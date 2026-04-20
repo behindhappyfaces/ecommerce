@@ -5,15 +5,19 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // --- Nav: scroll state ---
+  // Only restore nav--transparent on scroll-up if this page started with it (homepage only)
   const nav = document.querySelector('.nav');
   if (nav) {
+    const startsTransparent = nav.classList.contains('nav--transparent');
     const updateNav = () => {
       if (window.scrollY > 40) {
         nav.classList.add('scrolled');
         nav.classList.remove('nav--transparent');
       } else {
         nav.classList.remove('scrolled');
-        nav.classList.add('nav--transparent');
+        if (startsTransparent) {
+          nav.classList.add('nav--transparent');
+        }
       }
     };
     updateNav();

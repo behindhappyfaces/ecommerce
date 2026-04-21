@@ -522,7 +522,7 @@ h1, h2, h3, h4 {
 .pantry__card {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 3/4;
+  aspect-ratio: 4/3;
   cursor: pointer;
   background: var(--color-cream-dark);
 }

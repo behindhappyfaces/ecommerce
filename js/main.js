@@ -1,5 +1,5 @@
 /* =========================================
-   HEART OF TEXAS ORGANICS — MAIN JS
+   HEART OF TEXAS ORGANICS MAIN JS
    ========================================= */
 
 document.addEventListener('DOMContentLoaded', () => {

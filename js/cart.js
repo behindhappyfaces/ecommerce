@@ -1,5 +1,5 @@
 /* =========================================
-   HEART OF TEXAS ORGANICS — CART
+   HEART OF TEXAS ORGANICS CART
    ========================================= */
 
 const PRODUCTS = {
@@ -339,7 +339,7 @@ async function checkout() {
       throw new Error(data.error || 'Unknown error');
     }
   } catch (err) {
-    btn.textContent = 'Error — Try Again';
+    btn.textContent = 'Error. Try Again';
     btn.disabled = false;
     console.error('Checkout error:', err);
   }

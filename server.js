@@ -25,7 +25,7 @@ const mailer = nodemailer.createTransport({
 
 async function sendEmail(subject, html) {
   if (!process.env.OUTLOOK_PASSWORD || process.env.OUTLOOK_PASSWORD === 'your_outlook_password_here') {
-    console.log('[Email skipped — OUTLOOK_PASSWORD not set]\nSubject:', subject);
+    console.log('[Email skipped OUTLOOK_PASSWORD not set]\nSubject:', subject);
     return;
   }
   await mailer.sendMail({
@@ -129,7 +129,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const piId   = session.payment_intent;
 
         if (isPaid) {
-          // Card — money cleared immediately
+          // Card money cleared immediately
           saveOrder(piId, {
             sessionId: session.id,
             status: 'READY_TO_SHIP',
@@ -140,8 +140,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
 
           await sendEmail(
-            `✅ New Order — ${total} — Ready to Ship`,
-            `<h2 style="color:#2C3E2D;">New Order — Payment Cleared</h2>
+            `✅ New Order ${total} Ready to Ship`,
+            `<h2 style="color:#2C3E2D;">New Order Payment Cleared</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
              <p><strong>Payment:</strong> Card (cleared immediately)</p>
@@ -151,7 +151,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           );
 
         } else {
-          // ACH — bank info submitted, money not yet transferred
+          // ACH bank info submitted money not yet transferred
           saveOrder(piId, {
             sessionId: session.id,
             status: 'AWAITING_PAYMENT',
@@ -162,8 +162,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
 
           await sendEmail(
-            `⏳ New ACH Order — ${total} — DO NOT SHIP YET`,
-            `<h2 style="color:#8B4A2F;">New ACH Order — Awaiting Bank Settlement</h2>
+            `⏳ New ACH Order ${total} DO NOT SHIP YET`,
+            `<h2 style="color:#8B4A2F;">New ACH Order Awaiting Bank Settlement</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
              <p><strong>Payment:</strong> ACH Bank Transfer (3–5 business days to clear)</p>
@@ -178,12 +178,12 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         break;
       }
 
-      // --- ACH payment cleared — safe to ship ----------------------------
+      // ACH payment cleared safe to ship
       case 'payment_intent.succeeded': {
         const pi = event.data.object;
 
         // FIX: check the actual payment method TYPE used, not the allowed list.
-        // pi.payment_method_types is always ['card','us_bank_account'] for all sessions —
+        // pi.payment_method_types is always ['card','us_bank_account'] for all sessions
         // checking it would always evaluate to 'card' and skip ACH. Instead, retrieve
         // the actual PaymentMethod object and inspect its .type field.
         let pmType = null;
@@ -192,7 +192,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           pmType = pm.type;
         }
 
-        // Card payments are handled at checkout.session.completed — skip them here
+        // Card payments are handled at checkout.session.completed so skip them here
         if (pmType !== 'us_bank_account') break;
 
         // Retrieve originating session for line items
@@ -210,8 +210,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         saveOrder(pi.id, { status: 'READY_TO_SHIP', clearedAt: new Date().toISOString() });
 
         await sendEmail(
-          `✅ ACH Cleared — ${total} — Ship This Order Now`,
-          `<h2 style="color:#2C3E2D;">ACH Payment Settled — Ship This Order</h2>
+          `✅ ACH Cleared ${total} Ship This Order Now`,
+          `<h2 style="color:#2C3E2D;">ACH Payment Settled Ship This Order</h2>
            <p><strong>Funds cleared:</strong> ${date}</p>
            <p><strong>Amount received:</strong> ${total}</p>
            ${lineItemsHtml(items)}
@@ -230,7 +230,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         saveOrder(pi.id, { status: 'PAYMENT_FAILED', failedAt: new Date().toISOString(), reason });
 
         await sendEmail(
-          `❌ Payment Failed — ${total}`,
+          `❌ Payment Failed ${total}`,
           `<h2 style="color:#dc3545;">Payment Failed</h2>
            <p><strong>Amount:</strong> ${total}</p>
            <p><strong>Reason:</strong> ${reason}</p>

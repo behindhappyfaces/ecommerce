@@ -1,5 +1,5 @@
 /* =========================================
-   HEART OF TEXAS ORGANICS — GLOBAL STYLES
+   HEART OF TEXAS ORGANICS  GLOBAL STYLES
    ========================================= */
 
 /* --- Fonts --- */
@@ -446,7 +446,7 @@ h1, h2, h3, h4 {
 }
 
 .hero__badge::before {
-  content: '—  ';
+  content: '';
 }
 
 /* =========================================
@@ -1569,7 +1569,7 @@ h1, h2, h3, h4 {
 }
 
 /* =========================================
-   OFFERING CARD — ADD TO CART BUTTON
+   OFFERING CARD  ADD TO CART BUTTON
    ========================================= */
 
 .offering-card__actions {
@@ -1789,7 +1789,7 @@ h1, h2, h3, h4 {
 }
 
 /* =========================================
-   RESPONSIVE — CART & SUBSCRIPTIONS
+   RESPONSIVE  CART & SUBSCRIPTIONS
    ========================================= */
 
 @media (max-width: 1024px) {

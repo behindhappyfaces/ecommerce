@@ -81,6 +81,9 @@
               wild starter, and nothing else.
             </p>
             <p class="offering-card__price">From $12</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="country-loaf">Add to Cart</button>
+            </div>
           </div>
         </article>
 
@@ -97,6 +100,9 @@
               Made with real butter and ground cinnamon — nothing artificial.
             </p>
             <p class="offering-card__price">From $5</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="cinnamon-bun">Add to Cart</button>
+            </div>
           </div>
         </article>
 
@@ -112,7 +118,10 @@
               A rotating selection of seasonal pastries baked fresh weekly.
               Ask what's in the oven.
             </p>
-            <p class="offering-card__price">Market price</p>
+            <p class="offering-card__price">From $15</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="pastry-assortment">Add to Cart</button>
+            </div>
           </div>
         </article>
       </div>
@@ -140,6 +149,9 @@
               Processed on-farm and available fresh or frozen.
             </p>
             <p class="offering-card__price">From $18</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="whole-chicken">Add to Cart</button>
+            </div>
           </div>
         </article>
 
@@ -156,6 +168,28 @@
               Sea-salted and unsalted varieties available.
             </p>
             <p class="offering-card__price">From $9</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="cultured-butter">Add to Cart</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="offering-card" data-fade>
+          <div class="offering-card__image-wrap">
+            <img src="images/eggs.webp"
+                 alt="Farm fresh eggs" loading="lazy" />
+          </div>
+          <div class="offering-card__body">
+            <p class="offering-card__category">Farm Fresh</p>
+            <h3 class="offering-card__name">Farm Eggs</h3>
+            <p class="offering-card__desc">
+              One dozen pasture-raised eggs from hens that roam freely.
+              Deep golden yolks. No cages, no corners cut.
+            </p>
+            <p class="offering-card__price">$8 / dozen</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="farm-eggs">Add to Cart</button>
+            </div>
           </div>
         </article>
 
@@ -171,9 +205,75 @@
               A weekly curated box of what's growing. No fillers, no filler farms —
               just what came out of the ground this week.
             </p>
-            <p class="offering-card__price">From $35 / week</p>
+            <p class="offering-card__price">From $35 / basket</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="harvest-basket">Add to Cart</button>
+            </div>
           </div>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- MONTHLY SUBSCRIPTIONS -->
+  <section id="subscriptions" class="subscriptions" aria-labelledby="subscriptions-title">
+    <div class="container">
+      <div class="subscriptions__header" data-fade>
+        <p class="eyebrow subscriptions__eyebrow">Subscribe &amp; Save</p>
+        <h2 class="subscriptions__title" id="subscriptions-title">Monthly Farm Subscriptions</h2>
+        <p class="subscriptions__subtitle">Fresh from our land to your door, every month. Cancel anytime.</p>
+      </div>
+      <div class="subscriptions__grid">
+
+        <article class="sub-card" data-fade>
+          <div class="sub-card__image-wrap">
+            <img src="images/loaf.webp" alt="Monthly Bread Box" loading="lazy" />
+          </div>
+          <div class="sub-card__body">
+            <h3 class="sub-card__name">Monthly Bread Box</h3>
+            <p class="sub-card__desc">Two Country Loaves plus a rotating selection of seasonal pastries, delivered every month.</p>
+            <p class="sub-card__price">$45</p>
+            <p class="sub-card__billing">per month · cancel anytime</p>
+            <button class="sub-card__btn"
+              data-sub-id="bread-box"
+              data-sub-name="Monthly Bread Box"
+              data-sub-price="4500">Subscribe</button>
+          </div>
+        </article>
+
+        <article class="sub-card" data-fade>
+          <div class="sub-card__image-wrap">
+            <img src="images/harvest.webp" alt="Monthly Harvest Subscription" loading="lazy" />
+          </div>
+          <div class="sub-card__body">
+            <h3 class="sub-card__name">Monthly Harvest Subscription</h3>
+            <p class="sub-card__desc">A weekly Harvest Basket, billed monthly — four deliveries of whatever the farm is growing.</p>
+            <p class="sub-card__price">$120</p>
+            <p class="sub-card__billing">per month · cancel anytime</p>
+            <button class="sub-card__btn"
+              data-sub-id="harvest-subscription"
+              data-sub-name="Monthly Harvest Subscription"
+              data-sub-price="12000">Subscribe</button>
+          </div>
+        </article>
+
+        <article class="sub-card sub-card--featured" data-fade>
+          <span class="sub-card__badge">Best Value</span>
+          <div class="sub-card__image-wrap">
+            <img src="images/hero-ingredients.webp" alt="Monthly Farm Box" loading="lazy" />
+          </div>
+          <div class="sub-card__body">
+            <h3 class="sub-card__name">Monthly Farm Box</h3>
+            <p class="sub-card__desc">Everything we make — artisan bread, weekly harvest basket, and pasture-raised meat. The full farm, delivered.</p>
+            <p class="sub-card__price">$199</p>
+            <p class="sub-card__billing">per month · cancel anytime</p>
+            <button class="sub-card__btn"
+              data-sub-id="farm-box"
+              data-sub-name="Monthly Farm Box"
+              data-sub-price="19900">Subscribe</button>
+          </div>
+        </article>
+
       </div>
     </div>
   </section>
@@ -245,5 +345,6 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-require('dotenv').config();
+require('dotenv').config({ path: process.env.DOTENV_PATH || '/etc/secrets/.env' });
+if (!process.env.STRIPE_SECRET_KEY) require('dotenv').config();
 const express  = require('express');
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');

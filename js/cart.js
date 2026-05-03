@@ -3,9 +3,11 @@
    ========================================= */
 
 const PRODUCTS = {
-  'country-loaf':      { name: 'Country Loaf',       price: 1200, image: 'images/loaf.webp' },
-  'cinnamon-bun':      { name: 'Cinnamon Bun',        price: 500,  image: 'images/pastries-still-life.webp' },
-  'pastry-assortment': { name: 'Pastry Assortment',   price: 1500, image: 'images/pastries-flat.jpg' },
+  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0, image: 'images/japanese-milk-loaf.webp' },
+  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0, image: 'images/whole-wheat-loaf.webp' },
+  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0, image: 'images/cinnamon-rolls.webp' },
+  'yeast-rolls':        { name: 'Yeast Rolls',         price: 0, image: 'images/yeast-rolls.webp' },
+  'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0, image: 'images/focaccia-loaf.webp' },
   'whole-chicken':     { name: 'Whole Chicken',       price: 1800, image: 'images/chicken.webp' },
   'cultured-butter':   { name: 'Cultured Butter',     price: 900,  image: 'images/butter.webp' },
   'farm-eggs':         { name: 'Farm Eggs (1 dozen)', price: 800,  image: 'images/eggs.webp' },

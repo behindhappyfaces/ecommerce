@@ -283,6 +283,7 @@ app.post('/create-checkout-session', async (req, res) => {
         },
         quantity: item.quantity,
       })),
+      allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html`,
     });
@@ -311,6 +312,7 @@ app.post('/create-subscription-session', async (req, res) => {
         },
         quantity: 1,
       }],
+      allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html#subscriptions`,
     });

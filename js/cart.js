@@ -9,7 +9,7 @@ const PRODUCTS = {
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0, image: 'images/yeast-rolls.webp' },
   'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0, image: 'images/focaccia-loaf.webp' },
   'whole-chicken':     { name: 'Whole Chicken',       price: 1800, image: 'images/chicken.webp' },
-  'cultured-butter':   { name: 'Cultured Butter',     price: 900,  image: 'images/butter.webp' },
+  'cultured-butter':   { name: 'Real Cream Butter',   price: 900,  image: 'images/butter.webp' },
   'farm-eggs':         { name: 'Farm Eggs (1 dozen)', price: 800,  image: 'images/eggs.webp' },
   'harvest-basket':    { name: 'Harvest Basket',      price: 3500, image: 'images/harvest.webp' },
 };

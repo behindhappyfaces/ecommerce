@@ -3,15 +3,15 @@
    ========================================= */
 
 const PRODUCTS = {
-  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0, image: 'images/japanese-milk-loaf.webp' },
-  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0, image: 'images/whole-wheat-loaf.webp' },
-  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0, image: 'images/cinnamon-rolls.webp' },
-  'yeast-rolls':        { name: 'Yeast Rolls',         price: 0, image: 'images/yeast-rolls.webp' },
-  'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0, image: 'images/focaccia-loaf.webp' },
-  'whole-chicken':     { name: 'Whole Chicken',       price: 1800, image: 'images/chicken.webp' },
-  'cultured-butter':   { name: 'Real Cream Butter',   price: 900,  image: 'images/butter.webp' },
-  'farm-eggs':         { name: 'Farm Eggs (1 dozen)', price: 800,  image: 'images/eggs.webp' },
-  'harvest-basket':    { name: 'Harvest Basket',      price: 3500, image: 'images/harvest.webp' },
+  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0,    subPrice: null, image: 'images/japanese-milk-loaf.webp' },
+  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0,    subPrice: null, image: 'images/whole-wheat-loaf.webp' },
+  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.webp' },
+  'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.webp' },
+  'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0,    subPrice: null, image: 'images/focaccia-loaf.webp' },
+  'whole-chicken':      { name: 'Whole Chicken',       price: 1800, subPrice: 1500, image: 'images/chicken.webp' },
+  'cultured-butter':    { name: 'Real Cream Butter',   price: 900,  subPrice: 700,  image: 'images/butter.webp' },
+  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 800,  subPrice: 600,  image: 'images/eggs.webp' },
+  'harvest-basket':     { name: 'Harvest Basket',      price: 3500, subPrice: 2800, image: 'images/harvest.webp' },
 };
 
 const STORAGE_KEY = 'hoto-cart';
@@ -27,11 +27,13 @@ function saveCart(cart) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
-function addItem(productId) {
-  if (!PRODUCTS[productId]) return; // reject unknown ids
+function addItem(productId, priceOverride) {
+  if (!PRODUCTS[productId]) return;
   const cart = getCart();
   const existing = cart.items.find(i => i.id === productId);
-  if (existing) { existing.qty += 1; } else { cart.items.push({ id: productId, qty: 1 }); }
+  const price = priceOverride ?? null;
+  if (existing) { existing.qty += 1; existing.price = price; }
+  else { cart.items.push({ id: productId, qty: 1, price }); }
   saveCart(cart);
   renderCart();
   openCart();
@@ -57,7 +59,8 @@ function removeItem(productId) {
 function getTotal() {
   return getCart().items.reduce((sum, item) => {
     const p = PRODUCTS[item.id];
-    return sum + (p ? p.price * item.qty : 0);
+    const price = item.price ?? (p ? p.price : 0);
+    return sum + price * item.qty;
   }, 0);
 }
 
@@ -190,8 +193,9 @@ function renderCart() {
   itemsWrap.className = 'cart-items';
 
   // Only render items whose product id exists in PRODUCTS (extra safety)
-  cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty }) => {
+  cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
+    const displayPrice = itemPrice ?? p.price;
     const item = document.createElement('div');
     item.className = 'cart-item';
     item.dataset.id = id;
@@ -210,7 +214,13 @@ function renderCart() {
 
     const price = document.createElement('p');
     price.className = 'cart-item__price';
-    price.textContent = fmt(p.price);
+    price.textContent = fmt(displayPrice);
+    if (itemPrice !== null && itemPrice !== undefined && p.subPrice && itemPrice === p.subPrice) {
+      const badge = document.createElement('span');
+      badge.className = 'cart-item__sub-badge';
+      badge.textContent = 'Subscriber price';
+      price.appendChild(badge);
+    }
 
     const qtyRow = document.createElement('div');
     qtyRow.className = 'cart-item__qty';
@@ -326,7 +336,7 @@ async function checkout() {
 
   const items = cart.items
     .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty }) => ({ name: PRODUCTS[id].name, price: PRODUCTS[id].price, quantity: qty }));
+    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -360,7 +370,7 @@ async function checkoutCrypto() {
 
   const items = cart.items
     .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty }) => ({ name: PRODUCTS[id].name, price: PRODUCTS[id].price, quantity: qty }));
+    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
 
   try {
     const res = await fetch('/create-crypto-session', {
@@ -379,6 +389,82 @@ async function checkoutCrypto() {
     btn.disabled = false;
     console.error('Crypto checkout error:', err);
   }
+}
+
+// --- Subscriber Prompt Modal ---
+
+function injectSubscriberModal() {
+  const overlay = document.createElement('div');
+  overlay.id = 'sub-prompt-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'Want the subscriber price?';
+
+  const body = document.createElement('p');
+  body.className = 'sub-prompt__body';
+  body.textContent = 'Join our subscription and save on every order.';
+
+  const prices = document.createElement('div');
+  prices.className = 'sub-prompt__prices';
+  prices.id = 'sub-prompt-prices';
+
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  yesBtn.id = 'sub-prompt-yes';
+  yesBtn.textContent = 'Subscribe & Save';
+
+  const noBtn = document.createElement('button');
+  noBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
+  noBtn.id = 'sub-prompt-no';
+  noBtn.textContent = 'No thanks, add at full price';
+
+  const actions = document.createElement('div');
+  actions.className = 'sub-prompt__actions';
+  actions.appendChild(yesBtn);
+  actions.appendChild(noBtn);
+
+  box.appendChild(heading);
+  box.appendChild(body);
+  box.appendChild(prices);
+  box.appendChild(actions);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeSubPrompt(); });
+}
+
+function openSubPrompt(productId) {
+  const p = PRODUCTS[productId];
+  const overlay = document.getElementById('sub-prompt-overlay');
+  const prices = document.getElementById('sub-prompt-prices');
+  const yesBtn = document.getElementById('sub-prompt-yes');
+  const noBtn = document.getElementById('sub-prompt-no');
+
+  prices.textContent = '';
+  const reg = document.createElement('span');
+  reg.className = 'sub-prompt__regular';
+  reg.textContent = `Regular: ${fmt(p.price)}`;
+  const sub = document.createElement('span');
+  sub.className = 'sub-prompt__subscriber';
+  sub.textContent = `Subscribers: ${fmt(p.subPrice)}`;
+  prices.appendChild(reg);
+  prices.appendChild(sub);
+
+  yesBtn.onclick = () => { addItem(productId, p.subPrice); closeSubPrompt(); };
+  noBtn.onclick = () => { addItem(productId, p.price); closeSubPrompt(); };
+
+  overlay.classList.add('open');
+}
+
+function closeSubPrompt() {
+  document.getElementById('sub-prompt-overlay')?.classList.remove('open');
 }
 
 // --- Subscribe ---
@@ -411,10 +497,14 @@ async function subscribe(subId, name, price) {
 document.addEventListener('DOMContentLoaded', () => {
   injectCartDrawer();
   injectCartIcon();
+  injectSubscriberModal();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {
-    btn.addEventListener('click', () => addItem(btn.dataset.addToCart));
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.addToCart;
+      if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); } else { addItem(id); }
+    });
   });
 
   document.querySelectorAll('[data-sub-id]').forEach(btn => {

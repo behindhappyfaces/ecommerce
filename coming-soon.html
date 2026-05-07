@@ -261,6 +261,10 @@
               <input id="cs-name" name="name" type="text" placeholder="Jane" autocomplete="given-name" required />
             </div>
             <div class="form-group">
+              <label for="cs-lastname">Last Name</label>
+              <input id="cs-lastname" name="lastname" type="text" placeholder="Smith" autocomplete="family-name" />
+            </div>
+            <div class="form-group">
               <label for="cs-email">Email Address</label>
               <input id="cs-email" name="email" type="email" placeholder="jane@example.com" autocomplete="email" required />
             </div>
@@ -289,8 +293,9 @@
     document.getElementById('signup-form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      const name    = document.getElementById('cs-name').value.trim();
-      const email   = document.getElementById('cs-email').value.trim();
+      const name     = document.getElementById('cs-name').value.trim();
+      const lastname = document.getElementById('cs-lastname').value.trim();
+      const email    = document.getElementById('cs-email').value.trim();
       const btn     = document.getElementById('cs-submit');
       const msg     = document.getElementById('cs-message');
 
@@ -310,7 +315,7 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email }),
+          body: JSON.stringify({ name, lastname, email }),
         });
 
         btn.textContent = 'You are on the list!';

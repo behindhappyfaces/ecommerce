@@ -16,10 +16,10 @@ function doPost(e) {
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
 
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['Timestamp', 'Name', 'Email']);
+      sheet.appendRow(['Timestamp', 'First Name', 'Last Name', 'Email']);
     }
 
-    sheet.appendRow([new Date().toISOString(), data.name || '', data.email || '']);
+    sheet.appendRow([new Date().toISOString(), data.name || '', data.lastname || '', data.email || '']);
 
     return ContentService
       .createTextOutput(JSON.stringify({ result: 'success' }))

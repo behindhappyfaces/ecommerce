@@ -261,6 +261,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// Coming soon redirect — send all HTML page routes to /coming-soon
+// Static assets (images, css, js) and API routes pass through unchanged
+const ALLOWED_PATHS = new Set([
+  '/', '/coming-soon', '/coming-soon.html',
+  '/success', '/success.html',
+]);
+app.use((req, res, next) => {
+  const isAsset   = /\.(css|js|webp|jpg|jpeg|png|gif|svg|ico|woff2?|ttf)$/i.test(req.path);
+  const isApi     = req.path.startsWith('/create-') || req.path === '/webhook';
+  const isAllowed = ALLOWED_PATHS.has(req.path);
+  if (!isAsset && !isApi && !isAllowed && req.method === 'GET') {
+    return res.redirect(301, '/coming-soon');
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 
 // =========================================

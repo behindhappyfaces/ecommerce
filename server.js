@@ -255,8 +255,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 app.use(express.json());
 
 app.use((req, res, next) => {
-  if (/\.(css|js)$/.test(req.path)) {
+  if (/\.(css|js|html)$/.test(req.path) || req.path === '/' || !req.path.includes('.')) {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
   }
   next();
 });

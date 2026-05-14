@@ -261,21 +261,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const ALLOWED_PATHS = new Set([
-  '/', '/coming-soon', '/coming-soon.html',
-  '/success', '/success.html',
-]);
-app.use((req, res, next) => {
-  const isAsset = /\.(css|js|webp|jpg|jpeg|png|gif|svg|ico|woff2?|ttf)$/i.test(req.path);
-  const isApi   = req.path.startsWith('/create-') || req.path === '/webhook';
-  if (!isAsset && !isApi && !ALLOWED_PATHS.has(req.path) && req.method === 'GET') {
-    return res.redirect(301, '/coming-soon');
-  }
-  next();
-});
-
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'coming-soon.html')));
-
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 
 // =========================================

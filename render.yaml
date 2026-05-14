@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: heart-of-texas-organics
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: COINBASE_COMMERCE_API_KEY
+        sync: false
+      - key: OUTLOOK_USER
+        sync: false
+      - key: OUTLOOK_PASSWORD
+        sync: false

@@ -996,7 +996,8 @@
       showLoading();
       try {
         allEvents = await fetchEvents();
-        setView('list');
+        const params = new URLSearchParams(window.location.search);
+        setView(params.get('view') === 'month' ? 'month' : 'list');
       } catch (err) {
         console.error('Workshop calendar error:', err);
         showError(err.message.includes('400') || err.message.includes('403')

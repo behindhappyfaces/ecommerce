@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us at Heart of Texas Organics</title>
+  <meta name="description" content="Reach out to Heart of Texas Organics. Questions about orders, products, or the farm." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    .contact-page {
+      padding: var(--section-padding) 0;
+      background: var(--color-cream);
+    }
+
+    .contact-page__inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .contact-page__inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
+    .contact-info__eyebrow {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-rust);
+      margin-bottom: 16px;
+    }
+
+    .contact-info__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      color: var(--color-green);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .contact-info__title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .contact-info__body {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--color-muted);
+      margin-bottom: 36px;
+    }
+
+    .contact-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .contact-detail__item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .contact-detail__label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+    }
+
+    .contact-detail__value {
+      font-size: 0.95rem;
+      color: var(--color-text);
+    }
+
+    .contact-detail__value a {
+      color: var(--color-green);
+      text-decoration: none;
+    }
+
+    .contact-detail__value a:hover {
+      text-decoration: underline;
+    }
+
+    .contact-form-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 44px 40px;
+      box-shadow: 0 2px 24px rgba(44,62,45,0.08);
+    }
+
+    @media (max-width: 480px) {
+      .contact-form-card {
+        padding: 28px 20px;
+      }
+    }
+
+    .contact-form-card__heading {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--color-green);
+      margin-bottom: 6px;
+    }
+
+    .contact-form-card__sub {
+      font-size: 0.88rem;
+      color: var(--color-muted);
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 7px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #DDD8CE;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--color-text);
+      background: var(--color-cream);
+      transition: border-color 0.2s;
+      outline: none;
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--color-green);
+      background: #fff;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #AAA49A; }
+
+    .form-group select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B5E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .form-submit {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px 20px;
+      background: var(--color-green);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .form-submit:hover:not(:disabled) { background: #3A5240; }
+    .form-submit:disabled { opacity: 0.6; cursor: default; }
+
+    .form-message {
+      margin-top: 14px;
+      font-size: 0.88rem;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .form-message--success { color: var(--color-green); }
+    .form-message--error   { color: var(--color-rust); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li><a class="nav__link" href="offerings.html">Offerings</a></li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <!-- PAGE HERO -->
+  <header class="page-hero" aria-label="Contact hero">
+    <img class="page-hero__image"
+         src="images/farm-hands.webp"
+         alt="Hands working the land"
+         loading="eager" />
+    <div class="page-hero__overlay" aria-hidden="true"></div>
+    <div class="page-hero__content container">
+      <p class="eyebrow page-hero__eyebrow">We'd love to hear from you</p>
+      <h1 class="page-hero__title">Contact Us</h1>
+    </div>
+  </header>
+
+  <!-- CONTACT SECTION -->
+  <section class="contact-page">
+    <div class="container">
+      <div class="contact-page__inner">
+
+        <!-- Left: Info -->
+        <div data-fade>
+          <p class="contact-info__eyebrow">Reach Out</p>
+          <h2 class="contact-info__title">
+            Real questions<br>get <em>real answers.</em>
+          </h2>
+          <p class="contact-info__body">
+            Have a question about an order, a product, or the farm? We are a small
+            operation and we read every message. Reach out and we will get back to
+            you as soon as possible.
+          </p>
+
+          <div class="contact-detail">
+            <div class="contact-detail__item">
+              <span class="contact-detail__label">Email</span>
+              <span class="contact-detail__value">
+                <a href="mailto:operations@heartoftexasorganics.com">operations@heartoftexasorganics.com</a>
+              </span>
+            </div>
+            <div class="contact-detail__item">
+              <span class="contact-detail__label">Location</span>
+              <span class="contact-detail__value">Heart of Texas &mdash; Central Texas</span>
+            </div>
+            <div class="contact-detail__item">
+              <span class="contact-detail__label">Orders</span>
+              <span class="contact-detail__value">
+                Order online at <a href="offerings.html">our offerings page</a>.
+                All orders are confirmed by email.
+              </span>
+            </div>
+            <div class="contact-detail__item">
+              <span class="contact-detail__label">Response Time</span>
+              <span class="contact-detail__value">Within 1&ndash;2 business days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Form -->
+        <div data-fade>
+          <div class="contact-form-card">
+            <p class="contact-form-card__heading">Send a message</p>
+            <p class="contact-form-card__sub">Fill out the form and we will follow up by email.</p>
+
+            <form id="contact-form" novalidate>
+              <div class="form-group">
+                <label for="cf-name">Your Name</label>
+                <input id="cf-name" name="name" type="text" placeholder="Jane Smith" autocomplete="name" required />
+              </div>
+              <div class="form-group">
+                <label for="cf-email">Email Address</label>
+                <input id="cf-email" name="email" type="email" placeholder="jane@example.com" autocomplete="email" required />
+              </div>
+              <div class="form-group">
+                <label for="cf-subject">Subject</label>
+                <select id="cf-subject" name="subject">
+                  <option value="">Select a topic...</option>
+                  <option value="order">Order question</option>
+                  <option value="product">Product question</option>
+                  <option value="subscription">Subscription</option>
+                  <option value="wholesale">Wholesale inquiry</option>
+                  <option value="classes">Baking classes</option>
+                  <option value="other">Something else</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cf-message">Message</label>
+                <textarea id="cf-message" name="message" rows="5" placeholder="Tell us what's on your mind..." required></textarea>
+              </div>
+              <button class="form-submit" type="submit" id="cf-submit">Send Message</button>
+              <p class="form-message" id="cf-message-status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, real land, real people.<br>Grown and made without shortcuts.</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Navigate</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="index.html">Home</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Offerings</a></li>
+            <li><a class="footer__col-link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+            <li><a class="footer__col-link" href="about-heart-of-texas.html">Our Story</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Shop</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="offerings.html">Artisan Breads</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Pasture-Raised Meats</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Farm Eggs</a></li>
+            <li><a class="footer__col-link" href="offerings.html#classes">Baking Classes</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Connect</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftexasorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftexasorganics" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="coming-soon.html">Newsletter</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const name    = document.getElementById('cf-name').value.trim();
+      const email   = document.getElementById('cf-email').value.trim();
+      const subject = document.getElementById('cf-subject').value;
+      const message = document.getElementById('cf-message').value.trim();
+      const btn     = document.getElementById('cf-submit');
+      const status  = document.getElementById('cf-message-status');
+
+      if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !message) {
+        status.textContent = 'Please fill in your name, email, and message.';
+        status.className = 'form-message form-message--error';
+        return;
+      }
+
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+      status.textContent = '';
+      status.className = 'form-message';
+
+      try {
+        const res = await fetch('/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, subject, message }),
+        });
+
+        if (!res.ok) throw new Error('Server error');
+
+        btn.textContent = 'Message Sent';
+        status.textContent = 'Thank you! We will follow up within 1-2 business days.';
+        status.className = 'form-message form-message--success';
+        document.getElementById('contact-form').reset();
+      } catch {
+        btn.textContent = 'Send Message';
+        btn.disabled = false;
+        status.textContent = 'Something went wrong. Please email us directly at operations@heartoftexasorganics.com';
+        status.className = 'form-message form-message--error';
+      }
+    });
+  </script>
+</body>
+</html>

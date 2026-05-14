@@ -363,6 +363,43 @@ app.post('/create-crypto-session', async (req, res) => {
 });
 
 // =========================================
+// CONTACT FORM
+// =========================================
+
+app.post('/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const subjectLabel = {
+    order: 'Order Question',
+    product: 'Product Question',
+    subscription: 'Subscription',
+    wholesale: 'Wholesale Inquiry',
+    classes: 'Baking Classes',
+    other: 'General',
+  }[subject] || 'General';
+
+  try {
+    await sendEmail(
+      `Contact Form: ${subjectLabel} from ${name}`,
+      `<h2 style="color:#2C3E2D;">New Contact Form Submission</h2>
+       <p><strong>Name:</strong> ${name}</p>
+       <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+       <p><strong>Subject:</strong> ${subjectLabel}</p>
+       <p><strong>Message:</strong></p>
+       <p style="background:#F5F0E8;padding:16px;border-radius:4px;white-space:pre-wrap;">${message}</p>`
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Contact form email error:', err.message);
+    res.status(500).json({ error: 'Email failed' });
+  }
+});
+
+// =========================================
 // START
 // =========================================
 

@@ -347,115 +347,9 @@
         </h2>
       </header>
 
-      <div class="mag-grid">
+      <div class="mag-grid" id="mag-article-grid">
 
-        <a class="mag-card" href="about-behind-happy-faces.html" data-fade>
-          <img class="mag-card__image" src="images/chicken-landscape.jpg"
-               alt="Pasture-raised chickens on open land" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">Animal Welfare</p>
-            <h3 class="mag-card__title">What Pasture-Raised Actually Means on Our Farm</h3>
-            <p class="mag-card__excerpt">
-              When we say pasture-raised, we mean open sky every day. Not a marketing term,
-              not a loophole. Our chickens scratch, forage, and live like chickens were
-              meant to live. Here's what that actually looks like.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Behind Happy Faces</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
-
-        <a class="mag-card" href="workshops.html" data-fade>
-          <img class="mag-card__image" src="images/classes.jpg"
-               alt="Hands-on baking class" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">Craft &amp; Skill</p>
-            <h3 class="mag-card__title">The Lost Art of Real Bread and Why It Matters Now</h3>
-            <p class="mag-card__excerpt">
-              Most bread sold today was engineered to last on a shelf. Real bread lasts
-              two days because it's alive. We teach the craft from starter to score in
-              small, hands-on workshops for all skill levels.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Workshops &amp; Classes</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
-
-        <a class="mag-card" href="offerings.html" data-fade>
-          <img class="mag-card__image" src="images/harvest.webp"
-               alt="Fresh harvest basket" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">From the Pantry</p>
-            <h3 class="mag-card__title">Why We Refuse to Cut Corners on What Goes in Your Food</h3>
-            <p class="mag-card__excerpt">
-              No synthetic pesticides. No added hormones. No preservatives. No GMOs.
-              Our name reflects our standard, not a certification. Here's what that
-              commitment actually costs and why we believe it's worth every bit of it.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Our Ingredients</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
-
-        <a class="mag-card" href="about-heart-of-texas.html" data-fade>
-          <img class="mag-card__image" src="images/crop-rows.webp"
-               alt="Rows of crops on the farm" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">Faith &amp; Farming</p>
-            <h3 class="mag-card__title">Led by Obedience: Building a Farm One Step at a Time</h3>
-            <p class="mag-card__excerpt">
-              This didn't start as a business plan. It started as a calling. We didn't
-              wait for a perfect plan or the right season. We planted a seed, and we
-              kept going. This is what faithful obedience looks like in practice.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Our Story</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
-
-        <a class="mag-card" href="offerings.html" data-fade>
-          <img class="mag-card__image" src="images/eggs.webp"
-               alt="Farm fresh eggs" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">Food as Medicine</p>
-            <h3 class="mag-card__title">The Difference Between a Grocery Store Egg and a Real One</h3>
-            <p class="mag-card__excerpt">
-              Deep golden yolks. Rich, thick whites. The difference is visible before
-              you even taste it. Hens raised on open pasture without soy produce eggs
-              with a fundamentally different nutritional profile. Here's the science.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Farm Eggs</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
-
-        <a class="mag-card" href="offerings.html" data-fade>
-          <img class="mag-card__image" src="images/butter.webp"
-               alt="Real cream butter" loading="lazy" />
-          <div class="mag-card__body">
-            <p class="mag-card__category">Real Food</p>
-            <h3 class="mag-card__title">Butter Is Not the Enemy: What We Got Wrong About Fat</h3>
-            <p class="mag-card__excerpt">
-              Slow-churned from cream sourced from grass-fed cows. Sea-salted and
-              unsalted. Real butter made the old way. The kind your grandmother used
-              before the food industry convinced us to be afraid of fat.
-            </p>
-            <div class="mag-card__footer">
-              <span class="mag-card__date">Real Cream Butter</span>
-              <span class="mag-card__read">Read &rarr;</span>
-            </div>
-          </div>
-        </a>
+        <!-- articles injected by JS -->
 
       </div>
     </div>
@@ -525,6 +419,119 @@
 
   <script src="js/main.js"></script>
   <script>
+    // ── Substack article grid ────────────────────────────────────────────
+    const grid = document.getElementById('mag-article-grid');
+
+    function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+
+    function showGridLoading() {
+      clearEl(grid);
+      const msg = document.createElement('p');
+      msg.style.cssText = 'color:var(--color-muted);text-align:center;padding:48px 0;grid-column:1/-1;';
+      msg.textContent = 'Loading articles...';
+      grid.appendChild(msg);
+    }
+
+    function showGridError() {
+      clearEl(grid);
+      const msg = document.createElement('p');
+      msg.style.cssText = 'color:var(--color-muted);text-align:center;padding:48px 0;grid-column:1/-1;';
+      const text = document.createTextNode('Could not load articles. Read them directly on ');
+      const link = document.createElement('a');
+      link.href = 'https://bestmedicinesmagazine.substack.com';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Best Medicines on Substack';
+      link.style.color = 'var(--color-green)';
+      msg.appendChild(text);
+      msg.appendChild(link);
+      grid.appendChild(msg);
+    }
+
+    function buildCard(article) {
+      const card = document.createElement('a');
+      card.className = 'mag-card';
+      card.href = article.link;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+
+      if (article.image) {
+        const img = document.createElement('img');
+        img.className = 'mag-card__image';
+        img.src = article.image;
+        img.alt = article.title;
+        img.loading = 'lazy';
+        img.onerror = function() { this.style.display = 'none'; };
+        card.appendChild(img);
+      } else {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'mag-card__image--placeholder';
+        const icon = document.createElement('span');
+        icon.textContent = '📖';
+        placeholder.appendChild(icon);
+        card.appendChild(placeholder);
+      }
+
+      const body = document.createElement('div');
+      body.className = 'mag-card__body';
+
+      const category = document.createElement('p');
+      category.className = 'mag-card__category';
+      category.textContent = 'Best Medicines';
+
+      const title = document.createElement('h3');
+      title.className = 'mag-card__title';
+      title.textContent = article.title;
+
+      const excerpt = document.createElement('p');
+      excerpt.className = 'mag-card__excerpt';
+      excerpt.textContent = article.excerpt;
+
+      const footer = document.createElement('div');
+      footer.className = 'mag-card__footer';
+
+      const date = document.createElement('span');
+      date.className = 'mag-card__date';
+      date.textContent = article.date;
+
+      const read = document.createElement('span');
+      read.className = 'mag-card__read';
+      read.textContent = 'Read →';
+
+      footer.appendChild(date);
+      footer.appendChild(read);
+      body.appendChild(category);
+      body.appendChild(title);
+      body.appendChild(excerpt);
+      body.appendChild(footer);
+      card.appendChild(body);
+
+      return card;
+    }
+
+    async function loadArticles() {
+      showGridLoading();
+      try {
+        const res  = await fetch('/substack-feed');
+        const data = await res.json();
+        const articles = data.articles || [];
+
+        clearEl(grid);
+
+        if (!articles.length) {
+          showGridError();
+          return;
+        }
+
+        articles.forEach(a => grid.appendChild(buildCard(a)));
+      } catch {
+        showGridError();
+      }
+    }
+
+    loadArticles();
+
+    // ── Subscribe form ───────────────────────────────────────────────────
     document.getElementById('mag-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const email = document.getElementById('mag-email').value.trim();

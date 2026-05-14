@@ -365,6 +365,67 @@ app.post('/create-crypto-session', async (req, res) => {
 });
 
 // =========================================
+// SUBSTACK RSS FEED
+// =========================================
+
+const SUBSTACK_FEED = 'https://bestmedicinesmagazine.substack.com/feed';
+
+function extractTag(xml, tag) {
+  const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`));
+  return m ? m[1].trim() : null;
+}
+
+function extractCDATA(xml, tag) {
+  const m = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`));
+  return m ? m[1].trim() : null;
+}
+
+function parseRSS(xml) {
+  const items = [];
+  for (const match of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+    const raw   = match[1];
+    const title   = extractCDATA(raw, 'title')       || extractTag(raw, 'title');
+    const link    = extractTag(raw, 'link');
+    const pubDate = extractTag(raw, 'pubDate');
+    const desc    = extractCDATA(raw, 'description') || extractTag(raw, 'description') || '';
+
+    let image = null;
+    const enc   = raw.match(/<enclosure[^>]+url="([^"]+)"/);
+    const media = raw.match(/<media:content[^>]+url="([^"]+)"/);
+    const img   = desc.match(/<img[^>]+src="([^"]+)"/);
+    if (enc)        image = enc[1];
+    else if (media) image = media[1];
+    else if (img)   image = img[1];
+
+    const plain   = desc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const excerpt = plain.length > 200 ? plain.slice(0, 200).trimEnd() + '...' : plain;
+
+    let dateStr = '';
+    if (pubDate) {
+      try { dateStr = new Date(pubDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+      catch { dateStr = pubDate; }
+    }
+
+    if (title && link) items.push({ title, link, date: dateStr, excerpt, image });
+  }
+  return items.slice(0, 12);
+}
+
+app.get('/substack-feed', async (req, res) => {
+  try {
+    const response = await fetch(SUBSTACK_FEED);
+    if (!response.ok) throw new Error(`Feed returned ${response.status}`);
+    const xml = await response.text();
+    const articles = parseRSS(xml);
+    res.setHeader('Cache-Control', 'public, max-age=900');
+    res.json({ articles });
+  } catch (err) {
+    console.error('Substack feed error:', err.message);
+    res.status(500).json({ error: 'Could not load feed', articles: [] });
+  }
+});
+
+// =========================================
 // CONTACT FORM
 // =========================================
 

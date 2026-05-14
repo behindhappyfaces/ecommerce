@@ -263,34 +263,8 @@
         <a class="btn btn--dark" href="magazine.html">Read the Magazine</a>
       </header>
 
-      <ul class="blog__list" data-fade>
-        <li>
-          <a class="blog__item" href="magazine.html">
-            <div class="blog__item-left">
-              <span class="blog__item-date">Faith &amp; Farming</span>
-              <span class="blog__item-title">Led by Obedience: Building a Farm One Step at a Time</span>
-            </div>
-            <span class="blog__item-arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-        <li>
-          <a class="blog__item" href="magazine.html">
-            <div class="blog__item-left">
-              <span class="blog__item-date">Food as Medicine</span>
-              <span class="blog__item-title">The Difference Between a Grocery Store Egg and a Real One</span>
-            </div>
-            <span class="blog__item-arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
-        <li>
-          <a class="blog__item" href="magazine.html">
-            <div class="blog__item-left">
-              <span class="blog__item-date">Craft &amp; Skill</span>
-              <span class="blog__item-title">The Lost Art of Real Bread and Why It Matters Now</span>
-            </div>
-            <span class="blog__item-arrow" aria-hidden="true">→</span>
-          </a>
-        </li>
+      <ul class="blog__list" data-fade id="home-blog-list">
+        <!-- populated from Substack feed -->
       </ul>
     </div>
   </section>
@@ -354,5 +328,72 @@
 
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>
+  <script>
+    (async function loadBlogPreviews() {
+      const list = document.getElementById('home-blog-list');
+      if (!list) return;
+
+      try {
+        const res  = await fetch('/substack-feed');
+        const data = await res.json();
+        const articles = (data.articles || []).slice(0, 3);
+
+        if (!articles.length) throw new Error('empty');
+
+        articles.forEach(a => {
+          const li = document.createElement('li');
+
+          const link = document.createElement('a');
+          link.className = 'blog__item';
+          link.href = a.link;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+
+          const left = document.createElement('div');
+          left.className = 'blog__item-left';
+
+          const date = document.createElement('span');
+          date.className = 'blog__item-date';
+          date.textContent = a.date || 'Best Medicines';
+
+          const title = document.createElement('span');
+          title.className = 'blog__item-title';
+          title.textContent = a.title;
+
+          const arrow = document.createElement('span');
+          arrow.className = 'blog__item-arrow';
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.textContent = '→';
+
+          left.appendChild(date);
+          left.appendChild(title);
+          link.appendChild(left);
+          link.appendChild(arrow);
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      } catch {
+        // fallback: show link to magazine
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        link.className = 'blog__item';
+        link.href = 'magazine.html';
+        const left = document.createElement('div');
+        left.className = 'blog__item-left';
+        const title = document.createElement('span');
+        title.className = 'blog__item-title';
+        title.textContent = 'Read the latest from Best Medicines Magazine';
+        const arrow = document.createElement('span');
+        arrow.className = 'blog__item-arrow';
+        arrow.setAttribute('aria-hidden', 'true');
+        arrow.textContent = '→';
+        left.appendChild(title);
+        link.appendChild(left);
+        link.appendChild(arrow);
+        li.appendChild(link);
+        list.appendChild(li);
+      }
+    })();
+  </script>
 </body>
 </html>

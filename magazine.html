@@ -8,232 +8,449 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="images/logo.png" />
   <style>
-    .mag-hero {
-      background: var(--color-green);
-      padding: 72px 24px 60px;
+
+    /* ═══════════════════════════════════════
+       MAGAZINE VIEWER
+    ═══════════════════════════════════════ */
+    .mag-viewer {
+      background: #0f0f0f;
+      padding: 44px 0 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .mag-viewer__header {
+      text-align: center;
+      padding: 0 20px 28px;
+    }
+
+    .mag-viewer__eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.35);
+      margin: 0 0 8px;
+    }
+
+    .mag-viewer__title {
+      font-family: var(--font-serif, Georgia, serif);
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      color: #f5f0e8;
+      font-weight: 400;
+      margin: 0 0 5px;
+      letter-spacing: 0.03em;
+    }
+
+    .mag-viewer__sub {
+      font-size: 0.78rem;
+      color: rgba(245,240,232,0.38);
+      font-style: italic;
+      margin: 0;
+    }
+
+    /* Flip book wrapper */
+    #flip-book-wrap {
+      width: 100%;
+      max-width: 1120px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #flip-book {
+      /* dimensions set by StPageFlip */
+    }
+
+    /* Loading placeholder */
+    .mag-load-msg {
+      color: rgba(245,240,232,0.3);
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-align: center;
+      padding: 100px 20px;
+      text-transform: uppercase;
+    }
+
+    /* ── PAGES (used by StPageFlip) ─────────────── */
+    .page {
+      background: #f9f5ef;
+      overflow: hidden;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .page--green { background: #2C3E2D !important; }
+
+    .page__inner {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      padding: 34px 30px;
+    }
+
+    /* ── COVER ──────────────────────────────────── */
+    .pc {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 26px 18px !important;
+    }
+
+    .pc__logo {
+      width: 58px;
+      height: 58px;
+      object-fit: contain;
+      margin-bottom: 12px;
+    }
+
+    .pc__eye {
+      font-size: 0.56rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.45);
+      margin: 0 0 5px;
       text-align: center;
     }
 
-    .mag-hero__eyebrow {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--color-tan);
-      margin: 0 0 16px;
-    }
-
-    .mag-hero__title {
-      font-family: var(--font-serif);
-      font-size: clamp(2.8rem, 6vw, 4.2rem);
+    .pc__title {
+      font-family: Georgia, serif;
+      font-size: clamp(1.9rem, 4vw, 2.7rem);
+      color: #f5f0e8;
       font-weight: 400;
-      color: #fff;
-      margin: 0 0 12px;
-      line-height: 1.1;
+      margin: 0 0 3px;
+      letter-spacing: 0.03em;
+      text-align: center;
     }
 
-    .mag-hero__title em {
+    .pc__sub {
+      font-family: Georgia, serif;
       font-style: italic;
-      color: var(--color-tan);
+      font-size: 0.78rem;
+      color: rgba(245,240,232,0.55);
+      margin: 0 0 14px;
+      text-align: center;
     }
 
-    .mag-hero__sub {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.65);
-      max-width: 480px;
-      margin: 0 auto;
-      line-height: 1.7;
+    .pc__rule {
+      width: 44px;
+      height: 1px;
+      background: rgba(245,240,232,0.25);
+      margin: 0 auto 14px;
     }
 
-    .mag-divider {
-      width: 48px;
-      height: 2px;
-      background: var(--color-tan);
-      margin: 20px auto 0;
-    }
-
-    /* ---- Article Grid ---- */
-    .mag-section {
-      background: var(--color-cream);
-      padding: var(--section-padding) 0;
-    }
-
-    .mag-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-    }
-
-    @media (max-width: 900px) { .mag-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 580px) { .mag-grid { grid-template-columns: 1fr; } }
-
-    .mag-card {
-      background: #fff;
-      border-radius: 6px;
-      overflow: hidden;
-      box-shadow: 0 2px 16px rgba(44,62,45,0.07);
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      color: inherit;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .mag-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 28px rgba(44,62,45,0.13);
-    }
-
-    .mag-card__image {
+    .pc__img {
       width: 100%;
-      height: 220px;
+      flex: 1;
       object-fit: cover;
+      border-radius: 2px;
+      min-height: 0;
       display: block;
     }
 
-    .mag-card__image--placeholder {
-      width: 100%;
-      height: 220px;
-      background: var(--color-cream-dark);
+    .pc__issue {
+      font-size: 0.54rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.28);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* ── TABLE OF CONTENTS ──────────────────────── */
+    .pt__title {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      color: #2C3E2D;
+      border-bottom: 2px solid #2C3E2D;
+      padding-bottom: 8px;
+      margin: 0 0 14px;
+    }
+
+    .pt__item {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      gap: 9px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(44,62,45,0.09);
     }
 
-    .mag-card__image--placeholder span {
-      font-size: 2.5rem;
+    .pt__num {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      color: rgba(44,62,45,0.22);
+      min-width: 20px;
+      line-height: 1.3;
+      flex-shrink: 0;
     }
 
-    .mag-card__body {
-      padding: 24px;
-      flex: 1;
+    .pt__art-title {
+      font-family: Georgia, serif;
+      font-size: 0.76rem;
+      color: #1a1a1a;
+      line-height: 1.35;
+      display: block;
+    }
+
+    .pt__art-date {
+      font-size: 0.57rem;
+      color: rgba(44,62,45,0.38);
+      letter-spacing: 0.04em;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .pt__footer {
+      margin-top: auto;
+      text-align: center;
+      padding-top: 12px;
+    }
+
+    .pt__brand {
+      font-size: 0.54rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.28);
+    }
+
+    .pt__logo {
+      width: 28px;
+      opacity: 0.18;
+      display: block;
+      margin: 5px auto 0;
+    }
+
+    /* ── ARTICLE LEFT PAGE ──────────────────────── */
+    .pal {
+      padding: 0 !important;
       display: flex;
       flex-direction: column;
     }
 
-    .mag-card__category {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--color-rust);
-      margin: 0 0 10px;
-    }
-
-    .mag-card__title {
-      font-family: var(--font-serif);
-      font-size: 1.2rem;
-      font-weight: 400;
-      color: var(--color-green);
-      margin: 0 0 12px;
-      line-height: 1.35;
-    }
-
-    .mag-card__excerpt {
-      font-size: 0.88rem;
-      color: var(--color-muted);
-      line-height: 1.7;
-      margin: 0 0 20px;
+    .pal__img {
+      width: 100%;
       flex: 1;
+      object-fit: cover;
+      display: block;
+      min-height: 0;
     }
 
-    .mag-card__footer {
+    .pal__placeholder {
+      width: 100%;
+      flex: 1;
+      background: #2C3E2D;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid var(--color-cream-dark);
-      padding-top: 14px;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    .pal__placeholder img {
+      width: 42px;
+      opacity: 0.18;
+    }
+
+    .pal__bottom {
+      padding: 18px 22px;
+      background: #f9f5ef;
+      border-top: 3px solid #2C3E2D;
+    }
+
+    .pal__eye {
+      font-size: 0.55rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #2C3E2D;
+      margin: 0 0 5px;
+    }
+
+    .pal__title {
+      font-family: Georgia, serif;
+      font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+      color: #1a1a1a;
+      line-height: 1.3;
+      margin: 0;
+    }
+
+    /* ── ARTICLE RIGHT PAGE ─────────────────────── */
+    .par {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .par__rule {
+      width: 26px;
+      height: 2px;
+      background: #2C3E2D;
+      margin-bottom: 11px;
+    }
+
+    .par__date {
+      font-size: 0.57rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.4);
+      margin: 0 0 12px;
+    }
+
+    .par__body {
+      font-size: 0.78rem;
+      line-height: 1.78;
+      color: #2a2a2a;
+      margin: 0 0 14px;
+      flex: 1;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 10;
+      -webkit-box-orient: vertical;
+    }
+
+    .par__link {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #2C3E2D;
+      text-decoration: none;
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 2px;
+      width: fit-content;
+    }
+
+    .par__pgnum {
       margin-top: auto;
+      padding-top: 10px;
+      text-align: right;
+      font-size: 0.62rem;
+      color: rgba(44,62,45,0.25);
+      font-family: Georgia, serif;
     }
 
-    .mag-card__date {
-      font-size: 0.75rem;
-      color: var(--color-muted);
-      letter-spacing: 0.04em;
+    /* ── BACK COVER ─────────────────────────────── */
+    .pb {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      padding: 38px 30px !important;
     }
 
-    .mag-card__read {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--color-green);
+    .pb__logo {
+      width: 56px;
+      opacity: 0.82;
+      margin-bottom: 16px;
     }
 
-    /* ---- Featured Article ---- */
-    .mag-featured {
-      background: var(--color-cream-dark);
-      padding: var(--section-padding) 0;
+    .pb__title {
+      font-family: Georgia, serif;
+      font-size: 1.15rem;
+      color: #f5f0e8;
+      margin: 0 0 7px;
     }
 
-    .mag-featured__inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 64px;
-      align-items: center;
-    }
-
-    @media (max-width: 768px) {
-      .mag-featured__inner { grid-template-columns: 1fr; gap: 32px; }
-    }
-
-    .mag-featured__image {
-      width: 100%;
-      border-radius: 6px;
-      object-fit: cover;
-      height: 420px;
-    }
-
-    .mag-featured__label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--color-rust);
-      margin: 0 0 16px;
-    }
-
-    .mag-featured__title {
-      font-family: var(--font-serif);
-      font-size: clamp(1.8rem, 3vw, 2.4rem);
-      font-weight: 400;
-      color: var(--color-green);
-      line-height: 1.2;
+    .pb__sub {
+      font-size: 0.72rem;
+      color: rgba(245,240,232,0.55);
+      line-height: 1.65;
       margin: 0 0 20px;
+      max-width: 270px;
     }
 
-    .mag-featured__body {
-      font-size: 0.95rem;
-      line-height: 1.8;
-      color: var(--color-muted);
-      margin: 0 0 28px;
+    .pb__cta {
+      display: inline-block;
+      padding: 8px 20px;
+      border: 1px solid rgba(245,240,232,0.45);
+      border-radius: 3px;
+      color: #f5f0e8;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
     }
 
-    /* ---- Subscribe Strip ---- */
+    .pb__rule {
+      width: 28px;
+      height: 1px;
+      background: rgba(245,240,232,0.2);
+      margin: 18px auto;
+    }
+
+    .pb__handle {
+      font-size: 0.57rem;
+      letter-spacing: 0.14em;
+      color: rgba(245,240,232,0.3);
+    }
+
+    /* ── CONTROLS ───────────────────────────────── */
+    .mag-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 20px;
+      padding: 0 16px;
+    }
+
+    .mag-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: rgba(245,240,232,0.6);
+      padding: 8px 17px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      transition: border-color 0.18s, color 0.18s;
+    }
+
+    .mag-btn:hover {
+      border-color: rgba(255,255,255,0.45);
+      color: #f5f0e8;
+    }
+
+    .mag-counter {
+      font-size: 0.68rem;
+      color: rgba(245,240,232,0.32);
+      min-width: 115px;
+      text-align: center;
+      letter-spacing: 0.07em;
+    }
+
+    .mag-hint {
+      font-size: 0.6rem;
+      color: rgba(245,240,232,0.22);
+      letter-spacing: 0.1em;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* ══ SUBSCRIBE STRIP (below viewer) ══════════ */
     .mag-subscribe {
-      background: var(--color-green);
+      background: #2C3E2D;
       padding: 64px 24px;
       text-align: center;
     }
 
     .mag-subscribe__title {
-      font-family: var(--font-serif);
-      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-family: var(--font-serif, Georgia, serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
       font-weight: 400;
       color: #fff;
-      margin: 0 0 12px;
+      margin: 0 0 10px;
     }
 
     .mag-subscribe__sub {
-      font-size: 0.92rem;
-      color: rgba(255,255,255,0.65);
-      margin: 0 0 32px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.58);
+      margin: 0 0 30px;
     }
 
     .mag-subscribe__form {
       display: flex;
-      gap: 12px;
-      max-width: 440px;
+      gap: 10px;
+      max-width: 420px;
       margin: 0 auto;
       flex-wrap: wrap;
       justify-content: center;
@@ -241,43 +458,44 @@
 
     .mag-subscribe__input {
       flex: 1;
-      min-width: 220px;
-      padding: 13px 16px;
+      min-width: 210px;
+      padding: 12px 15px;
       border: none;
-      border-radius: 4px;
-      font-size: 0.95rem;
+      border-radius: 3px;
+      font-size: 0.92rem;
       font-family: sans-serif;
       outline: none;
     }
 
     .mag-subscribe__btn {
-      padding: 13px 24px;
-      background: var(--color-rust);
+      padding: 12px 22px;
+      background: #8B4513;
       color: #fff;
       border: none;
-      border-radius: 4px;
+      border-radius: 3px;
       font-family: sans-serif;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
+      transition: opacity 0.2s;
     }
 
-    .mag-subscribe__btn:hover { background: var(--color-rust-light); }
+    .mag-subscribe__btn:hover { opacity: 0.85; }
 
     .mag-subscribe__msg {
-      margin-top: 14px;
-      font-size: 0.85rem;
+      margin-top: 12px;
+      font-size: 0.82rem;
       min-height: 20px;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.75);
     }
+
   </style>
 </head>
 <body>
 
+  <!-- NAV -->
   <nav class="nav" aria-label="Main navigation">
     <a class="nav__logo" href="index.html">
       <img src="images/logo.png" alt="Heart of Texas Organics logo" />
@@ -302,60 +520,31 @@
     <a class="nav__mobile-link" href="offerings.html">Order Now</a>
   </div>
 
-  <!-- Hero -->
-  <header class="mag-hero">
-    <p class="mag-hero__eyebrow">Heart of Texas Organics</p>
-    <h1 class="mag-hero__title"><em>Best Medicines</em></h1>
-    <p class="mag-hero__sub">Stories, recipes, and wisdom from the farm. Because real food is the best medicine.</p>
-    <div class="mag-divider"></div>
-  </header>
+  <!-- ═══════════════ MAGAZINE VIEWER ═══════════════ -->
+  <section class="mag-viewer" aria-label="Best Medicines Magazine">
 
-  <!-- Featured Article -->
-  <section class="mag-featured" aria-labelledby="featured-title">
-    <div class="container">
-      <div class="mag-featured__inner">
-        <img class="mag-featured__image"
-             src="images/backyard-garden.webp"
-             alt="The backyard garden where it all started"
-             loading="eager" />
-        <div data-fade>
-          <p class="mag-featured__label">Featured Story</p>
-          <h2 class="mag-featured__title" id="featured-title">
-            It Started With a Garden and a Lot of Time on My Hands
-          </h2>
-          <p class="mag-featured__body">
-            There was no rock bottom moment. No dramatic turning point. I was unemployed,
-            had a little savings, and a lot of time. So I planted a garden. That's it.
-            Nothing fancy, nothing planned on a whiteboard. Just soil, seed, and something
-            in me that needed to grow something real. One garden became a few crop rows.
-            A few crop rows became a farm. Heart of Texas Organics is what happens when
-            you stop waiting for the perfect moment and just start.
-          </p>
-          <a class="btn btn--dark" href="about-heart-of-texas.html">Read the Full Story</a>
-        </div>
-      </div>
+    <div class="mag-viewer__header">
+      <p class="mag-viewer__eyebrow">Heart of Texas Organics</p>
+      <h1 class="mag-viewer__title">Best Medicines</h1>
+      <p class="mag-viewer__sub">Stories, recipes &amp; farm wisdom</p>
     </div>
+
+    <div id="flip-book-wrap">
+      <p class="mag-load-msg" id="mag-loading">Loading magazine&hellip;</p>
+      <div id="flip-book" style="display:none;"></div>
+    </div>
+
+    <div class="mag-controls" id="mag-controls" style="display:none;">
+      <button class="mag-btn" id="mag-prev" aria-label="Previous page">&#8592; Prev</button>
+      <span class="mag-counter" id="mag-counter"></span>
+      <button class="mag-btn" id="mag-next" aria-label="Next page">Next &#8594;</button>
+    </div>
+
+    <p class="mag-hint" id="mag-hint" style="display:none;">Click page edges or drag to turn &bull; Swipe on mobile</p>
+
   </section>
 
-  <!-- Article Grid -->
-  <section class="mag-section" aria-labelledby="articles-title">
-    <div class="container">
-      <header style="margin-bottom: 40px;" data-fade>
-        <p class="eyebrow" style="margin-bottom: 10px;">Latest Issues</p>
-        <h2 style="font-family: var(--font-serif); font-size: clamp(1.6rem,2.5vw,2.2rem); color: var(--color-green);" id="articles-title">
-          From Best Medicines Magazine
-        </h2>
-      </header>
-
-      <div class="mag-grid" id="mag-article-grid">
-
-        <!-- articles injected by JS -->
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Subscribe Strip -->
+  <!-- ═══════════════ SUBSCRIBE ═══════════════ -->
   <section class="mag-subscribe" aria-label="Subscribe to Best Medicines">
     <div class="container">
       <h2 class="mag-subscribe__title">Get Best Medicines in your inbox.</h2>
@@ -369,7 +558,7 @@
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
       <div class="footer__top">
@@ -418,121 +607,229 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@1.0.0/dist/js/page-flip.browser.js"></script>
+
   <script>
-    // ── Substack article grid ────────────────────────────────────────────
-    const grid = document.getElementById('mag-article-grid');
+    /* ══════════════════════════════════════════════════
+       BEST MEDICINES — MAGAZINE BUILDER
+    ══════════════════════════════════════════════════ */
+    (async function buildMagazine() {
 
-    function clearEl(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+      const flipBookEl = document.getElementById('flip-book');
+      const loadingEl  = document.getElementById('mag-loading');
+      const controlsEl = document.getElementById('mag-controls');
+      const counterEl  = document.getElementById('mag-counter');
+      const hintEl     = document.getElementById('mag-hint');
 
-    function showGridLoading() {
-      clearEl(grid);
-      const msg = document.createElement('p');
-      msg.style.cssText = 'color:var(--color-muted);text-align:center;padding:48px 0;grid-column:1/-1;';
-      msg.textContent = 'Loading articles...';
-      grid.appendChild(msg);
-    }
-
-    function showGridError() {
-      clearEl(grid);
-      const msg = document.createElement('p');
-      msg.style.cssText = 'color:var(--color-muted);text-align:center;padding:48px 0;grid-column:1/-1;';
-      const text = document.createTextNode('Could not load articles. Read them directly on ');
-      const link = document.createElement('a');
-      link.href = 'https://bestmedicinesmagazine.substack.com';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'Best Medicines on Substack';
-      link.style.color = 'var(--color-green)';
-      msg.appendChild(text);
-      msg.appendChild(link);
-      grid.appendChild(msg);
-    }
-
-    function buildCard(article) {
-      const card = document.createElement('a');
-      card.className = 'mag-card';
-      card.href = article.link;
-      card.target = '_blank';
-      card.rel = 'noopener noreferrer';
-
-      if (article.image) {
-        const img = document.createElement('img');
-        img.className = 'mag-card__image';
-        img.src = article.image;
-        img.alt = article.title;
-        img.loading = 'lazy';
-        img.onerror = function() { this.style.display = 'none'; };
-        card.appendChild(img);
-      } else {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'mag-card__image--placeholder';
-        const icon = document.createElement('span');
-        icon.textContent = '📖';
-        placeholder.appendChild(icon);
-        card.appendChild(placeholder);
-      }
-
-      const body = document.createElement('div');
-      body.className = 'mag-card__body';
-
-      const category = document.createElement('p');
-      category.className = 'mag-card__category';
-      category.textContent = 'Best Medicines';
-
-      const title = document.createElement('h3');
-      title.className = 'mag-card__title';
-      title.textContent = article.title;
-
-      const excerpt = document.createElement('p');
-      excerpt.className = 'mag-card__excerpt';
-      excerpt.textContent = article.excerpt;
-
-      const footer = document.createElement('div');
-      footer.className = 'mag-card__footer';
-
-      const date = document.createElement('span');
-      date.className = 'mag-card__date';
-      date.textContent = article.date;
-
-      const read = document.createElement('span');
-      read.className = 'mag-card__read';
-      read.textContent = 'Read →';
-
-      footer.appendChild(date);
-      footer.appendChild(read);
-      body.appendChild(category);
-      body.appendChild(title);
-      body.appendChild(excerpt);
-      body.appendChild(footer);
-      card.appendChild(body);
-
-      return card;
-    }
-
-    async function loadArticles() {
-      showGridLoading();
+      /* ── 1. Fetch Substack articles ──────────────── */
+      let articles = [];
       try {
         const res  = await fetch('/substack-feed');
         const data = await res.json();
-        const articles = data.articles || [];
+        articles = (data.articles || []).slice(0, 8);
+      } catch (_) {
+        /* continue — cover + back cover still render */
+      }
 
-        clearEl(grid);
+      loadingEl.style.display = 'none';
+      flipBookEl.style.display = 'block';
 
-        if (!articles.length) {
-          showGridError();
-          return;
+      /* ── 2. DOM helpers ──────────────────────────── */
+      function mk(tag, cls) {
+        const n = document.createElement(tag);
+        if (cls) n.className = cls;
+        return n;
+      }
+
+      /* ── 3. COVER page ───────────────────────────── */
+      const now        = new Date();
+      const issueLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const heroSrc    = (articles.length && articles[0].image)
+                           ? articles[0].image
+                           : 'images/cinnamon-rolls.jpg';
+
+      const cover  = mk('div', 'page page--green');
+      const coverI = mk('div', 'page__inner pc');
+
+      const cLogo  = mk('img', 'pc__logo');
+      cLogo.src = 'images/logo.png';
+      cLogo.alt = 'Heart of Texas Organics';
+
+      const cEye   = mk('p',   'pc__eye');   cEye.textContent   = 'Heart of Texas Organics presents';
+      const cTitle = mk('h2',  'pc__title'); cTitle.textContent = 'Best Medicines';
+      const cSub   = mk('p',   'pc__sub');   cSub.textContent   = 'Stories, recipes & farm wisdom';
+      const cRule  = mk('div', 'pc__rule');
+
+      const cImg   = mk('img', 'pc__img');
+      cImg.src = heroSrc;
+      cImg.alt = 'Cover';
+
+      const cIssue = mk('p', 'pc__issue');
+      cIssue.textContent = issueLabel + ' Issue';
+
+      [cLogo, cEye, cTitle, cSub, cRule, cImg, cIssue].forEach(c => coverI.appendChild(c));
+      cover.appendChild(coverI);
+      flipBookEl.appendChild(cover);
+
+      /* ── 4. TABLE OF CONTENTS page ───────────────── */
+      const toc  = mk('div', 'page');
+      const tocI = mk('div', 'page__inner');
+
+      const tocH = mk('h2', 'pt__title');
+      tocH.textContent = 'In This Issue';
+      tocI.appendChild(tocH);
+
+      articles.forEach(function (a, i) {
+        const row  = mk('div', 'pt__item');
+        const num  = mk('span', 'pt__num');  num.textContent  = String(i + 1);
+        const info = mk('div');
+        const at   = mk('span', 'pt__art-title'); at.textContent = a.title;
+        const ad   = mk('span', 'pt__art-date');  ad.textContent = a.date || '';
+        info.appendChild(at);
+        info.appendChild(ad);
+        row.appendChild(num);
+        row.appendChild(info);
+        tocI.appendChild(row);
+      });
+
+      const tocFoot  = mk('div', 'pt__footer');
+      const tocBrand = mk('p',   'pt__brand');
+      tocBrand.textContent = 'Heart of Texas Organics';
+      const tocLogo  = mk('img', 'pt__logo');
+      tocLogo.src = 'images/logo.png';
+      tocLogo.alt = '';
+      tocFoot.appendChild(tocBrand);
+      tocFoot.appendChild(tocLogo);
+      tocI.appendChild(tocFoot);
+
+      toc.appendChild(tocI);
+      flipBookEl.appendChild(toc);
+
+      /* ── 5. ARTICLE pages (2 per article) ────────── */
+      articles.forEach(function (a, i) {
+
+        /* Left page — image + headline */
+        const lp = mk('div', 'page pal');
+
+        if (a.image) {
+          const img = mk('img', 'pal__img');
+          img.src  = a.image;
+          img.alt  = a.title;
+          img.loading = 'lazy';
+          img.onerror = function () { this.style.display = 'none'; };
+          lp.appendChild(img);
+        } else {
+          const ph   = mk('div', 'pal__placeholder');
+          const phLg = mk('img');
+          phLg.src = 'images/logo.png';
+          phLg.alt = '';
+          ph.appendChild(phLg);
+          lp.appendChild(ph);
         }
 
-        articles.forEach(a => grid.appendChild(buildCard(a)));
-      } catch {
-        showGridError();
+        const lb      = mk('div', 'pal__bottom');
+        const lbEye   = mk('p',   'pal__eye');   lbEye.textContent   = 'Best Medicines';
+        const lbTitle = mk('h3',  'pal__title'); lbTitle.textContent = a.title;
+        lb.appendChild(lbEye);
+        lb.appendChild(lbTitle);
+        lp.appendChild(lb);
+        flipBookEl.appendChild(lp);
+
+        /* Right page — text excerpt + read-more */
+        const rp  = mk('div', 'page');
+        const ri  = mk('div', 'page__inner par');
+
+        const rule = mk('div', 'par__rule');
+        const date = mk('p',   'par__date');
+        date.textContent = a.date || '';
+        const body = mk('p', 'par__body');
+        body.textContent = a.description || 'Read the full article on Best Medicines Magazine.';
+
+        const link = mk('a', 'par__link');
+        link.href   = a.link;
+        link.target = '_blank';
+        link.rel    = 'noopener noreferrer';
+        link.textContent = 'Continue reading →';
+
+        const pgNum = mk('p', 'par__pgnum');
+        pgNum.textContent = String(i + 3);
+
+        [rule, date, body, link, pgNum].forEach(c => ri.appendChild(c));
+        rp.appendChild(ri);
+        flipBookEl.appendChild(rp);
+      });
+
+      /* ── 6. BACK COVER ───────────────────────────── */
+      const back  = mk('div', 'page page--green');
+      const backI = mk('div', 'page__inner pb');
+
+      const bLogo = mk('img', 'pb__logo');
+      bLogo.src = 'images/logo.png';
+      bLogo.alt = 'Heart of Texas Organics';
+
+      const bTitle = mk('h3', 'pb__title');
+      bTitle.textContent = 'Subscribe to Best Medicines';
+
+      const bSub = mk('p', 'pb__sub');
+      bSub.textContent = 'Get stories, recipes, and farm wisdom delivered to your inbox. Free to subscribe.';
+
+      const bCta  = mk('a', 'pb__cta');
+      bCta.href   = 'https://bestmedicinesmagazine.substack.com';
+      bCta.target = '_blank';
+      bCta.rel    = 'noopener noreferrer';
+      bCta.textContent = 'Subscribe on Substack';
+
+      const bRule   = mk('div', 'pb__rule');
+      const bHandle = mk('p',   'pb__handle');
+      bHandle.textContent = '@heartoftxorganics';
+
+      [bLogo, bTitle, bSub, bCta, bRule, bHandle].forEach(c => backI.appendChild(c));
+      back.appendChild(backI);
+      flipBookEl.appendChild(back);
+
+      /* ── 7. Initialize StPageFlip ─────────────────── */
+      const pageFlip = new St.PageFlip(flipBookEl, {
+        width:               500,
+        height:              670,
+        size:                'stretch',
+        minWidth:            255,
+        maxWidth:            800,
+        minHeight:           340,
+        maxHeight:           1070,
+        drawShadow:          true,
+        flippingTime:        720,
+        usePortrait:         true,
+        autoSize:            true,
+        maxShadowOpacity:    0.38,
+        showCover:           true,
+        mobileScrollSupport: false,
+        clickEventForward:   true,
+      });
+
+      pageFlip.loadFromHTML(flipBookEl.querySelectorAll('.page'));
+
+      /* ── 8. Controls ──────────────────────────────── */
+      function updateCounter() {
+        var curr  = pageFlip.getCurrentPageIndex();
+        var total = pageFlip.getPageCount();
+        counterEl.textContent = 'Page ' + (curr + 1) + ' of ' + total;
       }
-    }
 
-    loadArticles();
+      pageFlip.on('flip', updateCounter);
+      controlsEl.style.display = 'flex';
+      hintEl.style.display     = 'block';
+      updateCounter();
 
-    // ── Subscribe form ───────────────────────────────────────────────────
-    document.getElementById('mag-form').addEventListener('submit', async function(e) {
+      document.getElementById('mag-prev').addEventListener('click', function () { pageFlip.flipPrev(); });
+      document.getElementById('mag-next').addEventListener('click', function () { pageFlip.flipNext(); });
+
+    })();
+
+    /* ══════════════════════════════════════════════════
+       SUBSCRIBE FORM
+    ══════════════════════════════════════════════════ */
+    document.getElementById('mag-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       const email = document.getElementById('mag-email').value.trim();
       const msg   = document.getElementById('mag-msg');
@@ -543,7 +840,7 @@
         return;
       }
 
-      btn.textContent = 'Subscribing...';
+      btn.textContent = 'Subscribing…';
       btn.disabled = true;
 
       try {
@@ -551,7 +848,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: 'Magazine Subscriber',
+            name:    'Magazine Subscriber',
             email,
             subject: 'other',
             message: 'New Best Medicines magazine subscription request.',
@@ -560,7 +857,7 @@
         msg.textContent = 'You are subscribed! Welcome to Best Medicines.';
         document.getElementById('mag-email').value = '';
         btn.textContent = 'Subscribed';
-      } catch {
+      } catch (_) {
         msg.textContent = 'Something went wrong. Please try again.';
         btn.textContent = 'Subscribe';
         btn.disabled = false;

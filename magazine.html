@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Best Medicines Magazine | Heart of Texas Organics</title>
+  <meta name="description" content="Best Medicines — the Heart of Texas Organics magazine. Recipes, farm stories, and kitchen wisdom from the land." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    .mag-hero {
+      background: var(--color-green);
+      padding: 72px 24px 60px;
+      text-align: center;
+    }
+
+    .mag-hero__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+      margin: 0 0 16px;
+    }
+
+    .mag-hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.8rem, 6vw, 4.2rem);
+      font-weight: 400;
+      color: #fff;
+      margin: 0 0 12px;
+      line-height: 1.1;
+    }
+
+    .mag-hero__title em {
+      font-style: italic;
+      color: var(--color-tan);
+    }
+
+    .mag-hero__sub {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.65);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .mag-divider {
+      width: 48px;
+      height: 2px;
+      background: var(--color-tan);
+      margin: 20px auto 0;
+    }
+
+    /* ---- Article Grid ---- */
+    .mag-section {
+      background: var(--color-cream);
+      padding: var(--section-padding) 0;
+    }
+
+    .mag-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    @media (max-width: 900px) { .mag-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 580px) { .mag-grid { grid-template-columns: 1fr; } }
+
+    .mag-card {
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(44,62,45,0.07);
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .mag-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(44,62,45,0.13);
+    }
+
+    .mag-card__image {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .mag-card__image--placeholder {
+      width: 100%;
+      height: 220px;
+      background: var(--color-cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mag-card__image--placeholder span {
+      font-size: 2.5rem;
+    }
+
+    .mag-card__body {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mag-card__category {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-rust);
+      margin: 0 0 10px;
+    }
+
+    .mag-card__title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--color-green);
+      margin: 0 0 12px;
+      line-height: 1.35;
+    }
+
+    .mag-card__excerpt {
+      font-size: 0.88rem;
+      color: var(--color-muted);
+      line-height: 1.7;
+      margin: 0 0 20px;
+      flex: 1;
+    }
+
+    .mag-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--color-cream-dark);
+      padding-top: 14px;
+      margin-top: auto;
+    }
+
+    .mag-card__date {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .mag-card__read {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-green);
+    }
+
+    /* ---- Featured Article ---- */
+    .mag-featured {
+      background: var(--color-cream-dark);
+      padding: var(--section-padding) 0;
+    }
+
+    .mag-featured__inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .mag-featured__inner { grid-template-columns: 1fr; gap: 32px; }
+    }
+
+    .mag-featured__image {
+      width: 100%;
+      border-radius: 6px;
+      object-fit: cover;
+      height: 420px;
+    }
+
+    .mag-featured__label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-rust);
+      margin: 0 0 16px;
+    }
+
+    .mag-featured__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 400;
+      color: var(--color-green);
+      line-height: 1.2;
+      margin: 0 0 20px;
+    }
+
+    .mag-featured__body {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--color-muted);
+      margin: 0 0 28px;
+    }
+
+    /* ---- Subscribe Strip ---- */
+    .mag-subscribe {
+      background: var(--color-green);
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .mag-subscribe__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 400;
+      color: #fff;
+      margin: 0 0 12px;
+    }
+
+    .mag-subscribe__sub {
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.65);
+      margin: 0 0 32px;
+    }
+
+    .mag-subscribe__form {
+      display: flex;
+      gap: 12px;
+      max-width: 440px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .mag-subscribe__input {
+      flex: 1;
+      min-width: 220px;
+      padding: 13px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-family: sans-serif;
+      outline: none;
+    }
+
+    .mag-subscribe__btn {
+      padding: 13px 24px;
+      background: var(--color-rust);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .mag-subscribe__btn:hover { background: var(--color-rust-light); }
+
+    .mag-subscribe__msg {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      min-height: 20px;
+      color: rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li><a class="nav__link" href="offerings.html">Offerings</a></li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <!-- Hero -->
+  <header class="mag-hero">
+    <p class="mag-hero__eyebrow">Heart of Texas Organics</p>
+    <h1 class="mag-hero__title"><em>Best Medicines</em></h1>
+    <p class="mag-hero__sub">Stories, recipes, and wisdom from the farm. Because real food is the best medicine.</p>
+    <div class="mag-divider"></div>
+  </header>
+
+  <!-- Featured Article -->
+  <section class="mag-featured" aria-labelledby="featured-title">
+    <div class="container">
+      <div class="mag-featured__inner">
+        <img class="mag-featured__image"
+             src="images/backyard-garden.webp"
+             alt="The backyard garden where it all started"
+             loading="eager" />
+        <div data-fade>
+          <p class="mag-featured__label">Featured Story</p>
+          <h2 class="mag-featured__title" id="featured-title">
+            It Started With a Garden and a Lot of Time on My Hands
+          </h2>
+          <p class="mag-featured__body">
+            There was no rock bottom moment. No dramatic turning point. I was unemployed,
+            had a little savings, and a lot of time. So I planted a garden. That's it.
+            Nothing fancy, nothing planned on a whiteboard. Just soil, seed, and something
+            in me that needed to grow something real. One garden became a few crop rows.
+            A few crop rows became a farm. Heart of Texas Organics is what happens when
+            you stop waiting for the perfect moment and just start.
+          </p>
+          <a class="btn btn--dark" href="about-heart-of-texas.html">Read the Full Story</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Article Grid -->
+  <section class="mag-section" aria-labelledby="articles-title">
+    <div class="container">
+      <header style="margin-bottom: 40px;" data-fade>
+        <p class="eyebrow" style="margin-bottom: 10px;">Latest Issues</p>
+        <h2 style="font-family: var(--font-serif); font-size: clamp(1.6rem,2.5vw,2.2rem); color: var(--color-green);" id="articles-title">
+          From the farm kitchen.
+        </h2>
+      </header>
+
+      <div class="mag-grid">
+
+        <a class="mag-card" href="about-behind-happy-faces.html" data-fade>
+          <img class="mag-card__image" src="images/chicken-landscape.jpg"
+               alt="Pasture-raised chickens on open land" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">Animal Welfare</p>
+            <h3 class="mag-card__title">What Pasture-Raised Actually Means on Our Farm</h3>
+            <p class="mag-card__excerpt">
+              When we say pasture-raised, we mean open sky every day. Not a marketing term,
+              not a loophole. Our chickens scratch, forage, and live like chickens were
+              meant to live. Here's what that actually looks like.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Behind Happy Faces</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="mag-card" href="workshops.html" data-fade>
+          <img class="mag-card__image" src="images/classes.jpg"
+               alt="Hands-on baking class" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">Craft &amp; Skill</p>
+            <h3 class="mag-card__title">The Lost Art of Real Bread and Why It Matters Now</h3>
+            <p class="mag-card__excerpt">
+              Most bread sold today was engineered to last on a shelf. Real bread lasts
+              two days because it's alive. We teach the craft from starter to score in
+              small, hands-on workshops for all skill levels.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Workshops &amp; Classes</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="mag-card" href="offerings.html" data-fade>
+          <img class="mag-card__image" src="images/harvest.webp"
+               alt="Fresh harvest basket" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">From the Pantry</p>
+            <h3 class="mag-card__title">Why We Refuse to Cut Corners on What Goes in Your Food</h3>
+            <p class="mag-card__excerpt">
+              No synthetic pesticides. No added hormones. No preservatives. No GMOs.
+              Our name reflects our standard, not a certification. Here's what that
+              commitment actually costs and why we believe it's worth every bit of it.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Our Ingredients</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="mag-card" href="about-heart-of-texas.html" data-fade>
+          <img class="mag-card__image" src="images/crop-rows.webp"
+               alt="Rows of crops on the farm" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">Faith &amp; Farming</p>
+            <h3 class="mag-card__title">Led by Obedience: Building a Farm One Step at a Time</h3>
+            <p class="mag-card__excerpt">
+              This didn't start as a business plan. It started as a calling. We didn't
+              wait for a perfect plan or the right season. We planted a seed, and we
+              kept going. This is what faithful obedience looks like in practice.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Our Story</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="mag-card" href="offerings.html" data-fade>
+          <img class="mag-card__image" src="images/eggs.webp"
+               alt="Farm fresh eggs" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">Food as Medicine</p>
+            <h3 class="mag-card__title">The Difference Between a Grocery Store Egg and a Real One</h3>
+            <p class="mag-card__excerpt">
+              Deep golden yolks. Rich, thick whites. The difference is visible before
+              you even taste it. Hens raised on open pasture without soy produce eggs
+              with a fundamentally different nutritional profile. Here's the science.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Farm Eggs</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="mag-card" href="offerings.html" data-fade>
+          <img class="mag-card__image" src="images/butter.webp"
+               alt="Real cream butter" loading="lazy" />
+          <div class="mag-card__body">
+            <p class="mag-card__category">Real Food</p>
+            <h3 class="mag-card__title">Butter Is Not the Enemy: What We Got Wrong About Fat</h3>
+            <p class="mag-card__excerpt">
+              Slow-churned from cream sourced from grass-fed cows. Sea-salted and
+              unsalted. Real butter made the old way. The kind your grandmother used
+              before the food industry convinced us to be afraid of fat.
+            </p>
+            <div class="mag-card__footer">
+              <span class="mag-card__date">Real Cream Butter</span>
+              <span class="mag-card__read">Read &rarr;</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Subscribe Strip -->
+  <section class="mag-subscribe" aria-label="Subscribe to Best Medicines">
+    <div class="container">
+      <h2 class="mag-subscribe__title">Get Best Medicines in your inbox.</h2>
+      <p class="mag-subscribe__sub">New stories from the farm, delivered when we have something worth saying.</p>
+      <form class="mag-subscribe__form" id="mag-form" novalidate>
+        <input class="mag-subscribe__input" type="email" id="mag-email"
+               placeholder="your@email.com" autocomplete="email" required />
+        <button class="mag-subscribe__btn" type="submit">Subscribe</button>
+      </form>
+      <p class="mag-subscribe__msg" id="mag-msg" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Navigate</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="index.html">Home</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Offerings</a></li>
+            <li><a class="footer__col-link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+            <li><a class="footer__col-link" href="about-heart-of-texas.html">Our Story</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Shop</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="offerings.html">Artisan Breads</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Pasture-Raised Meats</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Farm Eggs</a></li>
+            <li><a class="footer__col-link" href="offerings.html#classes">Baking Classes</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Connect</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+            <li><a class="footer__col-link" href="magazine.html">Magazine</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('mag-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('mag-email').value.trim();
+      const msg   = document.getElementById('mag-msg');
+      const btn   = this.querySelector('button');
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = 'Please enter a valid email address.';
+        return;
+      }
+
+      btn.textContent = 'Subscribing...';
+      btn.disabled = true;
+
+      try {
+        await fetch('/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Magazine Subscriber',
+            email,
+            subject: 'other',
+            message: 'New Best Medicines magazine subscription request.',
+          }),
+        });
+        msg.textContent = 'You are subscribed! Welcome to Best Medicines.';
+        document.getElementById('mag-email').value = '';
+        btn.textContent = 'Subscribed';
+      } catch {
+        msg.textContent = 'Something went wrong. Please try again.';
+        btn.textContent = 'Subscribe';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

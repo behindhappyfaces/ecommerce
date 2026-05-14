@@ -4,449 +4,622 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Best Medicines Magazine | Heart of Texas Organics</title>
-  <meta name="description" content="Best Medicines — the Heart of Texas Organics magazine. Recipes, farm stories, and kitchen wisdom from the land." />
+  <meta name="description" content="Best Medicines — the Heart of Texas Organics magazine." />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="images/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
 
-    /* ═══════════════════════════════════════
-       MAGAZINE VIEWER
-    ═══════════════════════════════════════ */
-    .mag-viewer {
-      background: #0f0f0f;
-      padding: 44px 0 52px;
+    /* ════════════════════════════════════════════════
+       MAGAZINE VIEWER SHELL
+    ════════════════════════════════════════════════ */
+    .mag-shell {
+      background: #0a0a0a;
+      min-height: 100vh;
+      padding: 36px 0 48px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    .mag-viewer__header {
+    /* Masthead above the book */
+    .mag-masthead {
       text-align: center;
-      padding: 0 20px 28px;
+      padding: 0 20px 26px;
     }
-
-    .mag-viewer__eyebrow {
-      font-size: 0.62rem;
-      letter-spacing: 0.24em;
+    .mag-masthead__eye {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: rgba(245,240,232,0.35);
-      margin: 0 0 8px;
+      color: rgba(245,240,232,0.28);
+      margin: 0 0 7px;
     }
-
-    .mag-viewer__title {
-      font-family: var(--font-serif, Georgia, serif);
-      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-      color: #f5f0e8;
+    .mag-masthead__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.7rem, 3.5vw, 2.5rem);
       font-weight: 400;
-      margin: 0 0 5px;
-      letter-spacing: 0.03em;
+      color: #f5f0e8;
+      margin: 0 0 4px;
+      letter-spacing: 0.05em;
     }
-
-    .mag-viewer__sub {
-      font-size: 0.78rem;
-      color: rgba(245,240,232,0.38);
+    .mag-masthead__sub {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.7rem;
+      color: rgba(245,240,232,0.3);
       font-style: italic;
       margin: 0;
     }
 
-    /* Flip book wrapper */
+    /* Flip book container */
     #flip-book-wrap {
       width: 100%;
-      max-width: 1120px;
-      padding: 0 16px;
+      max-width: 1100px;
+      padding: 0 12px;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
     }
+    #flip-book { /* StPageFlip controls sizing */ }
 
-    #flip-book {
-      /* dimensions set by StPageFlip */
-    }
-
-    /* Loading placeholder */
-    .mag-load-msg {
-      color: rgba(245,240,232,0.3);
-      font-size: 0.82rem;
-      letter-spacing: 0.12em;
-      text-align: center;
-      padding: 100px 20px;
+    /* Loading */
+    .mag-loading {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
+      color: rgba(245,240,232,0.25);
+      padding: 120px 24px;
+      text-align: center;
     }
 
-    /* ── PAGES (used by StPageFlip) ─────────────── */
+    /* Controls */
+    .mag-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 0 16px;
+    }
+    .mag-btn {
+      font-family: 'Raleway', sans-serif;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(245,240,232,0.5);
+      padding: 8px 18px;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .mag-btn:hover { border-color: rgba(255,255,255,0.4); color: #f5f0e8; }
+    .mag-counter {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.64rem;
+      color: rgba(245,240,232,0.28);
+      min-width: 110px;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    .mag-hint {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.57rem;
+      letter-spacing: 0.12em;
+      color: rgba(245,240,232,0.18);
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    /* ════════════════════════════════════════════════
+       PAGE BASE
+    ════════════════════════════════════════════════ */
     .page {
-      background: #f9f5ef;
+      background: #faf7f2;
       overflow: hidden;
       position: relative;
       box-sizing: border-box;
     }
 
-    .page--green { background: #2C3E2D !important; }
+    /* ════════════════════════════════════════════════
+       COVER PAGE
+    ════════════════════════════════════════════════ */
+    .p-cover {
+      padding: 0 !important;
+      background: #111 !important;
+    }
 
-    .page__inner {
+    /* Full-bleed background photo */
+    .p-cover__bg {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      padding: 34px 30px;
+      object-fit: cover;
+      display: block;
     }
 
-    /* ── COVER ──────────────────────────────────── */
-    .pc {
+    /* Dark gradient top (for masthead readability) */
+    .p-cover__grad-top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 45%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 100%);
+    }
+
+    /* Dark gradient bottom (for cover lines) */
+    .p-cover__grad-bot {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 48%;
+      background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.1) 100%);
+    }
+
+    /* Top header area */
+    .p-cover__top {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 18px 20px 0;
+    }
+    .p-cover__brand-row {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      padding: 28px 26px 18px !important;
+      gap: 8px;
+      margin-bottom: 6px;
     }
-
-    .pc__logo {
-      width: 58px;
-      height: 58px;
+    .p-cover__brand-logo {
+      width: 22px;
+      height: 22px;
       object-fit: contain;
-      margin-bottom: 12px;
+      filter: brightness(10);
+      opacity: 0.85;
     }
-
-    .pc__eye {
-      font-size: 0.56rem;
+    .p-cover__brand-name {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.52rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+    }
+    .p-cover__masthead {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.2rem, 7vw, 3.6rem);
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 0.88;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .p-cover__tagline {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.55rem;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(245,240,232,0.45);
-      margin: 0 0 5px;
-      text-align: center;
+      color: rgba(255,255,255,0.55);
+      margin: 6px 0 0;
     }
 
-    .pc__title {
-      font-family: Georgia, serif;
-      font-size: clamp(1.9rem, 4vw, 2.7rem);
-      color: #f5f0e8;
-      font-weight: 400;
-      margin: 0 0 3px;
-      letter-spacing: 0.03em;
-      text-align: center;
+    /* Bottom cover lines */
+    .p-cover__bottom {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 0 20px 18px;
     }
-
-    .pc__sub {
-      font-family: Georgia, serif;
-      font-style: italic;
-      font-size: 0.78rem;
-      color: rgba(245,240,232,0.55);
-      margin: 0 0 14px;
-      text-align: center;
+    .p-cover__feature {
+      margin-bottom: 10px;
     }
-
-    .pc__rule {
-      width: 44px;
-      height: 1px;
-      background: rgba(245,240,232,0.25);
-      margin: 0 auto 14px;
-    }
-
-    .pc__img {
-      width: 100%;
-      flex: 1;
-      object-fit: cover;
-      border-radius: 2px;
-      min-height: 0;
-      display: block;
-    }
-
-    .pc__issue {
-      font-size: 0.54rem;
-      letter-spacing: 0.2em;
+    .p-cover__feature-eye {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(245,240,232,0.28);
-      text-align: center;
-      margin-top: 10px;
+      color: rgba(255,255,255,0.5);
+      margin: 0 0 3px;
     }
-
-    /* ── TABLE OF CONTENTS ──────────────────────── */
-    .pt__title {
-      font-family: Georgia, serif;
-      font-size: 1rem;
-      color: #2C3E2D;
-      border-bottom: 2px solid #2C3E2D;
-      padding-bottom: 8px;
-      margin: 0 0 14px;
+    .p-cover__feature-hed {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+      font-weight: 700;
+      font-style: italic;
+      color: #ffffff;
+      line-height: 1.15;
+      margin: 0;
     }
-
-    .pt__item {
+    .p-cover__rule {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.2);
+      margin: 8px 0;
+    }
+    .p-cover__lines {
+      list-style: none;
+      margin: 0;
+      padding: 0;
       display: flex;
-      gap: 9px;
-      padding: 7px 0;
-      border-bottom: 1px solid rgba(44,62,45,0.09);
+      flex-direction: column;
+      gap: 3px;
+    }
+    .p-cover__line {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.57rem;
+      color: rgba(255,255,255,0.72);
+      letter-spacing: 0.02em;
+    }
+    .p-cover__line::before {
+      content: '• ';
+      color: rgba(255,255,255,0.35);
+    }
+    .p-cover__issue-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #2C3E2D;
+      padding: 4px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .p-cover__issue-txt {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
     }
 
-    .pt__num {
-      font-family: Georgia, serif;
-      font-size: 1rem;
-      color: rgba(44,62,45,0.22);
+    /* ════════════════════════════════════════════════
+       TABLE OF CONTENTS
+    ════════════════════════════════════════════════ */
+    .p-toc {
+      background: #faf7f2 !important;
+      padding: 28px 26px !important;
+      display: flex;
+      flex-direction: column;
+    }
+    .p-toc__header {
+      border-bottom: 2px solid #2C3E2D;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .p-toc__label {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.52rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: #2C3E2D;
+    }
+    .p-toc__issue {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      color: rgba(44,62,45,0.35);
+      letter-spacing: 0.06em;
+    }
+
+    .p-toc__items { flex: 1; }
+
+    .p-toc__item {
+      display: flex;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(44,62,45,0.08);
+      align-items: flex-start;
+    }
+    .p-toc__num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.05rem;
+      color: rgba(44,62,45,0.18);
       min-width: 20px;
-      line-height: 1.3;
+      line-height: 1.2;
       flex-shrink: 0;
     }
-
-    .pt__art-title {
-      font-family: Georgia, serif;
-      font-size: 0.76rem;
+    .p-toc__art-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.78rem;
       color: #1a1a1a;
-      line-height: 1.35;
+      line-height: 1.3;
       display: block;
     }
-
-    .pt__art-date {
-      font-size: 0.57rem;
+    .p-toc__art-date {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.53rem;
       color: rgba(44,62,45,0.38);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       display: block;
       margin-top: 2px;
     }
 
-    .pt__footer {
+    .p-toc__foot {
       margin-top: auto;
-      text-align: center;
       padding-top: 12px;
-    }
-
-    .pt__brand {
-      font-size: 0.54rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(44,62,45,0.28);
-    }
-
-    .pt__logo {
-      width: 28px;
-      opacity: 0.18;
-      display: block;
-      margin: 5px auto 0;
-    }
-
-    /* ── ARTICLE LEFT PAGE ──────────────────────── */
-    .pal {
-      padding: 0 !important;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .p-toc__foot-brand {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.25);
+    }
+    .p-toc__foot-logo {
+      width: 26px;
+      opacity: 0.14;
     }
 
-    .pal__img {
+    /* ════════════════════════════════════════════════
+       ARTICLE SPREAD — LEFT (full-bleed image)
+    ════════════════════════════════════════════════ */
+    .p-left {
+      padding: 0 !important;
+      background: #1a1a1a !important;
+    }
+    .p-left__bg {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      flex: 1;
+      height: 100%;
       object-fit: cover;
       display: block;
-      min-height: 0;
+    }
+    .p-left__grad {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.85) 0%,
+        rgba(0,0,0,0.3) 45%,
+        rgba(0,0,0,0.05) 100%
+      );
+    }
+    .p-left__content {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 22px 22px;
+    }
+    .p-left__cat {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.52rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      margin: 0 0 6px;
+    }
+    .p-left__rule {
+      width: 26px;
+      height: 2px;
+      background: rgba(255,255,255,0.4);
+      margin-bottom: 8px;
+    }
+    .p-left__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1rem, 2.5vw, 1.45rem);
+      font-weight: 700;
+      font-style: italic;
+      color: #ffffff;
+      line-height: 1.2;
+      margin: 0;
+    }
+    .p-left__pgnum {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.16em;
+      color: rgba(255,255,255,0.35);
+      margin-top: 8px;
     }
 
-    .pal__placeholder {
-      width: 100%;
-      flex: 1;
+    /* No-image placeholder */
+    .p-left__placeholder {
+      position: absolute;
+      inset: 0;
       background: #2C3E2D;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 0;
+    }
+    .p-left__placeholder img {
+      width: 52px;
+      opacity: 0.15;
     }
 
-    .pal__placeholder img {
-      width: 42px;
-      opacity: 0.18;
-    }
-
-    .pal__bottom {
-      padding: 18px 22px;
-      background: #f9f5ef;
-      border-top: 3px solid #2C3E2D;
-    }
-
-    .pal__eye {
-      font-size: 0.55rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: #2C3E2D;
-      margin: 0 0 5px;
-    }
-
-    .pal__title {
-      font-family: Georgia, serif;
-      font-size: clamp(0.9rem, 1.8vw, 1.15rem);
-      color: #1a1a1a;
-      line-height: 1.3;
-      margin: 0;
-    }
-
-    /* ── ARTICLE RIGHT PAGE ─────────────────────── */
-    .par {
+    /* ════════════════════════════════════════════════
+       ARTICLE SPREAD — RIGHT (editorial text)
+    ════════════════════════════════════════════════ */
+    .p-right {
+      background: #faf7f2 !important;
+      padding: 28px 24px !important;
       display: flex;
       flex-direction: column;
     }
-
-    .par__rule {
-      width: 26px;
-      height: 2px;
-      background: #2C3E2D;
-      margin-bottom: 11px;
+    .p-right__top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 2px solid #2C3E2D;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
     }
-
-    .par__date {
-      font-size: 0.57rem;
-      letter-spacing: 0.16em;
+    .p-right__cat {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
-      color: rgba(44,62,45,0.4);
+      color: #2C3E2D;
+    }
+    .p-right__date {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5rem;
+      color: rgba(44,62,45,0.38);
+      letter-spacing: 0.06em;
+    }
+    .p-right__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(0.92rem, 2vw, 1.2rem);
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.25;
       margin: 0 0 12px;
     }
-
-    .par__body {
-      font-size: 0.78rem;
-      line-height: 1.78;
+    .p-right__body {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.72rem;
+      line-height: 1.85;
       color: #2a2a2a;
-      margin: 0 0 14px;
       flex: 1;
       overflow: hidden;
       display: -webkit-box;
-      -webkit-line-clamp: 10;
+      -webkit-line-clamp: 9;
       -webkit-box-orient: vertical;
+      margin: 0 0 14px;
     }
-
-    .par__link {
+    .p-right__pull {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+      color: #2C3E2D;
+      line-height: 1.5;
+      border-left: 3px solid #2C3E2D;
+      padding: 6px 12px;
+      margin: 0 0 14px;
+    }
+    .p-right__foot {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid rgba(44,62,45,0.1);
+    }
+    .p-right__link {
+      font-family: 'Raleway', sans-serif;
       display: inline-block;
-      font-size: 0.6rem;
-      letter-spacing: 0.16em;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: #2C3E2D;
       text-decoration: none;
       border-bottom: 1px solid currentColor;
-      padding-bottom: 2px;
-      width: fit-content;
+      padding-bottom: 1px;
+    }
+    .p-right__pgnum {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.75rem;
+      color: rgba(44,62,45,0.22);
     }
 
-    .par__pgnum {
-      margin-top: auto;
-      padding-top: 10px;
-      text-align: right;
-      font-size: 0.62rem;
-      color: rgba(44,62,45,0.25);
-      font-family: Georgia, serif;
+    /* ════════════════════════════════════════════════
+       BACK COVER
+    ════════════════════════════════════════════════ */
+    .p-back {
+      padding: 0 !important;
+      background: #2C3E2D !important;
     }
-
-    /* ── BACK COVER ─────────────────────────────── */
-    .pb {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      text-align: center !important;
-      padding: 38px 30px !important;
-    }
-
-    .pb__logo {
-      width: 56px;
-      opacity: 0.82;
-      margin-bottom: 16px;
-    }
-
-    .pb__title {
-      font-family: Georgia, serif;
-      font-size: 1.15rem;
-      color: #f5f0e8;
-      margin: 0 0 7px;
-    }
-
-    .pb__sub {
-      font-size: 0.72rem;
-      color: rgba(245,240,232,0.55);
-      line-height: 1.65;
-      margin: 0 0 20px;
-      max-width: 270px;
-    }
-
-    .pb__cta {
-      display: inline-block;
-      padding: 8px 20px;
-      border: 1px solid rgba(245,240,232,0.45);
-      border-radius: 3px;
-      color: #f5f0e8;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-
-    .pb__rule {
-      width: 28px;
-      height: 1px;
-      background: rgba(245,240,232,0.2);
-      margin: 18px auto;
-    }
-
-    .pb__handle {
-      font-size: 0.57rem;
-      letter-spacing: 0.14em;
-      color: rgba(245,240,232,0.3);
-    }
-
-    /* ── CONTROLS ───────────────────────────────── */
-    .mag-controls {
+    .p-back__inner {
+      position: absolute;
+      inset: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 14px;
-      margin-top: 20px;
-      padding: 0 16px;
-    }
-
-    .mag-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.16);
-      color: rgba(245,240,232,0.6);
-      padding: 8px 17px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 0.72rem;
-      letter-spacing: 0.05em;
-      transition: border-color 0.18s, color 0.18s;
-    }
-
-    .mag-btn:hover {
-      border-color: rgba(255,255,255,0.45);
-      color: #f5f0e8;
-    }
-
-    .mag-counter {
-      font-size: 0.68rem;
-      color: rgba(245,240,232,0.32);
-      min-width: 115px;
+      justify-content: center;
       text-align: center;
-      letter-spacing: 0.07em;
+      padding: 36px 28px;
     }
-
-    .mag-hint {
-      font-size: 0.6rem;
-      color: rgba(245,240,232,0.22);
-      letter-spacing: 0.1em;
-      text-align: center;
-      margin-top: 10px;
+    .p-back__logo {
+      width: 54px;
+      opacity: 0.8;
+      margin-bottom: 20px;
     }
-
-    /* ══ SUBSCRIBE STRIP (below viewer) ══════════ */
-    .mag-subscribe {
-      background: #2C3E2D;
-      padding: 64px 24px;
-      text-align: center;
+    .p-back__mag {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.45);
+      margin: 0 0 6px;
     }
-
-    .mag-subscribe__title {
-      font-family: var(--font-serif, Georgia, serif);
-      font-size: clamp(1.5rem, 3vw, 2rem);
+    .p-back__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
       font-weight: 400;
-      color: #fff;
+      color: #f5f0e8;
       margin: 0 0 10px;
     }
-
-    .mag-subscribe__sub {
-      font-size: 0.9rem;
-      color: rgba(255,255,255,0.58);
-      margin: 0 0 30px;
+    .p-back__sub {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.7rem;
+      color: rgba(245,240,232,0.5);
+      line-height: 1.65;
+      margin: 0 0 24px;
+      max-width: 260px;
+    }
+    .p-back__cta {
+      font-family: 'Raleway', sans-serif;
+      display: inline-block;
+      padding: 9px 22px;
+      border: 1px solid rgba(245,240,232,0.4);
+      border-radius: 2px;
+      color: #f5f0e8;
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .p-back__cta:hover { border-color: rgba(245,240,232,0.85); }
+    .p-back__divider {
+      width: 28px;
+      height: 1px;
+      background: rgba(245,240,232,0.18);
+      margin: 20px auto;
+    }
+    .p-back__handle {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.56rem;
+      letter-spacing: 0.16em;
+      color: rgba(245,240,232,0.28);
+    }
+    /* green texture bar at bottom of back cover */
+    .p-back__bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 28px;
+      background: rgba(0,0,0,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .p-back__bar-txt {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.48rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
     }
 
+    /* ════════════════════════════════════════════════
+       SUBSCRIBE STRIP (below viewer)
+    ════════════════════════════════════════════════ */
+    .mag-subscribe {
+      background: #2C3E2D;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .mag-subscribe__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 400;
+      color: #fff;
+      margin: 0 0 8px;
+    }
+    .mag-subscribe__sub {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.55);
+      margin: 0 0 28px;
+    }
     .mag-subscribe__form {
       display: flex;
       gap: 10px;
@@ -455,40 +628,37 @@
       flex-wrap: wrap;
       justify-content: center;
     }
-
     .mag-subscribe__input {
       flex: 1;
       min-width: 210px;
-      padding: 12px 15px;
+      padding: 12px 14px;
       border: none;
-      border-radius: 3px;
-      font-size: 0.92rem;
-      font-family: sans-serif;
+      border-radius: 2px;
+      font-size: 0.9rem;
+      font-family: 'Raleway', sans-serif;
       outline: none;
     }
-
     .mag-subscribe__btn {
       padding: 12px 22px;
       background: #8B4513;
       color: #fff;
       border: none;
-      border-radius: 3px;
-      font-family: sans-serif;
-      font-size: 0.78rem;
+      border-radius: 2px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       cursor: pointer;
       transition: opacity 0.2s;
     }
-
-    .mag-subscribe__btn:hover { opacity: 0.85; }
-
+    .mag-subscribe__btn:hover { opacity: 0.84; }
     .mag-subscribe__msg {
       margin-top: 12px;
+      font-family: 'Raleway', sans-serif;
       font-size: 0.82rem;
       min-height: 20px;
-      color: rgba(255,255,255,0.75);
+      color: rgba(255,255,255,0.7);
     }
 
   </style>
@@ -511,7 +681,6 @@
       <span></span><span></span><span></span>
     </button>
   </nav>
-
   <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
     <a class="nav__mobile-link" href="index.html">Home</a>
     <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
@@ -520,17 +689,17 @@
     <a class="nav__mobile-link" href="offerings.html">Order Now</a>
   </div>
 
-  <!-- ═══════════════ MAGAZINE VIEWER ═══════════════ -->
-  <section class="mag-viewer" aria-label="Best Medicines Magazine">
+  <!-- ═══════════ MAGAZINE VIEWER ═══════════ -->
+  <section class="mag-shell" aria-label="Best Medicines Magazine">
 
-    <div class="mag-viewer__header">
-      <p class="mag-viewer__eyebrow">Heart of Texas Organics</p>
-      <h1 class="mag-viewer__title">Best Medicines</h1>
-      <p class="mag-viewer__sub">Stories, recipes &amp; farm wisdom</p>
+    <div class="mag-masthead">
+      <p class="mag-masthead__eye">Heart of Texas Organics</p>
+      <h1 class="mag-masthead__title">Best Medicines</h1>
+      <p class="mag-masthead__sub">Stories, recipes &amp; farm wisdom</p>
     </div>
 
     <div id="flip-book-wrap">
-      <p class="mag-load-msg" id="mag-loading">Loading magazine&hellip;</p>
+      <p class="mag-loading" id="mag-loading">Loading magazine&hellip;</p>
       <div id="flip-book" style="display:none;"></div>
     </div>
 
@@ -539,12 +708,13 @@
       <span class="mag-counter" id="mag-counter"></span>
       <button class="mag-btn" id="mag-next" aria-label="Next page">Next &#8594;</button>
     </div>
-
-    <p class="mag-hint" id="mag-hint" style="display:none;">Click page edges or drag to turn &bull; Swipe on mobile</p>
+    <p class="mag-hint" id="mag-hint" style="display:none;">
+      Click page edges or drag to flip &bull; Swipe on mobile
+    </p>
 
   </section>
 
-  <!-- ═══════════════ SUBSCRIBE ═══════════════ -->
+  <!-- SUBSCRIBE -->
   <section class="mag-subscribe" aria-label="Subscribe to Best Medicines">
     <div class="container">
       <h2 class="mag-subscribe__title">Get Best Medicines in your inbox.</h2>
@@ -609,211 +779,325 @@
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/page-flip@1.0.0/dist/js/page-flip.browser.js"></script>
-
   <script>
-    /* ══════════════════════════════════════════════════
-       BEST MEDICINES — MAGAZINE BUILDER
-    ══════════════════════════════════════════════════ */
+    /* ════════════════════════════════════════════════
+       BEST MEDICINES — EDITORIAL MAGAZINE BUILDER
+    ════════════════════════════════════════════════ */
     (async function buildMagazine() {
 
-      const flipBookEl = document.getElementById('flip-book');
-      const loadingEl  = document.getElementById('mag-loading');
-      const controlsEl = document.getElementById('mag-controls');
-      const counterEl  = document.getElementById('mag-counter');
-      const hintEl     = document.getElementById('mag-hint');
+      var flipEl     = document.getElementById('flip-book');
+      var loadingEl  = document.getElementById('mag-loading');
+      var controlsEl = document.getElementById('mag-controls');
+      var counterEl  = document.getElementById('mag-counter');
+      var hintEl     = document.getElementById('mag-hint');
 
-      /* ── 1. Fetch Substack articles ──────────────── */
-      let articles = [];
+      /* Cover fallback images (cycle through farm photos if article has none) */
+      var farmImages = [
+        'images/crop-rows.webp',
+        'images/backyard-garden.webp',
+        'images/farm-scene.jpg',
+        'images/cinnamon-rolls.jpg',
+        'images/japanese-milk-loaf.webp',
+        'images/eggs.webp',
+        'images/butter.webp',
+      ];
+
+      /* ── Fetch Substack articles ──────────────── */
+      var articles = [];
       try {
-        const res  = await fetch('/substack-feed');
-        const data = await res.json();
+        var res  = await fetch('/substack-feed');
+        var data = await res.json();
         articles = (data.articles || []).slice(0, 8);
-      } catch (_) {
-        /* continue — cover + back cover still render */
-      }
+      } catch (_) { /* show cover + back cover only */ }
 
-      loadingEl.style.display = 'none';
-      flipBookEl.style.display = 'block';
+      loadingEl.style.display  = 'none';
+      flipEl.style.display     = 'block';
 
-      /* ── 2. DOM helpers ──────────────────────────── */
+      /* ── DOM helper ───────────────────────────── */
       function mk(tag, cls) {
-        const n = document.createElement(tag);
+        var n = document.createElement(tag);
         if (cls) n.className = cls;
         return n;
       }
 
-      /* ── 3. COVER page ───────────────────────────── */
-      const now        = new Date();
-      const issueLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      const heroSrc    = (articles.length && articles[0].image)
-                           ? articles[0].image
-                           : 'images/cinnamon-rolls.jpg';
+      /* Issue label */
+      var now   = new Date();
+      var issue = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-      const cover  = mk('div', 'page page--green');
-      const coverI = mk('div', 'page__inner pc');
+      /* ════════════════════════════════════════════
+         COVER PAGE
+      ════════════════════════════════════════════ */
+      var cover = mk('div', 'page p-cover');
 
-      const cLogo  = mk('img', 'pc__logo');
-      cLogo.src = 'images/logo.png';
-      cLogo.alt = 'Heart of Texas Organics';
+      /* background photo */
+      var coverBg = mk('img', 'p-cover__bg');
+      coverBg.src = (articles.length && articles[0].image)
+                      ? articles[0].image
+                      : 'images/crop-rows.webp';
+      coverBg.alt = 'Cover';
+      cover.appendChild(coverBg);
 
-      const cEye   = mk('p',   'pc__eye');   cEye.textContent   = 'Heart of Texas Organics presents';
-      const cTitle = mk('h2',  'pc__title'); cTitle.textContent = 'Best Medicines';
-      const cSub   = mk('p',   'pc__sub');   cSub.textContent   = 'Stories, recipes & farm wisdom';
-      const cRule  = mk('div', 'pc__rule');
+      /* gradients */
+      cover.appendChild(mk('div', 'p-cover__grad-top'));
+      cover.appendChild(mk('div', 'p-cover__grad-bot'));
 
-      const cImg   = mk('img', 'pc__img');
-      cImg.src = heroSrc;
-      cImg.alt = 'Cover';
+      /* top header */
+      var cTop  = mk('div', 'p-cover__top');
+      var cRow  = mk('div', 'p-cover__brand-row');
+      var cBLg  = mk('img', 'p-cover__brand-logo');
+      cBLg.src  = 'images/logo.png'; cBLg.alt = '';
+      var cBNm  = mk('span', 'p-cover__brand-name');
+      cBNm.textContent = 'Heart of Texas Organics';
+      cRow.appendChild(cBLg); cRow.appendChild(cBNm);
+      cTop.appendChild(cRow);
 
-      const cIssue = mk('p', 'pc__issue');
-      cIssue.textContent = issueLabel + ' Issue';
+      var cMast = mk('h2', 'p-cover__masthead');
+      cMast.textContent = 'Best\nMedicines';
+      cMast.style.whiteSpace = 'pre-line';
+      cTop.appendChild(cMast);
 
-      [cLogo, cEye, cTitle, cSub, cRule, cImg, cIssue].forEach(c => coverI.appendChild(c));
-      cover.appendChild(coverI);
-      flipBookEl.appendChild(cover);
+      var cTag = mk('p', 'p-cover__tagline');
+      cTag.textContent = 'Stories · Recipes · Farm Wisdom';
+      cTop.appendChild(cTag);
+      cover.appendChild(cTop);
 
-      /* ── 4. TABLE OF CONTENTS page ───────────────── */
-      const toc  = mk('div', 'page');
-      const tocI = mk('div', 'page__inner');
+      /* bottom cover lines */
+      var cBot = mk('div', 'p-cover__bottom');
+      cBot.style.paddingBottom = '34px'; /* make room for issue bar */
 
-      const tocH = mk('h2', 'pt__title');
-      tocH.textContent = 'In This Issue';
-      tocI.appendChild(tocH);
+      if (articles.length) {
+        /* featured article headline */
+        var cFeat = mk('div', 'p-cover__feature');
+        var cFEye = mk('p',  'p-cover__feature-eye');
+        cFEye.textContent = 'In This Issue';
+        var cFHed = mk('p',  'p-cover__feature-hed');
+        cFHed.textContent = articles[0].title;
+        cFeat.appendChild(cFEye); cFeat.appendChild(cFHed);
+        cBot.appendChild(cFeat);
 
+        if (articles.length > 1) {
+          cBot.appendChild(mk('div', 'p-cover__rule'));
+          var cLines = mk('ul', 'p-cover__lines');
+          articles.slice(1, 5).forEach(function (a) {
+            var li = mk('li', 'p-cover__line');
+            li.textContent = a.title;
+            cLines.appendChild(li);
+          });
+          cBot.appendChild(cLines);
+        }
+      }
+      cover.appendChild(cBot);
+
+      /* issue bar */
+      var cBar = mk('div', 'p-cover__issue-bar');
+      var cBarL = mk('span', 'p-cover__issue-txt');
+      cBarL.textContent = issue;
+      var cBarR = mk('span', 'p-cover__issue-txt');
+      cBarR.textContent = 'heartoftxorganics.com';
+      cBar.appendChild(cBarL); cBar.appendChild(cBarR);
+      cover.appendChild(cBar);
+
+      flipEl.appendChild(cover);
+
+      /* ════════════════════════════════════════════
+         TABLE OF CONTENTS
+      ════════════════════════════════════════════ */
+      var toc  = mk('div', 'page p-toc');
+      var tHdr = mk('div', 'p-toc__header');
+      var tLbl = mk('span', 'p-toc__label');
+      tLbl.textContent = 'In This Issue';
+      var tIss = mk('span', 'p-toc__issue');
+      tIss.textContent = issue;
+      tHdr.appendChild(tLbl); tHdr.appendChild(tIss);
+      toc.appendChild(tHdr);
+
+      var tItems = mk('div', 'p-toc__items');
       articles.forEach(function (a, i) {
-        const row  = mk('div', 'pt__item');
-        const num  = mk('span', 'pt__num');  num.textContent  = String(i + 1);
-        const info = mk('div');
-        const at   = mk('span', 'pt__art-title'); at.textContent = a.title;
-        const ad   = mk('span', 'pt__art-date');  ad.textContent = a.date || '';
-        info.appendChild(at);
-        info.appendChild(ad);
-        row.appendChild(num);
-        row.appendChild(info);
-        tocI.appendChild(row);
+        var row  = mk('div', 'p-toc__item');
+        var num  = mk('span', 'p-toc__num');
+        num.textContent = String(i + 1);
+        var info = mk('div');
+        var at   = mk('span', 'p-toc__art-title');
+        at.textContent = a.title;
+        var ad   = mk('span', 'p-toc__art-date');
+        ad.textContent = a.date || '';
+        info.appendChild(at); info.appendChild(ad);
+        row.appendChild(num); row.appendChild(info);
+        tItems.appendChild(row);
       });
+      toc.appendChild(tItems);
 
-      const tocFoot  = mk('div', 'pt__footer');
-      const tocBrand = mk('p',   'pt__brand');
-      tocBrand.textContent = 'Heart of Texas Organics';
-      const tocLogo  = mk('img', 'pt__logo');
-      tocLogo.src = 'images/logo.png';
-      tocLogo.alt = '';
-      tocFoot.appendChild(tocBrand);
-      tocFoot.appendChild(tocLogo);
-      tocI.appendChild(tocFoot);
+      var tFoot  = mk('div', 'p-toc__foot');
+      var tBrand = mk('span', 'p-toc__foot-brand');
+      tBrand.textContent = 'Best Medicines Magazine';
+      var tLogo  = mk('img', 'p-toc__foot-logo');
+      tLogo.src = 'images/logo.png'; tLogo.alt = '';
+      tFoot.appendChild(tBrand); tFoot.appendChild(tLogo);
+      toc.appendChild(tFoot);
 
-      toc.appendChild(tocI);
-      flipBookEl.appendChild(toc);
+      flipEl.appendChild(toc);
 
-      /* ── 5. ARTICLE pages (2 per article) ────────── */
+      /* ════════════════════════════════════════════
+         ARTICLE SPREADS  (2 pages per article)
+      ════════════════════════════════════════════ */
       articles.forEach(function (a, i) {
+        var imgSrc = a.image || farmImages[i % farmImages.length];
 
-        /* Left page — image + headline */
-        const lp = mk('div', 'page pal');
+        /* ── LEFT PAGE (full-bleed image) ── */
+        var lp  = mk('div', 'page p-left');
 
         if (a.image) {
-          const img = mk('img', 'pal__img');
-          img.src  = a.image;
-          img.alt  = a.title;
-          img.loading = 'lazy';
-          img.onerror = function () { this.style.display = 'none'; };
-          lp.appendChild(img);
+          var lBg = mk('img', 'p-left__bg');
+          lBg.src = a.image; lBg.alt = a.title; lBg.loading = 'lazy';
+          lBg.onerror = function () {
+            this.remove();
+            var ph = mk('div', 'p-left__placeholder');
+            var phLg = mk('img'); phLg.src = 'images/logo.png'; phLg.alt = '';
+            ph.appendChild(phLg);
+            lp.insertBefore(ph, lp.firstChild);
+          };
+          lp.appendChild(lBg);
         } else {
-          const ph   = mk('div', 'pal__placeholder');
-          const phLg = mk('img');
-          phLg.src = 'images/logo.png';
-          phLg.alt = '';
-          ph.appendChild(phLg);
-          lp.appendChild(ph);
+          var lPh = mk('div', 'p-left__placeholder');
+          var lPhLg = mk('img'); lPhLg.src = 'images/logo.png'; lPhLg.alt = '';
+          lPh.appendChild(lPhLg);
+          lp.appendChild(lPh);
         }
 
-        const lb      = mk('div', 'pal__bottom');
-        const lbEye   = mk('p',   'pal__eye');   lbEye.textContent   = 'Best Medicines';
-        const lbTitle = mk('h3',  'pal__title'); lbTitle.textContent = a.title;
-        lb.appendChild(lbEye);
-        lb.appendChild(lbTitle);
-        lp.appendChild(lb);
-        flipBookEl.appendChild(lp);
+        lp.appendChild(mk('div', 'p-left__grad'));
 
-        /* Right page — text excerpt + read-more */
-        const rp  = mk('div', 'page');
-        const ri  = mk('div', 'page__inner par');
+        var lCont  = mk('div', 'p-left__content');
+        var lCat   = mk('p',   'p-left__cat');
+        lCat.textContent = 'Best Medicines';
+        var lRule  = mk('div', 'p-left__rule');
+        var lTitle = mk('h3',  'p-left__title');
+        lTitle.textContent = a.title;
+        var lPgNum = mk('p', 'p-left__pgnum');
+        lPgNum.textContent = 'Page ' + (i * 2 + 3);
+        lCont.appendChild(lCat);
+        lCont.appendChild(lRule);
+        lCont.appendChild(lTitle);
+        lCont.appendChild(lPgNum);
+        lp.appendChild(lCont);
+        flipEl.appendChild(lp);
 
-        const rule = mk('div', 'par__rule');
-        const date = mk('p',   'par__date');
-        date.textContent = a.date || '';
-        const body = mk('p', 'par__body');
-        body.textContent = a.description || 'Read the full article on Best Medicines Magazine.';
+        /* ── RIGHT PAGE (editorial text) ── */
+        var rp    = mk('div', 'page p-right');
 
-        const link = mk('a', 'par__link');
-        link.href   = a.link;
-        link.target = '_blank';
-        link.rel    = 'noopener noreferrer';
-        link.textContent = 'Continue reading →';
+        var rTop  = mk('div', 'p-right__top');
+        var rCat  = mk('span', 'p-right__cat');
+        rCat.textContent = 'Best Medicines';
+        var rDate = mk('span', 'p-right__date');
+        rDate.textContent = a.date || '';
+        rTop.appendChild(rCat); rTop.appendChild(rDate);
+        rp.appendChild(rTop);
 
-        const pgNum = mk('p', 'par__pgnum');
-        pgNum.textContent = String(i + 3);
+        var rTitle = mk('h3', 'p-right__title');
+        rTitle.textContent = a.title;
+        rp.appendChild(rTitle);
 
-        [rule, date, body, link, pgNum].forEach(c => ri.appendChild(c));
-        rp.appendChild(ri);
-        flipBookEl.appendChild(rp);
+        /* Pull quote from excerpt (first sentence) */
+        var fullText = a.description || '';
+        var firstSentEnd = fullText.search(/[.!?]\s/);
+        var pullText = firstSentEnd > 0
+          ? fullText.slice(0, firstSentEnd + 1)
+          : fullText.slice(0, 100);
+
+        if (pullText) {
+          var rPull = mk('blockquote', 'p-right__pull');
+          rPull.textContent = '“' + pullText + '”';
+          rp.appendChild(rPull);
+        }
+
+        var rBody = mk('p', 'p-right__body');
+        rBody.textContent = fullText;
+        rp.appendChild(rBody);
+
+        var rFoot   = mk('div', 'p-right__foot');
+        var rLink   = mk('a',   'p-right__link');
+        rLink.href   = a.link;
+        rLink.target = '_blank';
+        rLink.rel    = 'noopener noreferrer';
+        rLink.textContent = 'Read full article →';
+        var rPgNum  = mk('span', 'p-right__pgnum');
+        rPgNum.textContent = String(i * 2 + 4);
+        rFoot.appendChild(rLink); rFoot.appendChild(rPgNum);
+        rp.appendChild(rFoot);
+
+        flipEl.appendChild(rp);
       });
 
-      /* ── 6. BACK COVER ───────────────────────────── */
-      const back  = mk('div', 'page page--green');
-      const backI = mk('div', 'page__inner pb');
+      /* ════════════════════════════════════════════
+         BACK COVER
+      ════════════════════════════════════════════ */
+      var back  = mk('div', 'page p-back');
+      var backI = mk('div', 'p-back__inner');
 
-      const bLogo = mk('img', 'pb__logo');
-      bLogo.src = 'images/logo.png';
-      bLogo.alt = 'Heart of Texas Organics';
+      var bLg = mk('img', 'p-back__logo');
+      bLg.src = 'images/logo.png'; bLg.alt = 'Heart of Texas Organics';
+      backI.appendChild(bLg);
 
-      const bTitle = mk('h3', 'pb__title');
-      bTitle.textContent = 'Subscribe to Best Medicines';
+      var bMag = mk('p', 'p-back__mag');
+      bMag.textContent = 'Best Medicines';
+      backI.appendChild(bMag);
 
-      const bSub = mk('p', 'pb__sub');
-      bSub.textContent = 'Get stories, recipes, and farm wisdom delivered to your inbox. Free to subscribe.';
+      var bTit = mk('h3', 'p-back__title');
+      bTit.textContent = 'Subscribe & Stay Nourished';
+      backI.appendChild(bTit);
 
-      const bCta  = mk('a', 'pb__cta');
+      var bSub = mk('p', 'p-back__sub');
+      bSub.textContent = 'Stories, recipes, and farm wisdom delivered free to your inbox whenever we have something real to say.';
+      backI.appendChild(bSub);
+
+      var bCta = mk('a', 'p-back__cta');
       bCta.href   = 'https://bestmedicinesmagazine.substack.com';
-      bCta.target = '_blank';
-      bCta.rel    = 'noopener noreferrer';
+      bCta.target = '_blank'; bCta.rel = 'noopener noreferrer';
       bCta.textContent = 'Subscribe on Substack';
+      backI.appendChild(bCta);
 
-      const bRule   = mk('div', 'pb__rule');
-      const bHandle = mk('p',   'pb__handle');
-      bHandle.textContent = '@heartoftxorganics';
+      backI.appendChild(mk('div', 'p-back__divider'));
 
-      [bLogo, bTitle, bSub, bCta, bRule, bHandle].forEach(c => backI.appendChild(c));
+      var bHdl = mk('p', 'p-back__handle');
+      bHdl.textContent = '@heartoftxorganics';
+      backI.appendChild(bHdl);
+
       back.appendChild(backI);
-      flipBookEl.appendChild(back);
 
-      /* ── 7. Initialize StPageFlip ─────────────────── */
-      const pageFlip = new St.PageFlip(flipBookEl, {
-        width:               500,
-        height:              670,
+      var bBar = mk('div', 'p-back__bar');
+      var bBarT = mk('span', 'p-back__bar-txt');
+      bBarT.textContent = 'Heart of Texas Organics · Real Food, Real Land';
+      bBar.appendChild(bBarT);
+      back.appendChild(bBar);
+
+      flipEl.appendChild(back);
+
+      /* ════════════════════════════════════════════
+         INIT StPageFlip
+      ════════════════════════════════════════════ */
+      var pageFlip = new St.PageFlip(flipEl, {
+        width:               490,
+        height:              680,
         size:                'stretch',
-        minWidth:            255,
-        maxWidth:            800,
-        minHeight:           340,
-        maxHeight:           1070,
+        minWidth:            260,
+        maxWidth:            820,
+        minHeight:           360,
+        maxHeight:           1100,
         drawShadow:          true,
-        flippingTime:        720,
+        flippingTime:        700,
         usePortrait:         true,
         autoSize:            true,
-        maxShadowOpacity:    0.38,
+        maxShadowOpacity:    0.45,
         showCover:           true,
         mobileScrollSupport: false,
         clickEventForward:   true,
       });
 
-      pageFlip.loadFromHTML(flipBookEl.querySelectorAll('.page'));
+      pageFlip.loadFromHTML(flipEl.querySelectorAll('.page'));
 
-      /* ── 8. Controls ──────────────────────────────── */
       function updateCounter() {
-        var curr  = pageFlip.getCurrentPageIndex();
-        var total = pageFlip.getPageCount();
-        counterEl.textContent = 'Page ' + (curr + 1) + ' of ' + total;
+        var c = pageFlip.getCurrentPageIndex();
+        var t = pageFlip.getPageCount();
+        counterEl.textContent = 'Page ' + (c + 1) + ' of ' + t;
       }
 
       pageFlip.on('flip', updateCounter);
@@ -826,30 +1110,27 @@
 
     })();
 
-    /* ══════════════════════════════════════════════════
+    /* ════════════════════════════════════════════════
        SUBSCRIBE FORM
-    ══════════════════════════════════════════════════ */
+    ════════════════════════════════════════════════ */
     document.getElementById('mag-form').addEventListener('submit', async function (e) {
       e.preventDefault();
-      const email = document.getElementById('mag-email').value.trim();
-      const msg   = document.getElementById('mag-msg');
-      const btn   = this.querySelector('button');
+      var email = document.getElementById('mag-email').value.trim();
+      var msg   = document.getElementById('mag-msg');
+      var btn   = this.querySelector('button');
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         msg.textContent = 'Please enter a valid email address.';
         return;
       }
-
       btn.textContent = 'Subscribing…';
       btn.disabled = true;
-
       try {
         await fetch('/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name:    'Magazine Subscriber',
-            email,
+            name: 'Magazine Subscriber', email: email,
             subject: 'other',
             message: 'New Best Medicines magazine subscription request.',
           }),

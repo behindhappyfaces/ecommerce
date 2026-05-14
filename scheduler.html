@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Consultation | Heart of Texas Organics</title>
+  <meta name="description" content="Schedule a 1-on-1 consultation with Heart of Texas Organics." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
+  <script src="https://assets.calendly.com/assets/external/widget.js" defer></script>
+  <style>
+    :root {
+      --s-olive:      #556B2F;
+      --s-olive-dark: #3E5022;
+      --s-cream:      #F5F5DC;
+      --s-cream-dark: #EDECC8;
+      --s-text:       #2A2A2A;
+      --s-muted:      #6B6B5E;
+      --s-border:     #D4D4B8;
+    }
+
+    .scheduler-section {
+      min-height: calc(100vh - 120px);
+      background: var(--s-cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+    }
+
+    .auth-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 52px 44px;
+      box-shadow: 0 4px 32px rgba(85,107,47,0.12);
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .auth-card__lock {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 24px;
+      background: var(--s-cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .auth-card__title {
+      font-family: Georgia, serif;
+      font-size: 1.9rem;
+      font-weight: normal;
+      color: var(--s-olive);
+      margin: 0 0 10px;
+      line-height: 1.25;
+    }
+
+    .auth-card__sub {
+      font-size: 0.92rem;
+      color: var(--s-muted);
+      line-height: 1.65;
+      margin: 0 0 32px;
+    }
+
+    .auth-card__label {
+      display: block;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--s-muted);
+      margin-bottom: 8px;
+    }
+
+    .auth-card__input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--s-border);
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: sans-serif;
+      color: var(--s-text);
+      background: var(--s-cream);
+      outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .auth-card__input:focus {
+      border-color: var(--s-olive);
+      background: #fff;
+    }
+
+    .auth-card__btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px 20px;
+      background: var(--s-olive);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-family: sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .auth-card__btn:hover { background: var(--s-olive-dark); }
+
+    .auth-card__error {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #B94040;
+      min-height: 20px;
+    }
+
+    .calendly-wrap {
+      width: 100%;
+      max-width: 920px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 32px rgba(85,107,47,0.12);
+      overflow: hidden;
+    }
+
+    .calendly-wrap__header {
+      background: var(--s-olive);
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .calendly-wrap__title {
+      font-family: Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: normal;
+      color: #fff;
+      margin: 0;
+    }
+
+    .calendly-wrap__logout {
+      background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.85);
+      padding: 7px 16px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .calendly-wrap__logout:hover {
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .calendly-inline-widget {
+      min-width: 320px;
+      height: 700px;
+    }
+
+    @media (max-width: 600px) {
+      .auth-card { padding: 36px 20px; }
+      .auth-card__title { font-size: 1.6rem; }
+      .calendly-inline-widget { height: 900px; }
+      .calendly-wrap__header { padding: 18px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li><a class="nav__link" href="offerings.html">Offerings</a></li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <main class="scheduler-section" id="scheduler-main" aria-label="Consultation scheduler"></main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, real land, real people.<br>Grown and made without shortcuts.</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Navigate</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="index.html">Home</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Offerings</a></li>
+            <li><a class="footer__col-link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+            <li><a class="footer__col-link" href="about-heart-of-texas.html">Our Story</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Connect</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftexasorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftexasorganics" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // ─────────────────────────────────────────────────────────────
+    // CONFIGURATION — change these two values, nothing else needed
+    // ─────────────────────────────────────────────────────────────
+    const SCHEDULER_PASSWORD = 'YOUR_PASSWORD_HERE';
+    const CALENDLY_URL       = 'https://calendly.com/YOUR_USERNAME/consultation';
+    // ─────────────────────────────────────────────────────────────
+
+    const SESSION_KEY      = 'hoto-scheduler-auth';
+    const SESSION_DURATION = 8 * 60 * 60 * 1000;
+    const main             = document.getElementById('scheduler-main');
+
+    function clearEl(el) {
+      while (el.firstChild) el.removeChild(el.firstChild);
+    }
+
+    function isAuthenticated() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        const { expires } = JSON.parse(raw);
+        return typeof expires === 'number' && Date.now() < expires;
+      } catch {
+        return false;
+      }
+    }
+
+    function saveSession() {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ expires: Date.now() + SESSION_DURATION }));
+    }
+
+    function clearSession() {
+      localStorage.removeItem(SESSION_KEY);
+    }
+
+    function showCalendly() {
+      clearEl(main);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'calendly-wrap';
+
+      const header = document.createElement('div');
+      header.className = 'calendly-wrap__header';
+
+      const title = document.createElement('h1');
+      title.className = 'calendly-wrap__title';
+      title.textContent = 'Book a 1-on-1 Consultation';
+
+      const logoutBtn = document.createElement('button');
+      logoutBtn.className = 'calendly-wrap__logout';
+      logoutBtn.textContent = 'Sign Out';
+      logoutBtn.addEventListener('click', () => { clearSession(); showPasswordForm(); });
+
+      header.appendChild(title);
+      header.appendChild(logoutBtn);
+
+      const widget = document.createElement('div');
+      widget.className = 'calendly-inline-widget';
+      widget.dataset.url = CALENDLY_URL;
+
+      wrap.appendChild(header);
+      wrap.appendChild(widget);
+      main.appendChild(wrap);
+
+      if (window.Calendly) {
+        Calendly.initInlineWidgets();
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          if (window.Calendly) Calendly.initInlineWidgets();
+        });
+      }
+    }
+
+    function showPasswordForm() {
+      clearEl(main);
+
+      const card = document.createElement('div');
+      card.className = 'auth-card';
+
+      const lockDiv = document.createElement('div');
+      lockDiv.className = 'auth-card__lock';
+      lockDiv.setAttribute('aria-hidden', 'true');
+      lockDiv.textContent = '🔒';
+
+      const title = document.createElement('h1');
+      title.className = 'auth-card__title';
+      title.textContent = 'Schedule a Consultation';
+
+      const sub = document.createElement('p');
+      sub.className = 'auth-card__sub';
+      sub.textContent = 'Enter your access code to book a 1-on-1 session with our team.';
+
+      const label = document.createElement('label');
+      label.className = 'auth-card__label';
+      label.setAttribute('for', 'scheduler-pw');
+      label.textContent = 'Access Code';
+
+      const input = document.createElement('input');
+      input.id          = 'scheduler-pw';
+      input.type        = 'password';
+      input.className   = 'auth-card__input';
+      input.placeholder = 'Enter access code';
+      input.autocomplete = 'current-password';
+
+      const btn = document.createElement('button');
+      btn.className   = 'auth-card__btn';
+      btn.textContent = 'Continue to Scheduler';
+
+      const errorEl = document.createElement('p');
+      errorEl.className = 'auth-card__error';
+      errorEl.setAttribute('aria-live', 'polite');
+
+      function attempt() {
+        const val = input.value;
+        if (!val) {
+          errorEl.textContent = 'Please enter your access code.';
+          input.focus();
+          return;
+        }
+        if (val === SCHEDULER_PASSWORD) {
+          saveSession();
+          showCalendly();
+        } else {
+          errorEl.textContent = 'Incorrect access code. Please try again.';
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      btn.addEventListener('click', attempt);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+
+      card.appendChild(lockDiv);
+      card.appendChild(title);
+      card.appendChild(sub);
+      card.appendChild(label);
+      card.appendChild(input);
+      card.appendChild(btn);
+      card.appendChild(errorEl);
+      main.appendChild(card);
+
+      input.focus();
+    }
+
+    isAuthenticated() ? showCalendly() : showPasswordForm();
+  </script>
+</body>
+</html>

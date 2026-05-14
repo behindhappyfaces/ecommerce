@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workshops & Classes | Heart of Texas Organics</title>
+  <meta name="description" content="Upcoming workshops and baking classes at Heart of Texas Organics. Register for hands-on farm and bread-making experiences." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    :root {
+      --w-olive:      #556B2F;
+      --w-olive-dark: #3E5022;
+      --w-olive-light:#7A9641;
+      --w-cream:      #F5F5DC;
+      --w-cream-dark: #EDECC8;
+      --w-text:       #2A2A2A;
+      --w-muted:      #6B6B5E;
+      --w-border:     #D4D4B8;
+    }
+
+    /* ---- Page Hero ---- */
+    .w-hero {
+      background: var(--w-olive);
+      padding: 72px 24px 60px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .w-hero__eyebrow {
+      font-family: sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin: 0 0 16px;
+    }
+
+    .w-hero__title {
+      font-family: Georgia, serif;
+      font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+      font-weight: normal;
+      margin: 0 0 14px;
+      line-height: 1.2;
+    }
+
+    .w-hero__sub {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.78);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ---- Controls Bar ---- */
+    .w-controls {
+      background: var(--w-cream-dark);
+      border-bottom: 1px solid var(--w-border);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .w-controls__label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--w-muted);
+      margin-right: 4px;
+    }
+
+    .w-view-btn {
+      padding: 9px 22px;
+      border-radius: 4px;
+      border: 1.5px solid var(--w-border);
+      background: #fff;
+      color: var(--w-muted);
+      font-family: sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .w-view-btn:hover { border-color: var(--w-olive); color: var(--w-olive); }
+
+    .w-view-btn--active {
+      background: var(--w-olive);
+      border-color: var(--w-olive);
+      color: #fff;
+    }
+
+    .w-view-btn--active:hover { background: var(--w-olive-dark); border-color: var(--w-olive-dark); color: #fff; }
+
+    /* ---- Main Content Area ---- */
+    .w-body {
+      background: var(--w-cream);
+      padding: 48px 24px 72px;
+      min-height: 500px;
+    }
+
+    .w-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ---- Loading / Error ---- */
+    .w-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--w-muted);
+      font-size: 1rem;
+    }
+
+    .w-state__spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--w-border);
+      border-top-color: var(--w-olive);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .w-state__title {
+      font-family: Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: normal;
+      color: var(--w-text);
+      margin: 0 0 8px;
+    }
+
+    /* ── LIST VIEW ──────────────────────────────── */
+    .w-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .w-event-card {
+      background: #fff;
+      border-radius: 8px;
+      border-left: 4px solid var(--w-olive);
+      padding: 24px 28px;
+      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 0 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 640px) {
+      .w-event-card {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .w-event-card__date-block { display: flex; gap: 10px; align-items: baseline; }
+    }
+
+    .w-event-card__date-block {
+      text-align: center;
+    }
+
+    .w-event-card__month {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--w-olive);
+    }
+
+    .w-event-card__day {
+      font-family: Georgia, serif;
+      font-size: 2.2rem;
+      font-weight: normal;
+      color: var(--w-text);
+      line-height: 1;
+      margin: 2px 0;
+    }
+
+    .w-event-card__dow {
+      font-size: 0.7rem;
+      color: var(--w-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .w-event-card__info {}
+
+    .w-event-card__title {
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: normal;
+      color: var(--w-text);
+      margin: 0 0 6px;
+    }
+
+    .w-event-card__time {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--w-olive);
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+
+    .w-event-card__desc {
+      font-size: 0.9rem;
+      color: var(--w-muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .w-event-card__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      min-width: 140px;
+    }
+
+    @media (max-width: 640px) {
+      .w-event-card__actions { flex-direction: row; align-items: center; }
+    }
+
+    .w-register-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: var(--w-olive);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .w-register-btn:hover { background: var(--w-olive-dark); }
+
+    .w-register-btn--disabled {
+      background: var(--w-border);
+      color: var(--w-muted);
+      cursor: default;
+    }
+
+    .w-register-btn--disabled:hover { background: var(--w-border); }
+
+    .w-spots-left {
+      font-size: 0.72rem;
+      color: var(--w-muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── MONTH VIEW ─────────────────────────────── */
+    .w-month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .w-month-nav__arrow {
+      background: #fff;
+      border: 1.5px solid var(--w-border);
+      border-radius: 4px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--w-text);
+      transition: border-color 0.2s;
+    }
+
+    .w-month-nav__arrow:hover { border-color: var(--w-olive); color: var(--w-olive); }
+
+    .w-month-nav__label {
+      font-family: Georgia, serif;
+      font-size: 1.4rem;
+      font-weight: normal;
+      color: var(--w-text);
+    }
+
+    .w-cal-grid {
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
+    }
+
+    .w-cal-grid__header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--w-olive);
+    }
+
+    .w-cal-grid__dow {
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .w-cal-grid__days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-top: 1px solid var(--w-border);
+    }
+
+    .w-cal-day {
+      min-height: 80px;
+      padding: 8px;
+      border-right: 1px solid var(--w-border);
+      border-bottom: 1px solid var(--w-border);
+      cursor: default;
+      position: relative;
+      transition: background 0.15s;
+    }
+
+    .w-cal-day:nth-child(7n) { border-right: none; }
+
+    .w-cal-day--other-month { background: #FAFAF4; }
+    .w-cal-day--other-month .w-cal-day__num { color: #C0C0A8; }
+
+    .w-cal-day--today .w-cal-day__num {
+      background: var(--w-olive);
+      color: #fff;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .w-cal-day--has-event { cursor: pointer; }
+    .w-cal-day--has-event:hover { background: var(--w-cream-dark); }
+
+    .w-cal-day--selected { background: var(--w-cream-dark); }
+
+    .w-cal-day__num {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--w-text);
+      margin-bottom: 4px;
+    }
+
+    .w-cal-day__dot {
+      width: 7px;
+      height: 7px;
+      background: var(--w-olive-light);
+      border-radius: 50%;
+      margin: 2px 0;
+    }
+
+    .w-cal-day__label {
+      font-size: 0.62rem;
+      color: var(--w-olive);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Day detail panel */
+    .w-day-detail {
+      margin-top: 24px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
+      border-top: 3px solid var(--w-olive);
+    }
+
+    .w-day-detail__heading {
+      font-family: Georgia, serif;
+      font-size: 1.15rem;
+      font-weight: normal;
+      color: var(--w-text);
+      margin: 0 0 16px;
+    }
+
+    .w-day-detail__event {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--w-border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .w-day-detail__event:last-child { border-bottom: none; }
+
+    .w-day-detail__event-title {
+      font-family: Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: normal;
+      color: var(--w-text);
+      margin: 0 0 4px;
+    }
+
+    .w-day-detail__event-time {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--w-olive);
+      margin-bottom: 6px;
+    }
+
+    .w-day-detail__event-desc {
+      font-size: 0.88rem;
+      color: var(--w-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .w-no-events {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--w-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 560px) {
+      .w-cal-day { min-height: 52px; padding: 4px; }
+      .w-cal-day__label { display: none; }
+      .w-cal-day__num { font-size: 0.74rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li><a class="nav__link" href="offerings.html">Offerings</a></li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <!-- Hero -->
+  <header class="w-hero">
+    <p class="w-hero__eyebrow">Heart of Texas Organics</p>
+    <h1 class="w-hero__title">Workshops &amp; Classes</h1>
+    <p class="w-hero__sub">
+      Hands-on bread making, farm tours, and seasonal workshops.
+      Small groups, real technique, no shortcuts.
+    </p>
+  </header>
+
+  <!-- View Toggle -->
+  <div class="w-controls">
+    <span class="w-controls__label">View:</span>
+    <button class="w-view-btn w-view-btn--active" id="btn-list" aria-pressed="true">List</button>
+    <button class="w-view-btn" id="btn-month" aria-pressed="false">Calendar</button>
+  </div>
+
+  <!-- Content -->
+  <section class="w-body" aria-label="Workshop calendar">
+    <div class="w-container" id="w-content">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, real land, real people.<br>Grown and made without shortcuts.</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Navigate</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="index.html">Home</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Offerings</a></li>
+            <li><a class="footer__col-link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+            <li><a class="footer__col-link" href="about-heart-of-texas.html">Our Story</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Connect</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftexasorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftexasorganics" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // ─────────────────────────────────────────────────────────────────────
+    // CONFIGURATION — paste your values here, nothing else needs changing
+    // ─────────────────────────────────────────────────────────────────────
+    const CALENDAR_ID = 'YOUR_CALENDAR_ID@group.calendar.google.com';
+    const API_KEY     = 'YOUR_GOOGLE_API_KEY';
+    // ─────────────────────────────────────────────────────────────────────
+
+    const DOW_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTH_NAMES = ['January','February','March','April','May','June',
+                         'July','August','September','October','November','December'];
+    const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun',
+                         'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    let allEvents     = [];
+    let currentView   = 'list';
+    let calYear       = new Date().getFullYear();
+    let calMonth      = new Date().getMonth();
+    let selectedDate  = null;
+
+    const content = document.getElementById('w-content');
+
+    function clearEl(el) {
+      while (el.firstChild) el.removeChild(el.firstChild);
+    }
+
+    // ── Fetch from Google Calendar ────────────────────────────────────────
+    async function fetchEvents() {
+      const now = new Date();
+      const future = new Date(now);
+      future.setMonth(future.getMonth() + 6);
+
+      const params = new URLSearchParams({
+        key: API_KEY,
+        timeMin: now.toISOString(),
+        timeMax: future.toISOString(),
+        orderBy: 'startTime',
+        singleEvents: 'true',
+        maxResults: '100',
+      });
+
+      const res = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?${params}`
+      );
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error?.message || `Calendar API error (${res.status})`);
+      }
+
+      const data = await res.json();
+      return (data.items || []).filter(e => e.status !== 'cancelled');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+    function eventDateKey(ev) {
+      return (ev.start.dateTime || ev.start.date).slice(0, 10);
+    }
+
+    function formatTime(ev) {
+      if (ev.start.date && !ev.start.dateTime) return 'All day';
+      const start = new Date(ev.start.dateTime);
+      const end   = ev.end?.dateTime ? new Date(ev.end.dateTime) : null;
+      const fmt   = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+      return end ? `${fmt(start)} – ${fmt(end)} CT` : fmt(start);
+    }
+
+    function extractRegistrationUrl(ev) {
+      // Look for a URL in the event description (Eventbrite or any link)
+      const text = ev.description || '';
+      const match = text.match(/https?:\/\/[^\s<>"]+/);
+      return match ? match[0] : (ev.htmlLink || null);
+    }
+
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.textContent = html;
+      return tmp.textContent;
+    }
+
+    function plainDescription(ev) {
+      if (!ev.description) return '';
+      // Remove HTML tags safely using textContent parsing
+      const d = document.createElement('div');
+      d.textContent = ev.description.replace(/<[^>]*>/g, ' ');
+      return d.textContent.slice(0, 220).trim() + (ev.description.length > 220 ? '...' : '');
+    }
+
+    // ── Loading state ─────────────────────────────────────────────────────
+    function showLoading() {
+      clearEl(content);
+      const state = document.createElement('div');
+      state.className = 'w-state';
+      const spinner = document.createElement('div');
+      spinner.className = 'w-state__spinner';
+      spinner.setAttribute('aria-label', 'Loading workshops');
+      const label = document.createElement('p');
+      label.textContent = 'Loading upcoming workshops...';
+      state.appendChild(spinner);
+      state.appendChild(label);
+      content.appendChild(state);
+    }
+
+    function showError(msg) {
+      clearEl(content);
+      const state = document.createElement('div');
+      state.className = 'w-state';
+      const title = document.createElement('p');
+      title.className = 'w-state__title';
+      title.textContent = 'Could not load workshops';
+      const sub = document.createElement('p');
+      sub.textContent = msg;
+      const contact = document.createElement('p');
+      contact.style.marginTop = '16px';
+      const link = document.createElement('a');
+      link.href = 'contact.html';
+      link.textContent = 'Contact us directly';
+      link.style.color = '#556B2F';
+      contact.appendChild(link);
+      contact.appendChild(document.createTextNode(' to ask about upcoming events.'));
+      state.appendChild(title);
+      state.appendChild(sub);
+      state.appendChild(contact);
+      content.appendChild(state);
+    }
+
+    // ── Register button factory ────────────────────────────────────────────
+    function makeRegisterBtn(ev) {
+      const url = extractRegistrationUrl(ev);
+      const btn = document.createElement('a');
+      btn.textContent = 'Register Now';
+
+      if (url) {
+        btn.href = url;
+        btn.target = '_blank';
+        btn.rel = 'noopener noreferrer';
+        btn.className = 'w-register-btn';
+      } else {
+        btn.href = 'contact.html';
+        btn.className = 'w-register-btn';
+        btn.title = 'Contact us to register';
+      }
+      return btn;
+    }
+
+    // ── LIST VIEW ─────────────────────────────────────────────────────────
+    function renderList(events) {
+      clearEl(content);
+
+      if (!events.length) {
+        const empty = document.createElement('div');
+        empty.className = 'w-no-events';
+        const p = document.createElement('p');
+        p.textContent = 'No upcoming workshops are scheduled right now. Check back soon or contact us to request one.';
+        const link = document.createElement('a');
+        link.href = 'contact.html';
+        link.textContent = 'Get in touch';
+        link.style.cssText = 'color:#556B2F;display:block;margin-top:12px;font-weight:600;';
+        empty.appendChild(p);
+        empty.appendChild(link);
+        content.appendChild(empty);
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'w-list';
+      list.setAttribute('aria-label', 'Upcoming workshops');
+
+      events.forEach(ev => {
+        const rawDate = ev.start.dateTime || ev.start.date;
+        const d = new Date(rawDate.includes('T') ? rawDate : rawDate + 'T00:00:00');
+
+        const card = document.createElement('article');
+        card.className = 'w-event-card';
+
+        // Date block
+        const dateBlock = document.createElement('div');
+        dateBlock.className = 'w-event-card__date-block';
+
+        const monthEl = document.createElement('div');
+        monthEl.className = 'w-event-card__month';
+        monthEl.textContent = MONTH_SHORT[d.getMonth()];
+
+        const dayEl = document.createElement('div');
+        dayEl.className = 'w-event-card__day';
+        dayEl.textContent = d.getDate();
+
+        const dowEl = document.createElement('div');
+        dowEl.className = 'w-event-card__dow';
+        dowEl.textContent = DOW_SHORT[d.getDay()];
+
+        dateBlock.appendChild(monthEl);
+        dateBlock.appendChild(dayEl);
+        dateBlock.appendChild(dowEl);
+
+        // Info block
+        const info = document.createElement('div');
+        info.className = 'w-event-card__info';
+
+        const title = document.createElement('h2');
+        title.className = 'w-event-card__title';
+        title.textContent = ev.summary || 'Workshop';
+
+        const time = document.createElement('div');
+        time.className = 'w-event-card__time';
+        time.textContent = formatTime(ev);
+
+        const desc = document.createElement('p');
+        desc.className = 'w-event-card__desc';
+        desc.textContent = plainDescription(ev);
+
+        info.appendChild(title);
+        info.appendChild(time);
+        if (ev.description) info.appendChild(desc);
+
+        // Actions block
+        const actions = document.createElement('div');
+        actions.className = 'w-event-card__actions';
+        actions.appendChild(makeRegisterBtn(ev));
+
+        card.appendChild(dateBlock);
+        card.appendChild(info);
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+
+      content.appendChild(list);
+    }
+
+    // ── MONTH VIEW ────────────────────────────────────────────────────────
+    function buildEventMap(events) {
+      const map = {};
+      events.forEach(ev => {
+        const key = eventDateKey(ev);
+        if (!map[key]) map[key] = [];
+        map[key].push(ev);
+      });
+      return map;
+    }
+
+    function renderDayDetail(dateKey, eventsForDay) {
+      const existing = document.getElementById('w-day-detail');
+      if (existing) existing.remove();
+
+      const panel = document.createElement('div');
+      panel.className = 'w-day-detail';
+      panel.id = 'w-day-detail';
+      panel.setAttribute('aria-live', 'polite');
+
+      const d = new Date(dateKey + 'T00:00:00');
+      const heading = document.createElement('h2');
+      heading.className = 'w-day-detail__heading';
+      heading.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      panel.appendChild(heading);
+
+      eventsForDay.forEach(ev => {
+        const row = document.createElement('div');
+        row.className = 'w-day-detail__event';
+
+        const left = document.createElement('div');
+
+        const title = document.createElement('h3');
+        title.className = 'w-day-detail__event-title';
+        title.textContent = ev.summary || 'Workshop';
+
+        const time = document.createElement('div');
+        time.className = 'w-day-detail__event-time';
+        time.textContent = formatTime(ev);
+
+        const desc = document.createElement('p');
+        desc.className = 'w-day-detail__event-desc';
+        desc.textContent = plainDescription(ev);
+
+        left.appendChild(title);
+        left.appendChild(time);
+        if (ev.description) left.appendChild(desc);
+
+        row.appendChild(left);
+        row.appendChild(makeRegisterBtn(ev));
+        panel.appendChild(row);
+      });
+
+      content.appendChild(panel);
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderMonth(events) {
+      clearEl(content);
+
+      const eventMap = buildEventMap(events);
+      const today    = new Date();
+      const todayKey = today.toISOString().slice(0, 10);
+
+      // Month nav bar
+      const nav = document.createElement('div');
+      nav.className = 'w-month-nav';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'w-month-nav__arrow';
+      prevBtn.setAttribute('aria-label', 'Previous month');
+      prevBtn.textContent = '←';
+      prevBtn.addEventListener('click', () => {
+        calMonth--;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        selectedDate = null;
+        renderMonth(allEvents);
+      });
+
+      const monthLabel = document.createElement('span');
+      monthLabel.className = 'w-month-nav__label';
+      monthLabel.textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'w-month-nav__arrow';
+      nextBtn.setAttribute('aria-label', 'Next month');
+      nextBtn.textContent = '→';
+      nextBtn.addEventListener('click', () => {
+        calMonth++;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        selectedDate = null;
+        renderMonth(allEvents);
+      });
+
+      nav.appendChild(prevBtn);
+      nav.appendChild(monthLabel);
+      nav.appendChild(nextBtn);
+      content.appendChild(nav);
+
+      // Calendar grid
+      const grid = document.createElement('div');
+      grid.className = 'w-cal-grid';
+      grid.setAttribute('role', 'grid');
+      grid.setAttribute('aria-label', `${MONTH_NAMES[calMonth]} ${calYear} calendar`);
+
+      // Day-of-week headers
+      const header = document.createElement('div');
+      header.className = 'w-cal-grid__header';
+      header.setAttribute('role', 'row');
+      DOW_SHORT.forEach(name => {
+        const cell = document.createElement('div');
+        cell.className = 'w-cal-grid__dow';
+        cell.setAttribute('role', 'columnheader');
+        cell.textContent = name;
+        header.appendChild(cell);
+      });
+      grid.appendChild(header);
+
+      // Day cells
+      const daysRow = document.createElement('div');
+      daysRow.className = 'w-cal-grid__days';
+      daysRow.setAttribute('role', 'rowgroup');
+
+      const firstDay = new Date(calYear, calMonth, 1);
+      const lastDay  = new Date(calYear, calMonth + 1, 0);
+      const startDow = firstDay.getDay();
+
+      // Fill leading cells from previous month
+      for (let i = 0; i < startDow; i++) {
+        const prevDate = new Date(calYear, calMonth, 1 - (startDow - i));
+        const cell = makeDayCell(prevDate, true, eventMap, todayKey);
+        daysRow.appendChild(cell);
+      }
+
+      // Current month days
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(calYear, calMonth, d);
+        const cell = makeDayCell(date, false, eventMap, todayKey);
+        daysRow.appendChild(cell);
+      }
+
+      // Fill trailing cells
+      const totalCells = daysRow.children.length;
+      const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let i = 1; i <= remaining; i++) {
+        const nextDate = new Date(calYear, calMonth + 1, i);
+        const cell = makeDayCell(nextDate, true, eventMap, todayKey);
+        daysRow.appendChild(cell);
+      }
+
+      grid.appendChild(daysRow);
+      content.appendChild(grid);
+
+      // Show detail if a date was selected
+      if (selectedDate && eventMap[selectedDate]) {
+        renderDayDetail(selectedDate, eventMap[selectedDate]);
+      }
+    }
+
+    function makeDayCell(date, otherMonth, eventMap, todayKey) {
+      const key    = date.toISOString().slice(0, 10);
+      const events = eventMap[key] || [];
+      const isToday = key === todayKey;
+      const isSelected = key === selectedDate;
+
+      const cell = document.createElement('div');
+      cell.className = 'w-cal-day';
+      cell.setAttribute('role', 'gridcell');
+      if (otherMonth) cell.classList.add('w-cal-day--other-month');
+      if (isToday)    cell.classList.add('w-cal-day--today');
+      if (events.length) cell.classList.add('w-cal-day--has-event');
+      if (isSelected)    cell.classList.add('w-cal-day--selected');
+
+      const num = document.createElement('div');
+      num.className = 'w-cal-day__num';
+      num.textContent = date.getDate();
+      cell.appendChild(num);
+
+      events.slice(0, 2).forEach(ev => {
+        const dot = document.createElement('div');
+        dot.className = 'w-cal-day__dot';
+        cell.appendChild(dot);
+        const label = document.createElement('div');
+        label.className = 'w-cal-day__label';
+        label.textContent = ev.summary || 'Event';
+        cell.appendChild(label);
+      });
+
+      if (events.length > 2) {
+        const more = document.createElement('div');
+        more.className = 'w-cal-day__label';
+        more.textContent = `+${events.length - 2} more`;
+        cell.appendChild(more);
+      }
+
+      if (events.length) {
+        cell.setAttribute('tabindex', '0');
+        cell.setAttribute('aria-label', `${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}: ${events.length} event${events.length > 1 ? 's' : ''}`);
+
+        const activate = () => {
+          selectedDate = key;
+          renderMonth(allEvents);
+        };
+        cell.addEventListener('click', activate);
+        cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+      }
+
+      return cell;
+    }
+
+    // ── View switching ────────────────────────────────────────────────────
+    function setView(view) {
+      currentView = view;
+      const listBtn  = document.getElementById('btn-list');
+      const monthBtn = document.getElementById('btn-month');
+
+      listBtn.classList.toggle('w-view-btn--active', view === 'list');
+      listBtn.setAttribute('aria-pressed', view === 'list');
+      monthBtn.classList.toggle('w-view-btn--active', view === 'month');
+      monthBtn.setAttribute('aria-pressed', view === 'month');
+
+      if (view === 'list') {
+        renderList(allEvents);
+      } else {
+        calYear  = new Date().getFullYear();
+        calMonth = new Date().getMonth();
+        selectedDate = null;
+        renderMonth(allEvents);
+      }
+    }
+
+    document.getElementById('btn-list').addEventListener('click', () => setView('list'));
+    document.getElementById('btn-month').addEventListener('click', () => setView('month'));
+
+    // ── Bootstrap ─────────────────────────────────────────────────────────
+    (async function init() {
+      showLoading();
+      try {
+        allEvents = await fetchEvents();
+        setView('list');
+      } catch (err) {
+        console.error('Workshop calendar error:', err);
+        showError(err.message.includes('400') || err.message.includes('403')
+          ? 'Calendar configuration error. Please check the setup guide.'
+          : 'Unable to load workshops right now. Please try again shortly.');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -355,6 +355,106 @@ h1, h2, h3, h4 {
   color: var(--color-tan-light);
 }
 
+/* Sub-links in mobile menu (Provisions / Lost Arts) */
+.nav__mobile-link--sub {
+  font-size: 1.3rem;
+  font-style: normal;
+  color: rgba(245,240,232,0.6);
+  letter-spacing: 0.06em;
+  padding-left: 28px;
+  position: relative;
+}
+.nav__mobile-link--sub::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: rgba(245,240,232,0.3);
+  font-style: normal;
+  font-size: 1rem;
+}
+.nav__mobile-link--sub:hover {
+  color: var(--color-tan-light);
+}
+
+/* ── Offerings dropdown (desktop) ── */
+.nav__item {
+  position: relative;
+  list-style: none;
+}
+
+.nav__item--has-dropdown .nav__link--dropdown::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  margin-left: 5px;
+  vertical-align: middle;
+  transition: transform 0.2s;
+}
+
+.nav__item--has-dropdown:hover .nav__link--dropdown::after {
+  transform: rotate(-135deg) translateY(-2px);
+}
+
+.nav__dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid rgba(44,62,45,0.1);
+  border-radius: 4px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  min-width: 150px;
+  list-style: none;
+  padding: 6px 0;
+  z-index: 200;
+  /* small notch pointing up */
+}
+.nav__dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid rgba(44,62,45,0.1);
+  border-top: 1px solid rgba(44,62,45,0.1);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.nav__item--has-dropdown:hover .nav__dropdown,
+.nav__item--has-dropdown:focus-within .nav__dropdown {
+  display: block;
+}
+
+.nav__dropdown-link {
+  display: block;
+  padding: 10px 20px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-green);
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.nav__dropdown-link:hover {
+  background: var(--color-cream);
+  color: var(--color-green);
+  opacity: 1;
+}
+
+/* When nav is scrolled, dropdown arrow color matches */
+.nav.scrolled .nav__item--has-dropdown .nav__link--dropdown::after {
+  border-color: var(--color-green);
+}
 
 /* =========================================
    HOMEPAGE HERO

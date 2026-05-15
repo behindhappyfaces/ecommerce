@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ | Heart of Texas Organics</title>
+  <meta name="description" content="Frequently asked questions about Heart of Texas Organics products, ordering, subscriptions, and farm practices." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    .faq-hero {
+      background: var(--color-green);
+      padding: 80px 24px 60px;
+      text-align: center;
+    }
+    .faq-hero__eye {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+      margin: 0 0 14px;
+    }
+    .faq-hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 400;
+      color: #fff;
+      margin: 0 0 12px;
+      line-height: 1.15;
+    }
+    .faq-hero__sub {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.6);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── FAQ BODY ── */
+    .faq-section {
+      background: var(--color-cream);
+      padding: var(--section-padding) 0;
+    }
+    .faq-section__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .faq-category {
+      margin-bottom: 48px;
+    }
+    .faq-category__title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-green);
+      border-bottom: 2px solid var(--color-green);
+      padding-bottom: 8px;
+      margin: 0 0 24px;
+    }
+
+    /* Accordion item */
+    .faq-item {
+      border-bottom: 1px solid rgba(44,62,45,0.12);
+    }
+    .faq-item__btn {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 18px 40px 18px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      gap: 12px;
+    }
+    .faq-item__question {
+      font-family: var(--font-serif);
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      font-weight: 400;
+      color: var(--color-green);
+      line-height: 1.35;
+    }
+    .faq-item__icon {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border: 1.5px solid rgba(44,62,45,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+      color: var(--color-green);
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .faq-item__btn:hover .faq-item__icon {
+      background: var(--color-green);
+      border-color: var(--color-green);
+      color: #fff;
+    }
+    .faq-item__btn[aria-expanded="true"] .faq-item__icon {
+      background: var(--color-green);
+      border-color: var(--color-green);
+      color: #fff;
+    }
+    .faq-item__btn[aria-expanded="true"] .faq-item__icon::after {
+      content: '−';
+    }
+    .faq-item__icon::after { content: '+'; }
+
+    .faq-item__answer {
+      display: none;
+      padding: 0 0 20px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--color-muted);
+    }
+    .faq-item__answer.open { display: block; }
+
+    /* ── CONTACT CTA ── */
+    .faq-cta {
+      background: var(--color-green);
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .faq-cta__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      color: #fff;
+      font-weight: 400;
+      margin: 0 0 10px;
+    }
+    .faq-cta__sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      margin: 0 0 28px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li class="nav__item nav__item--has-dropdown">
+        <a class="nav__link nav__link--dropdown" href="offerings.html">Offerings</a>
+        <ul class="nav__dropdown" role="menu">
+          <li><a class="nav__dropdown-link" href="offerings.html">Provisions</a></li>
+          <li><a class="nav__dropdown-link" href="workshops.html?view=month">Lost Arts</a></li>
+        </ul>
+      </li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+      <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="offerings.html">Provisions</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <!-- HERO -->
+  <header class="faq-hero">
+    <p class="faq-hero__eye">Heart of Texas Organics</p>
+    <h1 class="faq-hero__title">Frequently Asked Questions</h1>
+    <p class="faq-hero__sub">Everything you want to know about our food, our farm, and how we operate.</p>
+  </header>
+
+  <!-- FAQ BODY -->
+  <section class="faq-section" aria-label="FAQ">
+    <div class="faq-section__inner">
+
+      <!-- ORDERING & PRODUCTS -->
+      <div class="faq-category" data-fade>
+        <p class="faq-category__title">Ordering &amp; Products</p>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">How do I place an order?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Visit our <a href="offerings.html" style="color:var(--color-green);">Offerings page</a>, select the items you want, and check out securely via Stripe. We accept all major credit cards and ACH bank transfers.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">How fresh are your products?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Everything is made to order or harvested fresh for your pickup. We do not store finished baked goods for more than 48 hours. Eggs are gathered daily from our pasture-raised hens.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Do you offer delivery?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            We currently offer local pickup and select delivery routes in Central Texas. Contact us to ask about delivery availability in your area.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Can I get a refund or cancel my order?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Because our products are perishable and made fresh, we cannot offer refunds on completed orders. If there is a quality issue with your order, please contact us within 24 hours and we will make it right.
+          </div>
+        </div>
+      </div>
+
+      <!-- OUR INGREDIENTS & PRACTICES -->
+      <div class="faq-category" data-fade>
+        <p class="faq-category__title">Our Ingredients &amp; Practices</p>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Are you USDA Certified Organic?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            We are not USDA Certified Organic — and that is intentional. Organic certification is a process and a label. Our name reflects our standard, not a certification. We commit to no synthetic pesticides, herbicides, or fertilizers, no GMOs, no added hormones or antibiotics, and no preservatives. We source locally from growers we trust and are fully transparent about every ingredient.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Are your eggs soy-free?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Yes. Our pasture-raised hens are fed a soy-free diet. They also forage freely on open pasture, which contributes to naturally richer, more nutritious yolks.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">What flour do you use in your breads?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            We use unbleached, unbromated flour and source from local Texas mills whenever possible. No dough conditioners, no additives. Just flour, water, salt, and time.
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKSHOPS & LOST ARTS -->
+      <div class="faq-category" data-fade>
+        <p class="faq-category__title">Workshops &amp; Lost Arts Classes</p>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Who are the workshops for?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Our hands-on workshops are designed for youth, adults, and corporate teams. Whether you are a complete beginner or looking to sharpen your skills, we meet you where you are. Topics include bread making, butter churning, canning, soap making, and more.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">How do I register for a class?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Browse upcoming workshops on our <a href="workshops.html?view=month" style="color:var(--color-green);">Lost Arts calendar</a>. Each event listing includes a registration link. Spots are limited — we keep classes small intentionally.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">Do you offer private or corporate bookings?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Yes. We offer private class bookings for groups, team-building events, and corporate wellness programs. <a href="contact.html" style="color:var(--color-green);">Contact us</a> to discuss your group's needs and available dates.
+          </div>
+        </div>
+      </div>
+
+      <!-- BEST MEDICINES MAGAZINE -->
+      <div class="faq-category" data-fade>
+        <p class="faq-category__title">Best Medicines Magazine</p>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">What is Best Medicines Magazine?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Best Medicines is our monthly digital magazine — stories, recipes, farm wisdom, and interviews on living and eating well. It is published by Heart of Texas Organics and available as a digital subscription for $6.99/month.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-item__btn" aria-expanded="false">
+            <span class="faq-item__question">How do I subscribe to the magazine?</span>
+            <span class="faq-item__icon" aria-hidden="true"></span>
+          </button>
+          <div class="faq-item__answer">
+            Visit our <a href="magazine.html" style="color:var(--color-green);">Magazine page</a>, enter your email, and you will be taken to a secure Stripe checkout to complete your $6.99/month subscription. You can cancel anytime.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CONTACT CTA -->
+  <section class="faq-cta">
+    <h2 class="faq-cta__title">Still have a question?</h2>
+    <p class="faq-cta__sub">We read every message and respond within one business day.</p>
+    <a class="btn btn--light" href="contact.html">Contact Us</a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Navigate</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="index.html">Home</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Offerings</a></li>
+            <li><a class="footer__col-link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+            <li><a class="footer__col-link" href="about-heart-of-texas.html">Our Story</a></li>
+            <li><a class="footer__col-link" href="magazine.html">Best Medicines</a></li>
+            <li><a class="footer__col-link" href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Shop</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="offerings.html">Artisan Breads</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Pasture-Raised Meats</a></li>
+            <li><a class="footer__col-link" href="offerings.html">Farm Eggs</a></li>
+            <li><a class="footer__col-link" href="offerings.html#classes">Baking Classes</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Connect</p>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+            <li><a class="footer__col-link" href="magazine.html">Magazine</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    /* FAQ accordion */
+    document.querySelectorAll('.faq-item__btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        var answer   = this.nextElementSibling;
+        this.setAttribute('aria-expanded', String(!expanded));
+        answer.classList.toggle('open', !expanded);
+      });
+    });
+  </script>
+</body>
+</html>

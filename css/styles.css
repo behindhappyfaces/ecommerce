@@ -138,6 +138,16 @@ h1, h2, h3, h4 {
   color: var(--color-green);
 }
 
+.btn--outline {
+  color: var(--color-green);
+  border-color: rgba(44, 62, 45, 0.4);
+}
+
+.btn--outline:hover {
+  border-color: var(--color-green);
+  background: rgba(44, 62, 45, 0.06);
+}
+
 .btn--rust {
   color: var(--color-rust);
   border-color: var(--color-rust);
@@ -1770,6 +1780,349 @@ h1, h2, h3, h4 {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* =========================================
+   CART — SUBSCRIBE & SAVE TOGGLE
+   ========================================= */
+
+.cart-subscribe {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1.5px solid rgba(44, 62, 45, 0.18);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  border-radius: 4px;
+}
+
+.cart-subscribe--active {
+  border-color: var(--color-green);
+  background: rgba(44, 62, 45, 0.04);
+}
+
+.cart-subscribe__input {
+  display: none;
+}
+
+.cart-subscribe__box {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 1.5px solid var(--color-green);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.cart-subscribe--active .cart-subscribe__box {
+  background: var(--color-green);
+}
+
+.cart-subscribe--active .cart-subscribe__box::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 8px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.cart-subscribe__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cart-subscribe__text strong {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-green);
+  letter-spacing: 0.02em;
+}
+
+.cart-subscribe__text em {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-style: normal;
+}
+
+.cart-item__price-orig {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+  margin-right: 6px;
+  font-size: 0.8rem;
+}
+
+.cart-item__price-disc {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+/* =========================================
+   SUBSCRIPTION SUCCESS PAGE
+   ========================================= */
+
+.sub-confirm {
+  min-height: 80vh;
+  padding: 80px 0 100px;
+  background: var(--color-cream);
+  display: flex;
+  align-items: flex-start;
+}
+
+.sub-confirm__inner {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sub-confirm__icon {
+  width: 72px;
+  height: 72px;
+  background: var(--color-green);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 28px;
+}
+
+.sub-confirm__title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  color: var(--color-green);
+  margin-bottom: 14px;
+}
+
+.sub-confirm__intro {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+  font-family: var(--font-serif);
+  font-style: italic;
+  margin-bottom: 40px;
+}
+
+.sub-confirm__card {
+  background: #fff;
+  padding: 32px;
+  text-align: left;
+  margin-bottom: 32px;
+  border-top: 3px solid var(--color-green);
+}
+
+.sub-confirm__loading {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.sub-confirm__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sub-confirm__table tr td {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(44, 62, 45, 0.1);
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.sub-confirm__table tr td:first-child {
+  color: var(--color-text-muted);
+  width: 44%;
+}
+
+.sub-confirm__table tr:last-child td {
+  border-bottom: none;
+}
+
+.sub-confirm__status {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.sub-confirm__status--active { background: #D4EDDA; color: #1d6030; }
+.sub-confirm__status--trialing { background: #D4EDDA; color: #1d6030; }
+.sub-confirm__status--past_due { background: #FFF3CD; color: #856404; }
+.sub-confirm__status--canceled { background: #F8D7DA; color: #721c24; }
+
+.sub-confirm__actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* =========================================
+   SUBSCRIPTION DASHBOARD PAGE
+   ========================================= */
+
+.sub-dash {
+  padding: 80px 0 120px;
+  background: var(--color-cream);
+  min-height: 80vh;
+}
+
+.sub-dash__header {
+  margin-bottom: 56px;
+  text-align: center;
+}
+
+.sub-dash__title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--color-green);
+  margin-top: 10px;
+}
+
+.sub-dash__section {
+  max-width: 680px;
+  margin: 0 auto 56px;
+}
+
+.sub-dash__section-title {
+  font-size: 1.1rem;
+  color: var(--color-green);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(44, 62, 45, 0.15);
+}
+
+.sub-dash__section-body {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.75;
+  margin-bottom: 20px;
+}
+
+.sub-dash__card {
+  background: #fff;
+  padding: 28px 32px;
+  border-top: 3px solid var(--color-green);
+  margin-bottom: 24px;
+}
+
+.sub-dash__loading {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.sub-dash__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sub-dash__table th,
+.sub-dash__table td {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(44, 62, 45, 0.1);
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.sub-dash__table th {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  width: 44%;
+}
+
+.sub-dash__table tr:last-child th,
+.sub-dash__table tr:last-child td {
+  border-bottom: none;
+}
+
+.sub-dash__prefs {
+  background: #fff;
+  padding: 28px 32px;
+  border-top: 3px solid var(--color-rust);
+}
+
+.sub-dash__fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.sub-dash__legend {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-rust);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.sub-dash__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.sub-dash__check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+
+.sub-dash__notes-wrap {
+  margin-bottom: 20px;
+}
+
+.sub-dash__notes-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.sub-dash__notes {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(44, 62, 45, 0.25);
+  background: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+}
+
+.sub-dash__notes:focus {
+  outline: 2px solid var(--color-green);
+  border-color: transparent;
+}
+
+.sub-dash__prefs-msg {
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  min-height: 20px;
+}
+
+.sub-dash__prefs-msg--ok { color: #1d6030; }
+.sub-dash__prefs-msg--error { color: var(--color-rust); }
 
 /* =========================================
    OFFERING CARD  ADD TO CART BUTTON

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Confirmed — Heart of Texas Organics</title>
+  <meta name="description" content="Your subscription is confirmed. Welcome to the Heart of Texas Organics family." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li class="nav__item nav__item--has-dropdown">
+        <a class="nav__link nav__link--dropdown" href="offerings.html">Offerings</a>
+        <ul class="nav__dropdown" role="menu">
+          <div class="nav__dropdown-inner">
+            <li><a class="nav__dropdown-link" href="offerings.html">Provisions</a></li>
+            <li><a class="nav__dropdown-link" href="workshops.html?view=month">Lost Arts</a></li>
+          </div>
+        </ul>
+      </li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+      <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="offerings.html">Provisions</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <main class="sub-confirm">
+    <div class="sub-confirm__inner container">
+
+      <div class="sub-confirm__icon" aria-hidden="true">✓</div>
+      <h1 class="sub-confirm__title">You're subscribed!</h1>
+      <p class="sub-confirm__intro">Welcome to the Heart of Texas Organics family. A confirmation email is on its way to you.</p>
+
+      <div class="sub-confirm__card" id="sub-details">
+        <p class="sub-confirm__loading">Loading your subscription details…</p>
+      </div>
+
+      <div class="sub-confirm__actions" id="sub-actions" style="display:none;">
+        <button class="btn btn--dark" id="manage-btn">Manage Your Subscription</button>
+        <a class="btn btn--outline" href="offerings.html">Continue Shopping</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="faq.html">FAQ</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    function buildRow(label, value) {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.textContent = label;
+      const td2 = document.createElement('td');
+      td2.textContent = value;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      return tr;
+    }
+
+    function buildStatusRow(status) {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.textContent = 'Status';
+      const td2 = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'sub-confirm__status sub-confirm__status--' + status;
+      badge.textContent = status;
+      td2.appendChild(badge);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      return tr;
+    }
+
+    (async () => {
+      const params    = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      const card      = document.getElementById('sub-details');
+      const actions   = document.getElementById('sub-actions');
+      let customerId  = null;
+
+      if (!sessionId) {
+        card.querySelector('.sub-confirm__loading').textContent = 'No session found.';
+        return;
+      }
+
+      localStorage.setItem('hoto-sub-session', sessionId);
+      localStorage.setItem('hoto-subscribe', '0');
+
+      try {
+        const res  = await fetch('/subscription-info?session_id=' + encodeURIComponent(sessionId));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load details');
+
+        customerId = data.customerId;
+
+        const nextDate = data.nextCharge
+          ? new Date(data.nextCharge * 1000).toLocaleDateString('en-US', {
+              timeZone: 'America/Chicago', dateStyle: 'full',
+            })
+          : '—';
+        const amount = data.amount ? '$' + (data.amount / 100).toFixed(2) + '/mo' : '—';
+
+        const table = document.createElement('table');
+        table.className = 'sub-confirm__table';
+        table.appendChild(buildRow('Items in your box', data.items || '—'));
+        table.appendChild(buildRow('Monthly charge', amount));
+        table.appendChild(buildRow('Next charge', nextDate));
+        table.appendChild(buildStatusRow(data.status));
+
+        card.textContent = '';
+        card.appendChild(table);
+
+      } catch (err) {
+        card.textContent = 'Could not load details — please check your email for confirmation.';
+        console.error(err);
+      }
+
+      const manageBtn = document.getElementById('manage-btn');
+      manageBtn.addEventListener('click', async () => {
+        if (!customerId) {
+          window.location.href = 'subscription-dashboard.html';
+          return;
+        }
+        manageBtn.textContent = 'Opening…';
+        manageBtn.disabled = true;
+        try {
+          const r = await fetch('/subscription-portal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerId }),
+          });
+          const d = await r.json();
+          if (d.url) {
+            window.location.href = d.url;
+          } else {
+            throw new Error(d.error);
+          }
+        } catch {
+          manageBtn.textContent = 'Manage Your Subscription';
+          manageBtn.disabled = false;
+        }
+      });
+
+      actions.style.display = 'flex';
+    })();
+  </script>
+</body>
+</html>

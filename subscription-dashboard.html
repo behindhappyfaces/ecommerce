@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Dashboard — Heart of Texas Organics</title>
+  <meta name="description" content="Manage your Heart of Texas Organics monthly subscription." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li class="nav__item nav__item--has-dropdown">
+        <a class="nav__link nav__link--dropdown" href="offerings.html">Offerings</a>
+        <ul class="nav__dropdown" role="menu">
+          <div class="nav__dropdown-inner">
+            <li><a class="nav__dropdown-link" href="offerings.html">Provisions</a></li>
+            <li><a class="nav__dropdown-link" href="workshops.html?view=month">Lost Arts</a></li>
+          </div>
+        </ul>
+      </li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+      <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="offerings.html">Provisions</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <main class="sub-dash">
+    <div class="container">
+
+      <header class="sub-dash__header">
+        <p class="eyebrow">Your Account</p>
+        <h1 class="sub-dash__title">Subscription Dashboard</h1>
+      </header>
+
+      <!-- Subscription summary -->
+      <section class="sub-dash__section" id="summary-section">
+        <h2 class="sub-dash__section-title">Subscription Summary</h2>
+        <div class="sub-dash__card" id="summary-card">
+          <p class="sub-dash__loading">Loading…</p>
+        </div>
+      </section>
+
+      <!-- Manage (Stripe portal) -->
+      <section class="sub-dash__section">
+        <h2 class="sub-dash__section-title">Manage Billing</h2>
+        <p class="sub-dash__section-body">Update your payment method, pause, skip a month, or cancel your subscription.</p>
+        <button class="btn btn--dark" id="portal-btn">Open Billing Portal</button>
+      </section>
+
+      <!-- Modify next box -->
+      <section class="sub-dash__section">
+        <h2 class="sub-dash__section-title">Modify Your Next Box</h2>
+        <p class="sub-dash__section-body">Select what you'd like in next month's box. We'll confirm changes by email before your charge date.</p>
+
+        <form class="sub-dash__prefs" id="prefs-form" novalidate>
+          <fieldset class="sub-dash__fieldset">
+            <legend class="sub-dash__legend">Breads &amp; Baked Goods</legend>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Japanese Milk Loaf"> Japanese Milk Loaf</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Whole Wheat Loaf"> Whole Wheat Loaf</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Cinnamon Rolls"> Cinnamon Rolls</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Yeast Rolls"> Yeast Rolls</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Focaccia Loaf"> Focaccia Loaf</label>
+          </fieldset>
+
+          <fieldset class="sub-dash__fieldset">
+            <legend class="sub-dash__legend">Farm Provisions</legend>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Whole Chicken"> Whole Chicken</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Real Cream Butter"> Real Cream Butter</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Farm Eggs (1 dozen)"> Farm Eggs (1 dozen)</label>
+            <label class="sub-dash__check"><input type="checkbox" name="items" value="Harvest Basket"> Harvest Basket</label>
+          </fieldset>
+
+          <div class="sub-dash__notes-wrap">
+            <label class="sub-dash__notes-label" for="pref-notes">Special requests or notes</label>
+            <textarea id="pref-notes" name="notes" class="sub-dash__notes" rows="3" maxlength="500" placeholder="e.g. extra rolls, no chicken next month…"></textarea>
+          </div>
+
+          <div id="prefs-msg" class="sub-dash__prefs-msg" aria-live="polite"></div>
+          <button type="submit" class="btn btn--dark" id="prefs-btn">Send Preferences</button>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="faq.html">FAQ</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    let customerId = null;
+
+    function addSummaryRow(table, label, value) {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      th.textContent = label;
+      const td = document.createElement('td');
+      td.textContent = value;
+      tr.appendChild(th);
+      tr.appendChild(td);
+      table.appendChild(tr);
+    }
+
+    async function loadSummary(sessionId) {
+      const card = document.getElementById('summary-card');
+      try {
+        const res  = await fetch('/subscription-info?session_id=' + encodeURIComponent(sessionId));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error');
+
+        customerId = data.customerId;
+
+        const nextDate = data.nextCharge
+          ? new Date(data.nextCharge * 1000).toLocaleDateString('en-US', {
+              timeZone: 'America/Chicago', dateStyle: 'full',
+            })
+          : '—';
+        const amount = data.amount ? '$' + (data.amount / 100).toFixed(2) + '/mo' : '—';
+        const statusText = data.cancelAtPeriodEnd
+          ? 'Cancels at end of period'
+          : data.status === 'active' ? 'Active' : data.status;
+
+        const table = document.createElement('table');
+        table.className = 'sub-dash__table';
+        addSummaryRow(table, 'Current box', data.items || '—');
+        addSummaryRow(table, 'Monthly charge', amount);
+        addSummaryRow(table, 'Next charge', nextDate);
+        addSummaryRow(table, 'Status', statusText);
+
+        card.textContent = '';
+        card.appendChild(table);
+
+      } catch (err) {
+        card.textContent = 'Could not load subscription details. Please contact us for help.';
+        console.error(err);
+      }
+    }
+
+    async function openPortal() {
+      const btn = document.getElementById('portal-btn');
+      if (!customerId) {
+        alert('Subscription details not loaded yet. Please wait a moment and try again.');
+        return;
+      }
+      btn.textContent = 'Opening…';
+      btn.disabled = true;
+      try {
+        const r = await fetch('/subscription-portal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerId }),
+        });
+        const d = await r.json();
+        if (d.url) {
+          window.location.href = d.url;
+        } else {
+          throw new Error(d.error);
+        }
+      } catch {
+        btn.textContent = 'Open Billing Portal';
+        btn.disabled = false;
+      }
+    }
+
+    async function sendPreferences(e) {
+      e.preventDefault();
+      const form    = document.getElementById('prefs-form');
+      const msg     = document.getElementById('prefs-msg');
+      const btn     = document.getElementById('prefs-btn');
+      const checked = [...form.querySelectorAll('input[name="items"]:checked')].map(el => el.value);
+      const notes   = form.querySelector('#pref-notes').value.trim().slice(0, 500);
+
+      if (!checked.length && !notes) {
+        msg.textContent = 'Please select at least one item or add a note.';
+        msg.className = 'sub-dash__prefs-msg sub-dash__prefs-msg--error';
+        return;
+      }
+
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+      msg.textContent = '';
+      msg.className = 'sub-dash__prefs-msg';
+
+      const sessionId = localStorage.getItem('hoto-sub-session') || '';
+      const body = [
+        'Items requested: ' + (checked.join(', ') || 'none selected'),
+        notes ? 'Notes: ' + notes : '',
+        'Subscription session: ' + sessionId,
+      ].filter(Boolean).join('\n');
+
+      try {
+        const res = await fetch('/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Subscriber',
+            email: 'subscriber@noreply.com',
+            subject: 'subscription',
+            message: body,
+          }),
+        });
+        if (!res.ok) throw new Error('Send failed');
+        msg.textContent = 'Preferences sent! We\'ll confirm by email before your next charge.';
+        msg.className = 'sub-dash__prefs-msg sub-dash__prefs-msg--ok';
+        btn.textContent = 'Sent';
+      } catch {
+        msg.textContent = 'Could not send. Please email us directly at heartoftexasorganics@outlook.com.';
+        msg.className = 'sub-dash__prefs-msg sub-dash__prefs-msg--error';
+        btn.textContent = 'Send Preferences';
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('portal-btn').addEventListener('click', openPortal);
+    document.getElementById('prefs-form').addEventListener('submit', sendPreferences);
+
+    const storedSession = localStorage.getItem('hoto-sub-session');
+    if (storedSession) {
+      loadSummary(storedSession);
+    } else {
+      document.getElementById('summary-card').textContent =
+        'No active session found. Please return here from your confirmation email link.';
+    }
+  </script>
+</body>
+</html>

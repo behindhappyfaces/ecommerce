@@ -72,6 +72,26 @@ function fmt(cents) {
   return '$' + (cents / 100).toFixed(2);
 }
 
+function isSubscribing() {
+  return localStorage.getItem('hoto-subscribe') === '1';
+}
+
+function setSubscribing(v) {
+  localStorage.setItem('hoto-subscribe', v ? '1' : '0');
+}
+
+function getDiscountedTotal() {
+  return getCart().items.reduce((sum, item) => {
+    const p = PRODUCTS[item.id];
+    const price = item.price ?? (p ? p.price : 0);
+    return sum + Math.round(price * 0.8) * item.qty;
+  }, 0);
+}
+
+function getMonthlyTotal() {
+  return getDiscountedTotal() * 4;
+}
+
 // --- DOM Setup ---
 
 function injectCartDrawer() {
@@ -193,9 +213,12 @@ function renderCart() {
   itemsWrap.className = 'cart-items';
 
   // Only render items whose product id exists in PRODUCTS (extra safety)
+  const subscribing = isSubscribing();
+
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
-    const displayPrice = itemPrice ?? p.price;
+    const basePrice = itemPrice ?? p.price;
+    const displayPrice = subscribing && basePrice > 0 ? Math.round(basePrice * 0.8) : basePrice;
     const item = document.createElement('div');
     item.className = 'cart-item';
     item.dataset.id = id;
@@ -214,12 +237,23 @@ function renderCart() {
 
     const price = document.createElement('p');
     price.className = 'cart-item__price';
-    price.textContent = fmt(displayPrice);
-    if (itemPrice !== null && itemPrice !== undefined && p.subPrice && itemPrice === p.subPrice) {
-      const badge = document.createElement('span');
-      badge.className = 'cart-item__sub-badge';
-      badge.textContent = 'Subscriber price';
-      price.appendChild(badge);
+    if (subscribing && basePrice > 0) {
+      const orig = document.createElement('span');
+      orig.className = 'cart-item__price-orig';
+      orig.textContent = fmt(basePrice);
+      const disc = document.createElement('span');
+      disc.className = 'cart-item__price-disc';
+      disc.textContent = fmt(displayPrice);
+      price.appendChild(orig);
+      price.appendChild(disc);
+    } else {
+      price.textContent = fmt(displayPrice);
+      if (itemPrice !== null && itemPrice !== undefined && p.subPrice && itemPrice === p.subPrice) {
+        const badge = document.createElement('span');
+        badge.className = 'cart-item__sub-badge';
+        badge.textContent = 'Subscriber price';
+        price.appendChild(badge);
+      }
     }
 
     const qtyRow = document.createElement('div');
@@ -264,28 +298,54 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
+  // Subscribe & Save toggle
+  const subToggle = document.createElement('label');
+  subToggle.className = 'cart-subscribe' + (subscribing ? ' cart-subscribe--active' : '');
+  subToggle.htmlFor = 'cart-sub-check';
+
+  const subCheck = document.createElement('input');
+  subCheck.type = 'checkbox';
+  subCheck.id = 'cart-sub-check';
+  subCheck.className = 'cart-subscribe__input';
+  subCheck.checked = subscribing;
+  subCheck.addEventListener('change', () => {
+    setSubscribing(subCheck.checked);
+    renderCart();
+  });
+
+  const subCheckbox = document.createElement('span');
+  subCheckbox.className = 'cart-subscribe__box';
+
+  const subText = document.createElement('span');
+  subText.className = 'cart-subscribe__text';
+  subText.innerHTML = '<strong>Subscribe &amp; Save 20%</strong><em>Billed monthly · cancel anytime</em>';
+
+  subToggle.appendChild(subCheck);
+  subToggle.appendChild(subCheckbox);
+  subToggle.appendChild(subText);
+
   const totalRow = document.createElement('div');
   totalRow.className = 'cart-footer__total';
 
   const totalLabel = document.createElement('span');
-  totalLabel.textContent = 'Subtotal';
+  totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
 
   const totalAmount = document.createElement('span');
   totalAmount.id = 'cart-total';
-  totalAmount.textContent = fmt(getTotal());
+  totalAmount.textContent = subscribing ? fmt(getMonthlyTotal()) + '/mo' : fmt(getTotal());
 
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
 
   const note = document.createElement('p');
   note.className = 'cart-footer__note';
-  note.textContent = 'Shipping calculated at checkout';
+  note.textContent = subscribing ? 'Charged monthly · 4 weeks × discounted total' : 'Shipping calculated at checkout';
 
   const checkoutBtn = document.createElement('button');
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
   checkoutBtn.id = 'cart-checkout';
-  checkoutBtn.textContent = 'Proceed to Checkout';
-  checkoutBtn.addEventListener('click', checkout);
+  checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(getMonthlyTotal())}/mo` : 'Proceed to Checkout';
+  checkoutBtn.addEventListener('click', subscribing ? checkoutSubscription : checkout);
 
   const divider = document.createElement('div');
   divider.className = 'cart-footer__divider';
@@ -299,6 +359,7 @@ function renderCart() {
   cryptoBtn.textContent = '₿  Pay with Bitcoin';
   cryptoBtn.addEventListener('click', checkoutCrypto);
 
+  footer.appendChild(subToggle);
   footer.appendChild(totalRow);
   footer.appendChild(note);
   footer.appendChild(checkoutBtn);
@@ -354,6 +415,43 @@ async function checkout() {
     btn.textContent = 'Error. Try Again';
     btn.disabled = false;
     console.error('Checkout error:', err);
+  }
+}
+
+// --- Subscription Checkout ---
+
+async function checkoutSubscription() {
+  const cart = getCart();
+  if (!cart.items.length) return;
+
+  const btn = document.getElementById('cart-checkout');
+  btn.textContent = 'Redirecting…';
+  btn.disabled = true;
+
+  const items = cart.items
+    .filter(({ id }) => PRODUCTS[id])
+    .map(({ id, qty, price }) => ({
+      name: PRODUCTS[id].name,
+      price: Math.round((price ?? PRODUCTS[id].price) * 0.8),
+      quantity: qty,
+    }));
+
+  try {
+    const res = await fetch('/create-cart-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (err) {
+    btn.textContent = `Subscribe — ${fmt(getMonthlyTotal())}/mo`;
+    btn.disabled = false;
+    console.error('Subscription checkout error:', err);
   }
 }
 

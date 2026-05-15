@@ -37,6 +37,20 @@ async function sendEmail(subject, html) {
   console.log('Email sent:', subject);
 }
 
+async function sendEmailTo(to, subject, html) {
+  if (!process.env.OUTLOOK_PASSWORD || process.env.OUTLOOK_PASSWORD === 'your_outlook_password_here') {
+    console.log('[Customer email skipped]\nTo:', to, '\nSubject:', subject);
+    return;
+  }
+  await mailer.sendMail({
+    from: `"Heart of Texas Organics" <${process.env.OUTLOOK_USER}>`,
+    to,
+    subject,
+    html,
+  });
+  console.log('Customer email sent:', to, subject);
+}
+
 function formatMoney(cents) {
   return '$' + (cents / 100).toFixed(2);
 }
@@ -221,6 +235,80 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         break;
       }
 
+      // --- New subscription started --------------------------------------
+      case 'customer.subscription.created': {
+        const sub = event.data.object;
+        const customer = await stripe.customers.retrieve(sub.customer);
+        const email = customer.email;
+        if (!email) break;
+
+        const amount    = sub.items.data[0]?.price?.unit_amount;
+        const items     = sub.metadata?.items || 'your selected items';
+        const siteUrl   = process.env.SITE_URL || 'https://heartoftexasorganics.onrender.com';
+        const nextDate  = new Date(sub.current_period_end * 1000).toLocaleDateString('en-US', {
+          timeZone: 'America/Chicago', dateStyle: 'full',
+        });
+
+        await sendEmailTo(email,
+          'Your Heart of Texas Organics Subscription is Active',
+          `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+            <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
+            <h2 style="color:#2C3E2D;margin:0 0 16px;">You're subscribed!</h2>
+            <p style="color:#3d3d3d;line-height:1.8;">Thank you for joining the Heart of Texas Organics family. Here's a summary of your subscription:</p>
+            <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fff;padding:24px;">
+              <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;font-weight:600;color:#2C3E2D;">Items</td><td style="padding:10px 16px;border-bottom:1px solid #eee;">${items}</td></tr>
+              <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;font-weight:600;color:#2C3E2D;">Monthly charge</td><td style="padding:10px 16px;border-bottom:1px solid #eee;">${formatMoney(amount)}</td></tr>
+              <tr><td style="padding:10px 16px;font-weight:600;color:#2C3E2D;">Next charge</td><td style="padding:10px 16px;">${nextDate}</td></tr>
+            </table>
+            <a href="${siteUrl}/subscription-dashboard.html" style="display:inline-block;background:#2C3E2D;color:#F5F0E8;padding:14px 28px;text-decoration:none;font-family:sans-serif;font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px;">Manage Your Subscription</a>
+            <p style="color:#888;font-size:12px;line-height:1.7;">You can pause, skip, or cancel anytime from your dashboard. Questions? Reply to this email or visit our contact page.</p>
+          </div>`
+        );
+
+        await sendEmail(
+          `New Farm Subscription — ${formatMoney(amount)}/month`,
+          `<h2 style="color:#2C3E2D;">New Subscription Started</h2>
+           <p><strong>Customer:</strong> ${email}</p>
+           <p><strong>Items:</strong> ${items}</p>
+           <p><strong>Monthly charge:</strong> ${formatMoney(amount)}</p>
+           <p><strong>Next charge:</strong> ${nextDate}</p>`
+        );
+        break;
+      }
+
+      // --- Upcoming charge reminder (fires 7 days before) ---------------
+      case 'invoice.upcoming': {
+        const invoice  = event.data.object;
+        if (!invoice.subscription) break;
+        const customer = await stripe.customers.retrieve(invoice.customer);
+        const email    = customer.email;
+        if (!email) break;
+
+        const sub      = await stripe.subscriptions.retrieve(invoice.subscription);
+        const items    = sub.metadata?.items || 'your monthly box';
+        const siteUrl  = process.env.SITE_URL || 'https://heartoftexasorganics.onrender.com';
+        const amount   = invoice.amount_due;
+        const chargeTs = invoice.next_payment_attempt || sub.current_period_end;
+        const chargeDate = new Date(chargeTs * 1000).toLocaleDateString('en-US', {
+          timeZone: 'America/Chicago', dateStyle: 'full',
+        });
+
+        await sendEmailTo(email,
+          `Reminder: ${formatMoney(amount)} charge coming up`,
+          `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+            <h2 style="color:#2C3E2D;margin:0 0 16px;">Your box is almost here</h2>
+            <p style="color:#3d3d3d;line-height:1.8;">Your monthly Heart of Texas Organics box is coming up. Here's what to expect:</p>
+            <table style="width:100%;border-collapse:collapse;margin:24px 0;background:#fff;padding:24px;">
+              <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;font-weight:600;color:#2C3E2D;">Items</td><td style="padding:10px 16px;border-bottom:1px solid #eee;">${items}</td></tr>
+              <tr><td style="padding:10px 16px;border-bottom:1px solid #eee;font-weight:600;color:#2C3E2D;">Amount</td><td style="padding:10px 16px;border-bottom:1px solid #eee;">${formatMoney(amount)}</td></tr>
+              <tr><td style="padding:10px 16px;font-weight:600;color:#2C3E2D;">Charge date</td><td style="padding:10px 16px;">${chargeDate}</td></tr>
+            </table>
+            <p style="color:#3d3d3d;">Need to make changes before the charge? <a href="${siteUrl}/subscription-dashboard.html" style="color:#2C3E2D;">Visit your dashboard</a> to skip, modify, or cancel.</p>
+          </div>`
+        );
+        break;
+      }
+
       // --- Payment failed ------------------------------------------------
       case 'payment_intent.payment_failed': {
         const pi    = event.data.object;
@@ -368,6 +456,91 @@ app.post('/create-subscription-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     console.error('Subscription error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =========================================
+// CART SUBSCRIPTION  (Subscribe & Save 20%)
+// =========================================
+
+app.post('/create-cart-subscription', async (req, res) => {
+  try {
+    const { items } = req.body;
+    const origin = `${req.protocol}://${req.get('host')}`;
+    if (!items?.length) return res.status(400).json({ error: 'No items' });
+
+    const weeklyTotal  = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const monthlyAmount = weeklyTotal * 4;
+    const itemsLabel   = items.map(i => `${i.quantity}× ${i.name}`).join(', ');
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Heart of Texas Organics Monthly Box',
+            description: itemsLabel,
+          },
+          unit_amount: monthlyAmount,
+          recurring: { interval: 'month' },
+        },
+        quantity: 1,
+      }],
+      subscription_data: { metadata: { items: itemsLabel } },
+      allow_promotion_codes: true,
+      success_url: `${origin}/subscription-success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/offerings.html`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Cart subscription error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/subscription-info', async (req, res) => {
+  try {
+    const { session_id } = req.query;
+    if (!session_id) return res.status(400).json({ error: 'session_id required' });
+
+    const session = await stripe.checkout.sessions.retrieve(session_id, {
+      expand: ['subscription'],
+    });
+    const sub = session.subscription;
+    if (!sub) return res.status(404).json({ error: 'No subscription found' });
+
+    res.json({
+      subscriptionId: sub.id,
+      customerId: sub.customer,
+      status: sub.status,
+      amount: sub.items.data[0]?.price?.unit_amount,
+      nextCharge: sub.current_period_end,
+      items: sub.metadata?.items || '',
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+    });
+  } catch (err) {
+    console.error('Subscription info error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/subscription-portal', async (req, res) => {
+  try {
+    const { customerId } = req.body;
+    const origin = `${req.protocol}://${req.get('host')}`;
+    if (!customerId) return res.status(400).json({ error: 'customerId required' });
+
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${origin}/subscription-dashboard.html`,
+    });
+    res.json({ url: portalSession.url });
+  } catch (err) {
+    console.error('Portal error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

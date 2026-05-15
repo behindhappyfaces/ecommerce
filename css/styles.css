@@ -395,43 +395,62 @@ h1, h2, h3, h4 {
   transition: transform 0.2s;
 }
 
-.nav__item--has-dropdown:hover .nav__link--dropdown::after {
+.nav__item--has-dropdown:hover .nav__link--dropdown::after,
+.nav__item--has-dropdown:focus-within .nav__link--dropdown::after {
   transform: rotate(-135deg) translateY(-2px);
 }
 
 .nav__dropdown {
-  display: none;
+  /* Use opacity/visibility instead of display so the
+     padding-top bridge never gets a gap that breaks hover */
   position: absolute;
-  top: calc(100% + 14px);
+  top: 100%;
   left: 50%;
-  transform: translateX(-50%);
-  background: #fff;
-  border: 1px solid rgba(44,62,45,0.1);
-  border-radius: 4px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
-  min-width: 150px;
+  transform: translateX(-50%) translateY(-4px);
+  /* padding-top creates a seamless hover bridge from the
+     nav link into the menu — no gap means no flicker */
+  padding-top: 14px;
+  min-width: 160px;
   list-style: none;
-  padding: 6px 0;
   z-index: 200;
-  /* small notch pointing up */
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
 }
-.nav__dropdown::before {
+
+/* The visible white card sits inside a ::after so the
+   transparent padding-top bridge stays invisible */
+.nav__dropdown::after {
   content: '';
   position: absolute;
-  top: -6px;
+  top: 8px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(45deg);
   width: 10px;
   height: 10px;
   background: #fff;
   border-left: 1px solid rgba(44,62,45,0.1);
   border-top: 1px solid rgba(44,62,45,0.1);
-  transform: translateX(-50%) rotate(45deg);
+  z-index: 1;
+}
+
+.nav__dropdown-inner {
+  background: #fff;
+  border: 1px solid rgba(44,62,45,0.1);
+  border-radius: 4px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  padding: 6px 0;
+  position: relative;
+  z-index: 2;
 }
 
 .nav__item--has-dropdown:hover .nav__dropdown,
 .nav__item--has-dropdown:focus-within .nav__dropdown {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
 }
 
 .nav__dropdown-link {

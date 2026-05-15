@@ -266,6 +266,52 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 
 // =========================================
+// MAGAZINE SUBSCRIPTION  ($6.99 / month)
+// =========================================
+
+let _magazinePriceId = process.env.STRIPE_MAGAZINE_PRICE_ID || null;
+
+async function getMagazinePriceId() {
+  if (_magazinePriceId) return _magazinePriceId;
+  const product = await stripe.products.create({
+    name: 'Best Medicines Magazine',
+    description: 'Monthly digital magazine — Heart of Texas Organics',
+  });
+  const price = await stripe.prices.create({
+    product: product.id,
+    unit_amount: 699,
+    currency: 'usd',
+    recurring: { interval: 'month' },
+  });
+  _magazinePriceId = price.id;
+  console.log('Magazine price created:', _magazinePriceId, '— add STRIPE_MAGAZINE_PRICE_ID to env to persist');
+  return _magazinePriceId;
+}
+
+app.post('/create-magazine-subscription', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    const priceId = await getMagazinePriceId();
+    const origin  = `${req.protocol}://${req.get('host')}`;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer_email: email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${origin}/magazine.html?subscribed=1`,
+      cancel_url:  `${origin}/magazine.html`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Magazine subscription error:', err.message);
+    res.status(500).json({ error: 'Could not start subscription' });
+  }
+});
+
+// =========================================
 // STRIPE CHECKOUT
 // =========================================
 

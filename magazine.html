@@ -197,64 +197,85 @@
       border-color: rgba(245,240,232,0.4);
     }
 
-    /* ── SUBSCRIBE STRIP ───────────────────────── */
-    .mag-subscribe {
-      background: #2C3E2D;
-      padding: 64px 24px;
+    /* ── SUBSCRIBE BOX (below cover, dark bg) ─── */
+    .mag-sub-box {
+      width: 100%;
+      max-width: 520px;
+      padding: 36px 24px 0;
       text-align: center;
     }
-    .mag-subscribe__title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(1.5rem, 3vw, 2.1rem);
-      font-weight: 400;
-      color: #fff;
-      margin: 0 0 10px;
-    }
-    .mag-subscribe__sub {
+    .mag-sub-box__success {
       font-family: 'Raleway', sans-serif;
-      font-size: 0.88rem;
-      color: rgba(255,255,255,0.52);
-      margin: 0 0 28px;
+      font-size: 0.9rem;
+      color: #a8d5a2;
+      border: 1px solid rgba(168,213,162,0.3);
+      border-radius: 3px;
+      padding: 14px 20px;
+      margin: 0;
     }
-    .mag-subscribe__form {
+    .mag-sub-box__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 400;
+      color: #f5f0e8;
+      margin: 0 0 8px;
+    }
+    .mag-sub-box__sub {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.82rem;
+      color: rgba(245,240,232,0.45);
+      margin: 0 0 20px;
+      line-height: 1.65;
+    }
+    .mag-sub-box__form {
       display: flex;
       gap: 10px;
-      max-width: 420px;
-      margin: 0 auto;
       flex-wrap: wrap;
       justify-content: center;
     }
-    .mag-subscribe__input {
+    .mag-sub-box__input {
       flex: 1;
-      min-width: 210px;
-      padding: 12px 15px;
-      border: none;
+      min-width: 200px;
+      padding: 13px 15px;
+      border: 1px solid rgba(245,240,232,0.15);
       border-radius: 2px;
+      background: rgba(255,255,255,0.06);
+      color: #f5f0e8;
       font-size: 0.9rem;
       font-family: 'Raleway', sans-serif;
       outline: none;
+      transition: border-color 0.2s;
     }
-    .mag-subscribe__btn {
-      padding: 12px 22px;
-      background: #8B4513;
-      color: #fff;
-      border: none;
+    .mag-sub-box__input::placeholder { color: rgba(245,240,232,0.3); }
+    .mag-sub-box__input:focus { border-color: rgba(245,240,232,0.4); }
+    .mag-sub-box__btn {
+      padding: 13px 22px;
+      background: #2C3E2D;
+      border: 1px solid rgba(245,240,232,0.2);
+      color: #f5f0e8;
       border-radius: 2px;
       font-family: 'Raleway', sans-serif;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
     }
-    .mag-subscribe__btn:hover { opacity: 0.84; }
-    .mag-subscribe__msg {
-      margin-top: 12px;
+    .mag-sub-box__btn:hover { background: #3a5040; border-color: rgba(245,240,232,0.4); }
+    .mag-sub-box__msg {
+      margin-top: 10px;
       font-family: 'Raleway', sans-serif;
-      font-size: 0.82rem;
-      min-height: 20px;
-      color: rgba(255,255,255,0.7);
+      font-size: 0.78rem;
+      color: rgba(245,240,232,0.5);
+      min-height: 18px;
+    }
+    .mag-sub-box__fine {
+      margin-top: 10px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: rgba(245,240,232,0.2);
     }
 
   </style>
@@ -295,36 +316,37 @@
       <p class="mag-masthead__sub">Stories &middot; Recipes &middot; Farm Wisdom</p>
     </div>
 
-    <div class="mag-viewer">
-
-      <!-- ── CURRENT ISSUE COVER ─────────────────── -->
-      <div class="mag-cover-display">
-        <div class="mag-cover-wrap">
-          <img
-            src="images/magazine-cover.jpg"
-            alt="Best Medicines Magazine — June 2026 cover featuring Deborah Smith"
-            class="mag-cover-img"
-            loading="eager"
-          />
-        </div>
-        <p class="mag-cover-issue">June 2026 &bull; Issue No. 1</p>
+    <!-- ── CURRENT ISSUE COVER ─────────────────── -->
+    <div class="mag-cover-display">
+      <div class="mag-cover-wrap">
+        <img
+          src="images/magazine-cover.jpg"
+          alt="Best Medicines Magazine — June 2026 cover featuring Deborah Smith"
+          class="mag-cover-img"
+          loading="eager"
+        />
       </div>
+      <p class="mag-cover-issue">June 2026 &bull; Issue No. 1</p>
+    </div>
 
-      <!-- ── FULL FLIPBOOK (Issuu) ─────────────────
-           Paste the Issuu <iframe> embed inside mag-embed-wrap
-           and remove the mag-placeholder div when ready.
-      ─────────────────────────────────────────────── -->
-      <div class="mag-embed-section">
-        <p class="mag-embed-label">Read Inside</p>
-        <div class="mag-embed-wrap">
+    <!-- ── SUBSCRIBE (directly under cover) ────── -->
+    <div class="mag-sub-box" id="mag-success-msg" style="display:none;">
+      <p class="mag-sub-box__success">You&rsquo;re subscribed! Check your email to complete setup.</p>
+    </div>
 
-          <div class="mag-placeholder">
-            <p class="mag-placeholder__sub">Full flipbook coming soon &mdash;<br>upload PDF to Issuu to activate.</p>
-          </div>
-
-        </div>
-      </div>
-
+    <div class="mag-sub-box" id="mag-sub-form-wrap">
+      <h2 class="mag-sub-box__title">Get Best Medicines in your inbox.</h2>
+      <p class="mag-sub-box__sub">
+        Subscribe for <strong style="color:#f5f0e8;">$6.99&thinsp;/&thinsp;month</strong>
+        &mdash; stories, recipes &amp; farm wisdom delivered monthly.
+      </p>
+      <form class="mag-sub-box__form" id="mag-form" novalidate>
+        <input class="mag-sub-box__input" type="email" id="mag-email"
+               placeholder="your@email.com" autocomplete="email" required />
+        <button class="mag-sub-box__btn" type="submit">Subscribe &rarr;</button>
+      </form>
+      <p class="mag-sub-box__msg" id="mag-msg" aria-live="polite"></p>
+      <p class="mag-sub-box__fine">Billed monthly &bull; Cancel anytime &bull; Secure checkout via Stripe</p>
     </div>
 
     <div class="mag-actions">
@@ -336,20 +358,6 @@
       <a class="mag-action-link" href="contact.html">Contact Us</a>
     </div>
 
-  </section>
-
-  <!-- SUBSCRIBE -->
-  <section class="mag-subscribe" aria-label="Subscribe to Best Medicines">
-    <div class="container">
-      <h2 class="mag-subscribe__title">Get Best Medicines in your inbox.</h2>
-      <p class="mag-subscribe__sub">New stories from the farm, delivered when we have something worth saying.</p>
-      <form class="mag-subscribe__form" id="mag-form" novalidate>
-        <input class="mag-subscribe__input" type="email" id="mag-email"
-               placeholder="your@email.com" autocomplete="email" required />
-        <button class="mag-subscribe__btn" type="submit">Subscribe</button>
-      </form>
-      <p class="mag-subscribe__msg" id="mag-msg" aria-live="polite"></p>
-    </div>
   </section>
 
   <!-- FOOTER -->
@@ -403,7 +411,14 @@
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>
   <script>
-    /* Subscribe form */
+    /* Show success banner if returning from Stripe */
+    if (new URLSearchParams(window.location.search).get('subscribed') === '1') {
+      document.getElementById('mag-success-msg').style.display  = 'block';
+      document.getElementById('mag-sub-form-wrap').style.display = 'none';
+      history.replaceState(null, '', 'magazine.html');
+    }
+
+    /* Subscribe → Stripe checkout */
     document.getElementById('mag-form').addEventListener('submit', async function (e) {
       e.preventDefault();
       var email = document.getElementById('mag-email').value.trim();
@@ -414,24 +429,25 @@
         msg.textContent = 'Please enter a valid email address.';
         return;
       }
-      btn.textContent = 'Subscribing…';
+
+      btn.textContent = 'Loading…';
       btn.disabled = true;
+
       try {
-        await fetch('/contact', {
+        var res  = await fetch('/create-magazine-subscription', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: 'Magazine Subscriber', email: email,
-            subject: 'other',
-            message: 'New Best Medicines magazine subscription request.',
-          }),
+          body: JSON.stringify({ email: email }),
         });
-        msg.textContent = 'You are subscribed! Welcome to Best Medicines.';
-        document.getElementById('mag-email').value = '';
-        btn.textContent = 'Subscribed';
+        var data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error(data.error || 'No checkout URL');
+        }
       } catch (_) {
         msg.textContent = 'Something went wrong. Please try again.';
-        btn.textContent = 'Subscribe';
+        btn.textContent = 'Subscribe →';
         btn.disabled = false;
       }
     });

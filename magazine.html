@@ -57,6 +57,73 @@
       margin: 0;
     }
 
+    /* ── CURRENT ISSUE COVER ──────────────────── */
+    .mag-cover-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 56px;
+    }
+
+    .mag-cover-wrap {
+      position: relative;
+      max-width: 480px;
+      width: 100%;
+      /* Magazine sitting on surface effect */
+      filter: drop-shadow(0 40px 60px rgba(0,0,0,0.8)) drop-shadow(0 8px 20px rgba(0,0,0,0.6));
+      transform: perspective(1000px) rotateX(2deg);
+      transition: transform 0.4s ease, filter 0.4s ease;
+    }
+
+    .mag-cover-wrap:hover {
+      transform: perspective(1000px) rotateX(0deg) scale(1.02);
+      filter: drop-shadow(0 50px 80px rgba(0,0,0,0.85)) drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+    }
+
+    .mag-cover-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 2px;
+    }
+
+    /* Spine highlight to make it look printed */
+    .mag-cover-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 14px;
+      height: 100%;
+      background: linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.05) 60%, transparent);
+      border-radius: 2px 0 0 2px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .mag-cover-issue {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.28);
+      margin: 18px 0 0;
+    }
+
+    /* ── ISSUU FLIPBOOK SECTION ────────────────── */
+    .mag-embed-section {
+      width: 100%;
+    }
+
+    .mag-embed-label {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.22);
+      text-align: center;
+      margin: 0 0 16px;
+    }
+
     /* ── ISSUU EMBED CONTAINER ─────────────────── */
     .mag-viewer {
       width: 100%;
@@ -88,34 +155,21 @@
     .mag-placeholder {
       position: absolute;
       inset: 0;
-      background: #1a1a1a;
+      background: #161616;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       border-radius: 4px;
-      border: 1px dashed rgba(245,240,232,0.12);
-    }
-    .mag-placeholder__logo {
-      width: 56px;
-      opacity: 0.2;
-      margin-bottom: 18px;
-    }
-    .mag-placeholder__title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-style: italic;
-      font-size: 1.4rem;
-      color: rgba(245,240,232,0.25);
-      margin: 0 0 8px;
-      text-align: center;
+      border: 1px dashed rgba(245,240,232,0.08);
     }
     .mag-placeholder__sub {
       font-family: 'Raleway', sans-serif;
-      font-size: 0.72rem;
-      color: rgba(245,240,232,0.18);
+      font-size: 0.68rem;
+      color: rgba(245,240,232,0.15);
       text-align: center;
-      max-width: 280px;
-      line-height: 1.7;
+      max-width: 260px;
+      line-height: 1.75;
     }
 
     /* ── LINKS BELOW VIEWER ────────────────────── */
@@ -242,20 +296,35 @@
     </div>
 
     <div class="mag-viewer">
-      <div class="mag-embed-wrap">
 
-        <!-- ═══════════════════════════════════════════════════════
-             ISSUU EMBED — paste the Issuu embed <iframe> here
-             and remove the mag-placeholder div below it
-        ═══════════════════════════════════════════════════════ -->
-
-        <div class="mag-placeholder">
-          <img class="mag-placeholder__logo" src="images/logo.png" alt="" />
-          <p class="mag-placeholder__title">Best Medicines</p>
-          <p class="mag-placeholder__sub">Magazine coming soon.<br>New issues published seasonally.</p>
+      <!-- ── CURRENT ISSUE COVER ─────────────────── -->
+      <div class="mag-cover-display">
+        <div class="mag-cover-wrap">
+          <img
+            src="images/magazine-cover.png"
+            alt="Best Medicines Magazine — June 2026 cover featuring Deborah Smith"
+            class="mag-cover-img"
+            loading="eager"
+          />
         </div>
-
+        <p class="mag-cover-issue">June 2026 &bull; Issue No. 1</p>
       </div>
+
+      <!-- ── FULL FLIPBOOK (Issuu) ─────────────────
+           Paste the Issuu <iframe> embed inside mag-embed-wrap
+           and remove the mag-placeholder div when ready.
+      ─────────────────────────────────────────────── -->
+      <div class="mag-embed-section">
+        <p class="mag-embed-label">Read Inside</p>
+        <div class="mag-embed-wrap">
+
+          <div class="mag-placeholder">
+            <p class="mag-placeholder__sub">Full flipbook coming soon &mdash;<br>upload PDF to Issuu to activate.</p>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
     <div class="mag-actions">

@@ -967,7 +967,7 @@ h1, h2, h3, h4 {
 
 .footer__top {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 48px;
   margin-bottom: 64px;
 }

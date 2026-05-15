@@ -382,23 +382,6 @@ h1, h2, h3, h4 {
   list-style: none;
 }
 
-.nav__item--has-dropdown .nav__link--dropdown::after {
-  content: '';
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg) translateY(-2px);
-  margin-left: 5px;
-  vertical-align: middle;
-  transition: transform 0.2s;
-}
-
-.nav__item--has-dropdown:hover .nav__link--dropdown::after,
-.nav__item--has-dropdown:focus-within .nav__link--dropdown::after {
-  transform: rotate(-135deg) translateY(-2px);
-}
 
 .nav__dropdown {
   /* Use opacity/visibility instead of display so the
@@ -470,10 +453,6 @@ h1, h2, h3, h4 {
   opacity: 1;
 }
 
-/* When nav is scrolled, dropdown arrow color matches */
-.nav.scrolled .nav__item--has-dropdown .nav__link--dropdown::after {
-  border-color: var(--color-green);
-}
 
 /* =========================================
    HOMEPAGE HERO

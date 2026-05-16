@@ -2235,6 +2235,21 @@ h1, h2, h3, h4 {
 
 .sub-card:hover .sub-card__image-wrap img { transform: scale(1.05); }
 
+.sub-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px dashed rgba(245,240,232,0.2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.35);
+}
+
 .sub-card__body {
   padding: 28px 28px 32px;
   display: flex;

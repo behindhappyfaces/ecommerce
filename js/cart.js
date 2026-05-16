@@ -3,15 +3,15 @@
    ========================================= */
 
 const PRODUCTS = {
-  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0,    subPrice: null, image: 'images/japanese-milk-loaf.webp' },
-  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0,    subPrice: null, image: 'images/whole-wheat-loaf.webp' },
-  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.webp' },
+  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0,    subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
+  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0,    subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
+  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
   'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0,    subPrice: null, image: 'images/focaccia-loaf.jpg' },
-  'whole-chicken':      { name: 'Whole Chicken',       price: 1800, subPrice: 1500, image: 'images/chicken.webp' },
-  'cultured-butter':    { name: 'Real Cream Butter',   price: 900,  subPrice: 700,  image: 'images/butter.webp' },
-  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 800,  subPrice: 600,  image: 'images/eggs.webp' },
-  'harvest-basket':     { name: 'Harvest Basket',      price: 3500, subPrice: 2800, image: 'images/harvest.webp' },
+  'whole-chicken':      { name: 'Whole Chicken',       price: 1800, subPrice: 1500, image: 'images/chicken.jpg' },
+  'cultured-butter':    { name: 'Real Cream Butter',   price: 900,  subPrice: 700,  image: 'images/butter.jpg' },
+  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 800,  subPrice: 600,  image: 'images/eggs.jpg' },
+  'harvest-basket':     { name: 'Harvest Basket',      price: 3500, subPrice: 2800, image: 'images/harvest.jpg' },
 };
 
 const STORAGE_KEY = 'hoto-cart';

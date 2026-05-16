@@ -5,6 +5,10 @@ const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');
 const path     = require('path');
 const fs       = require('fs');
+const crypto   = require('crypto');
+const db       = require('./db');
+let cron;
+try { cron = require('node-cron'); } catch(e) { console.log('[Cron] node-cron not available'); }
 
 const app = express();
 
@@ -152,6 +156,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             paymentMethod: 'card',
             created: new Date().toISOString(),
           });
+          deductStockForOrder(items, session.id);
 
           await sendEmail(
             `✅ New Order ${total} Ready to Ship`,
@@ -174,6 +179,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             paymentMethod: 'us_bank_account',
             created: new Date().toISOString(),
           });
+          deductStockForOrder(items, session.id);
 
           await sendEmail(
             `⏳ New ACH Order ${total} DO NOT SHIP YET`,
@@ -680,6 +686,319 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'Email failed' });
   }
 });
+
+// =========================================
+// INVENTORY MANAGEMENT
+// =========================================
+
+// --- Auth (in-memory sessions, 24h expiry) ---
+const sessions = new Map();
+function mkToken() { return crypto.randomBytes(32).toString('hex'); }
+function requireAdmin(req, res, next) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  const exp = sessions.get(token);
+  if (!exp || Date.now() > exp) return res.status(401).json({ error: 'Not authenticated' });
+  next();
+}
+
+// --- Stock map: Stripe product name → internal product ID ---
+const PRODUCT_MAP = {
+  'Japanese Milk Loaf':          'japanese-milk-loaf',
+  'Cinnamon Rolls':              'cinnamon-rolls',
+  'Whole Wheat Loaf':            'whole-wheat-loaf',
+  'Yeast Rolls':                 'yeast-rolls',
+  'Focaccia Loaf':               'focaccia-loaf',
+  'Sourdough':                   'sourdough',
+  'Challah':                     'challah',
+  'Pasture-Raised Eggs':         'farm-eggs',
+  'Real Cream Butter':           'cultured-butter',
+  'Seasonal Preserves':          'seasonal-preserves',
+  'Garlic Chili Crunch':         'garlic-chili-crunch',
+  'Tuscany Herb Dipping Oil':    'herb-dipping-oil',
+  'Tuscany Herb Bread Dipping Oil': 'herb-dipping-oil',
+};
+
+function deductStockForOrder(lineItems, orderId) {
+  for (const item of lineItems) {
+    const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
+    if (!pid) continue;
+    const qty = item.quantity || 1;
+    db.prepare('UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?').run(qty, pid);
+    db.prepare('INSERT INTO transactions (product_id, type, quantity, order_id, notes) VALUES (?, ?, ?, ?, ?)').run(pid, 'sale', -qty, orderId, 'Stripe checkout');
+  }
+}
+
+// --- Admin auth routes ---
+app.post('/admin/login', (req, res) => {
+  const { password } = req.body || {};
+  if (!password || password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Invalid password' });
+  }
+  const token = mkToken();
+  sessions.set(token, Date.now() + 24 * 60 * 60 * 1000);
+  res.json({ token });
+});
+
+app.post('/admin/logout', (req, res) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  sessions.delete(token);
+  res.json({ ok: true });
+});
+
+app.get('/admin/check', requireAdmin, (req, res) => {
+  res.json({ ok: true });
+});
+
+// --- Public stock endpoint (for website sold-out indicators) ---
+app.get('/api/stock', (req, res) => {
+  const rows = db.prepare(
+    'SELECT id, name, stock, reorder_level, allow_preorder FROM products WHERE active = 1'
+  ).all();
+  res.json(rows);
+});
+
+// --- Inventory CRUD ---
+app.get('/admin/inventory', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT * FROM products ORDER BY category, name').all();
+  res.json(rows);
+});
+
+app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { reorder_level, price_cents, unit, allow_preorder } = req.body || {};
+  const product = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  db.prepare(
+    'UPDATE products SET reorder_level = ?, price_cents = ?, unit = ?, allow_preorder = ? WHERE id = ?'
+  ).run(
+    reorder_level ?? product.reorder_level,
+    price_cents   ?? product.price_cents,
+    unit          ?? product.unit,
+    allow_preorder != null ? (allow_preorder ? 1 : 0) : product.allow_preorder,
+    id
+  );
+  res.json({ ok: true });
+});
+
+app.post('/admin/inventory/:id/adjust', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { quantity, notes } = req.body || {};
+  if (quantity == null || isNaN(parseInt(quantity))) {
+    return res.status(400).json({ error: 'quantity required' });
+  }
+  const qty = parseInt(quantity);
+  const product = db.prepare('SELECT id, stock FROM products WHERE id = ?').get(id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  db.prepare('UPDATE products SET stock = MAX(0, stock + ?) WHERE id = ?').run(qty, id);
+  db.prepare(
+    'INSERT INTO transactions (product_id, type, quantity, notes) VALUES (?, ?, ?, ?)'
+  ).run(id, 'adjustment', qty, notes || null);
+
+  const updated = db.prepare('SELECT stock FROM products WHERE id = ?').get(id);
+  res.json({ ok: true, stock: updated.stock });
+});
+
+app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { quantity, batch_number, notes } = req.body || {};
+  if (!quantity || isNaN(parseInt(quantity)) || parseInt(quantity) <= 0) {
+    return res.status(400).json({ error: 'quantity must be a positive integer' });
+  }
+  const qty = parseInt(quantity);
+  const product = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+
+  db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, id);
+  db.prepare(
+    'INSERT INTO transactions (product_id, type, quantity, batch_number, notes) VALUES (?, ?, ?, ?, ?)'
+  ).run(id, 'restock', qty, batch_number || null, notes || null);
+
+  const updated = db.prepare('SELECT stock FROM products WHERE id = ?').get(id);
+  res.json({ ok: true, stock: updated.stock });
+});
+
+// --- Transaction history ---
+app.get('/admin/transactions', requireAdmin, (req, res) => {
+  const { product_id } = req.query;
+  let rows;
+  if (product_id) {
+    rows = db.prepare(`
+      SELECT t.*, p.name AS product_name
+      FROM transactions t
+      JOIN products p ON p.id = t.product_id
+      WHERE t.product_id = ?
+      ORDER BY t.created_at DESC
+      LIMIT 150
+    `).all(product_id);
+  } else {
+    rows = db.prepare(`
+      SELECT t.*, p.name AS product_name
+      FROM transactions t
+      JOIN products p ON p.id = t.product_id
+      ORDER BY t.created_at DESC
+      LIMIT 150
+    `).all();
+  }
+  res.json(rows);
+});
+
+// --- Reports ---
+app.get('/admin/reports/weekly', requireAdmin, (req, res) => {
+  const sales = db.prepare(`
+    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
+           SUM(-t.quantity * p.price_cents) AS revenue_cents
+    FROM transactions t
+    JOIN products p ON p.id = t.product_id
+    WHERE t.type = 'sale'
+      AND t.created_at >= datetime('now', '-7 days')
+    GROUP BY t.product_id, p.name
+    ORDER BY units_sold DESC
+  `).all();
+  const total = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
+  res.json({ sales, total_revenue: total });
+});
+
+app.get('/admin/reports/monthly', requireAdmin, (req, res) => {
+  const sales = db.prepare(`
+    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
+           SUM(-t.quantity * p.price_cents) AS revenue_cents
+    FROM transactions t
+    JOIN products p ON p.id = t.product_id
+    WHERE t.type = 'sale'
+      AND t.created_at >= datetime('now', '-30 days')
+    GROUP BY t.product_id, p.name
+    ORDER BY units_sold DESC
+  `).all();
+  const total = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
+  res.json({ sales, total_revenue: total });
+});
+
+// --- CSV export ---
+app.get('/admin/export/csv', requireAdmin, (req, res) => {
+  const products = db.prepare('SELECT * FROM products ORDER BY category, name').all();
+  const txns     = db.prepare(`
+    SELECT t.created_at, p.name AS product_name, t.type, t.quantity,
+           t.batch_number, t.order_id, t.notes
+    FROM transactions t
+    JOIN products p ON p.id = t.product_id
+    ORDER BY t.created_at DESC
+  `).all();
+
+  const esc = (v) => {
+    if (v == null) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+
+  let csv = 'PRODUCTS\n';
+  csv += 'name,category,stock,reorder_level,unit,price_cents\n';
+  for (const p of products) {
+    csv += [p.name, p.category, p.stock, p.reorder_level, p.unit, p.price_cents].map(esc).join(',') + '\n';
+  }
+
+  csv += '\nTRANSACTIONS\n';
+  csv += 'created_at,product_name,type,quantity,batch_number,order_id,notes\n';
+  for (const t of txns) {
+    csv += [t.created_at, t.product_name, t.type, t.quantity, t.batch_number, t.order_id, t.notes].map(esc).join(',') + '\n';
+  }
+
+  const filename = `inventory-export-${new Date().toISOString().slice(0,10)}.csv`;
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(csv);
+});
+
+// --- Send weekly report email on demand ---
+app.post('/admin/reports/send-weekly', requireAdmin, async (req, res) => {
+  try {
+    const report = buildWeeklyReport();
+    await sendEmail('Weekly Inventory Report — Heart of Texas Organics', report);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Send weekly report error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+function buildWeeklyReport() {
+  const sales = db.prepare(`
+    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
+           SUM(-t.quantity * p.price_cents) AS revenue_cents
+    FROM transactions t
+    JOIN products p ON p.id = t.product_id
+    WHERE t.type = 'sale'
+      AND t.created_at >= datetime('now', '-7 days')
+    GROUP BY t.product_id, p.name
+    ORDER BY units_sold DESC
+  `).all();
+
+  const products = db.prepare('SELECT * FROM products WHERE active = 1 ORDER BY stock ASC').all();
+  const lowStock = products.filter(p => p.stock <= p.reorder_level);
+  const totalRev = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
+
+  const salesRows = sales.map(r => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${r.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${r.units_sold}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${((r.revenue_cents || 0)/100).toFixed(2)}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="padding:8px 12px;color:#888;">No sales this week</td></tr>';
+
+  const lowRows = lowStock.map(p => `
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${p.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;color:${p.stock === 0 ? '#e74c3c' : '#e67e22'};font-weight:600;">${p.stock}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${p.reorder_level}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="padding:8px 12px;color:#27ae60;">All products adequately stocked</td></tr>';
+
+  return `
+    <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:32px;background:#F5F0E8;">
+      <h2 style="color:#2C3E2D;margin:0 0 8px;">Weekly Inventory Report</h2>
+      <p style="color:#888;margin:0 0 24px;">Week ending ${new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago', dateStyle: 'full' })}</p>
+
+      <h3 style="color:#2C3E2D;border-bottom:2px solid #2C3E2D;padding-bottom:8px;">Sales This Week</h3>
+      <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:8px;">
+        <thead><tr style="background:#2C3E2D;color:#F5F0E8;">
+          <th style="padding:8px 12px;text-align:left;">Product</th>
+          <th style="padding:8px 12px;text-align:center;">Units Sold</th>
+          <th style="padding:8px 12px;text-align:right;">Revenue</th>
+        </tr></thead>
+        <tbody>${salesRows}</tbody>
+        <tfoot><tr style="background:#F5F0E8;font-weight:600;">
+          <td style="padding:8px 12px;" colspan="2">Total Revenue</td>
+          <td style="padding:8px 12px;text-align:right;">$${(totalRev/100).toFixed(2)}</td>
+        </tr></tfoot>
+      </table>
+
+      <h3 style="color:#8B4A2F;border-bottom:2px solid #8B4A2F;padding-bottom:8px;margin-top:32px;">Low / Out of Stock</h3>
+      <table style="width:100%;border-collapse:collapse;background:#fff;">
+        <thead><tr style="background:#8B4A2F;color:#F5F0E8;">
+          <th style="padding:8px 12px;text-align:left;">Product</th>
+          <th style="padding:8px 12px;text-align:center;">Current Stock</th>
+          <th style="padding:8px 12px;text-align:center;">Reorder At</th>
+        </tr></thead>
+        <tbody>${lowRows}</tbody>
+      </table>
+    </div>`;
+}
+
+// --- Weekly cron: Sundays 8am CT ---
+if (cron) {
+  cron.schedule('0 8 * * 0', async () => {
+    try {
+      console.log('[Cron] Sending weekly inventory report');
+      const report = buildWeeklyReport();
+      await sendEmail('Weekly Inventory Report — Heart of Texas Organics', report);
+    } catch (err) {
+      console.error('[Cron] Weekly report error:', err.message);
+    }
+  }, { timezone: 'America/Chicago' });
+  console.log('[Cron] Weekly inventory report scheduled (Sundays 8am CT)');
+}
 
 // =========================================
 // START

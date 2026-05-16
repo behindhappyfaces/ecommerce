@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory — Heart of Texas Organics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #1e2d1f;
+    --card:      #2C3E2D;
+    --card2:     #243325;
+    --cream:     #F5F0E8;
+    --cream-dim: #c8c2b6;
+    --terra:     #8B4A2F;
+    --terra-lt:  #a85c3d;
+    --red:       #e74c3c;
+    --orange:    #e67e22;
+    --green:     #27ae60;
+    --border:    rgba(245,240,232,0.12);
+    --shadow:    0 4px 16px rgba(0,0,0,0.35);
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* ---- LOGIN ---- */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .login-box {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 40px 32px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .login-box h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+  .login-box p {
+    color: var(--cream-dim);
+    font-size: 0.85rem;
+    margin-bottom: 28px;
+  }
+  .login-box input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--cream);
+    font-size: 1rem;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-box input:focus { border-color: var(--terra); }
+  .login-box button {
+    width: 100%;
+    background: var(--terra);
+    color: var(--cream);
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .login-box button:hover { background: var(--terra-lt); }
+  #login-error {
+    color: var(--red);
+    font-size: 0.85rem;
+    margin-top: 10px;
+    min-height: 18px;
+  }
+
+  /* ---- DASHBOARD ---- */
+  #dashboard { display: none; flex-direction: column; min-height: 100vh; }
+
+  header {
+    background: var(--card);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--cream);
+  }
+  header span {
+    font-size: 0.75rem;
+    color: var(--cream-dim);
+    display: block;
+  }
+  #logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--cream-dim);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  #logout-btn:hover { border-color: var(--terra); color: var(--cream); }
+
+  /* ---- TABS ---- */
+  .tabs {
+    display: flex;
+    background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: var(--cream-dim);
+    padding: 14px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab-btn:hover { color: var(--cream); }
+  .tab-btn.active {
+    color: var(--cream);
+    border-bottom-color: var(--terra);
+  }
+
+  /* ---- PANELS ---- */
+  .panel { display: none; padding: 20px 16px; }
+  .panel.active { display: block; }
+
+  /* ---- STAT CARDS ---- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (min-width: 600px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px 14px;
+    border: 1px solid var(--border);
+  }
+  .stat-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--cream-dim);
+    margin-bottom: 6px;
+  }
+  .stat-card .value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-card .value.orange { color: var(--orange); }
+  .stat-card .value.red    { color: var(--red); }
+  .stat-card .value.green  { color: var(--green); }
+
+  /* ---- ALERT BANNER ---- */
+  #alert-banner {
+    background: rgba(231,76,60,0.12);
+    border: 1px solid rgba(231,76,60,0.4);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+  }
+  #alert-banner strong {
+    display: block;
+    color: var(--red);
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ---- PRODUCT GRID ---- */
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 500px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 900px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .product-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .product-card .pname {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    margin-bottom: 2px;
+  }
+  .product-card .pcat {
+    font-size: 0.72rem;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .product-card .stock-num {
+    font-size: 2.4rem;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .product-card .stock-unit {
+    font-size: 0.78rem;
+    color: var(--cream-dim);
+    margin-bottom: 8px;
+  }
+  .product-card .reorder-label {
+    font-size: 0.75rem;
+    color: var(--cream-dim);
+    margin-bottom: 12px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .badge.out  { background: rgba(231,76,60,0.2);  color: var(--red); }
+  .badge.low  { background: rgba(230,126,34,0.2); color: var(--orange); }
+  .badge.good { background: rgba(39,174,96,0.2);  color: var(--green); }
+
+  .quick-adjust {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .adj-btn {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .adj-btn:hover { background: var(--terra); }
+  .adj-label { font-size: 0.75rem; color: var(--cream-dim); }
+
+  /* ---- FORMS ---- */
+  .form-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px 16px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .form-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+  .field {
+    margin-bottom: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cream-dim);
+    margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--cream);
+    font-size: 0.95rem;
+    padding: 10px 12px;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--terra);
+  }
+  .field select option { background: var(--card); }
+  .field textarea { resize: vertical; min-height: 70px; }
+
+  .btn {
+    background: var(--terra);
+    color: var(--cream);
+    border: none;
+    border-radius: 7px;
+    padding: 12px 22px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: var(--terra-lt); }
+  .btn.green { background: #27ae60; }
+  .btn.green:hover { background: #2ecc71; }
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 0.78rem;
+  }
+
+  /* ---- TABLES ---- */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 500px;
+  }
+  table.data th {
+    background: var(--card2);
+    color: var(--cream-dim);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  table.data td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  table.data tr:last-child td { border-bottom: none; }
+  table.data tr:hover td { background: rgba(245,240,232,0.03); }
+  .type-sale       { color: var(--red); }
+  .type-restock    { color: var(--green); }
+  .type-adjustment { color: var(--orange); }
+  .type-preorder   { color: #9b59b6; }
+
+  /* ---- REPORTS ---- */
+  .report-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media (min-width: 700px) { .report-row { grid-template-columns: 1fr 1fr; } }
+
+  .report-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .report-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  /* ---- SETTINGS TABLE ---- */
+  .settings-wrap { overflow-x: auto; }
+  table.settings {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 620px;
+  }
+  table.settings th {
+    background: var(--card2);
+    color: var(--cream-dim);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 10px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  table.settings td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  table.settings input[type="number"],
+  table.settings input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--cream);
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    width: 80px;
+    outline: none;
+  }
+  table.settings input[type="number"]:focus,
+  table.settings input[type="text"]:focus { border-color: var(--terra); }
+  table.settings input[type="checkbox"] {
+    width: 18px; height: 18px; cursor: pointer; accent-color: var(--terra);
+  }
+
+  /* ---- TOAST ---- */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    box-shadow: var(--shadow);
+    z-index: 999;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ---- MISC ---- */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    margin-top: 4px;
+  }
+  .empty-msg {
+    color: var(--cream-dim);
+    font-size: 0.88rem;
+    padding: 20px;
+    text-align: center;
+  }
+  .stock-value-block {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .stock-value-block span:first-child {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cream-dim);
+  }
+  .stock-value-block strong {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--green);
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Heart of Texas Organics</h1>
+    <p>Inventory Management</p>
+    <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password">
+    <button id="login-btn">Sign In</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <div>
+      <h1>Inventory</h1>
+      <span>Heart of Texas Organics</span>
+    </div>
+    <button id="logout-btn">Sign Out</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="stock">Stock</button>
+    <button class="tab-btn" data-tab="restock">Restock</button>
+    <button class="tab-btn" data-tab="history">History</button>
+    <button class="tab-btn" data-tab="reports">Reports</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- TAB: STOCK -->
+  <div class="panel active" id="panel-stock">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div id="alert-banner" style="display:none;"></div>
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+
+  <!-- TAB: RESTOCK -->
+  <div class="panel" id="panel-restock">
+    <div class="form-card">
+      <h3>Add Restock</h3>
+      <div class="field">
+        <label>Product</label>
+        <select id="restock-product"></select>
+      </div>
+      <div class="field">
+        <label>Quantity</label>
+        <input type="number" id="restock-qty" min="1" placeholder="e.g. 12">
+      </div>
+      <div class="field">
+        <label>Batch Number (optional)</label>
+        <input type="text" id="restock-batch" placeholder="e.g. B2026-05-15">
+      </div>
+      <div class="field">
+        <label>Notes (optional)</label>
+        <textarea id="restock-notes" placeholder="Any additional notes..."></textarea>
+      </div>
+      <button class="btn" id="restock-submit">Record Restock</button>
+    </div>
+
+    <h3 class="section-title">Recent Restocks</h3>
+    <div class="table-wrap">
+      <table class="data" id="restock-history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Batch #</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="restock-history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: HISTORY -->
+  <div class="panel" id="panel-history">
+    <div class="field" style="max-width:300px;margin-bottom:16px;">
+      <label>Filter by Product</label>
+      <select id="history-filter"></select>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Qty</th>
+            <th>Batch #</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: REPORTS -->
+  <div class="panel" id="panel-reports">
+    <div class="action-row">
+      <button class="btn" id="send-weekly-btn">Send Weekly Report Email</button>
+      <button class="btn green" id="export-csv-btn">Export CSV</button>
+    </div>
+
+    <div id="stock-value-block" class="stock-value-block" style="display:none;">
+      <span>Total Stock Value</span>
+      <strong id="stock-value-num">—</strong>
+    </div>
+
+    <div class="report-row">
+      <div class="report-card">
+        <h3>Top Sellers — This Week</h3>
+        <div class="table-wrap">
+          <table class="data" id="weekly-table">
+            <thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead>
+            <tbody id="weekly-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="report-card">
+        <h3>Turnover — This Month</h3>
+        <div class="table-wrap">
+          <table class="data" id="monthly-table">
+            <thead><tr><th>Product</th><th>Units</th><th>Revenue</th></tr></thead>
+            <tbody id="monthly-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <div class="settings-wrap">
+      <table class="settings">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Reorder Level</th>
+            <th>Price</th>
+            <th>Unit</th>
+            <th>Pre-order</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="settings-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---- State ----
+  let token = localStorage.getItem('inv_token') || '';
+  let allProducts = [];
+
+  // ---- DOM refs ----
+  const loginScreen  = document.getElementById('login-screen');
+  const dashboard    = document.getElementById('dashboard');
+  const loginError   = document.getElementById('login-error');
+  const pwInput      = document.getElementById('pw-input');
+  const loginBtn     = document.getElementById('login-btn');
+  const logoutBtn    = document.getElementById('logout-btn');
+  const toast        = document.getElementById('toast');
+  let toastTimer;
+
+  // ---- Toast ----
+  function showToast(msg, isError) {
+    toast.textContent = msg;
+    toast.style.borderColor = isError ? 'var(--red)' : 'var(--terra)';
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // ---- Auth ----
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+  }
+
+  async function checkAuth() {
+    if (!token) { showLogin(); return; }
+    try {
+      const r = await fetch('/admin/check', { headers: authHeaders() });
+      if (r.ok) { showDashboard(); }
+      else { showLogin(); }
+    } catch { showLogin(); }
+  }
+
+  function showLogin() {
+    loginScreen.style.display = 'flex';
+    dashboard.style.display = 'none';
+  }
+
+  function showDashboard() {
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'flex';
+    loadData();
+  }
+
+  loginBtn.addEventListener('click', doLogin);
+  pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+  async function doLogin() {
+    const pw = pwInput.value.trim();
+    if (!pw) return;
+    loginBtn.disabled = true;
+    loginError.textContent = '';
+    try {
+      const r = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      const data = await r.json();
+      if (r.ok) {
+        token = data.token;
+        localStorage.setItem('inv_token', token);
+        pwInput.value = '';
+        showDashboard();
+      } else {
+        loginError.textContent = 'Incorrect password';
+      }
+    } catch {
+      loginError.textContent = 'Connection error';
+    } finally {
+      loginBtn.disabled = false;
+    }
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+    await fetch('/admin/logout', { method: 'POST', headers: authHeaders() });
+    token = '';
+    localStorage.removeItem('inv_token');
+    showLogin();
+  });
+
+  // ---- Tab navigation ----
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panelId = 'panel-' + btn.dataset.tab;
+      document.getElementById(panelId).classList.add('active');
+      if (btn.dataset.tab === 'history') loadHistory();
+      if (btn.dataset.tab === 'reports') loadReports();
+    });
+  });
+
+  // ---- Load all data ----
+  async function loadData() {
+    await loadInventory();
+    populateProductDropdowns();
+    renderStockTab();
+    loadRestockHistory();
+  }
+
+  async function loadInventory() {
+    try {
+      const r = await fetch('/admin/inventory', { headers: authHeaders() });
+      if (!r.ok) { showToast('Failed to load inventory', true); return; }
+      allProducts = await r.json();
+    } catch { showToast('Connection error', true); }
+  }
+
+  // ---- Populate dropdowns ----
+  function populateProductDropdowns() {
+    const restockSel   = document.getElementById('restock-product');
+    const historyFilter = document.getElementById('history-filter');
+
+    [restockSel, historyFilter].forEach(sel => {
+      while (sel.firstChild) sel.removeChild(sel.firstChild);
+    });
+
+    // "All Products" for history
+    const allOpt = document.createElement('option');
+    allOpt.value = '';
+    allOpt.textContent = 'All Products';
+    historyFilter.appendChild(allOpt);
+
+    for (const p of allProducts) {
+      [restockSel, historyFilter].forEach((sel, i) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
+  // ---- STOCK TAB ----
+  function renderStockTab() {
+    renderStatCards();
+    renderAlertBanner();
+    renderProductGrid();
+  }
+
+  function stockStatus(p) {
+    if (p.stock === 0) return 'out';
+    if (p.stock <= p.reorder_level) return 'low';
+    return 'good';
+  }
+
+  function renderStatCards() {
+    const grid = document.getElementById('stat-grid');
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+    const total  = allProducts.length;
+    const low    = allProducts.filter(p => p.stock > 0 && p.stock <= p.reorder_level).length;
+    const out    = allProducts.filter(p => p.stock === 0).length;
+
+    const stats = [
+      { label: 'Total Products', value: total,  cls: '' },
+      { label: 'Low Stock',      value: low,    cls: 'orange' },
+      { label: 'Out of Stock',   value: out,    cls: 'red' },
+      { label: 'Products Good',  value: total - low - out, cls: 'green' },
+    ];
+
+    for (const s of stats) {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      const lbl = document.createElement('div');
+      lbl.className = 'label';
+      lbl.textContent = s.label;
+      const val = document.createElement('div');
+      val.className = 'value' + (s.cls ? ' ' + s.cls : '');
+      val.textContent = s.value;
+      card.appendChild(lbl);
+      card.appendChild(val);
+      grid.appendChild(card);
+    }
+  }
+
+  function renderAlertBanner() {
+    const banner = document.getElementById('alert-banner');
+    const critical = allProducts.filter(p => p.stock <= p.reorder_level);
+    if (!critical.length) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    while (banner.firstChild) banner.removeChild(banner.firstChild);
+
+    const title = document.createElement('strong');
+    title.textContent = 'Needs Attention';
+    banner.appendChild(title);
+
+    const list = document.createElement('div');
+    for (const p of critical) {
+      const line = document.createElement('div');
+      const status = p.stock === 0 ? ' — OUT OF STOCK' : ` — ${p.stock} ${p.unit}(s) left`;
+      line.textContent = p.name + status;
+      line.style.marginBottom = '2px';
+      if (p.stock === 0) line.style.color = '#e74c3c';
+      list.appendChild(line);
+    }
+    banner.appendChild(list);
+  }
+
+  function renderProductGrid() {
+    const grid = document.getElementById('product-grid');
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+    for (const p of allProducts) {
+      const status = stockStatus(p);
+      const card = document.createElement('div');
+      card.className = 'product-card';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'pname';
+      nameEl.textContent = p.name;
+
+      const catEl = document.createElement('div');
+      catEl.className = 'pcat';
+      catEl.textContent = p.category;
+
+      const stockNum = document.createElement('div');
+      stockNum.className = 'stock-num';
+      stockNum.textContent = p.stock;
+      stockNum.style.color = status === 'out' ? 'var(--red)' : status === 'low' ? 'var(--orange)' : 'var(--green)';
+
+      const unitEl = document.createElement('div');
+      unitEl.className = 'stock-unit';
+      unitEl.textContent = p.unit + (p.stock !== 1 ? 's' : '') + ' in stock';
+
+      const reorderEl = document.createElement('div');
+      reorderEl.className = 'reorder-label';
+      reorderEl.textContent = 'Reorder at: ' + p.reorder_level;
+
+      const badgeEl = document.createElement('div');
+      badgeEl.className = 'badge ' + status;
+      badgeEl.textContent = status === 'out' ? 'Out of Stock' : status === 'low' ? 'Low Stock' : 'Good';
+
+      // Quick adjust
+      const adjRow = document.createElement('div');
+      adjRow.className = 'quick-adjust';
+
+      const minusBtn = document.createElement('button');
+      minusBtn.className = 'adj-btn';
+      minusBtn.textContent = '−';
+      minusBtn.title = 'Remove 1';
+      minusBtn.addEventListener('click', () => quickAdjust(p, -1));
+
+      const adjLbl = document.createElement('div');
+      adjLbl.className = 'adj-label';
+      adjLbl.textContent = 'Quick adjust';
+
+      const plusBtn = document.createElement('button');
+      plusBtn.className = 'adj-btn';
+      plusBtn.textContent = '+';
+      plusBtn.title = 'Add 1';
+      plusBtn.addEventListener('click', () => quickAdjust(p, 1));
+
+      adjRow.appendChild(minusBtn);
+      adjRow.appendChild(adjLbl);
+      adjRow.appendChild(plusBtn);
+
+      card.appendChild(nameEl);
+      card.appendChild(catEl);
+      card.appendChild(stockNum);
+      card.appendChild(unitEl);
+      card.appendChild(reorderEl);
+      card.appendChild(badgeEl);
+      card.appendChild(adjRow);
+      grid.appendChild(card);
+    }
+  }
+
+  async function quickAdjust(product, delta) {
+    const verb = delta > 0 ? 'add 1 to' : 'remove 1 from';
+    if (!confirm(`${verb} ${product.name}? (${product.stock} → ${Math.max(0, product.stock + delta)})`)) return;
+    try {
+      const r = await fetch(`/admin/inventory/${product.id}/adjust`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ quantity: delta, notes: 'Quick adjust from dashboard' }),
+      });
+      if (!r.ok) { showToast('Adjust failed', true); return; }
+      await loadInventory();
+      renderStockTab();
+      showToast(`${product.name} updated`);
+    } catch { showToast('Connection error', true); }
+  }
+
+  // ---- RESTOCK TAB ----
+  document.getElementById('restock-submit').addEventListener('click', async () => {
+    const pid   = document.getElementById('restock-product').value;
+    const qty   = parseInt(document.getElementById('restock-qty').value);
+    const batch = document.getElementById('restock-batch').value.trim();
+    const notes = document.getElementById('restock-notes').value.trim();
+
+    if (!pid) { showToast('Select a product', true); return; }
+    if (!qty || qty < 1) { showToast('Enter a valid quantity', true); return; }
+
+    try {
+      const r = await fetch(`/admin/inventory/${pid}/restock`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ quantity: qty, batch_number: batch || undefined, notes: notes || undefined }),
+      });
+      if (!r.ok) { showToast('Restock failed', true); return; }
+      document.getElementById('restock-qty').value = '';
+      document.getElementById('restock-batch').value = '';
+      document.getElementById('restock-notes').value = '';
+      await loadInventory();
+      renderStockTab();
+      loadRestockHistory();
+      showToast('Restock recorded');
+    } catch { showToast('Connection error', true); }
+  });
+
+  async function loadRestockHistory() {
+    try {
+      const r = await fetch('/admin/transactions?type=restock', { headers: authHeaders() });
+      if (!r.ok) return;
+      const all = await r.json();
+      const restocks = all.filter(t => t.type === 'restock').slice(0, 10);
+      const body = document.getElementById('restock-history-body');
+      while (body.firstChild) body.removeChild(body.firstChild);
+      if (!restocks.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.className = 'empty-msg';
+        td.textContent = 'No restocks recorded yet';
+        tr.appendChild(td);
+        body.appendChild(tr);
+        return;
+      }
+      for (const t of restocks) {
+        body.appendChild(buildTxnRow(t, ['date', 'product', 'qty', 'batch', 'notes']));
+      }
+    } catch { /* silent */ }
+  }
+
+  // ---- HISTORY TAB ----
+  document.getElementById('history-filter').addEventListener('change', loadHistory);
+
+  async function loadHistory() {
+    const pid = document.getElementById('history-filter').value;
+    const url = pid ? `/admin/transactions?product_id=${encodeURIComponent(pid)}` : '/admin/transactions';
+    try {
+      const r = await fetch(url, { headers: authHeaders() });
+      if (!r.ok) return;
+      const rows = (await r.json()).slice(0, 100);
+      const body = document.getElementById('history-body');
+      while (body.firstChild) body.removeChild(body.firstChild);
+      if (!rows.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.className = 'empty-msg';
+        td.textContent = 'No transactions found';
+        tr.appendChild(td);
+        body.appendChild(tr);
+        return;
+      }
+      for (const t of rows) {
+        body.appendChild(buildTxnRow(t, ['date', 'product', 'type', 'qty', 'batch', 'notes']));
+      }
+    } catch { /* silent */ }
+  }
+
+  function buildTxnRow(t, cols) {
+    const tr = document.createElement('tr');
+    for (const col of cols) {
+      const td = document.createElement('td');
+      if (col === 'date') {
+        td.textContent = t.created_at ? t.created_at.replace('T', ' ').slice(0, 16) : '—';
+      } else if (col === 'product') {
+        td.textContent = t.product_name || t.product_id || '—';
+      } else if (col === 'type') {
+        td.textContent = t.type || '—';
+        td.className = 'type-' + (t.type || '');
+      } else if (col === 'qty') {
+        td.textContent = t.quantity > 0 ? '+' + t.quantity : t.quantity;
+        td.style.fontWeight = '600';
+        td.style.color = t.quantity > 0 ? 'var(--green)' : 'var(--red)';
+      } else if (col === 'batch') {
+        td.textContent = t.batch_number || '—';
+      } else if (col === 'notes') {
+        td.textContent = t.notes || '—';
+        td.style.color = 'var(--cream-dim)';
+      }
+      tr.appendChild(td);
+    }
+    return tr;
+  }
+
+  // ---- REPORTS TAB ----
+  document.getElementById('send-weekly-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('send-weekly-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+      const r = await fetch('/admin/reports/send-weekly', { method: 'POST', headers: authHeaders() });
+      if (r.ok) { showToast('Weekly report emailed!'); }
+      else { showToast('Email failed', true); }
+    } catch { showToast('Connection error', true); }
+    finally { btn.disabled = false; btn.textContent = 'Send Weekly Report Email'; }
+  });
+
+  document.getElementById('export-csv-btn').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = '/admin/export/csv';
+    a.setAttribute('download', '');
+    // Pass token via URL for file downloads — build a form POST approach using fetch + blob
+    fetch('/admin/export/csv', { headers: authHeaders() })
+      .then(r => r.ok ? r.blob() : Promise.reject())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      })
+      .catch(() => showToast('Export failed', true));
+  });
+
+  async function loadReports() {
+    try {
+      const [weekR, monthR] = await Promise.all([
+        fetch('/admin/reports/weekly',  { headers: authHeaders() }),
+        fetch('/admin/reports/monthly', { headers: authHeaders() }),
+      ]);
+      const weekData  = weekR.ok  ? await weekR.json()  : { sales: [] };
+      const monthData = monthR.ok ? await monthR.json() : { sales: [] };
+
+      renderReportTable('weekly-body',  weekData.sales.slice(0, 5));
+      renderReportTable('monthly-body', monthData.sales);
+
+      // Stock value
+      const stockVal = allProducts.reduce((s, p) => s + p.stock * p.price_cents, 0);
+      const svBlock = document.getElementById('stock-value-block');
+      const svNum   = document.getElementById('stock-value-num');
+      svNum.textContent = '$' + (stockVal / 100).toFixed(2);
+      svBlock.style.display = 'flex';
+    } catch { /* silent */ }
+  }
+
+  function renderReportTable(bodyId, rows) {
+    const body = document.getElementById(bodyId);
+    while (body.firstChild) body.removeChild(body.firstChild);
+    if (!rows || !rows.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.className = 'empty-msg';
+      td.textContent = 'No sales data';
+      tr.appendChild(td);
+      body.appendChild(tr);
+      return;
+    }
+    for (const row of rows) {
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      tdName.textContent = row.name || row.product_id;
+      const tdUnits = document.createElement('td');
+      tdUnits.textContent = row.units_sold || 0;
+      const tdRev = document.createElement('td');
+      tdRev.textContent = '$' + ((row.revenue_cents || 0) / 100).toFixed(2);
+      tr.appendChild(tdName);
+      tr.appendChild(tdUnits);
+      tr.appendChild(tdRev);
+      body.appendChild(tr);
+    }
+  }
+
+  // ---- SETTINGS TAB ----
+  async function loadSettings() {
+    const body = document.getElementById('settings-body');
+    while (body.firstChild) body.removeChild(body.firstChild);
+    for (const p of allProducts) {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = p.name;
+
+      const tdReorder = document.createElement('td');
+      const reorderInput = document.createElement('input');
+      reorderInput.type = 'number';
+      reorderInput.value = p.reorder_level;
+      reorderInput.min = '0';
+      tdReorder.appendChild(reorderInput);
+
+      const tdPrice = document.createElement('td');
+      const priceInput = document.createElement('input');
+      priceInput.type = 'text';
+      priceInput.value = (p.price_cents / 100).toFixed(2);
+      priceInput.style.width = '70px';
+      tdPrice.appendChild(priceInput);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = p.unit;
+
+      const tdPreorder = document.createElement('td');
+      const preorderCheck = document.createElement('input');
+      preorderCheck.type = 'checkbox';
+      preorderCheck.checked = !!p.allow_preorder;
+      tdPreorder.appendChild(preorderCheck);
+
+      const tdSave = document.createElement('td');
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'btn btn-sm';
+      saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', async () => {
+        const reorder = parseInt(reorderInput.value);
+        const price   = Math.round(parseFloat(priceInput.value) * 100);
+        if (isNaN(reorder) || reorder < 0) { showToast('Invalid reorder level', true); return; }
+        if (isNaN(price) || price < 0) { showToast('Invalid price', true); return; }
+        saveBtn.disabled = true;
+        saveBtn.textContent = '...';
+        try {
+          const r = await fetch(`/admin/inventory/${p.id}`, {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              reorder_level: reorder,
+              price_cents: price,
+              unit: p.unit,
+              allow_preorder: preorderCheck.checked,
+            }),
+          });
+          if (r.ok) {
+            showToast(p.name + ' saved');
+            await loadInventory();
+            renderStockTab();
+          } else {
+            showToast('Save failed', true);
+          }
+        } catch { showToast('Connection error', true); }
+        finally { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      });
+      tdSave.appendChild(saveBtn);
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdReorder);
+      tr.appendChild(tdPrice);
+      tr.appendChild(tdUnit);
+      tr.appendChild(tdPreorder);
+      tr.appendChild(tdSave);
+      body.appendChild(tr);
+    }
+  }
+
+  // Load settings when tab clicked
+  document.querySelector('[data-tab="settings"]').addEventListener('click', loadSettings);
+
+  // ---- INIT ----
+  checkAuth();
+})();
+</script>
+</body>
+</html>

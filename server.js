@@ -723,8 +723,8 @@ function deductStockForOrder(lineItems, orderId) {
     const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
     if (!pid) continue;
     const qty = item.quantity || 1;
-    db.prepare('UPDATE products SET stock = MAX(0, stock - ?) WHERE id = ?').run(qty, pid);
-    db.prepare('INSERT INTO transactions (product_id, type, quantity, order_id, notes) VALUES (?, ?, ?, ?, ?)').run(pid, 'sale', -qty, orderId, 'Stripe checkout');
+    db.adjustStock(pid, -qty);
+    db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout');
   }
 }
 
@@ -751,140 +751,70 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 
 // --- Public stock endpoint (for website sold-out indicators) ---
 app.get('/api/stock', (req, res) => {
-  const rows = db.prepare(
-    'SELECT id, name, stock, reorder_level, allow_preorder FROM products WHERE active = 1'
-  ).all();
+  const rows = db.getAll().map(p => ({ id: p.id, name: p.name, stock: p.stock, reorder_level: p.reorder_level, allow_preorder: p.allow_preorder }));
   res.json(rows);
 });
 
 // --- Inventory CRUD ---
 app.get('/admin/inventory', requireAdmin, (req, res) => {
-  const rows = db.prepare('SELECT * FROM products ORDER BY category, name').all();
-  res.json(rows);
+  res.json(db.getAll());
 });
 
 app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { reorder_level, price_cents, unit, allow_preorder } = req.body || {};
-  const product = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
+  const product = db.getProduct(id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
-
-  db.prepare(
-    'UPDATE products SET reorder_level = ?, price_cents = ?, unit = ?, allow_preorder = ? WHERE id = ?'
-  ).run(
-    reorder_level ?? product.reorder_level,
-    price_cents   ?? product.price_cents,
-    unit          ?? product.unit,
-    allow_preorder != null ? (allow_preorder ? 1 : 0) : product.allow_preorder,
-    id
-  );
+  const fields = {};
+  if (reorder_level  != null) fields.reorder_level  = parseInt(reorder_level);
+  if (price_cents    != null) fields.price_cents     = parseInt(price_cents);
+  if (unit           != null) fields.unit            = unit;
+  if (allow_preorder != null) fields.allow_preorder  = allow_preorder ? 1 : 0;
+  db.updateProduct(id, fields);
   res.json({ ok: true });
 });
 
 app.post('/admin/inventory/:id/adjust', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { quantity, notes } = req.body || {};
-  if (quantity == null || isNaN(parseInt(quantity))) {
-    return res.status(400).json({ error: 'quantity required' });
-  }
+  if (quantity == null || isNaN(parseInt(quantity))) return res.status(400).json({ error: 'quantity required' });
   const qty = parseInt(quantity);
-  const product = db.prepare('SELECT id, stock FROM products WHERE id = ?').get(id);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-
-  db.prepare('UPDATE products SET stock = MAX(0, stock + ?) WHERE id = ?').run(qty, id);
-  db.prepare(
-    'INSERT INTO transactions (product_id, type, quantity, notes) VALUES (?, ?, ?, ?)'
-  ).run(id, 'adjustment', qty, notes || null);
-
-  const updated = db.prepare('SELECT stock FROM products WHERE id = ?').get(id);
-  res.json({ ok: true, stock: updated.stock });
+  if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
+  const stock = db.adjustStock(id, qty);
+  db.addTransaction(id, 'adjustment', qty, null, null, notes || null);
+  res.json({ ok: true, stock });
 });
 
 app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { quantity, batch_number, notes } = req.body || {};
-  if (!quantity || isNaN(parseInt(quantity)) || parseInt(quantity) <= 0) {
-    return res.status(400).json({ error: 'quantity must be a positive integer' });
-  }
   const qty = parseInt(quantity);
-  const product = db.prepare('SELECT id FROM products WHERE id = ?').get(id);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-
-  db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, id);
-  db.prepare(
-    'INSERT INTO transactions (product_id, type, quantity, batch_number, notes) VALUES (?, ?, ?, ?, ?)'
-  ).run(id, 'restock', qty, batch_number || null, notes || null);
-
-  const updated = db.prepare('SELECT stock FROM products WHERE id = ?').get(id);
-  res.json({ ok: true, stock: updated.stock });
+  if (!qty || qty <= 0) return res.status(400).json({ error: 'quantity must be a positive integer' });
+  if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
+  const stock = db.adjustStock(id, qty);
+  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null);
+  res.json({ ok: true, stock });
 });
 
 // --- Transaction history ---
 app.get('/admin/transactions', requireAdmin, (req, res) => {
-  const { product_id } = req.query;
-  let rows;
-  if (product_id) {
-    rows = db.prepare(`
-      SELECT t.*, p.name AS product_name
-      FROM transactions t
-      JOIN products p ON p.id = t.product_id
-      WHERE t.product_id = ?
-      ORDER BY t.created_at DESC
-      LIMIT 150
-    `).all(product_id);
-  } else {
-    rows = db.prepare(`
-      SELECT t.*, p.name AS product_name
-      FROM transactions t
-      JOIN products p ON p.id = t.product_id
-      ORDER BY t.created_at DESC
-      LIMIT 150
-    `).all();
-  }
-  res.json(rows);
+  res.json(db.getTransactions(req.query.product_id || null, 150));
 });
 
 // --- Reports ---
 app.get('/admin/reports/weekly', requireAdmin, (req, res) => {
-  const sales = db.prepare(`
-    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
-           SUM(-t.quantity * p.price_cents) AS revenue_cents
-    FROM transactions t
-    JOIN products p ON p.id = t.product_id
-    WHERE t.type = 'sale'
-      AND t.created_at >= datetime('now', '-7 days')
-    GROUP BY t.product_id, p.name
-    ORDER BY units_sold DESC
-  `).all();
-  const total = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
-  res.json({ sales, total_revenue: total });
+  const sales = db.getSales(7);
+  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0) });
 });
 
 app.get('/admin/reports/monthly', requireAdmin, (req, res) => {
-  const sales = db.prepare(`
-    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
-           SUM(-t.quantity * p.price_cents) AS revenue_cents
-    FROM transactions t
-    JOIN products p ON p.id = t.product_id
-    WHERE t.type = 'sale'
-      AND t.created_at >= datetime('now', '-30 days')
-    GROUP BY t.product_id, p.name
-    ORDER BY units_sold DESC
-  `).all();
-  const total = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
-  res.json({ sales, total_revenue: total });
+  const sales = db.getSales(30);
+  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0) });
 });
 
 // --- CSV export ---
 app.get('/admin/export/csv', requireAdmin, (req, res) => {
-  const products = db.prepare('SELECT * FROM products ORDER BY category, name').all();
-  const txns     = db.prepare(`
-    SELECT t.created_at, p.name AS product_name, t.type, t.quantity,
-           t.batch_number, t.order_id, t.notes
-    FROM transactions t
-    JOIN products p ON p.id = t.product_id
-    ORDER BY t.created_at DESC
-  `).all();
+  const { products, transactions: txns } = db.getAllForCSV();
 
   const esc = (v) => {
     if (v == null) return '';
@@ -926,18 +856,8 @@ app.post('/admin/reports/send-weekly', requireAdmin, async (req, res) => {
 });
 
 function buildWeeklyReport() {
-  const sales = db.prepare(`
-    SELECT t.product_id, p.name, SUM(-t.quantity) AS units_sold,
-           SUM(-t.quantity * p.price_cents) AS revenue_cents
-    FROM transactions t
-    JOIN products p ON p.id = t.product_id
-    WHERE t.type = 'sale'
-      AND t.created_at >= datetime('now', '-7 days')
-    GROUP BY t.product_id, p.name
-    ORDER BY units_sold DESC
-  `).all();
-
-  const products = db.prepare('SELECT * FROM products WHERE active = 1 ORDER BY stock ASC').all();
+  const sales    = db.getSales(7);
+  const products = db.getAll().sort((a, b) => a.stock - b.stock);
   const lowStock = products.filter(p => p.stock <= p.reorder_level);
   const totalRev = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
 

@@ -1537,14 +1537,18 @@
         }
         const dupe = { ...p, name: newName };
         try {
+          // Create the product (appended to end on server)
           const r = await fetch('/admin/shipping/products', {
             method: 'POST',
             headers: { ...authHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(dupe),
           });
           if (!r.ok) { const d = await r.json(); showToast(d.error || 'Duplicate failed', true); return; }
+          // Move it from the end to directly below the source row
+          shipProducts.splice(idx + 1, 0, dupe);
+          await saveShipOrder();
           await loadShipProducts();
-          showToast('"' + newName + '" added');
+          showToast('"' + newName + '" added below');
         } catch { showToast('Connection error', true); }
       });
 

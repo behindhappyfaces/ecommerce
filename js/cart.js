@@ -16,6 +16,33 @@ const PRODUCTS = {
 
 const STORAGE_KEY = 'hoto-cart';
 
+// Approximate product weights in lbs (used for shipping rate calculation)
+const PRODUCT_WEIGHTS = {
+  'japanese-milk-loaf': 2.0,
+  'whole-wheat-loaf':   2.0,
+  'cinnamon-rolls':     1.5,
+  'yeast-rolls':        1.0,
+  'focaccia-loaf':      1.5,
+  'whole-chicken':      4.5,
+  'cultured-butter':    1.0,
+  'farm-eggs':          1.5,
+  'harvest-basket':     5.0,
+  'garlic-chili-crunch': 0.8,
+  'herb-dipping-oil':   1.0,
+  'seasonal-preserves': 1.2,
+};
+
+function calcCartWeight() {
+  const cart = getCart();
+  return cart.items.reduce((sum, { id, qty }) => sum + (PRODUCT_WEIGHTS[id] || 1) * qty, 0);
+}
+
+function getBoxDims(lbs) {
+  if (lbs <= 5)  return { length: 12, width: 10, height: 6 };
+  if (lbs <= 10) return { length: 14, width: 12, height: 8 };
+  return { length: 18, width: 14, height: 10 };
+}
+
 // --- State ---
 
 function getCart() {
@@ -345,7 +372,7 @@ function renderCart() {
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
   checkoutBtn.id = 'cart-checkout';
   checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(getMonthlyTotal())}/mo` : 'Proceed to Checkout';
-  checkoutBtn.addEventListener('click', subscribing ? openCartDeliveryModal : checkout);
+  checkoutBtn.addEventListener('click', subscribing ? openCartDeliveryModal : openOneTimeDeliveryChoice);
 
   const divider = document.createElement('div');
   divider.className = 'cart-footer__divider';
@@ -384,9 +411,219 @@ function closeCart() {
   document.body.style.overflow = '';
 }
 
+// --- Shipping Calculator Modal ---
+
+let _shipCalcRate = null;
+
+function makeField(id, labelText, placeholder, maxLen) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ship-calc-field';
+  const lbl = document.createElement('label');
+  lbl.className = 'ship-calc-label';
+  lbl.textContent = labelText;
+  lbl.htmlFor = id;
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.id = id; inp.placeholder = placeholder;
+  inp.className = 'ship-calc-input';
+  if (maxLen) inp.maxLength = maxLen;
+  wrap.appendChild(lbl);
+  wrap.appendChild(inp);
+  return wrap;
+}
+
+function injectShipCalcModal() {
+  if (document.getElementById('ship-calc-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'ship-calc-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt ship-calc-modal';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'Calculate Shipping';
+
+  const form = document.createElement('div');
+  form.className = 'ship-calc-form';
+  form.appendChild(makeField('sc-name',   'Full Name',       'Jane Smith'));
+  form.appendChild(makeField('sc-street', 'Street Address',  '123 Main St'));
+
+  const cityRow = document.createElement('div');
+  cityRow.className = 'ship-calc-row';
+  const cityF  = makeField('sc-city',  'City',  'Austin');
+  const stateF = makeField('sc-state', 'State', 'TX', 2);
+  const zipF   = makeField('sc-zip',   'ZIP',   '78701', 5);
+  stateF.style.flex = '0 0 62px';
+  zipF.style.flex   = '0 0 82px';
+  cityRow.appendChild(cityF);
+  cityRow.appendChild(stateF);
+  cityRow.appendChild(zipF);
+  form.appendChild(cityRow);
+
+  const getRatesBtn = document.createElement('button');
+  getRatesBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  getRatesBtn.id = 'sc-get-rates';
+  getRatesBtn.textContent = 'Calculate Shipping Rates';
+  getRatesBtn.style.marginTop = '4px';
+
+  const ratesDiv = document.createElement('div');
+  ratesDiv.id = 'sc-rates';
+  ratesDiv.style.display = 'none';
+
+  const continueBtn = document.createElement('button');
+  continueBtn.className = 'ship-calc-continue';
+  continueBtn.id = 'sc-continue';
+  continueBtn.textContent = 'Continue to Payment →';
+  continueBtn.style.display = 'none';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
+  cancelBtn.id = 'sc-cancel';
+  cancelBtn.textContent = 'Cancel';
+
+  box.appendChild(heading);
+  box.appendChild(form);
+  box.appendChild(getRatesBtn);
+  box.appendChild(ratesDiv);
+  box.appendChild(continueBtn);
+  box.appendChild(cancelBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeShipCalcModal(); });
+  cancelBtn.addEventListener('click', closeShipCalcModal);
+  getRatesBtn.addEventListener('click', fetchShippingRates);
+  continueBtn.addEventListener('click', checkoutWithShipping);
+}
+
+function openShipCalcModal() {
+  _shipCalcRate = null;
+  const ratesDiv = document.getElementById('sc-rates');
+  if (ratesDiv) { ratesDiv.style.display = 'none'; ratesDiv.textContent = ''; }
+  const cont = document.getElementById('sc-continue');
+  if (cont) cont.style.display = 'none';
+  document.getElementById('ship-calc-overlay').classList.add('open');
+}
+
+function closeShipCalcModal() {
+  document.getElementById('ship-calc-overlay')?.classList.remove('open');
+}
+
+async function fetchShippingRates() {
+  const name   = document.getElementById('sc-name').value.trim();
+  const street = document.getElementById('sc-street').value.trim();
+  const city   = document.getElementById('sc-city').value.trim();
+  const state  = document.getElementById('sc-state').value.trim().toUpperCase();
+  const zip    = document.getElementById('sc-zip').value.trim();
+  if (!name || !street || !city || !state || !zip) {
+    alert('Please fill in all address fields.'); return;
+  }
+
+  const totalWeight = calcCartWeight();
+  const box = getBoxDims(totalWeight);
+  const btn = document.getElementById('sc-get-rates');
+  btn.textContent = 'Calculating…'; btn.disabled = true;
+  _shipCalcRate = null;
+  const cont = document.getElementById('sc-continue');
+  cont.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/shipping-rates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: { name, street1: street, city, state, zip }, weight_lbs: totalWeight, ...box }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Could not get rates'); return; }
+    renderCalcRates(data.rates);
+  } catch { alert('Connection error. Please try again.'); }
+  finally { btn.textContent = 'Recalculate Rates'; btn.disabled = false; }
+}
+
+function renderCalcRates(rates) {
+  const div = document.getElementById('sc-rates');
+  div.textContent = '';
+
+  if (!rates.length) {
+    const p = document.createElement('p');
+    p.style.cssText = 'color:#888;font-size:0.85rem;margin:12px 0;';
+    p.textContent = 'No rates available for this address.';
+    div.appendChild(p);
+    div.style.display = '';
+    return;
+  }
+
+  const hdr = document.createElement('p');
+  hdr.className = 'ship-rates-label';
+  hdr.textContent = 'Select a shipping option:';
+  div.appendChild(hdr);
+
+  rates.forEach(r => {
+    const card = document.createElement('button');
+    card.className = 'ship-rate-option';
+    card.dataset.rateId = r.id;
+
+    const info = document.createElement('span');
+    info.className = 'ship-rate-option__info';
+    const name = document.createElement('strong');
+    name.textContent = r.carrier + ' ' + r.service;
+    const days = document.createElement('span');
+    days.style.cssText = 'color:#27ae60;font-size:0.78rem;margin-top:2px;';
+    days.textContent = r.delivery_days ? r.delivery_days + ' day' + (r.delivery_days !== 1 ? 's' : '') : '';
+    info.appendChild(name);
+    info.appendChild(days);
+
+    const price = document.createElement('span');
+    price.className = 'ship-rate-option__price';
+    price.textContent = '$' + parseFloat(r.rate).toFixed(2);
+
+    card.appendChild(info);
+    card.appendChild(price);
+
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.ship-rate-option').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      _shipCalcRate = { id: r.id, rate: r.rate, carrier: r.carrier, service: r.service };
+      document.getElementById('sc-continue').style.display = '';
+    });
+
+    div.appendChild(card);
+  });
+
+  div.style.display = '';
+}
+
+async function checkoutWithShipping() {
+  if (!_shipCalcRate) return;
+  const btn = document.getElementById('sc-continue');
+  btn.textContent = 'Redirecting…'; btn.disabled = true;
+
+  const cart = getCart();
+  if (!cart.items.length) return;
+
+  const items = cart.items
+    .filter(({ id }) => PRODUCTS[id])
+    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+
+  try {
+    const res = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, shipping: _shipCalcRate, delivery_method: 'ship' }),
+    });
+    const data = await res.json();
+    if (data.url) { window.location.href = data.url; }
+    else { alert(data.error || 'Checkout error'); btn.textContent = 'Continue to Payment →'; btn.disabled = false; }
+  } catch { alert('Connection error.'); btn.textContent = 'Continue to Payment →'; btn.disabled = false; }
+}
+
 // --- Checkout ---
 
-async function checkout() {
+async function checkout(deliveryMethod) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -403,7 +640,7 @@ async function checkout() {
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, delivery_method: deliveryMethod || 'pickup' }),
     });
     const data = await res.json();
     if (data.url) {
@@ -412,7 +649,7 @@ async function checkout() {
       throw new Error(data.error || 'Unknown error');
     }
   } catch (err) {
-    btn.textContent = 'Error. Try Again';
+    btn.textContent = original;
     btn.disabled = false;
     console.error('Checkout error:', err);
   }
@@ -426,6 +663,15 @@ function openCartDeliveryModal() {
   overlay.classList.add('open');
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); checkoutSubscription('pickup'); };
+  document.getElementById('dm-cancel').onclick = closeDeliveryModal;
+}
+
+function openOneTimeDeliveryChoice() {
+  const overlay = document.getElementById('delivery-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); openShipCalcModal(); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); checkout('pickup'); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -684,6 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectCartIcon();
   injectSubscriberModal();
   injectDeliveryModal();
+  injectShipCalcModal();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {

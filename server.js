@@ -166,6 +166,36 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const date   = formatDate(session.created);
         const piId   = session.payment_intent;
 
+        const customerEmail  = session.customer_details?.email;
+        const customerName   = session.customer_details?.name || 'Valued Customer';
+        const deliveryMethod = session.metadata?.delivery_method || 'ship';
+        const shippingAddr   = session.shipping_details?.address;
+        const siteUrl        = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+
+        // Product items only (exclude the shipping line item for display)
+        const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
+        const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
+
+        const addrLine = shippingAddr
+          ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
+          : (deliveryMethod === 'pickup' ? 'Local pick-up — details to follow' : '');
+
+        function orderConfirmEmail(intro, statusNote) {
+          return `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+            <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
+            <h2 style="color:#2C3E2D;margin:0 0 8px;">Order Confirmed</h2>
+            <p style="color:#3d3d3d;line-height:1.8;margin:0 0 24px;">Hi ${customerName}, ${intro}</p>
+            <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
+              ${productItems.map(li => `<tr><td style="padding:10px 16px;border-bottom:1px solid #eee;">${li.description}</td><td style="padding:10px 16px;border-bottom:1px solid #eee;text-align:right;">×${li.quantity}</td></tr>`).join('')}
+              ${shippingItem ? `<tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">${shippingItem.description}</td><td style="padding:10px 16px;border-bottom:1px solid #eee;text-align:right;color:#666;">${formatMoney(shippingItem.amount_total)}</td></tr>` : ''}
+              <tr><td style="padding:10px 16px;font-weight:700;color:#2C3E2D;">Total</td><td style="padding:10px 16px;font-weight:700;text-align:right;">${total}</td></tr>
+            </table>
+            ${addrLine ? `<p style="color:#3d3d3d;font-size:0.9rem;"><strong>Delivery:</strong> ${addrLine}</p>` : ''}
+            ${statusNote ? `<p style="color:#8B4A2F;font-size:0.85rem;margin-top:8px;">${statusNote}</p>` : ''}
+            <p style="color:#888;font-size:12px;margin-top:24px;">Order ref: ${session.id}</p>
+          </div>`;
+        }
+
         if (isPaid) {
           // Card money cleared immediately
           saveOrder(piId, {
@@ -178,11 +208,22 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           deductStockForOrder(items, session.id);
 
+          // Customer confirmation
+          if (customerEmail) {
+            await sendEmailTo(customerEmail,
+              'Your Heart of Texas Organics Order is Confirmed',
+              orderConfirmEmail('thank you for your order! We\'re preparing it now.', null)
+            );
+          }
+
+          // Admin notification
           await sendEmail(
             `✅ New Order ${total} Ready to Ship`,
             `<h2 style="color:#2C3E2D;">New Order Payment Cleared</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
+             <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
+             <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
              <p><strong>Payment:</strong> Card (cleared immediately)</p>
              ${lineItemsHtml(items)}
              ${fulfillmentBadge('READY_TO_SHIP')}
@@ -190,7 +231,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           );
 
         } else {
-          // ACH bank info submitted money not yet transferred
+          // ACH bank info submitted — money not yet transferred
           saveOrder(piId, {
             sessionId: session.id,
             status: 'AWAITING_PAYMENT',
@@ -201,11 +242,25 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           deductStockForOrder(items, session.id);
 
+          // Customer confirmation (note: not shipped until ACH clears)
+          if (customerEmail) {
+            await sendEmailTo(customerEmail,
+              'Your Heart of Texas Organics Order is Received',
+              orderConfirmEmail(
+                'we\'ve received your order! Your bank transfer is processing.',
+                'Note: ACH bank transfers take 3–5 business days to settle. We\'ll ship your order once payment clears and send you a follow-up email.'
+              )
+            );
+          }
+
+          // Admin notification
           await sendEmail(
             `⏳ New ACH Order ${total} DO NOT SHIP YET`,
             `<h2 style="color:#8B4A2F;">New ACH Order Awaiting Bank Settlement</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
+             <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
+             <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
              <p><strong>Payment:</strong> ACH Bank Transfer (3–5 business days to clear)</p>
              ${lineItemsHtml(items)}
              ${fulfillmentBadge('AWAITING_PAYMENT')}
@@ -429,27 +484,73 @@ app.post('/create-magazine-subscription', async (req, res) => {
 // STRIPE CHECKOUT
 // =========================================
 
+// POST /api/shipping-rates — public, no auth required
+app.post('/api/shipping-rates', async (req, res) => {
+  if (!easypost) return res.status(503).json({ error: 'Shipping rates temporarily unavailable' });
+  try {
+    const { to, weight_lbs, length, width, height } = req.body;
+    const shipment = await easypost.Shipment.create({
+      from_address: BHF_FROM_ADDRESS,
+      to_address:   to,
+      parcel: {
+        length: length || 12,
+        width:  width  || 10,
+        height: height || 6,
+        weight: Math.ceil((parseFloat(weight_lbs) || 1) * 16),
+      },
+    });
+    const rates = (shipment.rates || [])
+      .map(r => ({ id: r.id, carrier: r.carrier, service: r.service, rate: r.rate, delivery_days: r.delivery_days }))
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+    res.json({ shipment_id: shipment.id, rates });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not calculate shipping rates' });
+  }
+});
+
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, shipping, delivery_method } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
+    const isShip = delivery_method !== 'pickup';
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card', 'us_bank_account'],
-      line_items: items.map(item => ({
+    const lineItems = items.map(item => ({
+      price_data: {
+        currency: 'usd',
+        product_data: { name: item.name },
+        unit_amount: item.price,
+      },
+      quantity: item.quantity,
+    }));
+
+    // Add shipping as a line item when a rate was selected
+    if (isShip && shipping?.rate) {
+      lineItems.push({
         price_data: {
           currency: 'usd',
-          product_data: { name: item.name },
-          unit_amount: item.price,
+          product_data: { name: `Shipping — ${shipping.carrier} ${shipping.service}` },
+          unit_amount: Math.round(parseFloat(shipping.rate) * 100),
         },
-        quantity: item.quantity,
-      })),
+        quantity: 1,
+      });
+    }
+
+    const sessionParams = {
+      mode: 'payment',
+      payment_method_types: ['card', 'us_bank_account'],
+      line_items: lineItems,
       allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/offerings.html`,
-    });
+      cancel_url:  `${origin}/offerings.html`,
+      metadata: { delivery_method: delivery_method || 'ship' },
+    };
 
+    if (isShip) {
+      sessionParams.shipping_address_collection = { allowed_countries: ['US'] };
+      sessionParams.phone_number_collection     = { enabled: true };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {
     console.error('Checkout error:', err.message);

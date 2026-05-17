@@ -1339,6 +1339,37 @@ h1, h2, h3, h4 {
 .delivery-modal__label { display: block; font-weight: 700; font-size: 0.95rem; color: var(--color-green); margin-bottom: 3px; }
 .delivery-modal__note { display: block; font-size: 0.8rem; color: #888; }
 
+/* ---- Shipping Calculator Modal ---- */
+.ship-calc-modal { max-width: 500px; }
+.ship-calc-form  { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 0; }
+.ship-calc-row   { display: flex; gap: 8px; }
+.ship-calc-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ship-calc-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: #888; }
+.ship-calc-input {
+  padding: 9px 11px; border: 1px solid #ddd; border-radius: 5px;
+  font-size: 0.9rem; font-family: inherit; outline: none; background: #fff; color: #333;
+  transition: border-color 0.15s;
+}
+.ship-calc-input:focus { border-color: var(--color-rust); }
+.ship-rates-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #666; margin: 14px 0 8px; }
+.ship-rate-option {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 12px 14px; border: 2px solid #e8e0d6; border-radius: 8px;
+  background: #faf8f5; cursor: pointer; text-align: left; margin-bottom: 6px;
+  transition: border-color 0.15s, background 0.15s; font-family: inherit;
+}
+.ship-rate-option:hover   { border-color: var(--color-rust); }
+.ship-rate-option.selected { border-color: var(--color-rust); background: #fff8f5; }
+.ship-rate-option__info   { display: flex; flex-direction: column; font-size: 0.88rem; }
+.ship-rate-option__price  { font-weight: 700; font-size: 1rem; color: var(--color-rust); white-space: nowrap; margin-left: 12px; }
+.ship-calc-continue {
+  width: 100%; margin-top: 12px; padding: 13px 20px;
+  background: var(--color-green); color: #fff; border: none; border-radius: 4px;
+  font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; font-weight: 600; transition: opacity 0.15s; font-family: inherit;
+}
+.ship-calc-continue:hover { opacity: 0.88; }
+
 /* =========================================
    ABOUT PAGES
    ========================================= */

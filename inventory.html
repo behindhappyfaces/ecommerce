@@ -370,6 +370,20 @@
         <label>Batch Number (optional)</label>
         <input type="text" id="restock-batch" placeholder="e.g. B2026-05-15">
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Production Date</label>
+          <input type="date" id="restock-prod-date">
+        </div>
+        <div class="field">
+          <label>Best By / Expiry</label>
+          <input type="date" id="restock-expiry-date">
+        </div>
+      </div>
+      <div class="field">
+        <label>Batch Cost — total $ for this batch (optional)</label>
+        <input type="number" id="restock-batch-cost" min="0" step="0.01" placeholder="e.g. 48.50">
+      </div>
       <div class="field">
         <label>Notes (optional)</label>
         <textarea id="restock-notes" placeholder="Any additional notes..."></textarea>
@@ -387,6 +401,10 @@
             <th>Qty</th>
             <th>Before → After</th>
             <th>Batch #</th>
+            <th>Prod. Date</th>
+            <th>Best By</th>
+            <th>Batch Cost</th>
+            <th>Status</th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -770,7 +788,43 @@
       const stockNum = document.createElement('div');
       stockNum.className = 'stock-num';
       stockNum.textContent = p.stock;
+      stockNum.title = 'Click to set stock';
+      stockNum.style.cursor = 'pointer';
       stockNum.style.color = status === 'out' ? 'var(--red)' : status === 'low' ? 'var(--orange)' : 'var(--green)';
+      stockNum.addEventListener('click', () => {
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.min = '0';
+        inp.value = p.stock;
+        inp.style.cssText = 'width:90px;font-size:2rem;font-family:"Playfair Display",serif;font-weight:700;background:var(--bg);border:2px solid var(--terra);border-radius:6px;color:var(--cream);padding:2px 6px;outline:none;';
+        const commit = async () => {
+          const newVal = parseInt(inp.value);
+          inp.remove();
+          stockNum.style.display = '';
+          if (isNaN(newVal) || newVal < 0 || newVal === p.stock) return;
+          const delta = newVal - p.stock;
+          if (!confirm('Set ' + p.name + ' to ' + newVal + '? (' + p.stock + ' → ' + newVal + ')')) return;
+          try {
+            const r = await fetch('/admin/inventory/' + p.id + '/adjust', {
+              method: 'POST', headers: authHeaders(),
+              body: JSON.stringify({ quantity: delta, notes: 'Manual stock correction → ' + newVal }),
+            });
+            if (r.ok) showToast(p.name + ' set to ' + newVal);
+            else showToast('Update failed', true);
+          } catch { showToast('Connection error', true); }
+          await loadInventory();
+          renderStockTab();
+        };
+        inp.addEventListener('blur', commit);
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+          if (e.key === 'Escape') { inp.remove(); stockNum.style.display = ''; }
+        });
+        stockNum.style.display = 'none';
+        stockNum.parentNode.insertBefore(inp, stockNum.nextSibling);
+        inp.focus();
+        inp.select();
+      });
 
       const unitEl = document.createElement('div');
       unitEl.className = 'stock-unit';
@@ -841,25 +895,37 @@
 
   // ---- RESTOCK TAB ----
   document.getElementById('restock-submit').addEventListener('click', async () => {
-    const pid     = document.getElementById('restock-product').value;
-    const qty     = parseInt(document.getElementById('restock-qty').value);
-    const batch   = document.getElementById('restock-batch').value.trim();
-    const notes   = document.getElementById('restock-notes').value.trim();
-    const channel = document.getElementById('restock-channel').value;
+    const pid       = document.getElementById('restock-product').value;
+    const qty       = parseInt(document.getElementById('restock-qty').value);
+    const batch     = document.getElementById('restock-batch').value.trim();
+    const notes     = document.getElementById('restock-notes').value.trim();
+    const channel   = document.getElementById('restock-channel').value;
+    const prodDate  = document.getElementById('restock-prod-date').value;
+    const expiryDate = document.getElementById('restock-expiry-date').value;
+    const batchCost = document.getElementById('restock-batch-cost').value;
 
     if (!pid) { showToast('Select a product', true); return; }
     if (!qty || qty < 1) { showToast('Enter a valid quantity', true); return; }
 
     try {
+      const body = { quantity: qty };
+      if (batch)     body.batch_number    = batch;
+      if (notes)     body.notes           = notes;
+      if (channel)   body.channel         = channel;
+      if (prodDate)  body.prod_date       = prodDate;
+      if (expiryDate) body.expiry_date    = expiryDate;
+      if (batchCost) body.batch_cost_cents = parseFloat(batchCost);
       const r = await fetch('/admin/inventory/' + pid + '/restock', {
-        method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ quantity: qty, batch_number: batch || undefined, notes: notes || undefined, channel: channel || undefined }),
+        method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
       });
       if (!r.ok) { showToast('Restock failed', true); return; }
       document.getElementById('restock-qty').value = '';
       document.getElementById('restock-batch').value = '';
       document.getElementById('restock-notes').value = '';
       document.getElementById('restock-channel').value = '';
+      document.getElementById('restock-prod-date').value = '';
+      document.getElementById('restock-expiry-date').value = '';
+      document.getElementById('restock-batch-cost').value = '';
       await loadInventory();
       renderStockTab();
       loadRestockHistory();
@@ -878,7 +944,7 @@
       if (!restocks.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 6;
+        td.colSpan = 10;
         td.className = 'empty-msg';
         td.textContent = 'No restocks recorded yet';
         tr.appendChild(td);
@@ -886,7 +952,7 @@
         return;
       }
       for (const t of restocks) {
-        body.appendChild(buildTxnRow(t, ['date', 'product', 'qty', 'before-after', 'batch', 'notes']));
+        body.appendChild(buildTxnRow(t, ['date', 'product', 'qty', 'before-after', 'batch', 'prod-date', 'expiry', 'batch-cost', 'batch-status', 'notes']));
       }
     } catch { /* silent */ }
   }
@@ -960,6 +1026,43 @@
         td.style.fontSize = '0.82rem';
       } else if (col === 'batch') {
         td.textContent = t.batch_number || '—';
+      } else if (col === 'prod-date') {
+        td.textContent = t.prod_date || '—';
+        td.style.color = 'var(--cream-dim)';
+        td.style.fontSize = '0.82rem';
+      } else if (col === 'expiry') {
+        td.textContent = t.expiry_date || '—';
+        td.style.fontSize = '0.82rem';
+        if (t.expiry_date) {
+          const daysLeft = Math.ceil((new Date(t.expiry_date) - new Date()) / 864e5);
+          if (daysLeft < 0)  td.style.color = 'var(--red)';
+          else if (daysLeft <= 7) td.style.color = 'var(--orange)';
+          else td.style.color = 'var(--cream-dim)';
+        } else {
+          td.style.color = 'var(--cream-dim)';
+        }
+      } else if (col === 'batch-cost') {
+        td.textContent = t.batch_cost_cents != null ? '$' + (t.batch_cost_cents / 100).toFixed(2) : '—';
+        td.style.color = 'var(--cream-dim)';
+        td.style.fontSize = '0.82rem';
+      } else if (col === 'batch-status') {
+        if (!t.expiry_date) { td.textContent = '—'; td.style.color = 'var(--cream-dim)'; }
+        else {
+          const daysLeft = Math.ceil((new Date(t.expiry_date) - new Date()) / 864e5);
+          if (daysLeft < 0) {
+            td.textContent = 'Expired';
+            td.style.color = 'var(--red)';
+            td.style.fontWeight = '600';
+          } else if (daysLeft <= 7) {
+            td.textContent = 'Expiring (' + daysLeft + 'd)';
+            td.style.color = 'var(--orange)';
+            td.style.fontWeight = '600';
+          } else {
+            td.textContent = 'Active';
+            td.style.color = 'var(--green)';
+          }
+        }
+        td.style.fontSize = '0.82rem';
       } else if (col === 'notes') {
         td.textContent = t.notes || '—';
         td.style.color = 'var(--cream-dim)';

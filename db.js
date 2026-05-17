@@ -77,7 +77,7 @@ const store = {
     return { before, after: p.stock };
   },
 
-  addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null, channel = null, stockBefore = null, stockAfter = null) {
+  addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null, channel = null, stockBefore = null, stockAfter = null, extra = {}) {
     const tx = {
       id: _data.nextTxId++,
       product_id: productId,
@@ -90,6 +90,7 @@ const store = {
       stock_before: stockBefore,
       stock_after:  stockAfter,
       created_at: new Date().toISOString(),
+      ...extra,
     };
     _data.transactions.push(tx);
     if (_data.transactions.length > 500) _data.transactions = _data.transactions.slice(-500);

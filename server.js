@@ -790,12 +790,16 @@ app.post('/admin/inventory/:id/adjust', requireAdmin, (req, res) => {
 
 app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { quantity, batch_number, notes, channel } = req.body || {};
+  const { quantity, batch_number, notes, channel, prod_date, expiry_date, batch_cost_cents } = req.body || {};
   const qty = parseInt(quantity);
   if (!qty || qty <= 0) return res.status(400).json({ error: 'quantity must be a positive integer' });
   if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
   const result = db.adjustStock(id, qty);
-  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null, channel || null, result.before, result.after);
+  const extra = {};
+  if (prod_date)         extra.prod_date        = prod_date;
+  if (expiry_date)       extra.expiry_date       = expiry_date;
+  if (batch_cost_cents != null) extra.batch_cost_cents = Math.round(parseFloat(batch_cost_cents) * 100);
+  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null, channel || null, result.before, result.after, extra);
   res.json({ ok: true, stock: result.after });
 });
 

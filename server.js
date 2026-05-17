@@ -1032,6 +1032,13 @@ app.put('/admin/shipping/products/:idx', requireAdmin, (req, res) => {
   res.json(products[idx]);
 });
 
+app.put('/admin/shipping/reorder', requireAdmin, (req, res) => {
+  const { products } = req.body;
+  if (!Array.isArray(products)) return res.status(400).json({ error: 'products array required' });
+  writeShippingProducts(products);
+  res.json({ ok: true });
+});
+
 app.delete('/admin/shipping/products/:idx', requireAdmin, (req, res) => {
   const products = readShippingProducts();
   const idx = parseInt(req.params.idx, 10);

@@ -327,6 +327,12 @@
   .ship-stat-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cream-dim); margin-bottom: 4px; }
   .ship-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Playfair Display', serif; }
   .ship-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ship-drag-handle { cursor: grab; color: var(--cream-dim); font-size: 1rem; padding: 0 6px; user-select: none; line-height: 1; }
+  .ship-drag-handle:active { cursor: grabbing; }
+  .ship-drag-th { width: 28px; }
+  tr.ship-dragging { opacity: 0.35; }
+  tr.ship-drop-above { box-shadow: 0 -2px 0 var(--terra); }
+  tr.ship-drop-below { box-shadow: 0 2px 0 var(--terra); }
   .ship-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .ship-form-header h4 { font-size: 0.9rem; color: var(--cream); margin: 0; }
   .ship-preset-select { background: var(--bg); border: 1px solid var(--terra); border-radius: 6px; color: var(--cream); font-size: 0.8rem; padding: 5px 8px; cursor: pointer; max-width: 180px; }
@@ -602,7 +608,7 @@
         <div class="table-wrap">
           <table class="data" id="ship-lib-table">
             <thead><tr>
-              <th>Product</th><th>Product Wt</th><th>Pkg Wt</th><th>Total Wt</th><th>L×W×H (in)</th><th></th>
+              <th class="ship-drag-th"></th><th>Product</th><th>Product Wt</th><th>Pkg Wt</th><th>Total Wt</th><th>L×W×H (in)</th><th></th>
             </tr></thead>
             <tbody id="ship-lib-body"></tbody>
           </table>
@@ -1481,7 +1487,16 @@
 
     function renderShipRow(tr, p, idx) {
       tr.textContent = '';
+      tr.draggable = true;
+      tr.dataset.idx = idx;
       const total = +((p.product_weight_lbs || 0) + (p.packaging_weight_lbs || 0)).toFixed(2);
+
+      const tdGrip = document.createElement('td');
+      const grip   = document.createElement('span');
+      grip.className   = 'ship-drag-handle';
+      grip.textContent = '⠿';
+      grip.title       = 'Drag to reorder';
+      tdGrip.appendChild(grip);
 
       const td1 = document.createElement('td'); td1.textContent = p.name;
       const td2 = document.createElement('td'); td2.textContent = (p.product_weight_lbs || 0) + ' lbs';
@@ -1509,12 +1524,64 @@
       presetBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx, true));
       delBtn.addEventListener('click', () => deleteShipProduct(idx));
 
+      // prevent drag from firing when clicking buttons or inputs
+      [editBtn, presetBtn, delBtn].forEach(btn => {
+        btn.addEventListener('mousedown', e => e.stopPropagation());
+      });
+
       td6.appendChild(editBtn); td6.appendChild(presetBtn); td6.appendChild(delBtn);
-      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+      tr.appendChild(tdGrip); tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+
+      // drag events
+      tr.addEventListener('dragstart', e => {
+        dragSrcIdx = idx;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', idx);
+        setTimeout(() => tr.classList.add('ship-dragging'), 0);
+      });
+      tr.addEventListener('dragend', () => {
+        tr.classList.remove('ship-dragging');
+        document.querySelectorAll('#ship-lib-body tr').forEach(r => {
+          r.classList.remove('ship-drop-above', 'ship-drop-below');
+        });
+      });
+      tr.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('#ship-lib-body tr').forEach(r => {
+          r.classList.remove('ship-drop-above', 'ship-drop-below');
+        });
+        if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+          tr.classList.add(dragSrcIdx < idx ? 'ship-drop-below' : 'ship-drop-above');
+        }
+      });
+      tr.addEventListener('dragleave', () => {
+        tr.classList.remove('ship-drop-above', 'ship-drop-below');
+      });
+      tr.addEventListener('drop', e => {
+        e.preventDefault();
+        tr.classList.remove('ship-drop-above', 'ship-drop-below');
+        if (dragSrcIdx === null || dragSrcIdx === idx) return;
+        const moved = shipProducts.splice(dragSrcIdx, 1)[0];
+        shipProducts.splice(idx, 0, moved);
+        dragSrcIdx = null;
+        renderShipLibrary();
+        renderShipSelect();
+        saveShipOrder();
+      });
     }
 
     function renderShipRowEdit(tr, p, idx, showPreset) {
       tr.textContent = '';
+      tr.draggable = false;
+
+      // drag handle placeholder (keeps column alignment in edit mode)
+      const tdGripEdit = document.createElement('td');
+      const gripEdit = document.createElement('span');
+      gripEdit.className = 'ship-drag-handle'; gripEdit.textContent = '⠿';
+      gripEdit.style.opacity = '0.3';
+      tdGripEdit.appendChild(gripEdit);
+      tr.appendChild(tdGripEdit);
 
       // col 1: name (static)
       const td1 = document.createElement('td');
@@ -1622,6 +1689,18 @@
       td6.appendChild(saveBtn); td6.appendChild(cancelBtn);
       tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
       pwInp.focus();
+    }
+
+    let dragSrcIdx = null;
+
+    async function saveShipOrder() {
+      try {
+        await fetch('/admin/shipping/reorder', {
+          method: 'PUT',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products: shipProducts }),
+        });
+      } catch { showToast('Could not save new order', true); }
     }
 
     function renderShipLibrary() {

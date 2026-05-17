@@ -1442,23 +1442,108 @@
       } catch { showToast('Could not load shipping products', true); }
     }
 
+    function makeInput(val, width) {
+      const inp = document.createElement('input');
+      inp.type  = 'number'; inp.value = val; inp.step = '0.1'; inp.min = '0';
+      inp.style.cssText = 'width:' + width + ';background:var(--bg);border:1px solid var(--terra);border-radius:4px;color:var(--cream);padding:4px 6px;font-size:0.82rem;';
+      return inp;
+    }
+
+    function renderShipRow(tr, p, idx) {
+      tr.textContent = '';
+
+      const td1 = document.createElement('td'); td1.textContent = p.name;
+
+      const td2 = document.createElement('td'); td2.textContent = p.weight_lbs;
+
+      const td3 = document.createElement('td'); td3.textContent = p.length_in + '×' + p.width_in + '×' + p.height_in;
+
+      const td4 = document.createElement('td');
+      td4.style.whiteSpace = 'nowrap';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-sm btn-ghost'; editBtn.textContent = 'Edit';
+      editBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin-right:4px;';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-sm btn-ghost'; delBtn.textContent = '✕';
+      delBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
+
+      editBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx));
+      delBtn.addEventListener('click', () => deleteShipProduct(idx));
+
+      td4.appendChild(editBtn); td4.appendChild(delBtn);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+    }
+
+    function renderShipRowEdit(tr, p, idx) {
+      tr.textContent = '';
+
+      const td1 = document.createElement('td'); td1.textContent = p.name;
+
+      const td2 = document.createElement('td');
+      const wInp = makeInput(p.weight_lbs, '68px');
+      td2.appendChild(wInp);
+
+      const td3 = document.createElement('td');
+      td3.style.whiteSpace = 'nowrap';
+      const lInp = makeInput(p.length_in, '52px');
+      const wdInp = makeInput(p.width_in, '52px');
+      const hInp = makeInput(p.height_in, '52px');
+      [lInp, wdInp, hInp].forEach((inp, i) => {
+        if (i > 0) { const x = document.createTextNode('×'); td3.appendChild(x); }
+        td3.appendChild(inp);
+      });
+
+      const td4 = document.createElement('td');
+      td4.style.whiteSpace = 'nowrap';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'btn-sm btn-terra'; saveBtn.textContent = 'Save';
+      saveBtn.style.cssText = 'padding:4px 10px;font-size:0.75rem;margin-right:4px;';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn-sm btn-ghost'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
+
+      saveBtn.addEventListener('click', async () => {
+        const updated = {
+          name:       p.name,
+          weight_lbs: parseFloat(wInp.value),
+          length_in:  parseFloat(lInp.value),
+          width_in:   parseFloat(wdInp.value),
+          height_in:  parseFloat(hInp.value),
+        };
+        if ([updated.weight_lbs, updated.length_in, updated.width_in, updated.height_in].some(isNaN)) {
+          showToast('All fields must be numbers', true); return;
+        }
+        saveBtn.disabled = true; saveBtn.textContent = '...';
+        try {
+          const r = await fetch('/admin/shipping/products/' + idx, {
+            method: 'PUT', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(updated),
+          });
+          if (!r.ok) { const d = await r.json(); showToast(d.error || 'Save failed', true); saveBtn.disabled = false; saveBtn.textContent = 'Save'; return; }
+          shipProducts[idx] = updated;
+          renderShipRow(tr, updated, idx);
+          renderShipSelect();
+          showToast(updated.name + ' updated');
+        } catch { showToast('Connection error', true); saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      });
+
+      cancelBtn.addEventListener('click', () => renderShipRow(tr, p, idx));
+
+      td4.appendChild(saveBtn); td4.appendChild(cancelBtn);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+      wInp.focus();
+    }
+
     function renderShipLibrary() {
       const body = document.getElementById('ship-lib-body');
       body.textContent = '';
       shipProducts.forEach((p, idx) => {
         const tr = document.createElement('tr');
-        const td1 = document.createElement('td'); td1.textContent = p.name;
-        const td2 = document.createElement('td'); td2.textContent = p.weight_lbs;
-        const td3 = document.createElement('td'); td3.textContent = p.length_in + '×' + p.width_in + '×' + p.height_in;
-        const td4 = document.createElement('td');
-        const del = document.createElement('button');
-        del.className = 'btn-sm btn-ghost ship-del';
-        del.dataset.idx = idx;
-        del.textContent = '✕';
-        del.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
-        del.addEventListener('click', () => deleteShipProduct(parseInt(del.dataset.idx)));
-        td4.appendChild(del);
-        tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+        renderShipRow(tr, p, idx);
         body.appendChild(tr);
       });
     }

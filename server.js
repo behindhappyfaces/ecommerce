@@ -723,8 +723,10 @@ function deductStockForOrder(lineItems, orderId) {
     const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
     if (!pid) continue;
     const qty = item.quantity || 1;
-    db.adjustStock(pid, -qty);
-    db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout');
+    const result = db.adjustStock(pid, -qty);
+    const before = result ? result.before : null;
+    const after  = result ? result.after  : null;
+    db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout', 'online', before, after);
   }
 }
 
@@ -762,12 +764,13 @@ app.get('/admin/inventory', requireAdmin, (req, res) => {
 
 app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { reorder_level, price_cents, unit, allow_preorder } = req.body || {};
+  const { reorder_level, price_cents, cost_cents, unit, allow_preorder } = req.body || {};
   const product = db.getProduct(id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   const fields = {};
   if (reorder_level  != null) fields.reorder_level  = parseInt(reorder_level);
   if (price_cents    != null) fields.price_cents     = parseInt(price_cents);
+  if (cost_cents     != null) fields.cost_cents      = parseInt(cost_cents);
   if (unit           != null) fields.unit            = unit;
   if (allow_preorder != null) fields.allow_preorder  = allow_preorder ? 1 : 0;
   db.updateProduct(id, fields);
@@ -776,40 +779,48 @@ app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
 
 app.post('/admin/inventory/:id/adjust', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { quantity, notes } = req.body || {};
+  const { quantity, notes, channel } = req.body || {};
   if (quantity == null || isNaN(parseInt(quantity))) return res.status(400).json({ error: 'quantity required' });
   const qty = parseInt(quantity);
   if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
-  const stock = db.adjustStock(id, qty);
-  db.addTransaction(id, 'adjustment', qty, null, null, notes || null);
-  res.json({ ok: true, stock });
+  const result = db.adjustStock(id, qty);
+  db.addTransaction(id, 'adjustment', qty, null, null, notes || null, channel || null, result.before, result.after);
+  res.json({ ok: true, stock: result.after });
 });
 
 app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { quantity, batch_number, notes } = req.body || {};
+  const { quantity, batch_number, notes, channel } = req.body || {};
   const qty = parseInt(quantity);
   if (!qty || qty <= 0) return res.status(400).json({ error: 'quantity must be a positive integer' });
   if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
-  const stock = db.adjustStock(id, qty);
-  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null);
-  res.json({ ok: true, stock });
+  const result = db.adjustStock(id, qty);
+  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null, channel || null, result.before, result.after);
+  res.json({ ok: true, stock: result.after });
 });
 
 // --- Transaction history ---
 app.get('/admin/transactions', requireAdmin, (req, res) => {
-  res.json(db.getTransactions(req.query.product_id || null, 150));
+  const { product_id, date_from, date_to } = req.query;
+  res.json(db.getTransactions(product_id || null, 150, date_from || null, date_to || null));
 });
 
 // --- Reports ---
 app.get('/admin/reports/weekly', requireAdmin, (req, res) => {
   const sales = db.getSales(7);
-  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0) });
+  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
 });
 
 app.get('/admin/reports/monthly', requireAdmin, (req, res) => {
   const sales = db.getSales(30);
-  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0) });
+  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
+});
+
+app.get('/admin/reports/range', requireAdmin, (req, res) => {
+  const { date_from, date_to } = req.query;
+  if (!date_from || !date_to) return res.status(400).json({ error: 'date_from and date_to required (YYYY-MM-DD)' });
+  const sales = db.getSales(0, date_from, date_to);
+  res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
 });
 
 // --- CSV export ---
@@ -826,15 +837,15 @@ app.get('/admin/export/csv', requireAdmin, (req, res) => {
   };
 
   let csv = 'PRODUCTS\n';
-  csv += 'name,category,stock,reorder_level,unit,price_cents\n';
+  csv += 'name,category,stock,reorder_level,unit,price_cents,cost_cents\n';
   for (const p of products) {
-    csv += [p.name, p.category, p.stock, p.reorder_level, p.unit, p.price_cents].map(esc).join(',') + '\n';
+    csv += [p.name, p.category, p.stock, p.reorder_level, p.unit, p.price_cents, p.cost_cents || 0].map(esc).join(',') + '\n';
   }
 
   csv += '\nTRANSACTIONS\n';
-  csv += 'created_at,product_name,type,quantity,batch_number,order_id,notes\n';
+  csv += 'created_at,product_name,type,quantity,stock_before,stock_after,channel,batch_number,order_id,notes\n';
   for (const t of txns) {
-    csv += [t.created_at, t.product_name, t.type, t.quantity, t.batch_number, t.order_id, t.notes].map(esc).join(',') + '\n';
+    csv += [t.created_at, t.product_name, t.type, t.quantity, t.stock_before, t.stock_after, t.channel, t.batch_number, t.order_id, t.notes].map(esc).join(',') + '\n';
   }
 
   const filename = `inventory-export-${new Date().toISOString().slice(0,10)}.csv`;

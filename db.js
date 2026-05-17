@@ -5,24 +5,31 @@ const path = require('path');
 const DATA_PATH = process.env.DB_PATH || path.join(__dirname, 'inventory-data.json');
 
 const SEED = [
-  { id:'japanese-milk-loaf',  name:'Japanese Milk Loaf',       category:'Bakery',    stock:12, reorder_level:4,  unit:'loaf',   price_cents:1800, allow_preorder:0, active:1 },
-  { id:'cinnamon-rolls',      name:'Cinnamon Rolls',           category:'Bakery',    stock:24, reorder_level:6,  unit:'dozen',  price_cents:1500, allow_preorder:0, active:1 },
-  { id:'whole-wheat-loaf',    name:'Whole Wheat Loaf',         category:'Bakery',    stock:8,  reorder_level:3,  unit:'loaf',   price_cents:1400, allow_preorder:0, active:1 },
-  { id:'yeast-rolls',         name:'Yeast Rolls',              category:'Bakery',    stock:30, reorder_level:10, unit:'roll',   price_cents:300,  allow_preorder:0, active:1 },
-  { id:'focaccia-loaf',       name:'Focaccia Loaf',            category:'Bakery',    stock:5,  reorder_level:3,  unit:'loaf',   price_cents:1400, allow_preorder:0, active:1 },
-  { id:'sourdough',           name:'Sourdough',                category:'Bakery',    stock:6,  reorder_level:4,  unit:'loaf',   price_cents:1500, allow_preorder:0, active:1 },
-  { id:'challah',             name:'Challah',                  category:'Bakery',    stock:4,  reorder_level:3,  unit:'loaf',   price_cents:1600, allow_preorder:0, active:1 },
-  { id:'farm-eggs',           name:'Pasture-Raised Eggs',      category:'Farm Fresh',stock:18, reorder_level:10, unit:'dozen',  price_cents:800,  allow_preorder:0, active:1 },
-  { id:'cultured-butter',     name:'Real Cream Butter',        category:'Dairy',     stock:8,  reorder_level:5,  unit:'jar',    price_cents:900,  allow_preorder:0, active:1 },
-  { id:'seasonal-preserves',  name:'Seasonal Preserves',       category:'Larder',    stock:15, reorder_level:8,  unit:'jar',    price_cents:1200, allow_preorder:0, active:1 },
-  { id:'garlic-chili-crunch', name:'Garlic Chili Crunch',      category:'Larder',    stock:10, reorder_level:5,  unit:'jar',    price_cents:1400, allow_preorder:0, active:1 },
-  { id:'herb-dipping-oil',    name:'Tuscany Herb Dipping Oil', category:'Larder',    stock:7,  reorder_level:5,  unit:'bottle', price_cents:1600, allow_preorder:0, active:1 },
+  { id:'japanese-milk-loaf',  name:'Japanese Milk Loaf',       category:'Bakery',    stock:12, reorder_level:4,  unit:'loaf',   price_cents:1800, cost_cents:600,  allow_preorder:0, active:1 },
+  { id:'cinnamon-rolls',      name:'Cinnamon Rolls',           category:'Bakery',    stock:24, reorder_level:6,  unit:'dozen',  price_cents:1500, cost_cents:450,  allow_preorder:0, active:1 },
+  { id:'whole-wheat-loaf',    name:'Whole Wheat Loaf',         category:'Bakery',    stock:8,  reorder_level:3,  unit:'loaf',   price_cents:1400, cost_cents:400,  allow_preorder:0, active:1 },
+  { id:'yeast-rolls',         name:'Yeast Rolls',              category:'Bakery',    stock:30, reorder_level:10, unit:'roll',   price_cents:300,  cost_cents:80,   allow_preorder:0, active:1 },
+  { id:'focaccia-loaf',       name:'Focaccia Loaf',            category:'Bakery',    stock:5,  reorder_level:3,  unit:'loaf',   price_cents:1400, cost_cents:380,  allow_preorder:0, active:1 },
+  { id:'sourdough',           name:'Sourdough',                category:'Bakery',    stock:6,  reorder_level:4,  unit:'loaf',   price_cents:1500, cost_cents:420,  allow_preorder:0, active:1 },
+  { id:'challah',             name:'Challah',                  category:'Bakery',    stock:4,  reorder_level:3,  unit:'loaf',   price_cents:1600, cost_cents:500,  allow_preorder:0, active:1 },
+  { id:'farm-eggs',           name:'Pasture-Raised Eggs',      category:'Farm Fresh',stock:18, reorder_level:10, unit:'dozen',  price_cents:800,  cost_cents:200,  allow_preorder:0, active:1 },
+  { id:'cultured-butter',     name:'Real Cream Butter',        category:'Dairy',     stock:8,  reorder_level:5,  unit:'jar',    price_cents:900,  cost_cents:280,  allow_preorder:0, active:1 },
+  { id:'seasonal-preserves',  name:'Seasonal Preserves',       category:'Larder',    stock:15, reorder_level:8,  unit:'jar',    price_cents:1200, cost_cents:350,  allow_preorder:0, active:1 },
+  { id:'garlic-chili-crunch', name:'Garlic Chili Crunch',      category:'Larder',    stock:10, reorder_level:5,  unit:'jar',    price_cents:1400, cost_cents:400,  allow_preorder:0, active:1 },
+  { id:'herb-dipping-oil',    name:'Tuscany Herb Dipping Oil', category:'Larder',    stock:7,  reorder_level:5,  unit:'bottle', price_cents:1600, cost_cents:480,  allow_preorder:0, active:1 },
 ];
 
 function load() {
   try {
     const raw = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
     if (!raw.products) throw new Error('bad format');
+    // Backfill cost_cents for existing data that predates this field
+    for (const p of raw.products) {
+      if (p.cost_cents == null) {
+        const seed = SEED.find(s => s.id === p.id);
+        p.cost_cents = seed ? seed.cost_cents : 0;
+      }
+    }
     return raw;
   } catch {
     return { products: SEED.map(p => ({ ...p, created_at: new Date().toISOString() })), transactions: [], nextTxId: 1 };
@@ -60,15 +67,17 @@ const store = {
     return true;
   },
 
+  // Returns { before, after } so callers can log it
   adjustStock(id, qty) {
     const p = _data.products.find(p => p.id === id);
     if (!p) return null;
+    const before = p.stock;
     p.stock = Math.max(0, p.stock + qty);
     persist(_data);
-    return p.stock;
+    return { before, after: p.stock };
   },
 
-  addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null) {
+  addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null, channel = null, stockBefore = null, stockAfter = null) {
     const tx = {
       id: _data.nextTxId++,
       product_id: productId,
@@ -77,6 +86,9 @@ const store = {
       batch_number: batchNumber,
       order_id: orderId,
       notes,
+      channel,
+      stock_before: stockBefore,
+      stock_after:  stockAfter,
       created_at: new Date().toISOString(),
     };
     _data.transactions.push(tx);
@@ -85,26 +97,57 @@ const store = {
     return tx;
   },
 
-  getTransactions(productId = null, limit = 150) {
+  getTransactions(productId = null, limit = 150, dateFrom = null, dateTo = null) {
     const nameMap = Object.fromEntries(_data.products.map(p => [p.id, p.name]));
     let list = _data.transactions.slice().reverse();
     if (productId) list = list.filter(t => t.product_id === productId);
+    if (dateFrom)  list = list.filter(t => t.created_at >= dateFrom);
+    if (dateTo)    list = list.filter(t => t.created_at <= dateTo + 'T23:59:59Z');
     return list.slice(0, limit).map(t => ({ ...t, product_name: nameMap[t.product_id] || t.product_id }));
   },
 
-  getSales(daysSince) {
-    const since    = new Date(Date.now() - daysSince * 864e5).toISOString();
+  getSales(daysSince, dateFrom = null, dateTo = null) {
     const nameMap  = Object.fromEntries(_data.products.map(p => [p.id, p.name]));
     const priceMap = Object.fromEntries(_data.products.map(p => [p.id, p.price_cents]));
-    const grouped  = {};
-    for (const t of _data.transactions) {
-      if (t.type !== 'sale' || t.created_at < since) continue;
-      if (!grouped[t.product_id]) grouped[t.product_id] = { product_id: t.product_id, name: nameMap[t.product_id] || t.product_id, units_sold: 0, revenue_cents: 0 };
-      const u = Math.abs(t.quantity);
-      grouped[t.product_id].units_sold    += u;
-      grouped[t.product_id].revenue_cents += u * (priceMap[t.product_id] || 0);
+    const costMap  = Object.fromEntries(_data.products.map(p => [p.id, p.cost_cents || 0]));
+
+    let since;
+    if (dateFrom) {
+      since = dateFrom + 'T00:00:00Z';
+    } else {
+      since = new Date(Date.now() - daysSince * 864e5).toISOString();
     }
-    return Object.values(grouped).sort((a, b) => b.units_sold - a.units_sold);
+    const until = dateTo ? dateTo + 'T23:59:59Z' : null;
+
+    const grouped = {};
+    for (const t of _data.transactions) {
+      if (t.type !== 'sale') continue;
+      if (t.created_at < since) continue;
+      if (until && t.created_at > until) continue;
+      if (!grouped[t.product_id]) {
+        grouped[t.product_id] = {
+          product_id: t.product_id,
+          name: nameMap[t.product_id] || t.product_id,
+          units_sold: 0,
+          revenue_cents: 0,
+          cost_cents_total: 0,
+        };
+      }
+      const u = Math.abs(t.quantity);
+      grouped[t.product_id].units_sold       += u;
+      grouped[t.product_id].revenue_cents    += u * (priceMap[t.product_id] || 0);
+      grouped[t.product_id].cost_cents_total += u * (costMap[t.product_id]  || 0);
+    }
+
+    return Object.values(grouped)
+      .map(r => ({
+        ...r,
+        profit_cents: r.revenue_cents - r.cost_cents_total,
+        margin_pct: r.revenue_cents > 0
+          ? Math.round((r.revenue_cents - r.cost_cents_total) / r.revenue_cents * 100)
+          : 0,
+      }))
+      .sort((a, b) => b.units_sold - a.units_sold);
   },
 
   getAllForCSV() {

@@ -956,19 +956,28 @@ function readShippingProducts() {
   const lines = fs.readFileSync(SHIPPING_CSV, 'utf8').trim().split('\n');
   if (lines.length < 2) return [];
   return lines.slice(1).filter(Boolean).map(line => {
-    const [name, weight_lbs, length_in, width_in, height_in] = line.split(',');
-    return { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+    const [name, product_weight_lbs, packaging_weight_lbs, length_in, width_in, height_in] = line.split(',');
+    return {
+      name: name.trim(),
+      product_weight_lbs:   parseFloat(product_weight_lbs)   || 0,
+      packaging_weight_lbs: parseFloat(packaging_weight_lbs) || 0,
+      length_in:  parseFloat(length_in),
+      width_in:   parseFloat(width_in),
+      height_in:  parseFloat(height_in),
+    };
   });
 }
 
 function writeShippingProducts(products) {
-  const header = 'name,weight_lbs,length_in,width_in,height_in';
-  const rows   = products.map(p => `${p.name},${p.weight_lbs},${p.length_in},${p.width_in},${p.height_in}`);
+  const header = 'name,product_weight_lbs,packaging_weight_lbs,length_in,width_in,height_in';
+  const rows   = products.map(p =>
+    `${p.name},${p.product_weight_lbs},${p.packaging_weight_lbs},${p.length_in},${p.width_in},${p.height_in}`
+  );
   fs.writeFileSync(SHIPPING_CSV, [header, ...rows, ''].join('\n'));
 }
 
 function calcShipment(items) {
-  const totalWeight = items.reduce((s, i) => s + i.weight_lbs * i.qty, 0);
+  const totalWeight = items.reduce((s, i) => s + ((i.product_weight_lbs || 0) + (i.packaging_weight_lbs || 0)) * i.qty, 0);
   const totalVolume = items.reduce((s, i) => s + i.length_in * i.width_in * i.height_in * i.qty, 0);
   const buffered    = Math.ceil(totalVolume * 1.3);
   const maxDim      = Math.max(...items.map(i => Math.max(i.length_in, i.width_in, i.height_in)));
@@ -985,15 +994,22 @@ app.get('/admin/shipping/products', requireAdmin, (req, res) => {
 });
 
 app.post('/admin/shipping/products', requireAdmin, (req, res) => {
-  const { name, weight_lbs, length_in, width_in, height_in } = req.body;
-  if (!name || [weight_lbs, length_in, width_in, height_in].some(v => isNaN(parseFloat(v)))) {
-    return res.status(400).json({ error: 'All fields required and must be numbers' });
+  const { name, product_weight_lbs, packaging_weight_lbs, length_in, width_in, height_in } = req.body;
+  if (!name || [product_weight_lbs, length_in, width_in, height_in].some(v => isNaN(parseFloat(v)))) {
+    return res.status(400).json({ error: 'Name, product weight, and dimensions are required' });
   }
   const products = readShippingProducts();
   if (products.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     return res.status(400).json({ error: 'Product already exists' });
   }
-  const product = { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+  const product = {
+    name: name.trim(),
+    product_weight_lbs:   parseFloat(product_weight_lbs),
+    packaging_weight_lbs: parseFloat(packaging_weight_lbs) || 0,
+    length_in:  parseFloat(length_in),
+    width_in:   parseFloat(width_in),
+    height_in:  parseFloat(height_in),
+  };
   products.push(product);
   writeShippingProducts(products);
   res.json(product);
@@ -1003,8 +1019,15 @@ app.put('/admin/shipping/products/:idx', requireAdmin, (req, res) => {
   const products = readShippingProducts();
   const idx = parseInt(req.params.idx, 10);
   if (isNaN(idx) || idx < 0 || idx >= products.length) return res.status(404).json({ error: 'Not found' });
-  const { name, weight_lbs, length_in, width_in, height_in } = req.body;
-  products[idx] = { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+  const { name, product_weight_lbs, packaging_weight_lbs, length_in, width_in, height_in } = req.body;
+  products[idx] = {
+    name: name.trim(),
+    product_weight_lbs:   parseFloat(product_weight_lbs)   || 0,
+    packaging_weight_lbs: parseFloat(packaging_weight_lbs) || 0,
+    length_in:  parseFloat(length_in),
+    width_in:   parseFloat(width_in),
+    height_in:  parseFloat(height_in),
+  };
   writeShippingProducts(products);
   res.json(products[idx]);
 });
@@ -1029,12 +1052,15 @@ app.post('/admin/shipping/save-estimate', requireAdmin, (req, res) => {
   const { items, result } = req.body;
   if (!items?.length || !result) return res.status(400).json({ error: 'Missing data' });
 
-  const now       = new Date();
-  const dateStr   = now.toISOString().slice(0, 10);
-  const timeStr   = now.toTimeString().slice(0, 5);
+  const now     = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = now.toTimeString().slice(0, 5);
   const productRows = items.map(i => {
-    const vol = Math.round(i.length_in * i.width_in * i.height_in * i.qty);
-    return `| ${i.name} | ${i.qty} | ${(i.weight_lbs * i.qty).toFixed(1)} | ${vol} |`;
+    const vol      = Math.round(i.length_in * i.width_in * i.height_in * i.qty);
+    const prodWt   = ((i.product_weight_lbs   || 0) * i.qty).toFixed(1);
+    const pkgWt    = ((i.packaging_weight_lbs || 0) * i.qty).toFixed(1);
+    const totalWt  = (((i.product_weight_lbs || 0) + (i.packaging_weight_lbs || 0)) * i.qty).toFixed(1);
+    return `| ${i.name} | ${i.qty} | ${prodWt} | ${pkgWt} | ${totalWt} | ${vol} |`;
   }).join('\n');
 
   const markdown = `---
@@ -1047,8 +1073,8 @@ tags: [shipping, bhf, estimate]
 
 ## Products
 
-| Product | Qty | Weight (lbs) | Volume (cu in) |
-|---------|-----|-------------|----------------|
+| Product | Qty | Product Wt (lbs) | Pkg Wt (lbs) | Total Wt (lbs) | Volume (cu in) |
+|---------|-----|-----------------|-------------|----------------|----------------|
 ${productRows}
 
 ## Totals

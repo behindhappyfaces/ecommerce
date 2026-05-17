@@ -309,7 +309,7 @@
   .ship-add-form { background: var(--card2); border-radius: 10px; padding: 16px; margin-top: 14px; }
   .ship-add-form input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cream); font-size: 0.85rem; padding: 8px 10px; margin-bottom: 8px; outline: none; }
   .ship-add-form input:focus { border-color: var(--terra); }
-  .ship-dims { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .ship-dims { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
   .ship-dims input { margin-bottom: 0; }
   .ship-form-btns { display: flex; gap: 8px; }
   .btn-sm { padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; border: none; transition: background 0.2s; }
@@ -595,10 +595,14 @@
       <!-- LEFT: Product Library -->
       <div class="shipping-col">
         <h3 class="section-title">Product Library</h3>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="btn-sm btn-terra" id="ship-export-excel">Export Excel</button>
+          <button class="btn-sm btn-ghost" id="ship-export-pdf">Export PDF</button>
+        </div>
         <div class="table-wrap">
           <table class="data" id="ship-lib-table">
             <thead><tr>
-              <th>Product</th><th>Weight (lbs)</th><th>L×W×H (in)</th><th></th>
+              <th>Product</th><th>Product Wt</th><th>Pkg Wt</th><th>Total Wt</th><th>L×W×H (in)</th><th></th>
             </tr></thead>
             <tbody id="ship-lib-body"></tbody>
           </table>
@@ -621,10 +625,11 @@
           <input id="sadd-name" type="text" placeholder="Product name" />
           <div class="ship-estimate-row">
             <div class="ship-dims">
-              <input id="sadd-weight" type="number" placeholder="Weight lbs" step="0.1" min="0" />
-              <input id="sadd-l"      type="number" placeholder="Length in"  step="0.5" min="0" />
-              <input id="sadd-w"      type="number" placeholder="Width in"   step="0.5" min="0" />
-              <input id="sadd-h"      type="number" placeholder="Height in"  step="0.5" min="0" />
+              <input id="sadd-product-weight"   type="number" placeholder="Product wt lbs"  step="0.1" min="0" />
+              <input id="sadd-packaging-weight" type="number" placeholder="Pkg wt lbs"       step="0.1" min="0" value="0" />
+              <input id="sadd-l"                type="number" placeholder="Length in"         step="0.5" min="0" />
+              <input id="sadd-w"                type="number" placeholder="Width in"          step="0.5" min="0" />
+              <input id="sadd-h"                type="number" placeholder="Height in"         step="0.5" min="0" />
             </div>
             <button class="btn-sm btn-purple" id="sadd-estimate" title="Estimate missing weight or dimensions">Estimate</button>
           </div>
@@ -652,7 +657,7 @@
         <div class="table-wrap" id="ship-items-wrap" style="display:none;margin-top:16px;">
           <table class="data" id="ship-items-table">
             <thead><tr>
-              <th>Product</th><th>Qty</th><th>Weight</th><th>Volume</th><th></th>
+              <th>Product</th><th>Qty</th><th>Total Wt</th><th>Volume</th><th></th>
             </tr></thead>
             <tbody id="ship-items-body"></tbody>
           </table>
@@ -1476,52 +1481,107 @@
 
     function renderShipRow(tr, p, idx) {
       tr.textContent = '';
+      const total = +((p.product_weight_lbs || 0) + (p.packaging_weight_lbs || 0)).toFixed(2);
 
       const td1 = document.createElement('td'); td1.textContent = p.name;
+      const td2 = document.createElement('td'); td2.textContent = (p.product_weight_lbs || 0) + ' lbs';
+      const td3 = document.createElement('td'); td3.textContent = (p.packaging_weight_lbs || 0) + ' lbs';
+      const td4 = document.createElement('td'); td4.textContent = total + ' lbs';
+      td4.style.fontWeight = '600';
+      const td5 = document.createElement('td'); td5.textContent = p.length_in + '×' + p.width_in + '×' + p.height_in;
 
-      const td2 = document.createElement('td'); td2.textContent = p.weight_lbs;
-
-      const td3 = document.createElement('td'); td3.textContent = p.length_in + '×' + p.width_in + '×' + p.height_in;
-
-      const td4 = document.createElement('td');
-      td4.style.whiteSpace = 'nowrap';
+      const td6 = document.createElement('td');
+      td6.style.whiteSpace = 'nowrap';
 
       const editBtn = document.createElement('button');
       editBtn.className = 'btn-sm btn-ghost'; editBtn.textContent = 'Edit';
       editBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin-right:4px;';
+
+      const presetBtn = document.createElement('button');
+      presetBtn.className = 'btn-sm btn-purple'; presetBtn.textContent = 'Preset';
+      presetBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin-right:4px;';
 
       const delBtn = document.createElement('button');
       delBtn.className = 'btn-sm btn-ghost'; delBtn.textContent = '✕';
       delBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
 
       editBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx));
+      presetBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx, true));
       delBtn.addEventListener('click', () => deleteShipProduct(idx));
 
-      td4.appendChild(editBtn); td4.appendChild(delBtn);
-      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+      td6.appendChild(editBtn); td6.appendChild(presetBtn); td6.appendChild(delBtn);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
     }
 
-    function renderShipRowEdit(tr, p, idx) {
+    function renderShipRowEdit(tr, p, idx, showPreset) {
       tr.textContent = '';
 
-      const td1 = document.createElement('td'); td1.textContent = p.name;
+      // col 1: name (static)
+      const td1 = document.createElement('td');
+      td1.textContent = p.name;
 
+      // col 2: product weight
       const td2 = document.createElement('td');
-      const wInp = makeInput(p.weight_lbs, '68px');
-      td2.appendChild(wInp);
+      const pwInp = makeInput(p.product_weight_lbs || 0, '68px');
+      td2.appendChild(pwInp);
 
+      // col 3: packaging weight
       const td3 = document.createElement('td');
-      td3.style.whiteSpace = 'nowrap';
-      const lInp = makeInput(p.length_in, '52px');
-      const wdInp = makeInput(p.width_in, '52px');
-      const hInp = makeInput(p.height_in, '52px');
+      const pkInp = makeInput(p.packaging_weight_lbs || 0, '68px');
+      td3.appendChild(pkInp);
+
+      // col 4: total (live-updating label)
+      const td4 = document.createElement('td');
+      const totalSpan = document.createElement('span');
+      totalSpan.style.cssText = 'font-size:0.8rem;color:var(--cream-dim);';
+      function refreshTotal() {
+        const t = +((parseFloat(pwInp.value)||0) + (parseFloat(pkInp.value)||0)).toFixed(2);
+        totalSpan.textContent = t + ' lbs';
+      }
+      refreshTotal();
+      pwInp.addEventListener('input', refreshTotal);
+      pkInp.addEventListener('input', refreshTotal);
+      td4.appendChild(totalSpan);
+
+      // col 5: dims
+      const td5 = document.createElement('td');
+      td5.style.whiteSpace = 'nowrap';
+      const lInp = makeInput(p.length_in, '50px');
+      const wdInp = makeInput(p.width_in, '50px');
+      const hInp = makeInput(p.height_in, '50px');
       [lInp, wdInp, hInp].forEach((inp, i) => {
-        if (i > 0) { const x = document.createTextNode('×'); td3.appendChild(x); }
-        td3.appendChild(inp);
+        if (i > 0) { td5.appendChild(document.createTextNode('×')); }
+        td5.appendChild(inp);
       });
 
-      const td4 = document.createElement('td');
-      td4.style.whiteSpace = 'nowrap';
+      // col 6: actions + optional preset selector
+      const td6 = document.createElement('td');
+      td6.style.whiteSpace = 'nowrap';
+
+      if (showPreset) {
+        const pSel = document.createElement('select');
+        pSel.className = 'ship-preset-select';
+        pSel.style.cssText = 'display:block;margin-bottom:6px;max-width:160px;font-size:0.75rem;';
+        const defOpt = document.createElement('option');
+        defOpt.value = ''; defOpt.textContent = 'Use Preset…';
+        pSel.appendChild(defOpt);
+        Object.entries(SHIP_PRESETS).forEach(([key, pr]) => {
+          const o = document.createElement('option'); o.value = key; o.textContent = pr.name;
+          pSel.appendChild(o);
+        });
+        pSel.addEventListener('change', function() {
+          const pr = SHIP_PRESETS[this.value];
+          if (!pr) return;
+          pwInp.value = pr.product_weight_lbs;
+          pkInp.value = pr.packaging_weight_lbs;
+          lInp.value  = pr.length_in;
+          wdInp.value = pr.width_in;
+          hInp.value  = pr.height_in;
+          refreshTotal();
+          this.value = '';
+        });
+        td6.appendChild(pSel);
+      }
 
       const saveBtn = document.createElement('button');
       saveBtn.className = 'btn-sm btn-terra'; saveBtn.textContent = 'Save';
@@ -1533,14 +1593,15 @@
 
       saveBtn.addEventListener('click', async () => {
         const updated = {
-          name:       p.name,
-          weight_lbs: parseFloat(wInp.value),
-          length_in:  parseFloat(lInp.value),
-          width_in:   parseFloat(wdInp.value),
-          height_in:  parseFloat(hInp.value),
+          name:                 p.name,
+          product_weight_lbs:   parseFloat(pwInp.value)  || 0,
+          packaging_weight_lbs: parseFloat(pkInp.value)  || 0,
+          length_in:            parseFloat(lInp.value),
+          width_in:             parseFloat(wdInp.value),
+          height_in:            parseFloat(hInp.value),
         };
-        if ([updated.weight_lbs, updated.length_in, updated.width_in, updated.height_in].some(isNaN)) {
-          showToast('All fields must be numbers', true); return;
+        if ([updated.length_in, updated.width_in, updated.height_in].some(isNaN)) {
+          showToast('Dimensions must be numbers', true); return;
         }
         saveBtn.disabled = true; saveBtn.textContent = '...';
         try {
@@ -1558,9 +1619,9 @@
 
       cancelBtn.addEventListener('click', () => renderShipRow(tr, p, idx));
 
-      td4.appendChild(saveBtn); td4.appendChild(cancelBtn);
-      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
-      wInp.focus();
+      td6.appendChild(saveBtn); td6.appendChild(cancelBtn);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
+      pwInp.focus();
     }
 
     function renderShipLibrary() {
@@ -1593,7 +1654,7 @@
       body.textContent = '';
       shipItems.forEach((item, i) => {
         const vol    = (item.length_in * item.width_in * item.height_in * item.qty).toFixed(0);
-        const weight = (item.weight_lbs * item.qty).toFixed(1);
+        const weight = (((item.product_weight_lbs||0) + (item.packaging_weight_lbs||0)) * item.qty).toFixed(1);
         const tr = document.createElement('tr');
         const cells = [item.name, item.qty, weight + ' lbs', vol + ' cu in'];
         cells.forEach(val => {
@@ -1629,14 +1690,14 @@
     }
 
     const SHIP_PRESETS = {
-      'whole-chicken':  { name: 'Whole Chicken',              weight_lbs: 4.0,  length_in: 10, width_in: 8,   height_in: 5   },
-      'preserves':      { name: 'Preserves / Jam (pint jar)', weight_lbs: 1.5,  length_in: 4,  width_in: 4,   height_in: 5   },
-      'butter-fifth':   { name: 'Butter – 1/5 lb',           weight_lbs: 0.2,  length_in: 3.5,width_in: 1.5, height_in: 1   },
-      'butter-1lb':     { name: 'Butter – 1 lb',             weight_lbs: 1.0,  length_in: 5.5,width_in: 3,   height_in: 2   },
-      'bread':          { name: 'Bread (loaf)',               weight_lbs: 1.75, length_in: 9,  width_in: 5,   height_in: 4   },
-      'chili-crunch':   { name: 'Garlic Chili Crunch',        weight_lbs: 0.45, length_in: 3,  width_in: 3,   height_in: 3.5 },
-      'dipping-oil':    { name: 'Bread Dipping Oil',          weight_lbs: 0.75, length_in: 3,  width_in: 3,   height_in: 7   },
-      'cinnamon-rolls': { name: 'Cinnamon Rolls – ½ dozen',   weight_lbs: 1.5,  length_in: 9,  width_in: 9,   height_in: 3   },
+      'whole-chicken':  { name: 'Whole Chicken',              product_weight_lbs: 4.0,  packaging_weight_lbs: 0.1,  length_in: 10,  width_in: 8,   height_in: 5   },
+      'preserves':      { name: 'Preserves / Jam (pint jar)', product_weight_lbs: 1.0,  packaging_weight_lbs: 0.5,  length_in: 4,   width_in: 4,   height_in: 5   },
+      'butter-fifth':   { name: 'Butter – 1/5 lb',           product_weight_lbs: 0.2,  packaging_weight_lbs: 0.02, length_in: 3.5, width_in: 1.5, height_in: 1   },
+      'butter-1lb':     { name: 'Butter – 1 lb',             product_weight_lbs: 1.0,  packaging_weight_lbs: 0.1,  length_in: 5.5, width_in: 3,   height_in: 2   },
+      'bread':          { name: 'Bread (loaf)',               product_weight_lbs: 1.75, packaging_weight_lbs: 0.05, length_in: 9,   width_in: 5,   height_in: 4   },
+      'chili-crunch':   { name: 'Garlic Chili Crunch',        product_weight_lbs: 0.3,  packaging_weight_lbs: 0.15, length_in: 3,   width_in: 3,   height_in: 3.5 },
+      'dipping-oil':    { name: 'Bread Dipping Oil',          product_weight_lbs: 0.5,  packaging_weight_lbs: 0.25, length_in: 3,   width_in: 3,   height_in: 7   },
+      'cinnamon-rolls': { name: 'Cinnamon Rolls – ½ dozen',   product_weight_lbs: 1.3,  packaging_weight_lbs: 0.2,  length_in: 9,   width_in: 9,   height_in: 3   },
     };
 
     // density-based estimation (avg packaged food: ~0.85 g/cm³)
@@ -1665,22 +1726,23 @@
     document.getElementById('sadd-preset').addEventListener('change', function () {
       const preset = SHIP_PRESETS[this.value];
       if (!preset) return;
-      document.getElementById('sadd-name').value   = preset.name;
-      document.getElementById('sadd-weight').value = preset.weight_lbs;
-      document.getElementById('sadd-l').value      = preset.length_in;
-      document.getElementById('sadd-w').value      = preset.width_in;
-      document.getElementById('sadd-h').value      = preset.height_in;
+      document.getElementById('sadd-name').value             = preset.name;
+      document.getElementById('sadd-product-weight').value   = preset.product_weight_lbs;
+      document.getElementById('sadd-packaging-weight').value = preset.packaging_weight_lbs;
+      document.getElementById('sadd-l').value                = preset.length_in;
+      document.getElementById('sadd-w').value                = preset.width_in;
+      document.getElementById('sadd-h').value                = preset.height_in;
       setFormNote('Preset loaded — adjust any values before saving.');
       this.value = '';
     });
 
     document.getElementById('sadd-estimate').addEventListener('click', () => {
-      const wVal = document.getElementById('sadd-weight').value.trim();
-      const lVal = document.getElementById('sadd-l').value.trim();
-      const wdVal = document.getElementById('sadd-w').value.trim();
-      const hVal  = document.getElementById('sadd-h').value.trim();
+      const pwVal  = document.getElementById('sadd-product-weight').value.trim();
+      const lVal   = document.getElementById('sadd-l').value.trim();
+      const wdVal  = document.getElementById('sadd-w').value.trim();
+      const hVal   = document.getElementById('sadd-h').value.trim();
 
-      const hasWeight = wVal !== '' && !isNaN(parseFloat(wVal));
+      const hasWeight = pwVal !== '' && !isNaN(parseFloat(pwVal));
       const hasDims   = lVal !== '' && wdVal !== '' && hVal !== '' &&
                         !isNaN(parseFloat(lVal)) && !isNaN(parseFloat(wdVal)) && !isNaN(parseFloat(hVal));
 
@@ -1689,19 +1751,19 @@
         return;
       }
       if (!hasWeight && !hasDims) {
-        setFormNote('Enter at least weight OR all three dimensions to estimate the rest.');
+        setFormNote('Enter at least product weight OR all three dimensions to estimate the rest.');
         return;
       }
       if (hasWeight && !hasDims) {
-        const dims = dimsFromWeight(parseFloat(wVal));
+        const dims = dimsFromWeight(parseFloat(pwVal));
         document.getElementById('sadd-l').value = dims.length_in;
         document.getElementById('sadd-w').value = dims.width_in;
         document.getElementById('sadd-h').value = dims.height_in;
-        setFormNote('Dimensions estimated from weight using avg food density — adjust if needed.');
+        setFormNote('Dimensions estimated from product weight using avg food density — adjust if needed.');
       } else {
         const w = weightFromDims(parseFloat(lVal), parseFloat(wdVal), parseFloat(hVal));
-        document.getElementById('sadd-weight').value = w;
-        setFormNote('Weight estimated from dimensions using avg food density — adjust if needed.');
+        document.getElementById('sadd-product-weight').value = w;
+        setFormNote('Product weight estimated from dimensions using avg food density — adjust if needed.');
       }
     });
 
@@ -1717,19 +1779,23 @@
     });
     document.getElementById('sadd-save').addEventListener('click', async () => {
       const name   = document.getElementById('sadd-name').value.trim();
-      const weight = document.getElementById('sadd-weight').value;
+      const pw     = document.getElementById('sadd-product-weight').value;
+      const pkgw   = document.getElementById('sadd-packaging-weight').value;
       const l      = document.getElementById('sadd-l').value;
       const w      = document.getElementById('sadd-w').value;
       const h      = document.getElementById('sadd-h').value;
       if (!name) { showToast('Product name required', true); return; }
-      if (!weight || !l || !w || !h) { showToast('Use the Estimate button to fill missing values, or enter them manually', true); return; }
+      if (!pw || !l || !w || !h) { showToast('Use the Estimate button to fill missing values, or enter them manually', true); return; }
       try {
         const r = await fetch('/admin/shipping/products', {
           method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, weight_lbs: parseFloat(weight), length_in: parseFloat(l), width_in: parseFloat(w), height_in: parseFloat(h) }),
+          body: JSON.stringify({ name, product_weight_lbs: parseFloat(pw), packaging_weight_lbs: parseFloat(pkgw)||0, length_in: parseFloat(l), width_in: parseFloat(w), height_in: parseFloat(h) }),
         });
         if (!r.ok) { const d = await r.json(); showToast(d.error || 'Save failed', true); return; }
-        ['sadd-name','sadd-weight','sadd-l','sadd-w','sadd-h'].forEach(id => { document.getElementById(id).value = ''; });
+        ['sadd-name','sadd-product-weight','sadd-packaging-weight','sadd-l','sadd-w','sadd-h'].forEach(id => {
+          const el = document.getElementById(id);
+          el.value = id === 'sadd-packaging-weight' ? '0' : '';
+        });
         document.getElementById('ship-add-form').style.display = 'none';
         document.getElementById('ship-add-btn').style.display  = '';
         setFormNote('');
@@ -1737,6 +1803,60 @@
         showToast('Product added');
       } catch { showToast('Connection error', true); }
     });
+
+    // ── Export functions ──────────────────────────────────────────────────────
+    function exportShipExcel() {
+      if (!window.XLSX) { showToast('Excel library not loaded yet — try again in a moment', true); return; }
+      const rows = shipProducts.map(p => ({
+        'Product':              p.name,
+        'Product Weight (lbs)': p.product_weight_lbs || 0,
+        'Packaging Weight (lbs)': p.packaging_weight_lbs || 0,
+        'Total Weight (lbs)':   +((p.product_weight_lbs||0) + (p.packaging_weight_lbs||0)).toFixed(2),
+        'Length (in)':          p.length_in,
+        'Width (in)':           p.width_in,
+        'Height (in)':          p.height_in,
+        'Volume (cu in)':       +(p.length_in * p.width_in * p.height_in).toFixed(1),
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Product Library');
+      XLSX.writeFile(wb, 'bhf-shipping-products.xlsx');
+    }
+
+    function exportShipPDF() {
+      if (!window.jspdf) { showToast('PDF library not loaded yet — try again in a moment', true); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(44, 62, 45);
+      doc.text('BHF Shipping Product Library', 14, 16);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Generated ' + new Date().toLocaleDateString('en-US', { dateStyle: 'full' }), 14, 23);
+      doc.autoTable({
+        startY: 29,
+        head: [['Product', 'Product Wt (lbs)', 'Pkg Wt (lbs)', 'Total Wt (lbs)', 'L (in)', 'W (in)', 'H (in)', 'Volume (cu in)']],
+        body: shipProducts.map(p => [
+          p.name,
+          p.product_weight_lbs || 0,
+          p.packaging_weight_lbs || 0,
+          +((p.product_weight_lbs||0) + (p.packaging_weight_lbs||0)).toFixed(2),
+          p.length_in, p.width_in, p.height_in,
+          +(p.length_in * p.width_in * p.height_in).toFixed(1),
+        ]),
+        styles:     { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [139, 74, 47], textColor: 245, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 240, 232] },
+        tableLineColor: [200, 195, 185],
+        tableLineWidth: 0.1,
+      });
+      doc.save('bhf-shipping-products.pdf');
+    }
+
+    document.getElementById('ship-export-excel').addEventListener('click', exportShipExcel);
+    document.getElementById('ship-export-pdf').addEventListener('click', exportShipPDF);
 
     document.getElementById('ship-add-item').addEventListener('click', () => {
       const sel = document.getElementById('ship-product-select');
@@ -1815,5 +1935,10 @@
   }());
 })();
 </script>
+<!-- SheetJS (Excel export) -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<!-- jsPDF + autoTable (PDF export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>

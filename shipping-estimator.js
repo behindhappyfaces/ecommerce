@@ -18,14 +18,14 @@ const STANDARD_BOXES = [
 ];
 
 const PRESETS = [
-  { name: 'Whole Chicken',              weight_lbs: 4.0,  length_in: 10,  width_in: 8,   height_in: 5   },
-  { name: 'Preserves / Jam (pint jar)', weight_lbs: 1.5,  length_in: 4,   width_in: 4,   height_in: 5   },
-  { name: 'Butter – 1/5 lb',           weight_lbs: 0.2,  length_in: 3.5, width_in: 1.5, height_in: 1   },
-  { name: 'Butter – 1 lb',             weight_lbs: 1.0,  length_in: 5.5, width_in: 3,   height_in: 2   },
-  { name: 'Bread (loaf)',               weight_lbs: 1.75, length_in: 9,   width_in: 5,   height_in: 4   },
-  { name: 'Garlic Chili Crunch',        weight_lbs: 0.45, length_in: 3,   width_in: 3,   height_in: 3.5 },
-  { name: 'Bread Dipping Oil',          weight_lbs: 0.75, length_in: 3,   width_in: 3,   height_in: 7   },
-  { name: 'Cinnamon Rolls – ½ dozen',   weight_lbs: 1.5,  length_in: 9,   width_in: 9,   height_in: 3   },
+  { name: 'Whole Chicken',              product_weight_lbs: 4.0,  packaging_weight_lbs: 0.1,  length_in: 10,  width_in: 8,   height_in: 5   },
+  { name: 'Preserves / Jam (pint jar)', product_weight_lbs: 1.0,  packaging_weight_lbs: 0.5,  length_in: 4,   width_in: 4,   height_in: 5   },
+  { name: 'Butter – 1/5 lb',           product_weight_lbs: 0.2,  packaging_weight_lbs: 0.02, length_in: 3.5, width_in: 1.5, height_in: 1   },
+  { name: 'Butter – 1 lb',             product_weight_lbs: 1.0,  packaging_weight_lbs: 0.1,  length_in: 5.5, width_in: 3,   height_in: 2   },
+  { name: 'Bread (loaf)',               product_weight_lbs: 1.75, packaging_weight_lbs: 0.05, length_in: 9,   width_in: 5,   height_in: 4   },
+  { name: 'Garlic Chili Crunch',        product_weight_lbs: 0.3,  packaging_weight_lbs: 0.15, length_in: 3,   width_in: 3,   height_in: 3.5 },
+  { name: 'Bread Dipping Oil',          product_weight_lbs: 0.5,  packaging_weight_lbs: 0.25, length_in: 3,   width_in: 3,   height_in: 7   },
+  { name: 'Cinnamon Rolls – ½ dozen',   product_weight_lbs: 1.3,  packaging_weight_lbs: 0.2,  length_in: 9,   width_in: 9,   height_in: 3   },
 ];
 
 // avg packaged food density used when estimating missing values
@@ -48,27 +48,28 @@ function weightFromDims(l, w, h) {
 
 function readProducts() {
   if (!fs.existsSync(CSV_PATH)) {
-    fs.writeFileSync(CSV_PATH, 'name,weight_lbs,length_in,width_in,height_in\n');
+    fs.writeFileSync(CSV_PATH, 'name,product_weight_lbs,packaging_weight_lbs,length_in,width_in,height_in\n');
     return [];
   }
   const lines = fs.readFileSync(CSV_PATH, 'utf8').trim().split('\n');
   if (lines.length < 2) return [];
   return lines.slice(1).filter(Boolean).map(line => {
-    const [name, weight_lbs, length_in, width_in, height_in] = line.split(',');
+    const [name, product_weight_lbs, packaging_weight_lbs, length_in, width_in, height_in] = line.split(',');
     return {
-      name:       name.trim(),
-      weight_lbs: parseFloat(weight_lbs),
-      length_in:  parseFloat(length_in),
-      width_in:   parseFloat(width_in),
-      height_in:  parseFloat(height_in),
+      name:                 name.trim(),
+      product_weight_lbs:   parseFloat(product_weight_lbs)   || 0,
+      packaging_weight_lbs: parseFloat(packaging_weight_lbs) || 0,
+      length_in:            parseFloat(length_in),
+      width_in:             parseFloat(width_in),
+      height_in:            parseFloat(height_in),
     };
   });
 }
 
 function writeProducts(products) {
-  const header = 'name,weight_lbs,length_in,width_in,height_in';
+  const header = 'name,product_weight_lbs,packaging_weight_lbs,length_in,width_in,height_in';
   const rows   = products.map(p =>
-    `${p.name},${p.weight_lbs},${p.length_in},${p.width_in},${p.height_in}`
+    `${p.name},${p.product_weight_lbs},${p.packaging_weight_lbs},${p.length_in},${p.width_in},${p.height_in}`
   );
   fs.writeFileSync(CSV_PATH, [header, ...rows, ''].join('\n'));
 }
@@ -83,7 +84,6 @@ function recommendBox(selectedItems) {
   const maxDim    = Math.max(...selectedItems.map(i =>
     Math.max(i.length_in, i.width_in, i.height_in)
   ));
-
   for (const box of STANDARD_BOXES) {
     const longestSide = Math.max(box.l, box.w, box.h);
     const boxVol      = box.l * box.w * box.h;
@@ -97,19 +97,26 @@ function calcGelPacks(totalWeight) {
   return Math.max(1, Math.ceil(totalWeight / 5));
 }
 
+function itemTotalWeight(item) {
+  return ((item.product_weight_lbs || 0) + (item.packaging_weight_lbs || 0)) * item.qty;
+}
+
 // ─── Obsidian markdown ────────────────────────────────────────────────────────
 
 function saveEstimate(selectedItems) {
   const now         = new Date();
   const dateStr     = now.toISOString().slice(0, 10);
   const timeStr     = now.toTimeString().slice(0, 5);
-  const totalWeight = selectedItems.reduce((s, i) => s + i.weight_lbs * i.qty, 0);
+  const totalWeight = selectedItems.reduce((s, i) => s + itemTotalWeight(i), 0);
   const gelPacks    = calcGelPacks(totalWeight);
   const { box, totalVolume, buffered } = recommendBox(selectedItems);
 
   const productRows = selectedItems.map(i => {
-    const vol = (i.length_in * i.width_in * i.height_in * i.qty).toFixed(0);
-    return `| ${i.name} | ${i.qty} | ${(i.weight_lbs * i.qty).toFixed(1)} | ${vol} |`;
+    const vol    = (i.length_in * i.width_in * i.height_in * i.qty).toFixed(0);
+    const prodWt = (i.product_weight_lbs   * i.qty).toFixed(1);
+    const pkgWt  = (i.packaging_weight_lbs * i.qty).toFixed(1);
+    const totWt  = itemTotalWeight(i).toFixed(1);
+    return `| ${i.name} | ${i.qty} | ${prodWt} | ${pkgWt} | ${totWt} | ${vol} |`;
   }).join('\n');
 
   const markdown = `---
@@ -122,8 +129,8 @@ tags: [shipping, bhf, estimate]
 
 ## Products
 
-| Product | Qty | Weight (lbs) | Volume (cu in) |
-|---------|-----|-------------|----------------|
+| Product | Qty | Product Wt (lbs) | Pkg Wt (lbs) | Total Wt (lbs) | Volume (cu in) |
+|---------|-----|-----------------|-------------|----------------|----------------|
 ${productRows}
 
 ## Totals
@@ -175,7 +182,10 @@ async function addProduct(rl) {
   if (usePreset === 'y') {
     blank();
     console.log('  Available presets:');
-    PRESETS.forEach((p, i) => console.log(`    [${i + 1}] ${p.name}  (${p.weight_lbs} lbs, ${p.length_in}×${p.width_in}×${p.height_in} in)`));
+    PRESETS.forEach((p, i) => {
+      const total = +((p.product_weight_lbs||0)+(p.packaging_weight_lbs||0)).toFixed(2);
+      console.log(`    [${i + 1}] ${p.name}  (product ${p.product_weight_lbs} + pkg ${p.packaging_weight_lbs} = ${total} lbs, ${p.length_in}×${p.width_in}×${p.height_in} in)`);
+    });
     blank();
     const pidx = parseInt(await ask(rl, '  Select preset number: '), 10) - 1;
     if (!isNaN(pidx) && PRESETS[pidx]) {
@@ -193,13 +203,18 @@ async function addProduct(rl) {
   const name        = nameInput || defaultName;
   if (!name) { console.log('  Cancelled.'); return; }
 
-  // ── Weight ────────────────────────────────────────────────────────────────
-  const wDefault = preset ? String(preset.weight_lbs) : '';
-  const wRaw = (await ask(rl, `  Weight lbs${wDefault ? ' [' + wDefault + ']' : ' (or press Enter to estimate)'}: `)).trim();
-  const weight_lbs_input = wRaw ? parseFloat(wRaw) : (wDefault ? parseFloat(wDefault) : NaN);
+  // ── Product weight ────────────────────────────────────────────────────────
+  const pwDefault = preset ? String(preset.product_weight_lbs) : '';
+  const pwRaw = (await ask(rl, `  Product weight lbs (food only)${pwDefault ? ' [' + pwDefault + ']' : ' (or press Enter to estimate)'}: `)).trim();
+  const product_weight_lbs_input = pwRaw ? parseFloat(pwRaw) : (pwDefault ? parseFloat(pwDefault) : NaN);
+
+  // ── Packaging weight ──────────────────────────────────────────────────────
+  const pkDefault = preset ? String(preset.packaging_weight_lbs) : '0';
+  const pkRaw = (await ask(rl, `  Packaging weight lbs (jar/box/bag) [${pkDefault}]: `)).trim();
+  const packaging_weight_lbs = pkRaw ? parseFloat(pkRaw) : parseFloat(pkDefault);
 
   // ── Dimensions ────────────────────────────────────────────────────────────
-  const lDef = preset ? String(preset.length_in) : '';
+  const lDef  = preset ? String(preset.length_in) : '';
   const wdDef = preset ? String(preset.width_in)  : '';
   const hDef  = preset ? String(preset.height_in) : '';
 
@@ -211,31 +226,31 @@ async function addProduct(rl) {
   const width_in_input   = wdRaw ? parseFloat(wdRaw) : (wdDef ? parseFloat(wdDef) : NaN);
   const height_in_input  = hRaw  ? parseFloat(hRaw)  : (hDef  ? parseFloat(hDef)  : NaN);
 
-  const hasWeight = !isNaN(weight_lbs_input);
+  const hasWeight = !isNaN(product_weight_lbs_input);
   const hasDims   = !isNaN(length_in_input) && !isNaN(width_in_input) && !isNaN(height_in_input);
 
-  let weight_lbs, length_in, width_in, height_in;
+  let product_weight_lbs, length_in, width_in, height_in;
 
   if (hasWeight && hasDims) {
-    weight_lbs = weight_lbs_input;
+    product_weight_lbs = product_weight_lbs_input;
     length_in  = length_in_input;
     width_in   = width_in_input;
     height_in  = height_in_input;
   } else if (hasWeight && !hasDims) {
-    const dims = dimsFromWeight(weight_lbs_input);
+    const dims = dimsFromWeight(product_weight_lbs_input);
     length_in  = dims.length_in;
     width_in   = dims.width_in;
     height_in  = dims.height_in;
-    weight_lbs = weight_lbs_input;
-    console.log(`  ↻ Dimensions estimated from weight: ${length_in}×${width_in}×${height_in} in`);
+    product_weight_lbs = product_weight_lbs_input;
+    console.log(`  ↻ Dimensions estimated from product weight: ${length_in}×${width_in}×${height_in} in`);
   } else if (!hasWeight && hasDims) {
-    weight_lbs = weightFromDims(length_in_input, width_in_input, height_in_input);
+    product_weight_lbs = weightFromDims(length_in_input, width_in_input, height_in_input);
     length_in  = length_in_input;
     width_in   = width_in_input;
     height_in  = height_in_input;
-    console.log(`  ↻ Weight estimated from dimensions: ${weight_lbs} lbs`);
+    console.log(`  ↻ Product weight estimated from dimensions: ${product_weight_lbs} lbs`);
   } else {
-    console.log('  Nothing entered — product not saved. Enter at least weight or all three dimensions.');
+    console.log('  Nothing entered — product not saved. Enter at least product weight or all three dimensions.');
     return;
   }
 
@@ -245,9 +260,10 @@ async function addProduct(rl) {
     return;
   }
 
-  products.push({ name, weight_lbs, length_in, width_in, height_in });
+  const total = +((product_weight_lbs||0) + (packaging_weight_lbs||0)).toFixed(2);
+  products.push({ name, product_weight_lbs, packaging_weight_lbs: packaging_weight_lbs||0, length_in, width_in, height_in });
   writeProducts(products);
-  console.log(`  ✓ "${name}" added  (${weight_lbs} lbs, ${length_in}×${width_in}×${height_in} in)`);
+  console.log(`  ✓ "${name}" added  (product ${product_weight_lbs} + pkg ${packaging_weight_lbs||0} = ${total} lbs total, ${length_in}×${width_in}×${height_in} in)`);
 }
 
 async function updateProduct(rl) {
@@ -307,11 +323,12 @@ function viewLibrary() {
   console.log('  PRODUCT LIBRARY');
   hr();
   if (!products.length) { console.log('  No products yet. Use "Add Product" to get started.'); return; }
-  console.log(`  ${'#'.padEnd(4)} ${'Name'.padEnd(28)} ${'Wt(lb)'.padEnd(8)} ${'L×W×H (in)'.padEnd(18)}`);
+  console.log(`  ${'#'.padEnd(4)} ${'Name'.padEnd(26)} ${'Prod Wt'.padEnd(9)} ${'Pkg Wt'.padEnd(8)} ${'Total'.padEnd(8)} ${'L×W×H (in)'}`);
   hr();
   products.forEach((p, i) => {
-    const dims = `${p.length_in}×${p.width_in}×${p.height_in}`;
-    console.log(`  ${String(i + 1).padEnd(4)} ${p.name.padEnd(28)} ${String(p.weight_lbs).padEnd(8)} ${dims}`);
+    const total = +((p.product_weight_lbs || 0) + (p.packaging_weight_lbs || 0)).toFixed(2);
+    const dims  = `${p.length_in}×${p.width_in}×${p.height_in}`;
+    console.log(`  ${String(i + 1).padEnd(4)} ${p.name.padEnd(26)} ${String(p.product_weight_lbs || 0).padEnd(9)} ${String(p.packaging_weight_lbs || 0).padEnd(8)} ${String(total).padEnd(8)} ${dims}`);
   });
 }
 
@@ -358,7 +375,7 @@ async function buildEstimate(rl) {
 
   if (!selectedItems.length) { console.log('  Nothing selected.'); return; }
 
-  const totalWeight = selectedItems.reduce((s, i) => s + i.weight_lbs * i.qty, 0);
+  const totalWeight = selectedItems.reduce((s, i) => s + itemTotalWeight(i), 0);
   const gelPacks    = calcGelPacks(totalWeight);
   const { box, totalVolume, buffered } = recommendBox(selectedItems);
 
@@ -367,7 +384,7 @@ async function buildEstimate(rl) {
   console.log('  ESTIMATE RESULTS');
   console.log('  ══════════════════════════════════════════════');
   selectedItems.forEach(i =>
-    console.log(`  • ${i.name} × ${i.qty}  (${(i.weight_lbs * i.qty).toFixed(1)} lbs)`)
+    console.log(`  • ${i.name} × ${i.qty}  (${itemTotalWeight(i).toFixed(1)} lbs total)`)
   );
   hr();
   console.log(`  Total Weight:      ${totalWeight.toFixed(1)} lbs`);

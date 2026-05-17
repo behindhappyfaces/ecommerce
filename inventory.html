@@ -327,6 +327,14 @@
   .ship-stat-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cream-dim); margin-bottom: 4px; }
   .ship-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Playfair Display', serif; }
   .ship-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ship-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .ship-form-header h4 { font-size: 0.9rem; color: var(--cream); margin: 0; }
+  .ship-preset-select { background: var(--bg); border: 1px solid var(--terra); border-radius: 6px; color: var(--cream); font-size: 0.8rem; padding: 5px 8px; cursor: pointer; max-width: 180px; }
+  .ship-preset-select option { background: var(--card); }
+  .ship-estimate-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ship-estimate-row .ship-dims { margin-bottom: 0; flex: 1; }
+  .btn-purple { background: #7c3aed; color: var(--cream); }
+  .btn-purple:hover { background: #6d28d9; }
 </style>
 </head>
 <body>
@@ -596,14 +604,31 @@
           </table>
         </div>
         <div class="ship-add-form" id="ship-add-form" style="display:none;">
-          <h4 style="margin-bottom:12px;font-size:0.9rem;color:var(--cream);">Add Product</h4>
-          <input id="sadd-name"   type="text"   placeholder="Product name" />
-          <div class="ship-dims">
-            <input id="sadd-weight" type="number" placeholder="Weight lbs" step="0.1" min="0" />
-            <input id="sadd-l"      type="number" placeholder="Length in"  step="0.5" min="0" />
-            <input id="sadd-w"      type="number" placeholder="Width in"   step="0.5" min="0" />
-            <input id="sadd-h"      type="number" placeholder="Height in"  step="0.5" min="0" />
+          <div class="ship-form-header">
+            <h4>Add Product</h4>
+            <select class="ship-preset-select" id="sadd-preset">
+              <option value="">Use Preset…</option>
+              <option value="whole-chicken">Whole Chicken</option>
+              <option value="preserves">Preserves / Jam (pint jar)</option>
+              <option value="butter-fifth">Butter – 1/5 lb</option>
+              <option value="butter-1lb">Butter – 1 lb</option>
+              <option value="bread">Bread (loaf)</option>
+              <option value="chili-crunch">Garlic Chili Crunch</option>
+              <option value="dipping-oil">Bread Dipping Oil</option>
+              <option value="cinnamon-rolls">Cinnamon Rolls – ½ dozen</option>
+            </select>
           </div>
+          <input id="sadd-name" type="text" placeholder="Product name" />
+          <div class="ship-estimate-row">
+            <div class="ship-dims">
+              <input id="sadd-weight" type="number" placeholder="Weight lbs" step="0.1" min="0" />
+              <input id="sadd-l"      type="number" placeholder="Length in"  step="0.5" min="0" />
+              <input id="sadd-w"      type="number" placeholder="Width in"   step="0.5" min="0" />
+              <input id="sadd-h"      type="number" placeholder="Height in"  step="0.5" min="0" />
+            </div>
+            <button class="btn-sm btn-purple" id="sadd-estimate" title="Estimate missing weight or dimensions">Estimate</button>
+          </div>
+          <p id="sadd-estimate-note" style="font-size:0.75rem;color:var(--cream-dim);margin-bottom:8px;display:none;"></p>
           <div class="ship-form-btns">
             <button class="btn-sm btn-terra" id="sadd-save">Save Product</button>
             <button class="btn-sm btn-ghost" id="sadd-cancel">Cancel</button>
@@ -1603,13 +1628,92 @@
       } catch { showToast('Delete failed', true); }
     }
 
+    const SHIP_PRESETS = {
+      'whole-chicken':  { name: 'Whole Chicken',              weight_lbs: 4.0,  length_in: 10, width_in: 8,   height_in: 5   },
+      'preserves':      { name: 'Preserves / Jam (pint jar)', weight_lbs: 1.5,  length_in: 4,  width_in: 4,   height_in: 5   },
+      'butter-fifth':   { name: 'Butter – 1/5 lb',           weight_lbs: 0.2,  length_in: 3.5,width_in: 1.5, height_in: 1   },
+      'butter-1lb':     { name: 'Butter – 1 lb',             weight_lbs: 1.0,  length_in: 5.5,width_in: 3,   height_in: 2   },
+      'bread':          { name: 'Bread (loaf)',               weight_lbs: 1.75, length_in: 9,  width_in: 5,   height_in: 4   },
+      'chili-crunch':   { name: 'Garlic Chili Crunch',        weight_lbs: 0.45, length_in: 3,  width_in: 3,   height_in: 3.5 },
+      'dipping-oil':    { name: 'Bread Dipping Oil',          weight_lbs: 0.75, length_in: 3,  width_in: 3,   height_in: 7   },
+      'cinnamon-rolls': { name: 'Cinnamon Rolls – ½ dozen',   weight_lbs: 1.5,  length_in: 9,  width_in: 9,   height_in: 3   },
+    };
+
+    // density-based estimation (avg packaged food: ~0.85 g/cm³)
+    const FOOD_DENSITY = 0.85;
+    const G_PER_LB = 453.592;
+    const CM3_PER_IN3 = 16.387;
+
+    function dimsFromWeight(lbs) {
+      const vol_in3 = (lbs * G_PER_LB / FOOD_DENSITY) / CM3_PER_IN3;
+      // assume L:W:H ≈ 2:1.5:1  →  vol = 3 × H³
+      const h = Math.cbrt(vol_in3 / 3);
+      return { length_in: parseFloat((h * 2).toFixed(1)), width_in: parseFloat((h * 1.5).toFixed(1)), height_in: parseFloat(h.toFixed(1)) };
+    }
+
+    function weightFromDims(l, w, h) {
+      const vol_cm3 = l * w * h * CM3_PER_IN3;
+      return parseFloat((vol_cm3 * FOOD_DENSITY / G_PER_LB).toFixed(2));
+    }
+
+    function setFormNote(msg) {
+      const note = document.getElementById('sadd-estimate-note');
+      note.textContent = msg;
+      note.style.display = msg ? '' : 'none';
+    }
+
+    document.getElementById('sadd-preset').addEventListener('change', function () {
+      const preset = SHIP_PRESETS[this.value];
+      if (!preset) return;
+      document.getElementById('sadd-name').value   = preset.name;
+      document.getElementById('sadd-weight').value = preset.weight_lbs;
+      document.getElementById('sadd-l').value      = preset.length_in;
+      document.getElementById('sadd-w').value      = preset.width_in;
+      document.getElementById('sadd-h').value      = preset.height_in;
+      setFormNote('Preset loaded — adjust any values before saving.');
+      this.value = '';
+    });
+
+    document.getElementById('sadd-estimate').addEventListener('click', () => {
+      const wVal = document.getElementById('sadd-weight').value.trim();
+      const lVal = document.getElementById('sadd-l').value.trim();
+      const wdVal = document.getElementById('sadd-w').value.trim();
+      const hVal  = document.getElementById('sadd-h').value.trim();
+
+      const hasWeight = wVal !== '' && !isNaN(parseFloat(wVal));
+      const hasDims   = lVal !== '' && wdVal !== '' && hVal !== '' &&
+                        !isNaN(parseFloat(lVal)) && !isNaN(parseFloat(wdVal)) && !isNaN(parseFloat(hVal));
+
+      if (hasWeight && hasDims) {
+        setFormNote('All values already filled — nothing to estimate.');
+        return;
+      }
+      if (!hasWeight && !hasDims) {
+        setFormNote('Enter at least weight OR all three dimensions to estimate the rest.');
+        return;
+      }
+      if (hasWeight && !hasDims) {
+        const dims = dimsFromWeight(parseFloat(wVal));
+        document.getElementById('sadd-l').value = dims.length_in;
+        document.getElementById('sadd-w').value = dims.width_in;
+        document.getElementById('sadd-h').value = dims.height_in;
+        setFormNote('Dimensions estimated from weight using avg food density — adjust if needed.');
+      } else {
+        const w = weightFromDims(parseFloat(lVal), parseFloat(wdVal), parseFloat(hVal));
+        document.getElementById('sadd-weight').value = w;
+        setFormNote('Weight estimated from dimensions using avg food density — adjust if needed.');
+      }
+    });
+
     document.getElementById('ship-add-btn').addEventListener('click', () => {
       document.getElementById('ship-add-form').style.display = '';
       document.getElementById('ship-add-btn').style.display  = 'none';
+      setFormNote('');
     });
     document.getElementById('sadd-cancel').addEventListener('click', () => {
       document.getElementById('ship-add-form').style.display = 'none';
       document.getElementById('ship-add-btn').style.display  = '';
+      setFormNote('');
     });
     document.getElementById('sadd-save').addEventListener('click', async () => {
       const name   = document.getElementById('sadd-name').value.trim();
@@ -1617,7 +1721,8 @@
       const l      = document.getElementById('sadd-l').value;
       const w      = document.getElementById('sadd-w').value;
       const h      = document.getElementById('sadd-h').value;
-      if (!name || !weight || !l || !w || !h) { showToast('All fields required', true); return; }
+      if (!name) { showToast('Product name required', true); return; }
+      if (!weight || !l || !w || !h) { showToast('Use the Estimate button to fill missing values, or enter them manually', true); return; }
       try {
         const r = await fetch('/admin/shipping/products', {
           method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
@@ -1627,6 +1732,7 @@
         ['sadd-name','sadd-weight','sadd-l','sadd-w','sadd-h'].forEach(id => { document.getElementById(id).value = ''; });
         document.getElementById('ship-add-form').style.display = 'none';
         document.getElementById('ship-add-btn').style.display  = '';
+        setFormNote('');
         await loadShipProducts();
         showToast('Product added');
       } catch { showToast('Connection error', true); }

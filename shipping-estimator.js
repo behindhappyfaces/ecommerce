@@ -17,6 +17,33 @@ const STANDARD_BOXES = [
   { name: '2XL',    l: 30, w: 20, h: 20 },
 ];
 
+const PRESETS = [
+  { name: 'Whole Chicken',              weight_lbs: 4.0,  length_in: 10,  width_in: 8,   height_in: 5   },
+  { name: 'Preserves / Jam (pint jar)', weight_lbs: 1.5,  length_in: 4,   width_in: 4,   height_in: 5   },
+  { name: 'Butter – 1/5 lb',           weight_lbs: 0.2,  length_in: 3.5, width_in: 1.5, height_in: 1   },
+  { name: 'Butter – 1 lb',             weight_lbs: 1.0,  length_in: 5.5, width_in: 3,   height_in: 2   },
+  { name: 'Bread (loaf)',               weight_lbs: 1.75, length_in: 9,   width_in: 5,   height_in: 4   },
+  { name: 'Garlic Chili Crunch',        weight_lbs: 0.45, length_in: 3,   width_in: 3,   height_in: 3.5 },
+  { name: 'Bread Dipping Oil',          weight_lbs: 0.75, length_in: 3,   width_in: 3,   height_in: 7   },
+  { name: 'Cinnamon Rolls – ½ dozen',   weight_lbs: 1.5,  length_in: 9,   width_in: 9,   height_in: 3   },
+];
+
+// avg packaged food density used when estimating missing values
+const FOOD_DENSITY_G_CM3 = 0.85;
+const G_PER_LB   = 453.592;
+const CM3_PER_IN3 = 16.387;
+
+function dimsFromWeight(lbs) {
+  const vol_in3 = (lbs * G_PER_LB / FOOD_DENSITY_G_CM3) / CM3_PER_IN3;
+  const h = Math.cbrt(vol_in3 / 3); // L:W:H ≈ 2:1.5:1
+  return { length_in: +((h * 2).toFixed(1)), width_in: +((h * 1.5).toFixed(1)), height_in: +(h.toFixed(1)) };
+}
+
+function weightFromDims(l, w, h) {
+  const vol_cm3 = l * w * h * CM3_PER_IN3;
+  return +((vol_cm3 * FOOD_DENSITY_G_CM3 / G_PER_LB).toFixed(2));
+}
+
 // ─── CSV helpers ─────────────────────────────────────────────────────────────
 
 function readProducts() {
@@ -141,15 +168,74 @@ async function addProduct(rl) {
   blank();
   console.log('  ADD PRODUCT');
   hr();
-  const name       = (await ask(rl, '  Product name: ')).trim();
-  if (!name) { console.log('  Cancelled.'); return; }
-  const weight_lbs = parseFloat(await ask(rl, '  Weight (lbs): '));
-  const length_in  = parseFloat(await ask(rl, '  Length (in):  '));
-  const width_in   = parseFloat(await ask(rl, '  Width  (in):  '));
-  const height_in  = parseFloat(await ask(rl, '  Height (in):  '));
 
-  if ([weight_lbs, length_in, width_in, height_in].some(isNaN)) {
-    console.log('  Invalid number — product not saved.');
+  // ── Preset selection ──────────────────────────────────────────────────────
+  const usePreset = (await ask(rl, '  Use a preset? (y/N): ')).trim().toLowerCase();
+  let preset = null;
+  if (usePreset === 'y') {
+    blank();
+    console.log('  Available presets:');
+    PRESETS.forEach((p, i) => console.log(`    [${i + 1}] ${p.name}  (${p.weight_lbs} lbs, ${p.length_in}×${p.width_in}×${p.height_in} in)`));
+    blank();
+    const pidx = parseInt(await ask(rl, '  Select preset number: '), 10) - 1;
+    if (!isNaN(pidx) && PRESETS[pidx]) {
+      preset = { ...PRESETS[pidx] };
+      console.log(`  ✓ Preset loaded: ${preset.name}`);
+    } else {
+      console.log('  Invalid selection — continuing without preset.');
+    }
+  }
+
+  // ── Product name ──────────────────────────────────────────────────────────
+  const defaultName = preset?.name || '';
+  const namePrompt  = defaultName ? `  Product name [${defaultName}]: ` : '  Product name: ';
+  const nameInput   = (await ask(rl, namePrompt)).trim();
+  const name        = nameInput || defaultName;
+  if (!name) { console.log('  Cancelled.'); return; }
+
+  // ── Weight ────────────────────────────────────────────────────────────────
+  const wDefault = preset ? String(preset.weight_lbs) : '';
+  const wRaw = (await ask(rl, `  Weight lbs${wDefault ? ' [' + wDefault + ']' : ' (or press Enter to estimate)'}: `)).trim();
+  const weight_lbs_input = wRaw ? parseFloat(wRaw) : (wDefault ? parseFloat(wDefault) : NaN);
+
+  // ── Dimensions ────────────────────────────────────────────────────────────
+  const lDef = preset ? String(preset.length_in) : '';
+  const wdDef = preset ? String(preset.width_in)  : '';
+  const hDef  = preset ? String(preset.height_in) : '';
+
+  const lRaw  = (await ask(rl, `  Length in ${lDef  ? '[' + lDef  + ']' : '(or press Enter to estimate)'}: `)).trim();
+  const wdRaw = (await ask(rl, `  Width  in ${wdDef ? '[' + wdDef + ']' : '(or press Enter to estimate)'}: `)).trim();
+  const hRaw  = (await ask(rl, `  Height in ${hDef  ? '[' + hDef  + ']' : '(or press Enter to estimate)'}: `)).trim();
+
+  const length_in_input  = lRaw  ? parseFloat(lRaw)  : (lDef  ? parseFloat(lDef)  : NaN);
+  const width_in_input   = wdRaw ? parseFloat(wdRaw) : (wdDef ? parseFloat(wdDef) : NaN);
+  const height_in_input  = hRaw  ? parseFloat(hRaw)  : (hDef  ? parseFloat(hDef)  : NaN);
+
+  const hasWeight = !isNaN(weight_lbs_input);
+  const hasDims   = !isNaN(length_in_input) && !isNaN(width_in_input) && !isNaN(height_in_input);
+
+  let weight_lbs, length_in, width_in, height_in;
+
+  if (hasWeight && hasDims) {
+    weight_lbs = weight_lbs_input;
+    length_in  = length_in_input;
+    width_in   = width_in_input;
+    height_in  = height_in_input;
+  } else if (hasWeight && !hasDims) {
+    const dims = dimsFromWeight(weight_lbs_input);
+    length_in  = dims.length_in;
+    width_in   = dims.width_in;
+    height_in  = dims.height_in;
+    weight_lbs = weight_lbs_input;
+    console.log(`  ↻ Dimensions estimated from weight: ${length_in}×${width_in}×${height_in} in`);
+  } else if (!hasWeight && hasDims) {
+    weight_lbs = weightFromDims(length_in_input, width_in_input, height_in_input);
+    length_in  = length_in_input;
+    width_in   = width_in_input;
+    height_in  = height_in_input;
+    console.log(`  ↻ Weight estimated from dimensions: ${weight_lbs} lbs`);
+  } else {
+    console.log('  Nothing entered — product not saved. Enter at least weight or all three dimensions.');
     return;
   }
 
@@ -161,7 +247,7 @@ async function addProduct(rl) {
 
   products.push({ name, weight_lbs, length_in, width_in, height_in });
   writeProducts(products);
-  console.log(`  ✓ "${name}" added to library.`);
+  console.log(`  ✓ "${name}" added  (${weight_lbs} lbs, ${length_in}×${width_in}×${height_in} in)`);
 }
 
 async function updateProduct(rl) {

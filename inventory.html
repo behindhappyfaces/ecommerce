@@ -1516,6 +1516,11 @@
       presetBtn.className = 'btn-sm btn-purple'; presetBtn.textContent = 'Preset';
       presetBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin-right:4px;';
 
+      const dupBtn = document.createElement('button');
+      dupBtn.className = 'btn-sm btn-ghost'; dupBtn.textContent = 'Copy';
+      dupBtn.title = 'Duplicate this product';
+      dupBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;margin-right:4px;';
+
       const delBtn = document.createElement('button');
       delBtn.className = 'btn-sm btn-ghost'; delBtn.textContent = '✕';
       delBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
@@ -1523,13 +1528,32 @@
       editBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx));
       presetBtn.addEventListener('click', () => renderShipRowEdit(tr, p, idx, true));
       delBtn.addEventListener('click', () => deleteShipProduct(idx));
+      dupBtn.addEventListener('click', async () => {
+        let newName = p.name + ' (copy)';
+        let attempt = 1;
+        while (shipProducts.find(x => x.name === newName)) {
+          attempt++;
+          newName = p.name + ' (copy ' + attempt + ')';
+        }
+        const dupe = { ...p, name: newName };
+        try {
+          const r = await fetch('/admin/shipping/products', {
+            method: 'POST',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(dupe),
+          });
+          if (!r.ok) { const d = await r.json(); showToast(d.error || 'Duplicate failed', true); return; }
+          await loadShipProducts();
+          showToast('"' + newName + '" added');
+        } catch { showToast('Connection error', true); }
+      });
 
       // prevent drag from firing when clicking buttons or inputs
-      [editBtn, presetBtn, delBtn].forEach(btn => {
+      [editBtn, presetBtn, dupBtn, delBtn].forEach(btn => {
         btn.addEventListener('mousedown', e => e.stopPropagation());
       });
 
-      td6.appendChild(editBtn); td6.appendChild(presetBtn); td6.appendChild(delBtn);
+      td6.appendChild(editBtn); td6.appendChild(presetBtn); td6.appendChild(dupBtn); td6.appendChild(delBtn);
       tr.appendChild(tdGrip); tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
 
       // drag events

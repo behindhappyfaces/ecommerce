@@ -10,6 +10,26 @@ const db       = require('./db');
 let cron;
 try { cron = require('node-cron'); } catch(e) { console.log('[Cron] node-cron not available'); }
 
+const EasyPostClient = require('@easypost/api');
+const easypost = process.env.EASYPOST_API_KEY ? new EasyPostClient(process.env.EASYPOST_API_KEY) : null;
+
+const BHF_FROM_ADDRESS = {
+  name:    'Heart of Texas Organics',
+  street1: '100 Commons Rd Ste 7-121',
+  city:    'Dripping Springs',
+  state:   'TX',
+  zip:     '78620',
+  country: 'US',
+};
+
+// Update PICKUP_ADDRESS env var in Render when location is confirmed
+const PICKUP_LOCATION = {
+  name:    'Heart of Texas Organics — Local Pick-up',
+  address: process.env.PICKUP_ADDRESS || 'Address TBD — contact us to arrange',
+  hours:   process.env.PICKUP_HOURS   || 'Hours TBD',
+  notes:   process.env.PICKUP_NOTES   || 'We will reach out to confirm your pick-up time.',
+};
+
 const app = express();
 
 // =========================================
@@ -1106,6 +1126,66 @@ ${productRows}
     res.json({ saved: true, filename });
   } catch (err) {
     res.status(500).json({ error: 'Could not write to Obsidian: ' + err.message });
+  }
+});
+
+// =========================================
+// EASYPOST — RATES, LABELS, PICKUP
+// =========================================
+
+app.get('/admin/shipping/pickup-location', requireAdmin, (req, res) => {
+  res.json(PICKUP_LOCATION);
+});
+
+// POST /admin/shipping/rates
+// body: { to:{name,street1,city,state,zip,phone?}, weight_lbs, length, width, height }
+app.post('/admin/shipping/rates', requireAdmin, async (req, res) => {
+  if (!easypost) return res.status(503).json({ error: 'EasyPost not configured — set EASYPOST_API_KEY in environment variables' });
+  try {
+    const { to, weight_lbs, length, width, height } = req.body;
+    const shipment = await easypost.Shipment.create({
+      from_address: BHF_FROM_ADDRESS,
+      to_address:   to,
+      parcel: {
+        length,
+        width,
+        height,
+        weight: Math.ceil((weight_lbs || 0.1) * 16), // EasyPost uses ounces
+      },
+    });
+    const rates = (shipment.rates || [])
+      .map(r => ({
+        id:            r.id,
+        carrier:       r.carrier,
+        service:       r.service,
+        rate:          r.rate,
+        currency:      r.currency,
+        delivery_days: r.delivery_days,
+        delivery_date: r.delivery_date,
+      }))
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+    res.json({ shipment_id: shipment.id, rates });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'EasyPost error' });
+  }
+});
+
+// POST /admin/shipping/buy-label
+// body: { shipment_id, rate_id }
+app.post('/admin/shipping/buy-label', requireAdmin, async (req, res) => {
+  if (!easypost) return res.status(503).json({ error: 'EasyPost not configured' });
+  try {
+    const { shipment_id, rate_id } = req.body;
+    const purchased = await easypost.Shipment.buy(shipment_id, rate_id);
+    res.json({
+      tracking_code: purchased.tracking_code,
+      label_url:     purchased.postage_label?.label_url,
+      carrier:       purchased.selected_rate?.carrier,
+      service:       purchased.selected_rate?.service,
+      price:         purchased.selected_rate?.rate,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message || 'Could not purchase label' });
   }
 });
 

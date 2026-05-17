@@ -327,6 +327,31 @@
   .ship-stat-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cream-dim); margin-bottom: 4px; }
   .ship-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Playfair Display', serif; }
   .ship-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---- FULFILLMENT SECTION ---- */
+  .fulfill-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0 16px; }
+  .fulfill-toggle  { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--terra); width: fit-content; margin-bottom: 16px; }
+  .fulfill-toggle button { padding: 7px 20px; font-size: 0.8rem; border: none; cursor: pointer; background: transparent; color: var(--cream-dim); font-family: 'Inter', sans-serif; transition: background 0.15s, color 0.15s; }
+  .fulfill-toggle button.active { background: var(--terra); color: var(--cream); font-weight: 600; }
+  .ship-form-label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cream-dim); margin-bottom: 4px; }
+  .ship-text-inp { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--cream); padding: 8px 10px; font-size: 0.85rem; font-family: 'Inter', sans-serif; box-sizing: border-box; outline: none; }
+  .ship-text-inp:focus { border-color: var(--terra); }
+  .fulfill-addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .ship-rate-card { display: flex; justify-content: space-between; align-items: center; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+  .ship-rate-info { display: flex; flex-direction: column; gap: 2px; }
+  .ship-rate-carrier { font-size: 0.82rem; font-weight: 700; color: var(--cream); }
+  .ship-rate-service { font-size: 0.75rem; color: var(--cream-dim); }
+  .ship-rate-days { font-size: 0.72rem; color: var(--green); }
+  .ship-rate-right { display: flex; align-items: center; gap: 10px; }
+  .ship-rate-price { font-size: 1rem; font-weight: 700; color: var(--terra); font-family: 'Playfair Display', serif; }
+  .ship-pickup-card { display: flex; gap: 12px; align-items: flex-start; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .ship-pickup-name { font-size: 0.9rem; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+  .ship-pickup-addr { font-size: 0.82rem; color: var(--cream-dim); margin-bottom: 2px; }
+  .ship-pickup-hours { font-size: 0.78rem; color: var(--green); }
+  .ship-pickup-notes { font-size: 0.75rem; color: var(--cream-dim); margin-top: 4px; font-style: italic; }
+  .ship-label-box { background: var(--bg); border: 1px solid var(--green); border-radius: 8px; padding: 14px 16px; margin-top: 12px; }
+  .ship-label-success { color: var(--green); font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+  .ship-label-tracking { font-size: 0.85rem; color: var(--cream-dim); margin-bottom: 8px; }
   .ship-drag-handle { cursor: grab; color: var(--cream-dim); font-size: 1rem; padding: 0 6px; user-select: none; line-height: 1; }
   .ship-drag-handle:active { cursor: grabbing; }
   .ship-drag-th { width: 28px; }
@@ -683,6 +708,63 @@
             <button class="btn-sm btn-ghost" id="ship-dl-btn">Download .md</button>
             <button class="btn-sm btn-ghost" id="ship-clear-btn">Clear</button>
           </div>
+
+          <!-- Fulfillment -->
+          <hr class="fulfill-divider">
+          <h4 style="font-family:'Playfair Display',serif;font-size:0.95rem;margin-bottom:12px;color:var(--cream);">Fulfillment</h4>
+          <div class="fulfill-toggle">
+            <button id="fulfill-ship-btn" class="active">Ship</button>
+            <button id="fulfill-pickup-btn">Pick-up</button>
+          </div>
+
+          <!-- Ship panel -->
+          <div id="fulfill-ship-panel">
+            <div class="fulfill-addr-grid">
+              <div style="grid-column:1/-1;">
+                <label class="ship-form-label">Customer Name</label>
+                <input type="text" id="sf-name" class="ship-text-inp" placeholder="Full name">
+              </div>
+              <div style="grid-column:1/-1;">
+                <label class="ship-form-label">Street Address</label>
+                <input type="text" id="sf-street" class="ship-text-inp" placeholder="123 Main St">
+              </div>
+              <div>
+                <label class="ship-form-label">City</label>
+                <input type="text" id="sf-city" class="ship-text-inp" placeholder="City">
+              </div>
+              <div style="display:flex;gap:6px;">
+                <div style="flex:0 0 64px;">
+                  <label class="ship-form-label">State</label>
+                  <input type="text" id="sf-state" class="ship-text-inp" maxlength="2" placeholder="TX" style="text-transform:uppercase;">
+                </div>
+                <div style="flex:1;">
+                  <label class="ship-form-label">ZIP</label>
+                  <input type="text" id="sf-zip" class="ship-text-inp" placeholder="78620">
+                </div>
+              </div>
+              <div style="grid-column:1/-1;">
+                <label class="ship-form-label">Phone (optional)</label>
+                <input type="text" id="sf-phone" class="ship-text-inp" placeholder="555-555-5555">
+              </div>
+            </div>
+            <button class="btn-sm btn-terra" id="ship-get-rates-btn">Get Rates</button>
+            <div id="ship-rates-list" style="margin-top:14px;display:none;"></div>
+            <div id="ship-label-result" style="display:none;"></div>
+          </div>
+
+          <!-- Pick-up panel -->
+          <div id="fulfill-pickup-panel" style="display:none;">
+            <div class="ship-pickup-card">
+              <div style="font-size:1.4rem;">📍</div>
+              <div>
+                <div class="ship-pickup-name" id="pickup-loc-name">Heart of Texas Organics — Local Pick-up</div>
+                <div class="ship-pickup-addr" id="pickup-loc-addr">Loading…</div>
+                <div class="ship-pickup-hours" id="pickup-loc-hours"></div>
+                <div class="ship-pickup-notes" id="pickup-loc-notes"></div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -2037,10 +2119,140 @@
     document.getElementById('ship-clear-btn').addEventListener('click', () => {
       shipItems  = [];
       lastResult = null;
+      currentShipmentId = null;
       renderShipItems();
       updateShipCalcBtn();
       document.getElementById('ship-result').style.display = 'none';
+      document.getElementById('ship-rates-list').style.display = 'none';
+      document.getElementById('ship-label-result').style.display = 'none';
+      document.getElementById('ship-rates-list').innerHTML = '';
+      document.getElementById('ship-label-result').innerHTML = '';
     });
+
+    // ---- FULFILLMENT ----
+    let currentShipmentId = null;
+
+    // Toggle Ship / Pick-up
+    document.getElementById('fulfill-ship-btn').addEventListener('click', () => {
+      document.getElementById('fulfill-ship-btn').classList.add('active');
+      document.getElementById('fulfill-pickup-btn').classList.remove('active');
+      document.getElementById('fulfill-ship-panel').style.display = '';
+      document.getElementById('fulfill-pickup-panel').style.display = 'none';
+    });
+    document.getElementById('fulfill-pickup-btn').addEventListener('click', () => {
+      document.getElementById('fulfill-pickup-btn').classList.add('active');
+      document.getElementById('fulfill-ship-btn').classList.remove('active');
+      document.getElementById('fulfill-pickup-panel').style.display = '';
+      document.getElementById('fulfill-ship-panel').style.display = 'none';
+      loadPickupLocation();
+    });
+
+    let pickupLoaded = false;
+    async function loadPickupLocation() {
+      if (pickupLoaded) return;
+      try {
+        const r = await fetch('/admin/shipping/pickup-location', { headers: authHeaders() });
+        const d = await r.json();
+        document.getElementById('pickup-loc-name').textContent  = d.name;
+        document.getElementById('pickup-loc-addr').textContent  = d.address;
+        document.getElementById('pickup-loc-hours').textContent = d.hours;
+        document.getElementById('pickup-loc-notes').textContent = d.notes;
+        pickupLoaded = true;
+      } catch { /* leave placeholder */ }
+    }
+
+    // Get Rates
+    document.getElementById('ship-get-rates-btn').addEventListener('click', async () => {
+      if (!lastResult) { showToast('Calculate an estimate first', true); return; }
+      const name   = document.getElementById('sf-name').value.trim();
+      const street = document.getElementById('sf-street').value.trim();
+      const city   = document.getElementById('sf-city').value.trim();
+      const state  = document.getElementById('sf-state').value.trim().toUpperCase();
+      const zip    = document.getElementById('sf-zip').value.trim();
+      const phone  = document.getElementById('sf-phone').value.trim();
+      if (!name || !street || !city || !state || !zip) {
+        showToast('Please fill in the customer address', true); return;
+      }
+      const btn = document.getElementById('ship-get-rates-btn');
+      btn.disabled = true; btn.textContent = 'Fetching rates…';
+      document.getElementById('ship-rates-list').style.display = 'none';
+      document.getElementById('ship-label-result').style.display = 'none';
+      document.getElementById('ship-label-result').innerHTML = '';
+      try {
+        const r = await fetch('/admin/shipping/rates', {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: { name, street1: street, city, state, zip, phone: phone || undefined },
+            weight_lbs: lastResult.totalWeight,
+            length:     lastResult.box.l,
+            width:      lastResult.box.w,
+            height:     lastResult.box.h,
+          }),
+        });
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'Could not fetch rates', true); return; }
+        currentShipmentId = d.shipment_id;
+        renderRates(d.rates);
+      } catch { showToast('Connection error', true); }
+      finally { btn.disabled = false; btn.textContent = 'Get Rates'; }
+    });
+
+    function renderRates(rates) {
+      const div = document.getElementById('ship-rates-list');
+      div.innerHTML = '';
+      if (!rates.length) {
+        div.innerHTML = '<p style="color:var(--cream-dim);font-size:0.85rem;margin-top:8px;">No rates available for this address.</p>';
+        div.style.display = '';
+        return;
+      }
+      rates.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'ship-rate-card';
+        const days = r.delivery_days != null ? r.delivery_days + ' day' + (r.delivery_days !== 1 ? 's' : '') : 'ETA TBD';
+        card.innerHTML =
+          '<div class="ship-rate-info">' +
+            '<span class="ship-rate-carrier">' + r.carrier + '</span>' +
+            '<span class="ship-rate-service">' + r.service + '</span>' +
+            '<span class="ship-rate-days">' + days + '</span>' +
+          '</div>' +
+          '<div class="ship-rate-right">' +
+            '<span class="ship-rate-price">$' + parseFloat(r.rate).toFixed(2) + '</span>' +
+            '<button class="btn-sm btn-terra ship-buy-btn" data-rate-id="' + r.id + '">Buy Label</button>' +
+          '</div>';
+        div.appendChild(card);
+      });
+      div.querySelectorAll('.ship-buy-btn').forEach(btn => {
+        btn.addEventListener('click', () => buyLabel(btn.dataset.rateId, btn));
+      });
+      div.style.display = '';
+    }
+
+    async function buyLabel(rateId, btn) {
+      if (!currentShipmentId) return;
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const r = await fetch('/admin/shipping/buy-label', {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shipment_id: currentShipmentId, rate_id: rateId }),
+        });
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'Could not purchase label', true); btn.disabled = false; btn.textContent = 'Buy Label'; return; }
+        showLabelResult(d);
+        document.getElementById('ship-rates-list').style.display = 'none';
+      } catch { showToast('Connection error', true); btn.disabled = false; btn.textContent = 'Buy Label'; }
+    }
+
+    function showLabelResult(d) {
+      const div = document.getElementById('ship-label-result');
+      div.className = 'ship-label-box';
+      div.innerHTML =
+        '<div class="ship-label-success">✓ Label purchased — ' + d.carrier + ' ' + d.service + ' ($' + parseFloat(d.price).toFixed(2) + ')</div>' +
+        '<div class="ship-label-tracking">Tracking: <strong>' + d.tracking_code + '</strong></div>' +
+        (d.label_url ? '<a href="' + d.label_url + '" target="_blank" rel="noopener" class="btn-sm btn-terra" style="display:inline-block;text-decoration:none;">Download Label (PDF)</a>' : '');
+      div.style.display = '';
+    }
 
     document.querySelector('[data-tab="shipping"]').addEventListener('click', () => {
       if (!shipProducts.length) loadShipProducts();

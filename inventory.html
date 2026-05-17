@@ -1611,9 +1611,12 @@
       tdGripEdit.appendChild(gripEdit);
       tr.appendChild(tdGripEdit);
 
-      // col 1: name (static)
+      // col 1: name (editable)
       const td1 = document.createElement('td');
-      td1.textContent = p.name;
+      const nameInp = document.createElement('input');
+      nameInp.type = 'text'; nameInp.value = p.name;
+      nameInp.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--terra);border-radius:4px;color:var(--cream);padding:4px 6px;font-size:0.85rem;';
+      td1.appendChild(nameInp);
 
       // col 2: product weight
       const td2 = document.createElement('td');
@@ -1687,8 +1690,10 @@
       cancelBtn.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
 
       saveBtn.addEventListener('click', async () => {
+        const newName = nameInp.value.trim();
+        if (!newName) { showToast('Product name cannot be empty', true); return; }
         const updated = {
-          name:                 p.name,
+          name:                 newName,
           product_weight_lbs:   parseFloat(pwInp.value)  || 0,
           packaging_weight_lbs: parseFloat(pkInp.value)  || 0,
           length_in:            parseFloat(lInp.value),

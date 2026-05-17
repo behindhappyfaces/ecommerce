@@ -1326,6 +1326,19 @@ h1, h2, h3, h4 {
   border: 1px solid #ddd;
 }
 
+/* ---- Delivery Choice Modal ---- */
+.delivery-modal { max-width: 460px; }
+.delivery-modal__options { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 16px; }
+.delivery-modal__opt {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #faf8f5; border: 2px solid #e8e0d6; border-radius: 8px;
+  padding: 16px; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s;
+}
+.delivery-modal__opt:hover { border-color: var(--color-rust); background: #fff8f5; }
+.delivery-modal__icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.delivery-modal__label { display: block; font-weight: 700; font-size: 0.95rem; color: var(--color-green); margin-bottom: 3px; }
+.delivery-modal__note { display: block; font-size: 0.8rem; color: #888; }
+
 /* =========================================
    ABOUT PAGES
    ========================================= */

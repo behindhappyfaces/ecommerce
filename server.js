@@ -459,10 +459,11 @@ app.post('/create-checkout-session', async (req, res) => {
 
 app.post('/create-subscription-session', async (req, res) => {
   try {
-    const { item } = req.body;
+    const { item, delivery_method } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
+    const isShip = delivery_method !== 'pickup';
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
@@ -474,11 +475,18 @@ app.post('/create-subscription-session', async (req, res) => {
         },
         quantity: 1,
       }],
+      subscription_data: { metadata: { delivery_method: delivery_method || 'ship' } },
       allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html#subscriptions`,
-    });
+    };
 
+    if (isShip) {
+      sessionParams.shipping_address_collection = { allowed_countries: ['US'] };
+      sessionParams.phone_number_collection = { enabled: true };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {
     console.error('Subscription error:', err.message);
@@ -492,15 +500,16 @@ app.post('/create-subscription-session', async (req, res) => {
 
 app.post('/create-cart-subscription', async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, delivery_method } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     if (!items?.length) return res.status(400).json({ error: 'No items' });
 
-    const weeklyTotal  = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const weeklyTotal   = items.reduce((s, i) => s + i.price * i.quantity, 0);
     const monthlyAmount = weeklyTotal * 4;
-    const itemsLabel   = items.map(i => `${i.quantity}× ${i.name}`).join(', ');
+    const itemsLabel    = items.map(i => `${i.quantity}× ${i.name}`).join(', ');
+    const isShip        = delivery_method !== 'pickup';
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
@@ -515,12 +524,18 @@ app.post('/create-cart-subscription', async (req, res) => {
         },
         quantity: 1,
       }],
-      subscription_data: { metadata: { items: itemsLabel } },
+      subscription_data: { metadata: { items: itemsLabel, delivery_method: delivery_method || 'ship' } },
       allow_promotion_codes: true,
       success_url: `${origin}/subscription-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html`,
-    });
+    };
 
+    if (isShip) {
+      sessionParams.shipping_address_collection = { allowed_countries: ['US'] };
+      sessionParams.phone_number_collection = { enabled: true };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {
     console.error('Cart subscription error:', err.message);

@@ -345,7 +345,7 @@ function renderCart() {
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
   checkoutBtn.id = 'cart-checkout';
   checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(getMonthlyTotal())}/mo` : 'Proceed to Checkout';
-  checkoutBtn.addEventListener('click', subscribing ? checkoutSubscription : checkout);
+  checkoutBtn.addEventListener('click', subscribing ? openCartDeliveryModal : checkout);
 
   const divider = document.createElement('div');
   divider.className = 'cart-footer__divider';
@@ -420,7 +420,16 @@ async function checkout() {
 
 // --- Subscription Checkout ---
 
-async function checkoutSubscription() {
+function openCartDeliveryModal() {
+  const overlay = document.getElementById('delivery-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); checkoutSubscription('pickup'); };
+  document.getElementById('dm-cancel').onclick = closeDeliveryModal;
+}
+
+async function checkoutSubscription(deliveryMethod) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -440,7 +449,7 @@ async function checkoutSubscription() {
     const res = await fetch('/create-cart-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, delivery_method: deliveryMethod || 'ship' }),
     });
     const data = await res.json();
     if (data.url) {
@@ -565,9 +574,87 @@ function closeSubPrompt() {
   document.getElementById('sub-prompt-overlay')?.classList.remove('open');
 }
 
+// --- Delivery Choice Modal ---
+
+function makeDeliveryOpt(id, icon, label, note) {
+  const btn = document.createElement('button');
+  btn.className = 'delivery-modal__opt';
+  btn.id = id;
+
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'delivery-modal__icon';
+  iconSpan.textContent = icon;
+
+  const textWrap = document.createElement('span');
+
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'delivery-modal__label';
+  labelSpan.textContent = label;
+
+  const noteSpan = document.createElement('span');
+  noteSpan.className = 'delivery-modal__note';
+  noteSpan.textContent = note;
+
+  textWrap.appendChild(labelSpan);
+  textWrap.appendChild(noteSpan);
+  btn.appendChild(iconSpan);
+  btn.appendChild(textWrap);
+  return btn;
+}
+
+function injectDeliveryModal() {
+  if (document.getElementById('delivery-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'delivery-modal-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt delivery-modal';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'How would you like to receive your box?';
+
+  const opts = document.createElement('div');
+  opts.className = 'delivery-modal__options';
+  opts.appendChild(makeDeliveryOpt('dm-ship',   '🚚', 'Ship to my address',     'Shipping rates confirmed at checkout'));
+  opts.appendChild(makeDeliveryOpt('dm-pickup', '📍', 'Local pick-up (free)',    'Pick-up details sent after signup'));
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
+  cancelBtn.id = 'dm-cancel';
+  cancelBtn.textContent = 'Cancel';
+
+  box.appendChild(heading);
+  box.appendChild(opts);
+  box.appendChild(cancelBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeDeliveryModal(); });
+}
+
+let _pendingSubArgs = null;
+
+function openDeliveryModal(subId, name, price) {
+  _pendingSubArgs = { subId, name, price };
+  const overlay = document.getElementById('delivery-modal-overlay');
+  overlay.classList.add('open');
+  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship'); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup'); };
+  document.getElementById('dm-cancel').onclick = closeDeliveryModal;
+}
+
+function closeDeliveryModal() {
+  document.getElementById('delivery-modal-overlay')?.classList.remove('open');
+  _pendingSubArgs = null;
+}
+
 // --- Subscribe ---
 
-async function subscribe(subId, name, price) {
+async function subscribe(subId, name, price, deliveryMethod) {
   const btn = document.querySelector(`[data-sub-id="${CSS.escape(subId)}"]`);
   const original = btn?.textContent;
   if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
@@ -576,7 +663,7 @@ async function subscribe(subId, name, price) {
     const res = await fetch('/create-subscription-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item: { name, price } }),
+      body: JSON.stringify({ item: { name, price }, delivery_method: deliveryMethod || 'ship' }),
     });
     const data = await res.json();
     if (data.url) {
@@ -596,6 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectCartDrawer();
   injectCartIcon();
   injectSubscriberModal();
+  injectDeliveryModal();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {
@@ -607,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-sub-id]').forEach(btn => {
     btn.addEventListener('click', () =>
-      subscribe(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice, 10))
+      openDeliveryModal(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice, 10))
     );
   });
 });

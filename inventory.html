@@ -1613,9 +1613,10 @@
 
       // col 1: name (editable)
       const td1 = document.createElement('td');
+      td1.style.minWidth = '150px';
       const nameInp = document.createElement('input');
-      nameInp.type = 'text'; nameInp.value = p.name;
-      nameInp.style.cssText = 'width:100%;background:var(--bg);border:1px solid var(--terra);border-radius:4px;color:var(--cream);padding:4px 6px;font-size:0.85rem;';
+      nameInp.type = 'text'; nameInp.value = p.name; nameInp.placeholder = 'Product name';
+      nameInp.style.cssText = 'width:100%;min-width:130px;background:var(--bg);border:1px solid var(--terra);border-radius:4px;color:var(--cream);padding:4px 6px;font-size:0.85rem;box-sizing:border-box;';
       td1.appendChild(nameInp);
 
       // col 2: product weight
@@ -1721,7 +1722,7 @@
 
       td6.appendChild(saveBtn); td6.appendChild(cancelBtn);
       tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5); tr.appendChild(td6);
-      pwInp.focus();
+      nameInp.focus();
     }
 
     let dragSrcIdx = null;

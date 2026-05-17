@@ -301,6 +301,32 @@
   .stock-value-block strong {
     font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--green);
   }
+
+  /* ---- SHIPPING TAB ---- */
+  .shipping-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px; }
+  @media (max-width: 760px) { .shipping-layout { grid-template-columns: 1fr; } }
+  .shipping-col { display: flex; flex-direction: column; }
+  .ship-add-form { background: var(--card2); border-radius: 10px; padding: 16px; margin-top: 14px; }
+  .ship-add-form input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cream); font-size: 0.85rem; padding: 8px 10px; margin-bottom: 8px; outline: none; }
+  .ship-add-form input:focus { border-color: var(--terra); }
+  .ship-dims { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .ship-dims input { margin-bottom: 0; }
+  .ship-form-btns { display: flex; gap: 8px; }
+  .btn-sm { padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer; border: none; transition: background 0.2s; }
+  .btn-terra { background: var(--terra); color: var(--cream); }
+  .btn-terra:hover { background: var(--terra-lt); }
+  .btn-ghost { background: transparent; color: var(--cream-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--cream); border-color: var(--cream-dim); }
+  .ship-picker { display: flex; gap: 8px; align-items: center; }
+  .ship-picker select { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cream); font-size: 0.85rem; padding: 8px 10px; outline: none; }
+  .ship-picker input[type="number"] { width: 64px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--cream); font-size: 0.85rem; padding: 8px 10px; outline: none; }
+  .ship-result-card { background: var(--card2); border-radius: 10px; padding: 20px; margin-top: 16px; border: 1px solid var(--border); }
+  .ship-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .ship-stat { background: var(--bg); border-radius: 8px; padding: 12px 14px; }
+  .ship-stat--box { grid-column: span 2; }
+  .ship-stat-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--cream-dim); margin-bottom: 4px; }
+  .ship-stat-val { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Playfair Display', serif; }
+  .ship-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -332,6 +358,7 @@
     <button class="tab-btn" data-tab="history">History</button>
     <button class="tab-btn" data-tab="reports">Reports</button>
     <button class="tab-btn" data-tab="settings">Settings</button>
+    <button class="tab-btn" data-tab="shipping">Shipping</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -552,6 +579,80 @@
       </table>
     </div>
   </div>
+
+  <!-- TAB: SHIPPING -->
+  <div class="panel" id="panel-shipping">
+    <div class="shipping-layout">
+
+      <!-- LEFT: Product Library -->
+      <div class="shipping-col">
+        <h3 class="section-title">Product Library</h3>
+        <div class="table-wrap">
+          <table class="data" id="ship-lib-table">
+            <thead><tr>
+              <th>Product</th><th>Weight (lbs)</th><th>L×W×H (in)</th><th></th>
+            </tr></thead>
+            <tbody id="ship-lib-body"></tbody>
+          </table>
+        </div>
+        <div class="ship-add-form" id="ship-add-form" style="display:none;">
+          <h4 style="margin-bottom:12px;font-size:0.9rem;color:var(--cream);">Add Product</h4>
+          <input id="sadd-name"   type="text"   placeholder="Product name" />
+          <div class="ship-dims">
+            <input id="sadd-weight" type="number" placeholder="Weight lbs" step="0.1" min="0" />
+            <input id="sadd-l"      type="number" placeholder="Length in"  step="0.5" min="0" />
+            <input id="sadd-w"      type="number" placeholder="Width in"   step="0.5" min="0" />
+            <input id="sadd-h"      type="number" placeholder="Height in"  step="0.5" min="0" />
+          </div>
+          <div class="ship-form-btns">
+            <button class="btn-sm btn-terra" id="sadd-save">Save Product</button>
+            <button class="btn-sm btn-ghost" id="sadd-cancel">Cancel</button>
+          </div>
+        </div>
+        <button class="btn-sm btn-terra" id="ship-add-btn" style="margin-top:14px;">+ Add Product</button>
+      </div>
+
+      <!-- RIGHT: Estimator -->
+      <div class="shipping-col">
+        <h3 class="section-title">Build Shipment Estimate</h3>
+
+        <div class="ship-picker">
+          <select id="ship-product-select">
+            <option value="">— select product —</option>
+          </select>
+          <input id="ship-qty" type="number" min="1" value="1" placeholder="Qty" />
+          <button class="btn-sm btn-terra" id="ship-add-item">Add</button>
+        </div>
+
+        <div class="table-wrap" id="ship-items-wrap" style="display:none;margin-top:16px;">
+          <table class="data" id="ship-items-table">
+            <thead><tr>
+              <th>Product</th><th>Qty</th><th>Weight</th><th>Volume</th><th></th>
+            </tr></thead>
+            <tbody id="ship-items-body"></tbody>
+          </table>
+        </div>
+
+        <button class="btn-sm btn-terra" id="ship-calc-btn" style="display:none;margin-top:14px;">Calculate</button>
+
+        <div class="ship-result-card" id="ship-result" style="display:none;">
+          <div class="ship-result-grid">
+            <div class="ship-stat"><span class="ship-stat-label">Total Weight</span><span class="ship-stat-val" id="sr-weight">—</span></div>
+            <div class="ship-stat"><span class="ship-stat-label">Total Volume</span><span class="ship-stat-val" id="sr-volume">—</span></div>
+            <div class="ship-stat"><span class="ship-stat-label">Gel Packs</span><span class="ship-stat-val" id="sr-gel">—</span></div>
+            <div class="ship-stat ship-stat--box"><span class="ship-stat-label">Recommended Box</span><span class="ship-stat-val" id="sr-box">—</span></div>
+          </div>
+          <div class="ship-result-actions">
+            <button class="btn-sm btn-terra" id="ship-save-btn">Save to Obsidian</button>
+            <button class="btn-sm btn-ghost" id="ship-dl-btn">Download .md</button>
+            <button class="btn-sm btn-ghost" id="ship-clear-btn">Clear</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- TOAST -->
@@ -1325,6 +1426,202 @@
 
   // ---- INIT ----
   checkAuth();
+
+  // ---- SHIPPING TAB ----
+  (function () {
+    let shipProducts   = [];
+    let shipItems      = [];
+    let lastResult     = null;
+
+    async function loadShipProducts() {
+      try {
+        const r = await fetch('/admin/shipping/products', { headers: authHeaders() });
+        shipProducts = await r.json();
+        renderShipLibrary();
+        renderShipSelect();
+      } catch { showToast('Could not load shipping products', true); }
+    }
+
+    function renderShipLibrary() {
+      const body = document.getElementById('ship-lib-body');
+      body.textContent = '';
+      shipProducts.forEach((p, idx) => {
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td'); td1.textContent = p.name;
+        const td2 = document.createElement('td'); td2.textContent = p.weight_lbs;
+        const td3 = document.createElement('td'); td3.textContent = p.length_in + '×' + p.width_in + '×' + p.height_in;
+        const td4 = document.createElement('td');
+        const del = document.createElement('button');
+        del.className = 'btn-sm btn-ghost ship-del';
+        del.dataset.idx = idx;
+        del.textContent = '✕';
+        del.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
+        del.addEventListener('click', () => deleteShipProduct(parseInt(del.dataset.idx)));
+        td4.appendChild(del);
+        tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+        body.appendChild(tr);
+      });
+    }
+
+    function renderShipSelect() {
+      const sel = document.getElementById('ship-product-select');
+      const cur = sel.value;
+      sel.textContent = '';
+      const def = document.createElement('option');
+      def.value = ''; def.textContent = '— select product —';
+      sel.appendChild(def);
+      shipProducts.forEach((p, i) => {
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+      if (cur) sel.value = cur;
+    }
+
+    function renderShipItems() {
+      const body = document.getElementById('ship-items-body');
+      body.textContent = '';
+      shipItems.forEach((item, i) => {
+        const vol    = (item.length_in * item.width_in * item.height_in * item.qty).toFixed(0);
+        const weight = (item.weight_lbs * item.qty).toFixed(1);
+        const tr = document.createElement('tr');
+        const cells = [item.name, item.qty, weight + ' lbs', vol + ' cu in'];
+        cells.forEach(val => {
+          const td = document.createElement('td'); td.textContent = val; tr.appendChild(td);
+        });
+        const tdBtn = document.createElement('td');
+        const rm = document.createElement('button');
+        rm.className = 'btn-sm btn-ghost';
+        rm.textContent = '✕';
+        rm.style.cssText = 'padding:4px 8px;font-size:0.75rem;';
+        rm.addEventListener('click', () => {
+          shipItems.splice(i, 1);
+          renderShipItems();
+          updateShipCalcBtn();
+        });
+        tdBtn.appendChild(rm);
+        tr.appendChild(tdBtn);
+        body.appendChild(tr);
+      });
+      document.getElementById('ship-items-wrap').style.display = shipItems.length ? '' : 'none';
+    }
+
+    function updateShipCalcBtn() {
+      document.getElementById('ship-calc-btn').style.display = shipItems.length ? '' : 'none';
+    }
+
+    async function deleteShipProduct(idx) {
+      try {
+        await fetch('/admin/shipping/products/' + idx, { method: 'DELETE', headers: authHeaders() });
+        await loadShipProducts();
+        showToast('Product removed');
+      } catch { showToast('Delete failed', true); }
+    }
+
+    document.getElementById('ship-add-btn').addEventListener('click', () => {
+      document.getElementById('ship-add-form').style.display = '';
+      document.getElementById('ship-add-btn').style.display  = 'none';
+    });
+    document.getElementById('sadd-cancel').addEventListener('click', () => {
+      document.getElementById('ship-add-form').style.display = 'none';
+      document.getElementById('ship-add-btn').style.display  = '';
+    });
+    document.getElementById('sadd-save').addEventListener('click', async () => {
+      const name   = document.getElementById('sadd-name').value.trim();
+      const weight = document.getElementById('sadd-weight').value;
+      const l      = document.getElementById('sadd-l').value;
+      const w      = document.getElementById('sadd-w').value;
+      const h      = document.getElementById('sadd-h').value;
+      if (!name || !weight || !l || !w || !h) { showToast('All fields required', true); return; }
+      try {
+        const r = await fetch('/admin/shipping/products', {
+          method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, weight_lbs: parseFloat(weight), length_in: parseFloat(l), width_in: parseFloat(w), height_in: parseFloat(h) }),
+        });
+        if (!r.ok) { const d = await r.json(); showToast(d.error || 'Save failed', true); return; }
+        ['sadd-name','sadd-weight','sadd-l','sadd-w','sadd-h'].forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('ship-add-form').style.display = 'none';
+        document.getElementById('ship-add-btn').style.display  = '';
+        await loadShipProducts();
+        showToast('Product added');
+      } catch { showToast('Connection error', true); }
+    });
+
+    document.getElementById('ship-add-item').addEventListener('click', () => {
+      const sel = document.getElementById('ship-product-select');
+      const qty = parseInt(document.getElementById('ship-qty').value, 10);
+      const idx = parseInt(sel.value, 10);
+      if (isNaN(idx) || !shipProducts[idx]) { showToast('Select a product', true); return; }
+      if (isNaN(qty) || qty < 1)            { showToast('Invalid quantity', true); return; }
+      const p = shipProducts[idx];
+      const existing = shipItems.find(i => i.name === p.name);
+      if (existing) { existing.qty += qty; } else { shipItems.push({ ...p, qty }); }
+      document.getElementById('ship-qty').value = 1;
+      sel.value = '';
+      renderShipItems();
+      updateShipCalcBtn();
+      document.getElementById('ship-result').style.display = 'none';
+      lastResult = null;
+    });
+
+    document.getElementById('ship-calc-btn').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/admin/shipping/estimate', {
+          method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: shipItems }),
+        });
+        lastResult = await r.json();
+        document.getElementById('sr-weight').textContent = lastResult.totalWeight + ' lbs';
+        document.getElementById('sr-volume').textContent = lastResult.totalVolume + ' cu in';
+        document.getElementById('sr-gel').textContent    = lastResult.gelPacks;
+        document.getElementById('sr-box').textContent    = lastResult.box.name + ' — ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in';
+        document.getElementById('ship-result').style.display = '';
+      } catch { showToast('Calculation error', true); }
+    });
+
+    document.getElementById('ship-save-btn').addEventListener('click', async () => {
+      if (!lastResult) return;
+      try {
+        const r = await fetch('/admin/shipping/save-estimate', {
+          method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: shipItems, result: lastResult }),
+        });
+        const d = await r.json();
+        if (d.saved) { showToast('Saved to Obsidian: ' + d.filename); }
+        else         { showToast(d.error || 'Save failed', true); }
+      } catch { showToast('Connection error', true); }
+    });
+
+    document.getElementById('ship-dl-btn').addEventListener('click', () => {
+      if (!lastResult || !shipItems.length) return;
+      const now     = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const timeStr = now.toTimeString().slice(0, 5);
+      const rows    = shipItems.map(i => {
+        const vol = Math.round(i.length_in * i.width_in * i.height_in * i.qty);
+        return '| ' + i.name + ' | ' + i.qty + ' | ' + (i.weight_lbs * i.qty).toFixed(1) + ' | ' + vol + ' |';
+      }).join('\n');
+      const md = '---\ntitle: Shipment Estimate — ' + dateStr + '\ndate: ' + dateStr + '\ntags: [shipping, bhf, estimate]\n---\n\n# Shipment Estimate — ' + dateStr + ' ' + timeStr + '\n\n## Products\n\n| Product | Qty | Weight (lbs) | Volume (cu in) |\n|---------|-----|-------------|----------------|\n' + rows + '\n\n## Totals\n\n| | |\n|---|---|\n| **Total Weight** | ' + lastResult.totalWeight + ' lbs |\n| **Total Volume** | ' + lastResult.totalVolume + ' cu in (' + lastResult.buffered + ' cu in with 30% buffer) |\n| **Gel Packs Needed** | ' + lastResult.gelPacks + ' |\n| **Recommended Box** | ' + lastResult.box.name + ' — ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in |\n\n## Notes\n\n';
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = 'estimate-' + dateStr + '.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('ship-clear-btn').addEventListener('click', () => {
+      shipItems  = [];
+      lastResult = null;
+      renderShipItems();
+      updateShipCalcBtn();
+      document.getElementById('ship-result').style.display = 'none';
+    });
+
+    document.querySelector('[data-tab="shipping"]').addEventListener('click', () => {
+      if (!shipProducts.length) loadShipProducts();
+    });
+  }());
 })();
 </script>
 </body>

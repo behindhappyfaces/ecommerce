@@ -936,6 +936,147 @@ if (cron) {
 }
 
 // =========================================
+// SHIPPING ESTIMATOR
+// =========================================
+
+const SHIPPING_CSV = path.join(__dirname, 'shipping-products.csv');
+const OBSIDIAN_SHIPPING = '/Users/deborahsmith/Documents/collab/BehindHappyFaces/shipping-estimates';
+
+const STANDARD_BOXES = [
+  { name: 'Small',  l: 8,  w: 6,  h: 4  },
+  { name: 'Medium', l: 12, w: 10, h: 6  },
+  { name: 'Large',  l: 16, w: 12, h: 8  },
+  { name: 'XL',     l: 20, w: 16, h: 12 },
+  { name: 'XXL',    l: 24, w: 18, h: 18 },
+  { name: '2XL',    l: 30, w: 20, h: 20 },
+];
+
+function readShippingProducts() {
+  if (!fs.existsSync(SHIPPING_CSV)) return [];
+  const lines = fs.readFileSync(SHIPPING_CSV, 'utf8').trim().split('\n');
+  if (lines.length < 2) return [];
+  return lines.slice(1).filter(Boolean).map(line => {
+    const [name, weight_lbs, length_in, width_in, height_in] = line.split(',');
+    return { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+  });
+}
+
+function writeShippingProducts(products) {
+  const header = 'name,weight_lbs,length_in,width_in,height_in';
+  const rows   = products.map(p => `${p.name},${p.weight_lbs},${p.length_in},${p.width_in},${p.height_in}`);
+  fs.writeFileSync(SHIPPING_CSV, [header, ...rows, ''].join('\n'));
+}
+
+function calcShipment(items) {
+  const totalWeight = items.reduce((s, i) => s + i.weight_lbs * i.qty, 0);
+  const totalVolume = items.reduce((s, i) => s + i.length_in * i.width_in * i.height_in * i.qty, 0);
+  const buffered    = Math.ceil(totalVolume * 1.3);
+  const maxDim      = Math.max(...items.map(i => Math.max(i.length_in, i.width_in, i.height_in)));
+  const gelPacks    = Math.max(1, Math.ceil(totalWeight / 5));
+  let box = STANDARD_BOXES[STANDARD_BOXES.length - 1];
+  for (const b of STANDARD_BOXES) {
+    if (b.l * b.w * b.h >= buffered && Math.max(b.l, b.w, b.h) >= maxDim) { box = b; break; }
+  }
+  return { totalWeight: parseFloat(totalWeight.toFixed(1)), totalVolume: Math.round(totalVolume), buffered, gelPacks, box };
+}
+
+app.get('/admin/shipping/products', requireAdmin, (req, res) => {
+  res.json(readShippingProducts());
+});
+
+app.post('/admin/shipping/products', requireAdmin, (req, res) => {
+  const { name, weight_lbs, length_in, width_in, height_in } = req.body;
+  if (!name || [weight_lbs, length_in, width_in, height_in].some(v => isNaN(parseFloat(v)))) {
+    return res.status(400).json({ error: 'All fields required and must be numbers' });
+  }
+  const products = readShippingProducts();
+  if (products.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+    return res.status(400).json({ error: 'Product already exists' });
+  }
+  const product = { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+  products.push(product);
+  writeShippingProducts(products);
+  res.json(product);
+});
+
+app.put('/admin/shipping/products/:idx', requireAdmin, (req, res) => {
+  const products = readShippingProducts();
+  const idx = parseInt(req.params.idx, 10);
+  if (isNaN(idx) || idx < 0 || idx >= products.length) return res.status(404).json({ error: 'Not found' });
+  const { name, weight_lbs, length_in, width_in, height_in } = req.body;
+  products[idx] = { name: name.trim(), weight_lbs: parseFloat(weight_lbs), length_in: parseFloat(length_in), width_in: parseFloat(width_in), height_in: parseFloat(height_in) };
+  writeShippingProducts(products);
+  res.json(products[idx]);
+});
+
+app.delete('/admin/shipping/products/:idx', requireAdmin, (req, res) => {
+  const products = readShippingProducts();
+  const idx = parseInt(req.params.idx, 10);
+  if (isNaN(idx) || idx < 0 || idx >= products.length) return res.status(404).json({ error: 'Not found' });
+  const [removed] = products.splice(idx, 1);
+  writeShippingProducts(products);
+  res.json(removed);
+});
+
+app.post('/admin/shipping/estimate', requireAdmin, (req, res) => {
+  const { items } = req.body;
+  if (!items?.length) return res.status(400).json({ error: 'No items provided' });
+  const result = calcShipment(items);
+  res.json(result);
+});
+
+app.post('/admin/shipping/save-estimate', requireAdmin, (req, res) => {
+  const { items, result } = req.body;
+  if (!items?.length || !result) return res.status(400).json({ error: 'Missing data' });
+
+  const now       = new Date();
+  const dateStr   = now.toISOString().slice(0, 10);
+  const timeStr   = now.toTimeString().slice(0, 5);
+  const productRows = items.map(i => {
+    const vol = Math.round(i.length_in * i.width_in * i.height_in * i.qty);
+    return `| ${i.name} | ${i.qty} | ${(i.weight_lbs * i.qty).toFixed(1)} | ${vol} |`;
+  }).join('\n');
+
+  const markdown = `---
+title: Shipment Estimate — ${dateStr}
+date: ${dateStr}
+tags: [shipping, bhf, estimate]
+---
+
+# Shipment Estimate — ${dateStr} ${timeStr}
+
+## Products
+
+| Product | Qty | Weight (lbs) | Volume (cu in) |
+|---------|-----|-------------|----------------|
+${productRows}
+
+## Totals
+
+| | |
+|---|---|
+| **Total Weight** | ${result.totalWeight} lbs |
+| **Total Volume** | ${result.totalVolume} cu in (${result.buffered} cu in with 30% buffer) |
+| **Gel Packs Needed** | ${result.gelPacks} |
+| **Recommended Box** | ${result.box.name} — ${result.box.l}×${result.box.w}×${result.box.h} in |
+
+## Notes
+
+<!-- Add carrier, tracking, recipient, etc. -->
+`;
+
+  try {
+    if (!fs.existsSync(OBSIDIAN_SHIPPING)) fs.mkdirSync(OBSIDIAN_SHIPPING, { recursive: true });
+    const ts       = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `estimate-${ts}.md`;
+    fs.writeFileSync(path.join(OBSIDIAN_SHIPPING, filename), markdown);
+    res.json({ saved: true, filename });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not write to Obsidian: ' + err.message });
+  }
+});
+
+// =========================================
 // START
 // =========================================
 

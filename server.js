@@ -233,6 +233,21 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             items: items.map(li => ({ name: li.description, qty: li.quantity })),
             paymentMethod: 'card',
             created: new Date().toISOString(),
+            customerName: customerName,
+            customerEmail: customerEmail || '',
+            deliveryMethod: deliveryMethod,
+            pickupLocation: pickupLoc || '',
+            shippingAddress: shippingAddr ? {
+              name: customerName,
+              street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
+              city: shippingAddr.city,
+              state: shippingAddr.state,
+              zip: shippingAddr.postal_code,
+              phone: session.customer_details?.phone || '',
+            } : null,
+            isGift: isGift,
+            giftOccasion: giftOcc || '',
+            giftMsg: giftMsg || '',
           });
           deductStockForOrder(items, session.id);
 
@@ -269,6 +284,21 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             items: items.map(li => ({ name: li.description, qty: li.quantity })),
             paymentMethod: 'us_bank_account',
             created: new Date().toISOString(),
+            customerName: customerName,
+            customerEmail: customerEmail || '',
+            deliveryMethod: deliveryMethod,
+            pickupLocation: pickupLoc || '',
+            shippingAddress: shippingAddr ? {
+              name: customerName,
+              street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
+              city: shippingAddr.city,
+              state: shippingAddr.state,
+              zip: shippingAddr.postal_code,
+              phone: session.customer_details?.phone || '',
+            } : null,
+            isGift: isGift,
+            giftOccasion: giftOcc || '',
+            giftMsg: giftMsg || '',
           });
           deductStockForOrder(items, session.id);
 
@@ -1110,6 +1140,28 @@ app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
 app.get('/admin/transactions', requireAdmin, (req, res) => {
   const { product_id, date_from, date_to } = req.query;
   res.json(db.getTransactions(product_id || null, 150, date_from || null, date_to || null));
+});
+
+app.get('/admin/orders', requireAdmin, (req, res) => {
+  const orders = readOrders();
+  const list = Object.entries(orders)
+    .map(([piId, data]) => ({ piId, ...data }))
+    .sort((a, b) => new Date(b.created || 0) - new Date(a.created || 0));
+  res.json(list);
+});
+
+app.put('/admin/orders/:piId/complete', requireAdmin, (req, res) => {
+  const { piId } = req.params;
+  const orders = readOrders();
+  if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
+  orders[piId] = {
+    ...orders[piId],
+    status: 'COMPLETED',
+    completedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  res.json({ ok: true });
 });
 
 // --- Reports ---

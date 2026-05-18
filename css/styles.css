@@ -1490,6 +1490,37 @@ h1, h2, h3, h4 {
   .addr-confirm-cols { flex-direction: column; }
 }
 
+/* --- Pickup Location Modal --- */
+.pickup-loc-modal {
+  background: #fff; border-radius: 12px; padding: 28px 24px 20px;
+  max-width: 380px; width: 92%; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.pickup-loc-modal__heading {
+  font-family: var(--font-serif); font-size: 1.1rem; color: var(--color-green);
+  margin: 0 0 6px; font-weight: 600;
+}
+.pickup-loc-modal__sub {
+  font-size: 0.82rem; color: #888; margin: 0 0 18px;
+}
+.pickup-loc-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.pickup-loc-opt {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  background: var(--color-cream); border: 2px solid transparent;
+  border-radius: 8px; cursor: pointer; font-family: inherit; text-align: left;
+  transition: border-color 0.15s, background 0.15s; width: 100%;
+}
+.pickup-loc-opt:hover { border-color: var(--color-rust); background: #fff8f5; }
+.pickup-loc-opt__icon { font-size: 1.4rem; flex-shrink: 0; }
+.pickup-loc-opt__label { display: block; font-weight: 700; font-size: 0.93rem; color: var(--color-green); margin-bottom: 2px; }
+.pickup-loc-opt__note { display: block; font-size: 0.78rem; color: #888; }
+.pickup-loc-cancel {
+  display: block; width: 100%; padding: 10px; background: transparent;
+  border: 1px solid #ddd; border-radius: 4px; color: #999; font-size: 0.82rem;
+  cursor: pointer; font-family: inherit; text-align: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pickup-loc-cancel:hover { color: #555; border-color: #aaa; }
+
 /* =========================================
    ABOUT PAGES
    ========================================= */

@@ -176,9 +176,12 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
         const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
 
+        const pickupLoc  = session.metadata?.pickup_location || '';
         const addrLine = shippingAddr
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
-          : (deliveryMethod === 'pickup' ? 'Local pick-up — details to follow' : '');
+          : (deliveryMethod === 'pickup'
+              ? `Local pick-up${pickupLoc ? ' — ' + pickupLoc : ''} (details to follow)`
+              : '');
 
         // Gift + billing metadata
         const isGift   = session.metadata?.is_gift === 'true';
@@ -652,7 +655,7 @@ function escHtml(str) {
 
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items, shipping, delivery_method, billing, gift } = req.body;
+    const { items, shipping, delivery_method, billing, gift, pickup_location } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
 
@@ -679,6 +682,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     // Build metadata (Stripe limits: 50 keys, values ≤ 500 chars)
     const metadata = { delivery_method: delivery_method || 'ship' };
+    if (pickup_location) metadata.pickup_location = pickup_location;
     if (billing) {
       metadata.bill_name   = billing.name   || '';
       metadata.bill_street = billing.street || '';
@@ -717,9 +721,12 @@ app.post('/create-checkout-session', async (req, res) => {
 
 app.post('/create-subscription-session', async (req, res) => {
   try {
-    const { item, delivery_method } = req.body;
+    const { item, delivery_method, pickup_location } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
+
+    const subMeta = { delivery_method: delivery_method || 'ship' };
+    if (pickup_location) subMeta.pickup_location = pickup_location;
 
     const sessionParams = {
       mode: 'subscription',
@@ -733,7 +740,7 @@ app.post('/create-subscription-session', async (req, res) => {
         },
         quantity: 1,
       }],
-      subscription_data: { metadata: { delivery_method: delivery_method || 'ship' } },
+      subscription_data: { metadata: subMeta },
       allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html#subscriptions`,
@@ -758,7 +765,7 @@ app.post('/create-subscription-session', async (req, res) => {
 
 app.post('/create-cart-subscription', async (req, res) => {
   try {
-    const { items, delivery_method } = req.body;
+    const { items, delivery_method, pickup_location } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     if (!items?.length) return res.status(400).json({ error: 'No items' });
 
@@ -766,6 +773,9 @@ app.post('/create-cart-subscription', async (req, res) => {
     const monthlyAmount = weeklyTotal * 4;
     const itemsLabel    = items.map(i => `${i.quantity}× ${i.name}`).join(', ');
     const isShip        = delivery_method !== 'pickup';
+
+    const cartSubMeta = { items: itemsLabel, delivery_method: delivery_method || 'ship' };
+    if (pickup_location) cartSubMeta.pickup_location = pickup_location;
 
     const sessionParams = {
       mode: 'subscription',
@@ -782,7 +792,7 @@ app.post('/create-cart-subscription', async (req, res) => {
         },
         quantity: 1,
       }],
-      subscription_data: { metadata: { items: itemsLabel, delivery_method: delivery_method || 'ship' } },
+      subscription_data: { metadata: cartSubMeta },
       allow_promotion_codes: true,
       success_url: `${origin}/subscription-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html`,

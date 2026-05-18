@@ -1061,7 +1061,7 @@ async function submitOrderWithDetails() {
 
 // --- Checkout ---
 
-async function checkout(deliveryMethod) {
+async function checkout(deliveryMethod, pickupLocation) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -1075,10 +1075,12 @@ async function checkout(deliveryMethod) {
     .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
 
   try {
+    const body = { items, delivery_method: deliveryMethod || 'pickup' };
+    if (pickupLocation) body.pickup_location = pickupLocation;
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, delivery_method: deliveryMethod || 'pickup' }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (data.url) {
@@ -1100,7 +1102,7 @@ function openCartDeliveryModal() {
   if (!overlay) return;
   overlay.classList.add('open');
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); checkoutSubscription('pickup'); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkoutSubscription('pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -1109,11 +1111,11 @@ function openOneTimeDeliveryChoice() {
   if (!overlay) return;
   overlay.classList.add('open');
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); openShipCalcModal(); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); checkout('pickup'); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkout('pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
-async function checkoutSubscription(deliveryMethod) {
+async function checkoutSubscription(deliveryMethod, pickupLocation) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -1130,10 +1132,12 @@ async function checkoutSubscription(deliveryMethod) {
     }));
 
   try {
+    const body = { items, delivery_method: deliveryMethod || 'ship' };
+    if (pickupLocation) body.pickup_location = pickupLocation;
     const res = await fetch('/create-cart-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, delivery_method: deliveryMethod || 'ship' }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (data.url) {
@@ -1258,6 +1262,102 @@ function closeSubPrompt() {
   document.getElementById('sub-prompt-overlay')?.classList.remove('open');
 }
 
+// --- Pickup Location Modal ---
+
+function injectPickupLocationModal() {
+  if (document.getElementById('pickup-loc-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'pickup-loc-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'pickup-loc-modal';
+
+  const heading = document.createElement('p');
+  heading.className = 'pickup-loc-modal__heading';
+  heading.textContent = 'Choose a pick-up location';
+
+  const sub = document.createElement('p');
+  sub.className = 'pickup-loc-modal__sub';
+  sub.textContent = 'Pick-up details will be sent after your order is placed.';
+
+  const opts = document.createElement('div');
+  opts.className = 'pickup-loc-opts';
+
+  const locations = [
+    { id: 'pl-lakeway',   icon: '📍', label: 'Lakeway / Bee Cave',  note: 'Central location near Lake Travis' },
+    { id: 'pl-dripping',  icon: '📍', label: 'Dripping Springs',    note: 'Hill Country pick-up point' },
+    { id: 'pl-austin',    icon: '📍', label: 'Austin',              note: 'Downtown area pick-up' },
+  ];
+
+  locations.forEach(({ id, icon, label, note }) => {
+    const btn = document.createElement('button');
+    btn.className = 'pickup-loc-opt';
+    btn.id = id;
+
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'pickup-loc-opt__icon';
+    iconSpan.textContent = icon;
+
+    const textWrap = document.createElement('span');
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'pickup-loc-opt__label';
+    labelSpan.textContent = label;
+
+    const noteSpan = document.createElement('span');
+    noteSpan.className = 'pickup-loc-opt__note';
+    noteSpan.textContent = note;
+
+    textWrap.appendChild(labelSpan);
+    textWrap.appendChild(noteSpan);
+    btn.appendChild(iconSpan);
+    btn.appendChild(textWrap);
+    opts.appendChild(btn);
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'pickup-loc-cancel';
+  cancelBtn.id = 'pl-cancel';
+  cancelBtn.textContent = 'Cancel';
+
+  box.appendChild(heading);
+  box.appendChild(sub);
+  box.appendChild(opts);
+  box.appendChild(cancelBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePickupLocationModal(); });
+}
+
+function closePickupLocationModal() {
+  document.getElementById('pickup-loc-overlay')?.classList.remove('open');
+}
+
+function openPickupLocationModal(onSelect) {
+  const overlay = document.getElementById('pickup-loc-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+
+  const locations = [
+    { id: 'pl-lakeway',  label: 'Lakeway / Bee Cave' },
+    { id: 'pl-dripping', label: 'Dripping Springs' },
+    { id: 'pl-austin',   label: 'Austin' },
+  ];
+
+  locations.forEach(({ id, label }) => {
+    document.getElementById(id).onclick = () => {
+      closePickupLocationModal();
+      onSelect(label);
+    };
+  });
+
+  document.getElementById('pl-cancel').onclick = closePickupLocationModal;
+}
+
 // --- Delivery Choice Modal ---
 
 function makeDeliveryOpt(id, icon, label, note) {
@@ -1327,7 +1427,7 @@ function openDeliveryModal(subId, name, price) {
   const overlay = document.getElementById('delivery-modal-overlay');
   overlay.classList.add('open');
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship'); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup'); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -1338,16 +1438,18 @@ function closeDeliveryModal() {
 
 // --- Subscribe ---
 
-async function subscribe(subId, name, price, deliveryMethod) {
+async function subscribe(subId, name, price, deliveryMethod, pickupLocation) {
   const btn = document.querySelector(`[data-sub-id="${CSS.escape(subId)}"]`);
   const original = btn?.textContent;
   if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
 
   try {
+    const body = { item: { name, price }, delivery_method: deliveryMethod || 'ship' };
+    if (pickupLocation) body.pickup_location = pickupLocation;
     const res = await fetch('/create-subscription-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item: { name, price }, delivery_method: deliveryMethod || 'ship' }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (data.url) {
@@ -1368,6 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectCartIcon();
   injectSubscriberModal();
   injectDeliveryModal();
+  injectPickupLocationModal();
   injectShipCalcModal();
   injectAddressConfirmModal();
   injectOrderDetailsModal();

@@ -560,25 +560,53 @@ const US_STATE_ABBR = {
   'District of Columbia':'DC',
 };
 
+// GET /api/zip-lookup?zip=78701
+// Primary auto-fill: uses Zippopotam.us (USPS-sourced) to return city + state from a ZIP code.
+// Triggered the instant the customer finishes typing 5 digits — most reliable path.
+app.get('/api/zip-lookup', async (req, res) => {
+  const { zip } = req.query;
+  if (!zip || !/^\d{5}$/.test(zip)) return res.status(400).json({ error: 'valid 5-digit zip required' });
+  try {
+    const response = await fetch(`https://api.zippopotam.us/us/${zip}`, {
+      headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0' },
+    });
+    if (!response.ok) return res.json({}); // unknown ZIP — let user fill in manually
+    const data = await response.json();
+    const place = data.places?.[0];
+    if (!place) return res.json({});
+    res.json({
+      city:  place['place name']       || '',
+      state: place['state abbreviation'] || '',
+    });
+  } catch (e) {
+    console.error('ZIP lookup error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /api/geocode?city=Austin&street=123+Main+St
-// Proxies to Nominatim to auto-populate state/zip in the shipping form.
+// Fallback only — used to guess state from city name via Nominatim.
+// NOTE: city-level geocoding reliably returns state but NOT zip (one city = many ZIPs),
+// so we only use this for state auto-fill when zip is not yet entered.
 app.get('/api/geocode', async (req, res) => {
   const { street, city } = req.query;
   if (!city) return res.status(400).json({ error: 'city required' });
   try {
-    const q = [street, city, 'USA'].filter(Boolean).join(' ');
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&countrycodes=us&limit=1`;
+    const params = new URLSearchParams({
+      city, country: 'US', format: 'json', addressdetails: '1', limit: '1',
+    });
+    if (street) params.set('street', street);
+    const url = 'https://nominatim.openstreetmap.org/search?' + params;
     const response = await fetch(url, {
       headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (heartoftexasorganics.com)' },
     });
     const data = await response.json();
     if (!data.length) return res.json({});
-    const addr     = data[0].address || {};
+    const addr      = data[0].address || {};
     const stateFull = addr.state || '';
-    const stateAbbr = US_STATE_ABBR[stateFull] || stateFull.slice(0, 2).toUpperCase();
-    const postcode  = addr.postcode || '';
-    const [zipMain, zipPlus4 = ''] = postcode.split('-');
-    res.json({ state: stateAbbr, zip: zipMain.slice(0, 5), zip4: zipPlus4.slice(0, 4) });
+    const stateAbbr = US_STATE_ABBR[stateFull] || '';
+    // Only return state — zip from city geocoding is unreliable (omitted intentionally)
+    res.json({ state: stateAbbr });
   } catch (e) {
     console.error('Geocode error:', e.message);
     res.status(500).json({ error: e.message });

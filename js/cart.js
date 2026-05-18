@@ -607,31 +607,40 @@ function injectShipCalcModal() {
   document.getElementById('sc-state').setAttribute('autocomplete', 'shipping address-level1');
   document.getElementById('sc-zip').setAttribute('autocomplete', 'shipping postal-code');
 
-  // Auto-populate state/zip from city + street via server geocode proxy
-  async function autoFillAddress() {
-    const city = document.getElementById('sc-city').value.trim();
-    const street = document.getElementById('sc-street').value.trim();
+  // ── ZIP input: as soon as 5 digits are typed, fetch city + state from Zippopotam.us
+  document.getElementById('sc-zip').addEventListener('input', async function() {
+    const zip = this.value.trim();
+    if (!/^\d{5}$/.test(zip)) return;
+    const cityEl  = document.getElementById('sc-city');
+    const stateEl = document.getElementById('sc-state');
+    if (cityEl.value.trim() && stateEl.value.trim()) return; // already filled
+    try {
+      const res = await fetch('/api/zip-lookup?zip=' + zip);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.city  && !cityEl.value.trim())  cityEl.value  = data.city;
+      if (data.state && !stateEl.value.trim()) stateEl.value = data.state;
+    } catch { /* silent */ }
+  });
+
+  // ── City blur: best-effort state guess via Nominatim (state only — zip unreliable from city name)
+  document.getElementById('sc-city').addEventListener('blur', async function() {
+    const city = this.value.trim();
     if (!city) return;
     const stateEl = document.getElementById('sc-state');
-    const zipEl   = document.getElementById('sc-zip');
-    const zip4El  = document.getElementById('sc-zip4');
-    if (stateEl.value.trim() && zipEl.value.trim()) return; // already filled
+    if (stateEl.value.trim()) return; // already have state
     try {
+      const street = document.getElementById('sc-street').value.trim();
       const params = new URLSearchParams({ city });
       if (street) params.set('street', street);
       const res = await fetch('/api/geocode?' + params);
       if (!res.ok) return;
       const data = await res.json();
       if (data.state && !stateEl.value.trim()) stateEl.value = data.state;
-      if (data.zip   && !zipEl.value.trim())   zipEl.value   = data.zip;
-      if (data.zip4  && !zip4El.value.trim())  zip4El.value  = data.zip4;
-    } catch { /* silent — not critical */ }
-  }
+    } catch { /* silent */ }
+  });
 
-  document.getElementById('sc-city').addEventListener('blur', autoFillAddress);
-  document.getElementById('sc-street').addEventListener('blur', autoFillAddress);
-
-  // ZIP blur: auto-fill ZIP+4 via EasyPost address verification and show comparison if address differs
+  // ── ZIP blur: verify full address via EasyPost → fill ZIP+4, show comparison modal if address differs
   document.getElementById('sc-zip').addEventListener('blur', async function() {
     const zip = this.value.trim();
     if (!/^\d{5}$/.test(zip)) return;

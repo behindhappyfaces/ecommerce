@@ -449,20 +449,46 @@ function injectShipCalcModal() {
 
   const form = document.createElement('div');
   form.className = 'ship-calc-form';
-  form.appendChild(makeField('sc-name',   'Full Name',       'Jane Smith'));
-  form.appendChild(makeField('sc-street', 'Street Address',  '123 Main St'));
+  form.appendChild(makeField('sc-name',   'Full Name',      'Jane Smith'));
+  form.appendChild(makeField('sc-street', 'Street Address', '123 Main St'));
+  // City on its own row (full width)
+  form.appendChild(makeField('sc-city',   'City',           'Austin'));
 
-  const cityRow = document.createElement('div');
-  cityRow.className = 'ship-calc-row';
-  const cityF  = makeField('sc-city',  'City',  'Austin');
+  // State / ZIP / ZIP+4 on one row
+  const zipRow = document.createElement('div');
+  zipRow.className = 'ship-calc-row';
+
   const stateF = makeField('sc-state', 'State', 'TX', 2);
   const zipF   = makeField('sc-zip',   'ZIP',   '78701', 5);
-  stateF.style.flex = '0 0 62px';
-  zipF.style.flex   = '0 0 82px';
-  cityRow.appendChild(cityF);
-  cityRow.appendChild(stateF);
-  cityRow.appendChild(zipF);
-  form.appendChild(cityRow);
+
+  // ZIP+4 field (optional 4-digit extension)
+  const zip4F = document.createElement('div');
+  zip4F.className = 'ship-calc-field';
+  const zip4Lbl = document.createElement('label');
+  zip4Lbl.className = 'ship-calc-label';
+  zip4Lbl.htmlFor = 'sc-zip4';
+  zip4Lbl.textContent = 'ZIP+4';
+  const zip4Row = document.createElement('div');
+  zip4Row.className = 'ship-calc-zip4-row';
+  const zip4Dash = document.createElement('span');
+  zip4Dash.className = 'ship-calc-zip4-dash';
+  zip4Dash.textContent = '-';
+  const zip4Inp = document.createElement('input');
+  zip4Inp.type = 'text'; zip4Inp.id = 'sc-zip4'; zip4Inp.placeholder = '0000';
+  zip4Inp.className = 'ship-calc-input'; zip4Inp.maxLength = 4;
+  zip4Row.appendChild(zip4Dash);
+  zip4Row.appendChild(zip4Inp);
+  zip4F.appendChild(zip4Lbl);
+  zip4F.appendChild(zip4Row);
+
+  stateF.style.flex = '0 0 70px';
+  zipF.style.flex   = '0 0 96px';
+  zip4F.style.flex  = '0 0 92px';
+
+  zipRow.appendChild(stateF);
+  zipRow.appendChild(zipF);
+  zipRow.appendChild(zip4F);
+  form.appendChild(zipRow);
 
   const getRatesBtn = document.createElement('button');
   getRatesBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
@@ -493,6 +519,37 @@ function injectShipCalcModal() {
   box.appendChild(cancelBtn);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
+
+  // Autocomplete hints for browser autofill
+  document.getElementById('sc-name').setAttribute('autocomplete', 'name');
+  document.getElementById('sc-street').setAttribute('autocomplete', 'shipping street-address');
+  document.getElementById('sc-city').setAttribute('autocomplete', 'shipping address-level2');
+  document.getElementById('sc-state').setAttribute('autocomplete', 'shipping address-level1');
+  document.getElementById('sc-zip').setAttribute('autocomplete', 'shipping postal-code');
+
+  // Auto-populate state/zip from city + street via server geocode proxy
+  async function autoFillAddress() {
+    const city = document.getElementById('sc-city').value.trim();
+    const street = document.getElementById('sc-street').value.trim();
+    if (!city) return;
+    const stateEl = document.getElementById('sc-state');
+    const zipEl   = document.getElementById('sc-zip');
+    const zip4El  = document.getElementById('sc-zip4');
+    if (stateEl.value.trim() && zipEl.value.trim()) return; // already filled
+    try {
+      const params = new URLSearchParams({ city });
+      if (street) params.set('street', street);
+      const res = await fetch('/api/geocode?' + params);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.state && !stateEl.value.trim()) stateEl.value = data.state;
+      if (data.zip   && !zipEl.value.trim())   zipEl.value   = data.zip;
+      if (data.zip4  && !zip4El.value.trim())  zip4El.value  = data.zip4;
+    } catch { /* silent — not critical */ }
+  }
+
+  document.getElementById('sc-city').addEventListener('blur', autoFillAddress);
+  document.getElementById('sc-street').addEventListener('blur', autoFillAddress);
 
   overlay.addEventListener('click', e => { if (e.target === overlay) closeShipCalcModal(); });
   cancelBtn.addEventListener('click', closeShipCalcModal);
@@ -588,7 +645,8 @@ function renderCalcRates(rates) {
       document.querySelectorAll('.ship-rate-option').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       _shipCalcRate = { id: r.id, rate: r.rate, carrier: r.carrier, service: r.service };
-      document.getElementById('sc-continue').style.display = '';
+      const cont = document.getElementById('sc-continue');
+      if (cont) { cont.style.display = 'block'; cont.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     });
 
     div.appendChild(card);

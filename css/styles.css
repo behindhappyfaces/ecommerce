@@ -1340,17 +1340,29 @@ h1, h2, h3, h4 {
 .delivery-modal__note { display: block; font-size: 0.8rem; color: #888; }
 
 /* ---- Shipping Calculator Modal ---- */
-.ship-calc-modal { max-width: 500px; }
+.ship-calc-modal {
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 .ship-calc-form  { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 0; }
-.ship-calc-row   { display: flex; gap: 8px; }
-.ship-calc-field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ship-calc-row   { display: flex; gap: 8px; align-items: flex-end; }
+.ship-calc-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .ship-calc-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: #888; }
 .ship-calc-input {
   padding: 9px 11px; border: 1px solid #ddd; border-radius: 5px;
   font-size: 0.9rem; font-family: inherit; outline: none; background: #fff; color: #333;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s; width: 100%; box-sizing: border-box;
 }
 .ship-calc-input:focus { border-color: var(--color-rust); }
+/* ZIP+4 inline layout */
+.ship-calc-zip4-row {
+  display: flex; align-items: center; gap: 4px;
+}
+.ship-calc-zip4-dash {
+  color: #999; font-size: 1rem; flex-shrink: 0; line-height: 1; padding: 9px 0;
+}
+.ship-calc-zip4-row .ship-calc-input { flex: 1; }
 .ship-rates-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #666; margin: 14px 0 8px; }
 .ship-rate-option {
   display: flex; justify-content: space-between; align-items: center;
@@ -1363,7 +1375,7 @@ h1, h2, h3, h4 {
 .ship-rate-option__info   { display: flex; flex-direction: column; font-size: 0.88rem; }
 .ship-rate-option__price  { font-weight: 700; font-size: 1rem; color: var(--color-rust); white-space: nowrap; margin-left: 12px; }
 .ship-calc-continue {
-  width: 100%; margin-top: 12px; padding: 13px 20px;
+  display: block; width: 100%; margin-top: 12px; padding: 13px 20px;
   background: var(--color-green); color: #fff; border: none; border-radius: 4px;
   font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
   cursor: pointer; font-weight: 600; transition: opacity 0.15s; font-family: inherit;

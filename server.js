@@ -484,6 +484,39 @@ app.post('/create-magazine-subscription', async (req, res) => {
 // STRIPE CHECKOUT
 // =========================================
 
+// Filter raw EasyPost rates to: USPS + UPS + FedEx only, overnight/1-day tiers only,
+// max 2 options per carrier (cheapest and most premium overnight option).
+function filterOvernightRates(rates) {
+  const CARRIERS = ['USPS', 'UPS', 'FEDEX'];
+  const EXPRESS_RE = /overnight|express|next.?day|priority.*mail.*express|first.*overnight/i;
+
+  const result = [];
+
+  for (const carrier of CARRIERS) {
+    const carrierRates = rates
+      .filter(r => r.carrier.toUpperCase() === carrier)
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+
+    if (!carrierRates.length) continue;
+
+    // Overnight = delivery_days <= 1 OR service name matches express keywords
+    const fastRates = carrierRates.filter(r =>
+      (r.delivery_days != null && r.delivery_days <= 1) || EXPRESS_RE.test(r.service)
+    );
+
+    if (!fastRates.length) continue;
+
+    // Cheapest overnight option
+    result.push(fastRates[0]);
+
+    // Most premium overnight option (different price tier)
+    const premium = fastRates[fastRates.length - 1];
+    if (premium.id !== fastRates[0].id) result.push(premium);
+  }
+
+  return result.sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+}
+
 // POST /api/shipping-rates — public, no auth required
 app.post('/api/shipping-rates', async (req, res) => {
   if (!easypost) return res.status(503).json({ error: 'Shipping rates temporarily unavailable' });
@@ -499,12 +532,52 @@ app.post('/api/shipping-rates', async (req, res) => {
         weight: Math.ceil((parseFloat(weight_lbs) || 1) * 16),
       },
     });
-    const rates = (shipment.rates || [])
-      .map(r => ({ id: r.id, carrier: r.carrier, service: r.service, rate: r.rate, delivery_days: r.delivery_days }))
-      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
+    const allRates = (shipment.rates || [])
+      .map(r => ({ id: r.id, carrier: r.carrier, service: r.service, rate: r.rate, delivery_days: r.delivery_days }));
+    const rates = filterOvernightRates(allRates);
     res.json({ shipment_id: shipment.id, rates });
   } catch (e) {
     res.status(500).json({ error: e.message || 'Could not calculate shipping rates' });
+  }
+});
+
+// State name → abbreviation for geocode response
+const US_STATE_ABBR = {
+  'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+  'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+  'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS',
+  'Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA',
+  'Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT',
+  'Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM',
+  'New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK',
+  'Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
+  'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+  'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
+  'District of Columbia':'DC',
+};
+
+// GET /api/geocode?city=Austin&street=123+Main+St
+// Proxies to Nominatim to auto-populate state/zip in the shipping form.
+app.get('/api/geocode', async (req, res) => {
+  const { street, city } = req.query;
+  if (!city) return res.status(400).json({ error: 'city required' });
+  try {
+    const q = [street, city, 'USA'].filter(Boolean).join(' ');
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&countrycodes=us&limit=1`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (heartoftexasorganics.com)' },
+    });
+    const data = await response.json();
+    if (!data.length) return res.json({});
+    const addr     = data[0].address || {};
+    const stateFull = addr.state || '';
+    const stateAbbr = US_STATE_ABBR[stateFull] || stateFull.slice(0, 2).toUpperCase();
+    const postcode  = addr.postcode || '';
+    const [zipMain, zipPlus4 = ''] = postcode.split('-');
+    res.json({ state: stateAbbr, zip: zipMain.slice(0, 5), zip4: zipPlus4.slice(0, 4) });
+  } catch (e) {
+    console.error('Geocode error:', e.message);
+    res.status(500).json({ error: e.message });
   }
 });
 

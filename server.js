@@ -180,6 +180,29 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
           : (deliveryMethod === 'pickup' ? 'Local pick-up — details to follow' : '');
 
+        // Gift + billing metadata
+        const isGift   = session.metadata?.is_gift === 'true';
+        const giftOcc  = session.metadata?.gift_occasion || '';
+        const giftMsg  = session.metadata?.gift_msg      || '';
+        const billName = session.metadata?.bill_name     || '';
+
+        const occasionLabel = giftOcc
+          ? giftOcc.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+          : '';
+
+        const giftHtml = isGift
+          ? `<div style="background:#fff8f0;border-left:4px solid #8B4A2F;padding:12px 20px;margin:16px 0;font-size:0.9rem;">
+               <strong>🎁 Gift Order${occasionLabel ? ' — ' + escHtml(occasionLabel) : ''}</strong>
+               ${giftMsg ? `<p style="margin:6px 0 0;color:#555;font-style:italic;">&ldquo;${escHtml(giftMsg)}&rdquo;</p>` : '<p style="margin:4px 0 0;color:#888;font-size:0.85rem;">No message included.</p>'}
+             </div>`
+          : '';
+
+        const billHtml = billName
+          ? `<p style="color:#3d3d3d;font-size:0.9rem;margin-top:8px;">
+               <strong>Billing Address:</strong> ${escHtml(billName)}, ${escHtml(session.metadata.bill_street)}, ${escHtml(session.metadata.bill_city)}, ${escHtml(session.metadata.bill_state)} ${escHtml(session.metadata.bill_zip)}
+             </p>`
+          : '';
+
         function orderConfirmEmail(intro, statusNote) {
           return `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
             <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
@@ -191,6 +214,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
               <tr><td style="padding:10px 16px;font-weight:700;color:#2C3E2D;">Total</td><td style="padding:10px 16px;font-weight:700;text-align:right;">${total}</td></tr>
             </table>
             ${addrLine ? `<p style="color:#3d3d3d;font-size:0.9rem;"><strong>Delivery:</strong> ${addrLine}</p>` : ''}
+            ${billHtml}
+            ${giftHtml}
             ${statusNote ? `<p style="color:#8B4A2F;font-size:0.85rem;margin-top:8px;">${statusNote}</p>` : ''}
             <p style="color:#888;font-size:12px;margin-top:24px;">Order ref: ${session.id}</p>
           </div>`;
@@ -218,14 +243,16 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
           // Admin notification
           await sendEmail(
-            `✅ New Order ${total} Ready to Ship`,
+            `✅ New Order ${total} Ready to Ship${isGift ? ' 🎁 GIFT' : ''}`,
             `<h2 style="color:#2C3E2D;">New Order Payment Cleared</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
              <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
              <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
+             ${billHtml}
              <p><strong>Payment:</strong> Card (cleared immediately)</p>
              ${lineItemsHtml(items)}
+             ${giftHtml}
              ${fulfillmentBadge('READY_TO_SHIP')}
              <p style="color:#888;font-size:12px;">Reference: ${session.id}</p>`
           );
@@ -255,14 +282,16 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
           // Admin notification
           await sendEmail(
-            `⏳ New ACH Order ${total} DO NOT SHIP YET`,
+            `⏳ New ACH Order ${total} DO NOT SHIP YET${isGift ? ' 🎁 GIFT' : ''}`,
             `<h2 style="color:#8B4A2F;">New ACH Order Awaiting Bank Settlement</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
              <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
              <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
+             ${billHtml}
              <p><strong>Payment:</strong> ACH Bank Transfer (3–5 business days to clear)</p>
              ${lineItemsHtml(items)}
+             ${giftHtml}
              ${fulfillmentBadge('AWAITING_PAYMENT')}
              <p style="color:#888;font-size:12px;">
                You will receive a second email the moment funds clear.<br>
@@ -613,9 +642,17 @@ app.get('/api/geocode', async (req, res) => {
   }
 });
 
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items, shipping, delivery_method } = req.body;
+    const { items, shipping, delivery_method, billing, gift } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
 
@@ -640,6 +677,21 @@ app.post('/create-checkout-session', async (req, res) => {
       });
     }
 
+    // Build metadata (Stripe limits: 50 keys, values ≤ 500 chars)
+    const metadata = { delivery_method: delivery_method || 'ship' };
+    if (billing) {
+      metadata.bill_name   = billing.name   || '';
+      metadata.bill_street = billing.street || '';
+      metadata.bill_city   = billing.city   || '';
+      metadata.bill_state  = billing.state  || '';
+      metadata.bill_zip    = billing.zip    || '';
+    }
+    if (gift) {
+      metadata.is_gift        = 'true';
+      metadata.gift_occasion  = gift.occasion || '';
+      metadata.gift_msg       = (gift.message || '').slice(0, 500);
+    }
+
     const sessionParams = {
       mode: 'payment',
       payment_method_types: ['card', 'us_bank_account'],
@@ -647,7 +699,7 @@ app.post('/create-checkout-session', async (req, res) => {
       allow_promotion_codes: true,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/offerings.html`,
-      metadata: { delivery_method: delivery_method || 'ship' },
+      metadata,
     };
 
     if (isShip) {

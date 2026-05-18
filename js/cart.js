@@ -691,12 +691,14 @@ function injectShipCalcModal() {
   continueBtn.addEventListener('click', checkoutWithShipping);
 }
 
-function openShipCalcModal() {
-  _shipCalcRate = null;
-  const ratesDiv = document.getElementById('sc-rates');
-  if (ratesDiv) { ratesDiv.style.display = 'none'; ratesDiv.textContent = ''; }
-  const cont = document.getElementById('sc-continue');
-  if (cont) cont.style.display = 'none';
+function openShipCalcModal(opts) {
+  if (!opts?.preserveRates) {
+    _shipCalcRate = null;
+    const ratesDiv = document.getElementById('sc-rates');
+    if (ratesDiv) { ratesDiv.style.display = 'none'; ratesDiv.textContent = ''; }
+    const cont = document.getElementById('sc-continue');
+    if (cont) cont.style.display = 'none';
+  }
   document.getElementById('ship-calc-overlay').classList.add('open');
 }
 
@@ -789,10 +791,247 @@ function renderCalcRates(rates) {
   div.style.display = '';
 }
 
-async function checkoutWithShipping() {
+function checkoutWithShipping() {
   if (!_shipCalcRate) return;
-  const btn = document.getElementById('sc-continue');
+  closeShipCalcModal();
+  openOrderDetailsModal();
+}
+
+// --- Order Details Modal (billing address + gift options) ---
+
+function injectOrderDetailsModal() {
+  if (document.getElementById('order-details-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'order-details-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt order-details-modal';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'Complete Your Order';
+
+  // ── Billing Address ──────────────────────────────────────────
+  const billSection = document.createElement('div');
+  billSection.className = 'order-section';
+
+  const billTitle = document.createElement('p');
+  billTitle.className = 'order-section__title';
+  billTitle.textContent = 'Billing Address';
+
+  const sameLabel = document.createElement('label');
+  sameLabel.className = 'order-same-ship';
+  sameLabel.htmlFor = 'od-same-ship';
+
+  const sameCheck = document.createElement('input');
+  sameCheck.type = 'checkbox';
+  sameCheck.id = 'od-same-ship';
+  sameCheck.checked = true;
+
+  const sameBox = document.createElement('span');
+  sameBox.className = 'order-same-ship__box';
+
+  const sameText = document.createElement('span');
+  sameText.textContent = 'Same as shipping address';
+
+  sameLabel.appendChild(sameCheck);
+  sameLabel.appendChild(sameBox);
+  sameLabel.appendChild(sameText);
+
+  const billFields = document.createElement('div');
+  billFields.className = 'order-bill-fields';
+  billFields.id = 'od-bill-fields';
+  billFields.style.display = 'none';
+  billFields.appendChild(makeField('od-bill-name',   'Full Name',      'Jane Smith'));
+  billFields.appendChild(makeField('od-bill-street', 'Street Address', '123 Main St'));
+  const bCityRow = document.createElement('div');
+  bCityRow.className = 'ship-calc-row';
+  const bCityF  = makeField('od-bill-city',  'City',  'Austin');
+  const bStateF = makeField('od-bill-state', 'State', 'TX', 2);
+  const bZipF   = makeField('od-bill-zip',   'ZIP',   '78701', 5);
+  bStateF.style.flex = '0 0 70px';
+  bZipF.style.flex   = '0 0 96px';
+  bCityRow.appendChild(bCityF);
+  bCityRow.appendChild(bStateF);
+  bCityRow.appendChild(bZipF);
+  billFields.appendChild(bCityRow);
+
+  sameCheck.addEventListener('change', () => {
+    billFields.style.display = sameCheck.checked ? 'none' : 'flex';
+  });
+
+  billSection.appendChild(billTitle);
+  billSection.appendChild(sameLabel);
+  billSection.appendChild(billFields);
+
+  // ── Gift Options ────────────────────────────────────────────
+  const giftSection = document.createElement('div');
+  giftSection.className = 'order-section';
+
+  const giftTitle = document.createElement('p');
+  giftTitle.className = 'order-section__title';
+  giftTitle.textContent = 'Is This a Gift?';
+
+  const giftToggle = document.createElement('div');
+  giftToggle.className = 'gift-toggle';
+
+  const giftNo = document.createElement('button');
+  giftNo.type = 'button';
+  giftNo.className = 'gift-toggle__btn gift-toggle__btn--active';
+  giftNo.id = 'od-gift-no';
+  giftNo.textContent = 'No';
+
+  const giftYes = document.createElement('button');
+  giftYes.type = 'button';
+  giftYes.className = 'gift-toggle__btn';
+  giftYes.id = 'od-gift-yes';
+  giftYes.textContent = 'Yes — it\'s a gift!';
+
+  giftToggle.appendChild(giftNo);
+  giftToggle.appendChild(giftYes);
+
+  const giftDetails = document.createElement('div');
+  giftDetails.className = 'gift-details';
+  giftDetails.id = 'od-gift-details';
+  giftDetails.style.display = 'none';
+
+  // Occasion select
+  const occWrap = document.createElement('div');
+  occWrap.className = 'ship-calc-field';
+  const occLbl = document.createElement('label');
+  occLbl.className = 'ship-calc-label';
+  occLbl.htmlFor = 'od-occasion';
+  occLbl.textContent = 'Occasion';
+  const occSel = document.createElement('select');
+  occSel.id = 'od-occasion';
+  occSel.className = 'ship-calc-input gift-occasion-select';
+  [
+    ['', '— Select an occasion —'],
+    ['birthday',     'Birthday'],
+    ['anniversary',  'Anniversary'],
+    ['thank-you',    'Thank You'],
+    ['get-well',     'Get Well'],
+    ['holiday',      'Holiday'],
+    ['wedding',      'Wedding'],
+    ['baby-shower',  'Baby Shower'],
+    ['graduation',   'Graduation'],
+    ['just-because', 'Just Because'],
+    ['other',        'Other'],
+  ].forEach(([val, label]) => {
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = label;
+    occSel.appendChild(opt);
+  });
+  occWrap.appendChild(occLbl);
+  occWrap.appendChild(occSel);
+
+  // Gift message
+  const msgWrap = document.createElement('div');
+  msgWrap.className = 'ship-calc-field';
+  const msgLbl = document.createElement('label');
+  msgLbl.className = 'ship-calc-label';
+  msgLbl.htmlFor = 'od-gift-msg';
+  msgLbl.textContent = 'Gift Message (optional)';
+  const msgArea = document.createElement('textarea');
+  msgArea.id = 'od-gift-msg';
+  msgArea.className = 'ship-calc-input gift-message-area';
+  msgArea.placeholder = 'Write a personal message to include in the package…';
+  msgArea.maxLength = 250;
+  msgArea.rows = 3;
+  const msgCount = document.createElement('p');
+  msgCount.className = 'gift-msg-count';
+  msgCount.id = 'od-msg-count';
+  msgCount.textContent = '0 / 250';
+  msgArea.addEventListener('input', () => { msgCount.textContent = msgArea.value.length + ' / 250'; });
+  msgWrap.appendChild(msgLbl);
+  msgWrap.appendChild(msgArea);
+  msgWrap.appendChild(msgCount);
+
+  giftDetails.appendChild(occWrap);
+  giftDetails.appendChild(msgWrap);
+
+  giftNo.addEventListener('click', () => {
+    giftNo.classList.add('gift-toggle__btn--active');
+    giftYes.classList.remove('gift-toggle__btn--active');
+    giftDetails.style.display = 'none';
+  });
+  giftYes.addEventListener('click', () => {
+    giftYes.classList.add('gift-toggle__btn--active');
+    giftNo.classList.remove('gift-toggle__btn--active');
+    giftDetails.style.display = 'flex';
+  });
+
+  giftSection.appendChild(giftTitle);
+  giftSection.appendChild(giftToggle);
+  giftSection.appendChild(giftDetails);
+
+  // ── Action buttons ─────────────────────────────────────────
+  const proceedBtn = document.createElement('button');
+  proceedBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  proceedBtn.id = 'od-proceed';
+  proceedBtn.textContent = 'Proceed to Payment →';
+
+  const backBtn = document.createElement('button');
+  backBtn.type = 'button';
+  backBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
+  backBtn.textContent = '← Back to Shipping';
+  backBtn.addEventListener('click', () => {
+    overlay.classList.remove('open');
+    openShipCalcModal({ preserveRates: true });
+  });
+
+  box.appendChild(heading);
+  box.appendChild(billSection);
+  box.appendChild(giftSection);
+  box.appendChild(proceedBtn);
+  box.appendChild(backBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  proceedBtn.addEventListener('click', submitOrderWithDetails);
+}
+
+function openOrderDetailsModal() {
+  document.getElementById('order-details-overlay').classList.add('open');
+}
+
+async function submitOrderWithDetails() {
+  if (!_shipCalcRate) return;
+  const btn = document.getElementById('od-proceed');
   btn.textContent = 'Redirecting…'; btn.disabled = true;
+
+  // Billing address
+  const sameAsShip = document.getElementById('od-same-ship').checked;
+  let billing = null;
+  if (!sameAsShip) {
+    billing = {
+      name:   document.getElementById('od-bill-name').value.trim(),
+      street: document.getElementById('od-bill-street').value.trim(),
+      city:   document.getElementById('od-bill-city').value.trim(),
+      state:  document.getElementById('od-bill-state').value.trim(),
+      zip:    document.getElementById('od-bill-zip').value.trim(),
+    };
+    if (!billing.name || !billing.street || !billing.city || !billing.state || !billing.zip) {
+      alert('Please complete all billing address fields.');
+      btn.textContent = 'Proceed to Payment →'; btn.disabled = false;
+      return;
+    }
+  }
+
+  // Gift info
+  const isGift = document.getElementById('od-gift-yes').classList.contains('gift-toggle__btn--active');
+  let gift = null;
+  if (isGift) {
+    gift = {
+      occasion: document.getElementById('od-occasion').value,
+      message:  document.getElementById('od-gift-msg').value.trim(),
+    };
+  }
 
   const cart = getCart();
   if (!cart.items.length) return;
@@ -805,12 +1044,19 @@ async function checkoutWithShipping() {
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, shipping: _shipCalcRate, delivery_method: 'ship' }),
+      body: JSON.stringify({ items, shipping: _shipCalcRate, delivery_method: 'ship', billing, gift }),
     });
     const data = await res.json();
-    if (data.url) { window.location.href = data.url; }
-    else { alert(data.error || 'Checkout error'); btn.textContent = 'Continue to Payment →'; btn.disabled = false; }
-  } catch { alert('Connection error.'); btn.textContent = 'Continue to Payment →'; btn.disabled = false; }
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert(data.error || 'Checkout error');
+      btn.textContent = 'Proceed to Payment →'; btn.disabled = false;
+    }
+  } catch {
+    alert('Connection error.');
+    btn.textContent = 'Proceed to Payment →'; btn.disabled = false;
+  }
 }
 
 // --- Checkout ---
@@ -1124,6 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectDeliveryModal();
   injectShipCalcModal();
   injectAddressConfirmModal();
+  injectOrderDetailsModal();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {

@@ -1382,6 +1382,78 @@ h1, h2, h3, h4 {
 }
 .ship-calc-continue:hover { opacity: 0.88; }
 
+/* ---- Order Details Modal (billing + gift) ---- */
+.order-details-modal {
+  max-width: 500px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+.order-section {
+  border-top: 1px solid #ece8e0;
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.order-section__title {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: var(--color-green);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+/* Same-as-shipping checkbox */
+.order-same-ship {
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; font-size: 0.9rem; color: var(--color-text);
+  user-select: none;
+}
+.order-same-ship input[type="checkbox"] { display: none; }
+.order-same-ship__box {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 2px solid #ccc; border-radius: 3px; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.order-same-ship input:checked + .order-same-ship__box {
+  background: var(--color-green); border-color: var(--color-green);
+}
+.order-same-ship input:checked + .order-same-ship__box::after {
+  content: ''; display: block; width: 10px; height: 6px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+/* Billing address fields container */
+.order-bill-fields {
+  display: flex; flex-direction: column; gap: 10px; margin-top: 14px;
+}
+/* Gift toggle */
+.gift-toggle {
+  display: flex; gap: 8px;
+}
+.gift-toggle__btn {
+  flex: 1; padding: 10px 14px; border: 2px solid #e0d8cc; border-radius: 6px;
+  background: #faf8f5; cursor: pointer; font-size: 0.88rem; font-weight: 600;
+  font-family: inherit; color: #888; transition: all 0.15s;
+}
+.gift-toggle__btn--active {
+  border-color: var(--color-rust); background: #fff8f5; color: var(--color-rust);
+}
+/* Gift details (occasion + message) */
+.gift-details {
+  flex-direction: column; gap: 12px; margin-top: 14px;
+}
+.gift-occasion-select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 32px; cursor: pointer;
+}
+.gift-message-area {
+  resize: vertical; min-height: 80px; line-height: 1.5;
+}
+.gift-msg-count {
+  font-size: 0.72rem; color: #aaa; text-align: right; margin: 3px 0 0;
+}
+
 /* ---- Address Confirmation Modal ---- */
 .addr-confirm-modal  { max-width: 560px; }
 .addr-confirm-subtitle { font-size: 0.88rem; color: #666; margin: 0 0 18px; line-height: 1.5; }

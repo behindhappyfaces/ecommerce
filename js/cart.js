@@ -415,6 +415,86 @@ function closeCart() {
 
 let _shipCalcRate = null;
 
+// ---- Address Confirmation Modal ----
+
+function injectAddressConfirmModal() {
+  if (document.getElementById('addr-confirm-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'addr-confirm-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt addr-confirm-modal';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'Confirm Your Address';
+
+  const subtitle = document.createElement('p');
+  subtitle.className = 'addr-confirm-subtitle';
+  subtitle.textContent = 'USPS returned a standardized version. Select which to use:';
+
+  const cols = document.createElement('div');
+  cols.className = 'addr-confirm-cols';
+  cols.id = 'addr-confirm-cols';
+
+  const cancelLink = document.createElement('button');
+  cancelLink.className = 'addr-confirm-cancel';
+  cancelLink.textContent = 'Cancel — let me correct it';
+  cancelLink.addEventListener('click', () => overlay.classList.remove('open'));
+
+  box.appendChild(heading);
+  box.appendChild(subtitle);
+  box.appendChild(cols);
+  box.appendChild(cancelLink);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+}
+
+function showAddressConfirmModal(entered, suggested, onSelect) {
+  const cols = document.getElementById('addr-confirm-cols');
+  cols.textContent = '';
+
+  function makeAddrCol(labelText, addr, btnText, choice) {
+    const col = document.createElement('div');
+    col.className = 'addr-confirm-col';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'addr-confirm-col-label';
+    lbl.textContent = labelText;
+
+    const zip = addr.zip + (addr.zip4 ? '-' + addr.zip4 : '');
+    const text = document.createElement('div');
+    text.className = 'addr-confirm-col-text';
+    text.appendChild(document.createTextNode(addr.street));
+    text.appendChild(document.createElement('br'));
+    text.appendChild(document.createTextNode(addr.city + ', ' + addr.state + ' ' + zip));
+
+    const btn = document.createElement('button');
+    btn.className = 'addr-confirm-col-btn';
+    btn.textContent = btnText;
+    btn.addEventListener('click', () => {
+      document.getElementById('addr-confirm-overlay').classList.remove('open');
+      onSelect(choice, addr);
+    });
+
+    col.appendChild(lbl);
+    col.appendChild(text);
+    col.appendChild(btn);
+    return col;
+  }
+
+  cols.appendChild(makeAddrCol('You Entered', entered, 'Use What I Entered', 'entered'));
+  cols.appendChild(makeAddrCol('USPS Standardized', suggested, 'Use USPS Version', 'suggested'));
+
+  document.getElementById('addr-confirm-overlay').classList.add('open');
+}
+
 function makeField(id, labelText, placeholder, maxLen) {
   const wrap = document.createElement('div');
   wrap.className = 'ship-calc-field';
@@ -550,6 +630,51 @@ function injectShipCalcModal() {
 
   document.getElementById('sc-city').addEventListener('blur', autoFillAddress);
   document.getElementById('sc-street').addEventListener('blur', autoFillAddress);
+
+  // ZIP blur: auto-fill ZIP+4 via EasyPost address verification and show comparison if address differs
+  document.getElementById('sc-zip').addEventListener('blur', async function() {
+    const zip = this.value.trim();
+    if (!/^\d{5}$/.test(zip)) return;
+    const name   = document.getElementById('sc-name').value.trim();
+    const street = document.getElementById('sc-street').value.trim();
+    const city   = document.getElementById('sc-city').value.trim();
+    const state  = document.getElementById('sc-state').value.trim();
+    if (!street || !city || !state) return;
+    try {
+      const res = await fetch('/api/verify-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, street1: street, city, state, zip }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success || !data.standardized) return;
+      const std = data.standardized;
+      // Always fill ZIP+4
+      if (std.zip4) document.getElementById('sc-zip4').value = std.zip4;
+      // Show comparison modal only if the standardized address differs from what was entered
+      const differs =
+        std.street1.toUpperCase() !== street.toUpperCase() ||
+        std.city.toUpperCase()    !== city.toUpperCase()   ||
+        std.state.toUpperCase()   !== state.toUpperCase()  ||
+        std.zip                   !== zip;
+      if (differs) {
+        showAddressConfirmModal(
+          { street, city, state, zip, zip4: '' },
+          { street: std.street1, city: std.city, state: std.state, zip: std.zip, zip4: std.zip4 || '' },
+          (choice, addr) => {
+            if (choice === 'suggested') {
+              document.getElementById('sc-street').value = addr.street;
+              document.getElementById('sc-city').value   = addr.city;
+              document.getElementById('sc-state').value  = addr.state;
+              document.getElementById('sc-zip').value    = addr.zip;
+              document.getElementById('sc-zip4').value   = addr.zip4 || '';
+            }
+          }
+        );
+      }
+    } catch { /* silent — not critical */ }
+  });
 
   overlay.addEventListener('click', e => { if (e.target === overlay) closeShipCalcModal(); });
   cancelBtn.addEventListener('click', closeShipCalcModal);
@@ -989,6 +1114,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectSubscriberModal();
   injectDeliveryModal();
   injectShipCalcModal();
+  injectAddressConfirmModal();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {

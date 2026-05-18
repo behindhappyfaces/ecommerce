@@ -1382,6 +1382,42 @@ h1, h2, h3, h4 {
 }
 .ship-calc-continue:hover { opacity: 0.88; }
 
+/* ---- Address Confirmation Modal ---- */
+.addr-confirm-modal  { max-width: 560px; }
+.addr-confirm-subtitle { font-size: 0.88rem; color: #666; margin: 0 0 18px; line-height: 1.5; }
+.addr-confirm-cols {
+  display: flex; gap: 12px; margin-bottom: 18px;
+}
+.addr-confirm-col {
+  flex: 1; display: flex; flex-direction: column; gap: 10px;
+  background: #faf8f5; border: 2px solid #e8e0d6; border-radius: 8px;
+  padding: 14px 16px;
+}
+.addr-confirm-col-label {
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em;
+  color: #888; font-weight: 700;
+}
+.addr-confirm-col-text {
+  font-size: 0.9rem; color: var(--color-text); line-height: 1.65; flex: 1;
+}
+.addr-confirm-col-btn {
+  width: 100%; padding: 10px 14px; border: none; border-radius: 4px;
+  background: var(--color-green); color: #fff; font-size: 0.8rem;
+  letter-spacing: 0.07em; text-transform: uppercase; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: opacity 0.15s;
+}
+.addr-confirm-col-btn:hover { opacity: 0.85; }
+.addr-confirm-cancel {
+  display: block; width: 100%; padding: 10px; background: transparent;
+  border: 1px solid #ddd; border-radius: 4px; color: #999; font-size: 0.82rem;
+  cursor: pointer; font-family: inherit; text-align: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.addr-confirm-cancel:hover { color: #555; border-color: #aaa; }
+@media (max-width: 480px) {
+  .addr-confirm-cols { flex-direction: column; }
+}
+
 /* =========================================
    ABOUT PAGES
    ========================================= */

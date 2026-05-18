@@ -484,39 +484,6 @@ app.post('/create-magazine-subscription', async (req, res) => {
 // STRIPE CHECKOUT
 // =========================================
 
-// Filter raw EasyPost rates to: USPS + UPS + FedEx only, overnight/1-day tiers only,
-// max 2 options per carrier (cheapest and most premium overnight option).
-function filterOvernightRates(rates) {
-  const CARRIERS = ['USPS', 'UPS', 'FEDEX'];
-  const EXPRESS_RE = /overnight|express|next.?day|priority.*mail.*express|first.*overnight/i;
-
-  const result = [];
-
-  for (const carrier of CARRIERS) {
-    const carrierRates = rates
-      .filter(r => r.carrier.toUpperCase() === carrier)
-      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
-
-    if (!carrierRates.length) continue;
-
-    // Overnight = delivery_days <= 1 OR service name matches express keywords
-    const fastRates = carrierRates.filter(r =>
-      (r.delivery_days != null && r.delivery_days <= 1) || EXPRESS_RE.test(r.service)
-    );
-
-    if (!fastRates.length) continue;
-
-    // Cheapest overnight option
-    result.push(fastRates[0]);
-
-    // Most premium overnight option (different price tier)
-    const premium = fastRates[fastRates.length - 1];
-    if (premium.id !== fastRates[0].id) result.push(premium);
-  }
-
-  return result.sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
-}
-
 // POST /api/shipping-rates — public, no auth required
 app.post('/api/shipping-rates', async (req, res) => {
   if (!easypost) return res.status(503).json({ error: 'Shipping rates temporarily unavailable' });
@@ -532,12 +499,49 @@ app.post('/api/shipping-rates', async (req, res) => {
         weight: Math.ceil((parseFloat(weight_lbs) || 1) * 16),
       },
     });
-    const allRates = (shipment.rates || [])
-      .map(r => ({ id: r.id, carrier: r.carrier, service: r.service, rate: r.rate, delivery_days: r.delivery_days }));
-    const rates = filterOvernightRates(allRates);
+    // Return all available rates sorted cheapest first
+    const rates = (shipment.rates || [])
+      .map(r => ({ id: r.id, carrier: r.carrier, service: r.service, rate: r.rate, delivery_days: r.delivery_days }))
+      .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
     res.json({ shipment_id: shipment.id, rates });
   } catch (e) {
     res.status(500).json({ error: e.message || 'Could not calculate shipping rates' });
+  }
+});
+
+// POST /api/verify-address — verify + standardize address via EasyPost, returns ZIP+4
+app.post('/api/verify-address', async (req, res) => {
+  if (!easypost) return res.json({ success: false, error: 'Verification unavailable' });
+  try {
+    const { name, street1, city, state, zip } = req.body;
+    if (!street1 || !city || !state || !zip) {
+      return res.status(400).json({ success: false, error: 'street1, city, state, zip required' });
+    }
+    const address = await easypost.Address.create({
+      verify: ['delivery'],
+      name: name || '',
+      street1,
+      city,
+      state,
+      zip,
+      country: 'US',
+    });
+    const success = address.verifications?.delivery?.success ?? false;
+    res.json({
+      success,
+      standardized: {
+        street1: address.street1 || street1,
+        city:    address.city    || city,
+        state:   address.state   || state,
+        zip:     address.zip     || zip,
+        zip4:    address.zip4    || '',
+      },
+      errors: address.verifications?.delivery?.errors || [],
+    });
+  } catch (e) {
+    console.error('Address verify error:', e.message);
+    // Non-fatal: client silently skips comparison modal on error
+    res.json({ success: false, error: e.message });
   }
 });
 

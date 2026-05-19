@@ -14,7 +14,8 @@ const PRODUCTS = {
   'harvest-basket':     { name: 'Harvest Basket',      price: 3500, subPrice: 2800, image: 'images/harvest.jpg' },
 };
 
-const STORAGE_KEY = 'hoto-cart';
+const STORAGE_KEY   = 'hoto-cart';
+const SHIP_MINIMUM  = 7500; // $75.00 in cents — minimum pre-tax total required for shipping
 
 // Approximate product weights in lbs (used for shipping rate calculation)
 const PRODUCT_WEIGHTS = {
@@ -1097,10 +1098,33 @@ async function checkout(deliveryMethod, pickupLocation) {
 
 // --- Subscription Checkout ---
 
+function applyShipMinimum(totalCents) {
+  const shortfall = SHIP_MINIMUM - totalCents;
+  const shipBtn   = document.getElementById('dm-ship');
+  const existing  = document.getElementById('dm-ship-min-note');
+  if (existing) existing.remove();
+
+  if (shortfall > 0) {
+    shipBtn.disabled      = true;
+    shipBtn.style.opacity = '0.4';
+    shipBtn.style.cursor  = 'not-allowed';
+    const note = document.createElement('p');
+    note.id = 'dm-ship-min-note';
+    note.style.cssText = 'font-size:0.8rem;color:#8B4A2F;margin:6px 0 4px;text-align:center;line-height:1.5;padding:0 16px;';
+    note.textContent = `Add $${(shortfall / 100).toFixed(2)} more to your order to qualify for shipping. Orders under $75 are pick-up only.`;
+    shipBtn.after(note);
+  } else {
+    shipBtn.disabled      = false;
+    shipBtn.style.opacity = '';
+    shipBtn.style.cursor  = '';
+  }
+}
+
 function openCartDeliveryModal() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
+  applyShipMinimum(getTotal());
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkoutSubscription('pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
@@ -1110,6 +1134,7 @@ function openOneTimeDeliveryChoice() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
+  applyShipMinimum(getTotal());
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); openShipCalcModal(); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkout('pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
@@ -1426,6 +1451,7 @@ function openDeliveryModal(subId, name, price) {
   _pendingSubArgs = { subId, name, price };
   const overlay = document.getElementById('delivery-modal-overlay');
   overlay.classList.add('open');
+  applyShipMinimum(price);
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship'); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup', loc)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;

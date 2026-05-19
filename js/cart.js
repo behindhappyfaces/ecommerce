@@ -111,7 +111,7 @@ function getDiscountedTotal() {
   return getCart().items.reduce((sum, item) => {
     const p = PRODUCTS[item.id];
     const price = item.price ?? (p ? p.price : 0);
-    return sum + Math.round(price * 0.8) * item.qty;
+    return sum + Math.round(price * 0.85) * item.qty;
   }, 0);
 }
 
@@ -245,7 +245,7 @@ function renderCart() {
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
     const basePrice = itemPrice ?? p.price;
-    const displayPrice = subscribing && basePrice > 0 ? Math.round(basePrice * 0.8) : basePrice;
+    const displayPrice = subscribing && basePrice > 0 ? Math.round(basePrice * 0.85) : basePrice;
     const item = document.createElement('div');
     item.className = 'cart-item';
     item.dataset.id = id;
@@ -345,7 +345,7 @@ function renderCart() {
 
   const subText = document.createElement('span');
   subText.className = 'cart-subscribe__text';
-  subText.innerHTML = '<strong>Subscribe &amp; Save 20%</strong><em>Billed monthly · cancel anytime</em>';
+  subText.innerHTML = '<strong>Subscribe &amp; Save 15%</strong><em>Billed monthly · cancel anytime</em>';
 
   subToggle.appendChild(subCheck);
   subToggle.appendChild(subCheckbox);
@@ -1127,7 +1127,7 @@ async function checkoutSubscription(deliveryMethod, pickupLocation) {
     .filter(({ id }) => PRODUCTS[id])
     .map(({ id, qty, price }) => ({
       name: PRODUCTS[id].name,
-      price: Math.round((price ?? PRODUCTS[id].price) * 0.8),
+      price: Math.round((price ?? PRODUCTS[id].price) * 0.85),
       quantity: qty,
     }));
 

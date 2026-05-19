@@ -790,7 +790,7 @@ app.post('/create-subscription-session', async (req, res) => {
 });
 
 // =========================================
-// CART SUBSCRIPTION  (Subscribe & Save 20%)
+// CART SUBSCRIPTION  (Subscribe & Save 15%)
 // =========================================
 
 app.post('/create-cart-subscription', async (req, res) => {

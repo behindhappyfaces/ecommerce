@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventory — Heart of Texas Organics</title>
+<title>Inventory | Heart of Texas Organics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -474,7 +474,7 @@
         <div class="field">
           <label>Sales Channel</label>
           <select id="restock-channel">
-            <option value="">— Select Channel —</option>
+            <option value="">Select Channel</option>
             <option value="farm">Farm Direct</option>
             <option value="farmers-market">Farmers Market</option>
             <option value="online">Online Store</option>
@@ -498,7 +498,7 @@
         </div>
       </div>
       <div class="field">
-        <label>Batch Cost — total $ for this batch (optional)</label>
+        <label>Batch Cost: total $ for this batch (optional)</label>
         <input type="number" id="restock-batch-cost" min="0" step="0.01" placeholder="e.g. 48.50">
       </div>
       <div class="field">
@@ -593,30 +593,30 @@
     <div class="summary-block" id="report-summary" style="display:none;">
       <div class="summary-pill">
         <span class="pill-label">Revenue</span>
-        <span class="pill-value" id="summary-revenue">—</span>
+        <span class="pill-value" id="summary-revenue">-</span>
       </div>
       <div class="summary-pill">
         <span class="pill-label">Est. Profit</span>
-        <span class="pill-value green" id="summary-profit">—</span>
+        <span class="pill-value green" id="summary-profit">-</span>
       </div>
       <div class="summary-pill">
         <span class="pill-label">Margin</span>
-        <span class="pill-value" id="summary-margin">—</span>
+        <span class="pill-value" id="summary-margin">-</span>
       </div>
       <div class="summary-pill">
         <span class="pill-label">Units Sold</span>
-        <span class="pill-value" id="summary-units">—</span>
+        <span class="pill-value" id="summary-units">-</span>
       </div>
     </div>
 
     <div id="stock-value-block" class="stock-value-block" style="display:none;">
       <span>Total Stock Value</span>
-      <strong id="stock-value-num">—</strong>
+      <strong id="stock-value-num">-</strong>
     </div>
 
     <div class="report-row">
       <div class="report-card">
-        <h3>Top Sellers — This Week</h3>
+        <h3>Top Sellers: This Week</h3>
         <div class="table-wrap">
           <table class="data" id="weekly-table">
             <thead><tr><th>Product</th><th>Units</th><th>Revenue</th><th>Margin</th></tr></thead>
@@ -625,7 +625,7 @@
         </div>
       </div>
       <div class="report-card">
-        <h3>Turnover — This Month</h3>
+        <h3>Turnover: This Month</h3>
         <div class="table-wrap">
           <table class="data" id="monthly-table">
             <thead><tr><th>Product</th><th>Units</th><th>Revenue</th><th>Margin</th></tr></thead>
@@ -730,7 +730,7 @@
 
         <div class="ship-picker">
           <select id="ship-product-select">
-            <option value="">— select product —</option>
+            <option value="">Select Product</option>
           </select>
           <input id="ship-qty" type="number" min="1" value="1" placeholder="Qty" />
           <button class="btn-sm btn-terra" id="ship-add-item">Add</button>
@@ -749,10 +749,10 @@
 
         <div class="ship-result-card" id="ship-result" style="display:none;">
           <div class="ship-result-grid">
-            <div class="ship-stat"><span class="ship-stat-label">Total Weight</span><span class="ship-stat-val" id="sr-weight">—</span></div>
-            <div class="ship-stat"><span class="ship-stat-label">Total Volume</span><span class="ship-stat-val" id="sr-volume">—</span></div>
-            <div class="ship-stat"><span class="ship-stat-label">Gel Packs</span><span class="ship-stat-val" id="sr-gel">—</span></div>
-            <div class="ship-stat ship-stat--box"><span class="ship-stat-label">Recommended Box</span><span class="ship-stat-val" id="sr-box">—</span></div>
+            <div class="ship-stat"><span class="ship-stat-label">Total Weight</span><span class="ship-stat-val" id="sr-weight">-</span></div>
+            <div class="ship-stat"><span class="ship-stat-label">Total Volume</span><span class="ship-stat-val" id="sr-volume">-</span></div>
+            <div class="ship-stat"><span class="ship-stat-label">Gel Packs</span><span class="ship-stat-val" id="sr-gel">-</span></div>
+            <div class="ship-stat ship-stat--box"><span class="ship-stat-label">Recommended Box</span><span class="ship-stat-val" id="sr-box">-</span></div>
           </div>
           <div class="ship-result-actions">
             <button class="btn-sm btn-terra" id="ship-save-btn">Save to Obsidian</button>
@@ -808,7 +808,7 @@
             <div class="ship-pickup-card">
               <div style="font-size:1.4rem;">📍</div>
               <div>
-                <div class="ship-pickup-name" id="pickup-loc-name">Heart of Texas Organics — Local Pick-up</div>
+                <div class="ship-pickup-name" id="pickup-loc-name">Heart of Texas Organics - Local Pick-up</div>
                 <div class="ship-pickup-addr" id="pickup-loc-addr">Loading…</div>
                 <div class="ship-pickup-hours" id="pickup-loc-hours"></div>
                 <div class="ship-pickup-notes" id="pickup-loc-notes"></div>
@@ -1037,7 +1037,7 @@
     while (banner.firstChild) banner.removeChild(banner.firstChild);
 
     const title = document.createElement('strong');
-    title.textContent = 'Needs Attention — ' + critical.length + ' product' + (critical.length !== 1 ? 's' : '');
+    title.textContent = 'Needs Attention: ' + critical.length + ' product' + (critical.length !== 1 ? 's' : '');
     banner.appendChild(title);
 
     for (const p of critical) {
@@ -1052,7 +1052,7 @@
       statusSpan.className = 'alert-status';
       statusSpan.textContent = p.stock === 0
         ? 'OUT OF STOCK'
-        : p.stock + ' ' + p.unit + '(s) — reorder at ' + p.reorder_level;
+        : p.stock + ' ' + p.unit + '(s), reorder at ' + p.reorder_level;
       if (p.stock === 0) statusSpan.style.color = 'var(--red)';
 
       row.appendChild(nameSpan);
@@ -1295,14 +1295,14 @@
     for (const col of cols) {
       const td = document.createElement('td');
       if (col === 'date') {
-        td.textContent = t.created_at ? t.created_at.replace('T', ' ').slice(0, 16) : '—';
+        td.textContent = t.created_at ? t.created_at.replace('T', ' ').slice(0, 16) : '-';
       } else if (col === 'product') {
-        td.textContent = t.product_name || t.product_id || '—';
+        td.textContent = t.product_name || t.product_id || '-';
       } else if (col === 'type') {
-        td.textContent = t.type || '—';
+        td.textContent = t.type || '-';
         td.className = 'type-' + (t.type || '');
       } else if (col === 'channel') {
-        td.textContent = t.channel ? channelLabel(t.channel) : '—';
+        td.textContent = t.channel ? channelLabel(t.channel) : '-';
         td.style.color = 'var(--cream-dim)';
         td.style.fontSize = '0.82rem';
       } else if (col === 'qty') {
@@ -1313,18 +1313,18 @@
         if (t.stock_before != null && t.stock_after != null) {
           td.textContent = t.stock_before + ' → ' + t.stock_after;
         } else {
-          td.textContent = '—';
+          td.textContent = '-';
         }
         td.style.color = 'var(--cream-dim)';
         td.style.fontSize = '0.82rem';
       } else if (col === 'batch') {
-        td.textContent = t.batch_number || '—';
+        td.textContent = t.batch_number || '-';
       } else if (col === 'prod-date') {
-        td.textContent = t.prod_date || '—';
+        td.textContent = t.prod_date || '-';
         td.style.color = 'var(--cream-dim)';
         td.style.fontSize = '0.82rem';
       } else if (col === 'expiry') {
-        td.textContent = t.expiry_date || '—';
+        td.textContent = t.expiry_date || '-';
         td.style.fontSize = '0.82rem';
         if (t.expiry_date) {
           const daysLeft = Math.ceil((new Date(t.expiry_date) - new Date()) / 864e5);
@@ -1335,11 +1335,11 @@
           td.style.color = 'var(--cream-dim)';
         }
       } else if (col === 'batch-cost') {
-        td.textContent = t.batch_cost_cents != null ? '$' + (t.batch_cost_cents / 100).toFixed(2) : '—';
+        td.textContent = t.batch_cost_cents != null ? '$' + (t.batch_cost_cents / 100).toFixed(2) : '-';
         td.style.color = 'var(--cream-dim)';
         td.style.fontSize = '0.82rem';
       } else if (col === 'batch-status') {
-        if (!t.expiry_date) { td.textContent = '—'; td.style.color = 'var(--cream-dim)'; }
+        if (!t.expiry_date) { td.textContent = '-'; td.style.color = 'var(--cream-dim)'; }
         else {
           const daysLeft = Math.ceil((new Date(t.expiry_date) - new Date()) / 864e5);
           if (daysLeft < 0) {
@@ -1357,7 +1357,7 @@
         }
         td.style.fontSize = '0.82rem';
       } else if (col === 'notes') {
-        td.textContent = t.notes || '—';
+        td.textContent = t.notes || '-';
         td.style.color = 'var(--cream-dim)';
       }
       tr.appendChild(td);
@@ -1489,7 +1489,7 @@
       const tdName  = document.createElement('td'); tdName.textContent  = row.name || row.product_id;
       const tdUnits = document.createElement('td'); tdUnits.textContent = row.units_sold || 0;
       const tdRev   = document.createElement('td'); tdRev.textContent   = '$' + ((row.revenue_cents || 0) / 100).toFixed(2);
-      const tdMarg  = document.createElement('td'); tdMarg.textContent  = (row.margin_pct != null ? row.margin_pct + '%' : '—');
+      const tdMarg  = document.createElement('td'); tdMarg.textContent  = (row.margin_pct != null ? row.margin_pct + '%' : '-');
       if ((row.margin_pct || 0) >= 30) tdMarg.style.color = 'var(--green)';
       else if ((row.margin_pct || 0) >= 15) tdMarg.style.color = 'var(--orange)';
       else tdMarg.style.color = 'var(--red)';
@@ -1514,7 +1514,7 @@
       const tdRev    = document.createElement('td'); tdRev.textContent    = '$' + ((row.revenue_cents || 0) / 100).toFixed(2);
       const tdProfit = document.createElement('td'); tdProfit.textContent = '$' + ((row.profit_cents  || 0) / 100).toFixed(2);
       tdProfit.style.color = (row.profit_cents || 0) >= 0 ? 'var(--green)' : 'var(--red)';
-      const tdMarg   = document.createElement('td'); tdMarg.textContent   = (row.margin_pct != null ? row.margin_pct + '%' : '—');
+      const tdMarg   = document.createElement('td'); tdMarg.textContent   = (row.margin_pct != null ? row.margin_pct + '%' : '-');
       if ((row.margin_pct || 0) >= 30) tdMarg.style.color = 'var(--green)';
       else if ((row.margin_pct || 0) >= 15) tdMarg.style.color = 'var(--orange)';
       else tdMarg.style.color = 'var(--red)';
@@ -1559,7 +1559,7 @@
       const updateMarginDisplay = () => {
         const price = parseFloat(priceInput.value) * 100;
         const cost  = parseFloat(costInput.value)  * 100;
-        if (isNaN(price) || isNaN(cost) || price === 0) { tdMargin.textContent = '—'; return; }
+        if (isNaN(price) || isNaN(cost) || price === 0) { tdMargin.textContent = '-'; return; }
         const m = Math.round((price - cost) / price * 100);
         tdMargin.textContent = m + '%';
         tdMargin.className = 'margin-display' + (m >= 30 ? ' good' : m >= 15 ? ' warn' : '');
@@ -1908,7 +1908,7 @@
       const cur = sel.value;
       sel.textContent = '';
       const def = document.createElement('option');
-      def.value = ''; def.textContent = '— select product —';
+      def.value = ''; def.textContent = 'Select Product';
       sel.appendChild(def);
       shipProducts.forEach((p, i) => {
         const opt = document.createElement('option');
@@ -2001,7 +2001,7 @@
       document.getElementById('sadd-l').value                = preset.length_in;
       document.getElementById('sadd-w').value                = preset.width_in;
       document.getElementById('sadd-h').value                = preset.height_in;
-      setFormNote('Preset loaded — adjust any values before saving.');
+      setFormNote('Preset loaded. Adjust any values before saving.');
       this.value = '';
     });
 
@@ -2016,7 +2016,7 @@
                         !isNaN(parseFloat(lVal)) && !isNaN(parseFloat(wdVal)) && !isNaN(parseFloat(hVal));
 
       if (hasWeight && hasDims) {
-        setFormNote('All values already filled — nothing to estimate.');
+        setFormNote('All values already filled. Nothing to estimate.');
         return;
       }
       if (!hasWeight && !hasDims) {
@@ -2028,11 +2028,11 @@
         document.getElementById('sadd-l').value = dims.length_in;
         document.getElementById('sadd-w').value = dims.width_in;
         document.getElementById('sadd-h').value = dims.height_in;
-        setFormNote('Dimensions estimated from product weight using avg food density — adjust if needed.');
+        setFormNote('Dimensions estimated from product weight using avg food density. Adjust if needed.');
       } else {
         const w = weightFromDims(parseFloat(lVal), parseFloat(wdVal), parseFloat(hVal));
         document.getElementById('sadd-product-weight').value = w;
-        setFormNote('Product weight estimated from dimensions using avg food density — adjust if needed.');
+        setFormNote('Product weight estimated from dimensions using avg food density. Adjust if needed.');
       }
     });
 
@@ -2075,7 +2075,7 @@
 
     // ── Export functions ──────────────────────────────────────────────────────
     function exportShipExcel() {
-      if (!window.XLSX) { showToast('Excel library not loaded yet — try again in a moment', true); return; }
+      if (!window.XLSX) { showToast('Excel library not loaded yet. Try again in a moment', true); return; }
       const rows = shipProducts.map(p => ({
         'Product':              p.name,
         'Product Weight (lbs)': p.product_weight_lbs || 0,
@@ -2093,7 +2093,7 @@
     }
 
     function exportShipPDF() {
-      if (!window.jspdf) { showToast('PDF library not loaded yet — try again in a moment', true); return; }
+      if (!window.jspdf) { showToast('PDF library not loaded yet. Try again in a moment', true); return; }
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape' });
       doc.setFont('helvetica', 'bold');
@@ -2154,7 +2154,7 @@
         document.getElementById('sr-weight').textContent = lastResult.totalWeight + ' lbs';
         document.getElementById('sr-volume').textContent = lastResult.totalVolume + ' cu in';
         document.getElementById('sr-gel').textContent    = lastResult.gelPacks;
-        document.getElementById('sr-box').textContent    = lastResult.box.name + ' — ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in';
+        document.getElementById('sr-box').textContent    = lastResult.box.name + ': ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in';
         document.getElementById('ship-result').style.display = '';
       } catch { showToast('Calculation error', true); }
     });
@@ -2181,7 +2181,7 @@
         const vol = Math.round(i.length_in * i.width_in * i.height_in * i.qty);
         return '| ' + i.name + ' | ' + i.qty + ' | ' + (i.weight_lbs * i.qty).toFixed(1) + ' | ' + vol + ' |';
       }).join('\n');
-      const md = '---\ntitle: Shipment Estimate — ' + dateStr + '\ndate: ' + dateStr + '\ntags: [shipping, bhf, estimate]\n---\n\n# Shipment Estimate — ' + dateStr + ' ' + timeStr + '\n\n## Products\n\n| Product | Qty | Weight (lbs) | Volume (cu in) |\n|---------|-----|-------------|----------------|\n' + rows + '\n\n## Totals\n\n| | |\n|---|---|\n| **Total Weight** | ' + lastResult.totalWeight + ' lbs |\n| **Total Volume** | ' + lastResult.totalVolume + ' cu in (' + lastResult.buffered + ' cu in with 30% buffer) |\n| **Gel Packs Needed** | ' + lastResult.gelPacks + ' |\n| **Recommended Box** | ' + lastResult.box.name + ' — ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in |\n\n## Notes\n\n';
+      const md = '---\ntitle: Shipment Estimate: ' + dateStr + '\ndate: ' + dateStr + '\ntags: [shipping, bhf, estimate]\n---\n\n# Shipment Estimate: ' + dateStr + ' ' + timeStr + '\n\n## Products\n\n| Product | Qty | Weight (lbs) | Volume (cu in) |\n|---------|-----|-------------|----------------|\n' + rows + '\n\n## Totals\n\n| | |\n|---|---|\n| **Total Weight** | ' + lastResult.totalWeight + ' lbs |\n| **Total Volume** | ' + lastResult.totalVolume + ' cu in (' + lastResult.buffered + ' cu in with 30% buffer) |\n| **Gel Packs Needed** | ' + lastResult.gelPacks + ' |\n| **Recommended Box** | ' + lastResult.box.name + ': ' + lastResult.box.l + '×' + lastResult.box.w + '×' + lastResult.box.h + ' in |\n\n## Notes\n\n';
       const blob = new Blob([md], { type: 'text/markdown' });
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
@@ -2322,7 +2322,7 @@
       const div = document.getElementById('ship-label-result');
       div.className = 'ship-label-box';
       div.innerHTML =
-        '<div class="ship-label-success">✓ Label purchased — ' + d.carrier + ' ' + d.service + ' ($' + parseFloat(d.price).toFixed(2) + ')</div>' +
+        '<div class="ship-label-success">✓ Label purchased: ' + d.carrier + ' ' + d.service + ' ($' + parseFloat(d.price).toFixed(2) + ')</div>' +
         '<div class="ship-label-tracking">Tracking: <strong>' + d.tracking_code + '</strong></div>' +
         (d.label_url ? '<a href="' + d.label_url + '" target="_blank" rel="noopener" class="btn-sm btn-terra" style="display:inline-block;text-decoration:none;">Download Label (PDF)</a>' : '');
       div.style.display = '';
@@ -2358,7 +2358,7 @@
         if (!r.ok) { msg.textContent = 'Failed to load orders'; return; }
         allOrders = await r.json();
         renderOrders();
-      } catch { msg.textContent = 'Connection error — check your network'; }
+      } catch { msg.textContent = 'Connection error. Check your network.'; }
     }
 
     function renderOrders() {
@@ -2415,7 +2415,7 @@
       const cust = document.createElement('div');
       cust.className = 'order-customer';
       cust.textContent = (order.customerName || 'Unknown Customer') +
-        (order.customerEmail ? ' — ' + order.customerEmail : '');
+        (order.customerEmail ? ': ' + order.customerEmail : '');
       card.appendChild(cust);
 
       if (order.created) {
@@ -2434,7 +2434,7 @@
 
       // Items (exclude shipping line items)
       if (order.items && order.items.length) {
-        const productItems = order.items.filter(i => !i.name.startsWith('Shipping —') && !i.name.startsWith('Shipping -'));
+        const productItems = order.items.filter(i => !i.name.startsWith('Shipping -') && !i.name.startsWith('Shipping -'));
         if (productItems.length) {
           const itemsEl = document.createElement('div');
           itemsEl.className = 'order-items';
@@ -2465,7 +2465,7 @@
         const occ = order.giftOccasion
           ? order.giftOccasion.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
           : '';
-        giftTitle.textContent = '🎁 Gift Order' + (occ ? ' — ' + occ : '');
+        giftTitle.textContent = '🎁 Gift Order' + (occ ? ': ' + occ : '');
         giftBanner.appendChild(giftTitle);
 
         const msgEl = document.createElement('p');
@@ -2508,7 +2508,7 @@
               document.getElementById('sf-zip').value    = a.zip    || '';
               document.getElementById('sf-phone').value  = a.phone  || '';
             }
-            showToast('Address pre-filled — add products, calculate, then Get Rates');
+            showToast('Address pre-filled. Add products, calculate, then Get Rates');
           });
           actions.appendChild(shipBtn);
         }

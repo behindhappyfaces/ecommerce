@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subscription Confirmed — Heart of Texas Organics</title>
+  <title>Subscription Confirmed | Heart of Texas Organics</title>
   <meta name="description" content="Your subscription is confirmed. Welcome to the Heart of Texas Organics family." />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="images/logo.png" />
@@ -146,12 +146,12 @@
           ? new Date(data.nextCharge * 1000).toLocaleDateString('en-US', {
               timeZone: 'America/Chicago', dateStyle: 'full',
             })
-          : '—';
-        const amount = data.amount ? '$' + (data.amount / 100).toFixed(2) + '/mo' : '—';
+          : '-';
+        const amount = data.amount ? '$' + (data.amount / 100).toFixed(2) + '/mo' : '-';
 
         const table = document.createElement('table');
         table.className = 'sub-confirm__table';
-        table.appendChild(buildRow('Items in your box', data.items || '—'));
+        table.appendChild(buildRow('Items in your box', data.items || '-'));
         table.appendChild(buildRow('Monthly charge', amount));
         table.appendChild(buildRow('Next charge', nextDate));
         table.appendChild(buildStatusRow(data.status));
@@ -160,7 +160,7 @@
         card.appendChild(table);
 
       } catch (err) {
-        card.textContent = 'Could not load details — please check your email for confirmation.';
+        card.textContent = 'Could not load details. Please check your email for confirmation.';
         console.error(err);
       }
 

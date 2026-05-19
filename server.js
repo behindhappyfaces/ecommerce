@@ -589,14 +589,18 @@ app.post('/api/verify-address', async (req, res) => {
       country: 'US',
     });
     const success = address.verifications?.delivery?.success ?? false;
+    const rawZip   = address.zip || zip;
+    const digits   = rawZip.replace(/\D/g, '');
+    const zip5     = digits.slice(0, 5);
+    const zip4     = digits.length > 5 ? digits.slice(5, 9) : (address.zip4 || '');
     res.json({
       success,
       standardized: {
         street1: address.street1 || street1,
         city:    address.city    || city,
         state:   address.state   || state,
-        zip:     address.zip     || zip,
-        zip4:    address.zip4    || '',
+        zip:     zip5,
+        zip4:    zip4,
       },
       errors: address.verifications?.delivery?.errors || [],
     });

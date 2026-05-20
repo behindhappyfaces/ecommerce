@@ -449,6 +449,7 @@
     <button class="tab-btn" data-tab="settings">Settings</button>
     <button class="tab-btn" data-tab="shipping">Shipping</button>
     <button class="tab-btn" data-tab="orders">Orders</button>
+    <button class="tab-btn" data-tab="subscribers">Subscribers</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -822,6 +823,55 @@
     </div>
   </div>
 
+  <!-- TAB: SUBSCRIBERS -->
+  <div class="panel" id="panel-subscribers">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <h3 class="section-title" style="margin:0;">Best Medicines Subscribers</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-sm btn-ghost" id="subs-refresh-btn">&#8635; Refresh</button>
+        <button class="btn" id="subs-csv-btn" style="font-size:0.78rem;padding:7px 16px;">&#8595; Download CSV</button>
+      </div>
+    </div>
+
+    <div id="subs-stats" style="display:flex;gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px;">
+      <div style="flex:1;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--accent-warm);" id="subs-stat-total">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">Total</div>
+      </div>
+      <div style="flex:1;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--accent-warm);" id="subs-stat-month">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">This Month</div>
+      </div>
+      <div style="flex:2;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:0.9rem;font-weight:400;color:var(--accent-warm);" id="subs-stat-latest">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">Most Recent</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <input type="search" id="subs-search" placeholder="Search name, email, or phone…"
+        style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:9px 14px;color:var(--cream);font-size:0.85rem;width:100%;max-width:340px;outline:none;">
+    </div>
+
+    <div class="table-wrap">
+      <p id="subs-loading" style="color:rgba(232,227,217,0.35);font-size:0.85rem;padding:20px 0;">Loading…</p>
+      <p id="subs-empty" style="display:none;color:rgba(232,227,217,0.35);font-size:0.85rem;padding:20px 0;">No subscribers match your search.</p>
+      <table class="data" id="subs-table" style="display:none;">
+        <thead>
+          <tr>
+            <th style="cursor:pointer;" data-subs-col="name">Name</th>
+            <th style="cursor:pointer;" data-subs-col="email">Email</th>
+            <th style="cursor:pointer;" data-subs-col="phone">Phone</th>
+            <th style="cursor:pointer;" data-subs-col="address">Address</th>
+            <th style="cursor:pointer;text-align:center;" data-subs-col="agreed">Agreed</th>
+            <th style="cursor:pointer;" data-subs-col="date">Date</th>
+          </tr>
+        </thead>
+        <tbody id="subs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- TAB: ORDERS -->
   <div class="panel" id="panel-orders">
     <div class="orders-toolbar">
@@ -940,6 +990,7 @@
       if (btn.dataset.tab === 'history') loadHistory();
       if (btn.dataset.tab === 'reports') loadReports();
       if (btn.dataset.tab === 'settings') loadSettings();
+      if (btn.dataset.tab === 'subscribers') loadSubscribers();
     });
   });
 
@@ -2570,6 +2621,147 @@
     document.getElementById('orders-refresh-btn').addEventListener('click', loadOrders);
 
     document.querySelector('[data-tab="orders"]').addEventListener('click', loadOrders);
+  }());
+
+  // ---- Subscribers tab ----
+  (function () {
+    var allSubs  = [];
+    var subSort  = { col: 'date', dir: 'desc' };
+    var loaded   = false;
+
+    function getName(s)  { return (s.firstName || s.first || '') + ' ' + (s.lastName || s.last || ''); }
+    function getDate(s)  { return (s.createdAt || s.date || '').slice(0, 10); }
+    function getAgreed(s){ return !!(s.agreedToUpdates || s.agreed); }
+
+    window.loadSubscribers = async function () {
+      if (loaded) { renderSubs(document.getElementById('subs-search').value); return; }
+      document.getElementById('subs-loading').style.display = 'block';
+      document.getElementById('subs-table').style.display = 'none';
+      document.getElementById('subs-empty').style.display = 'none';
+      try {
+        const res = await fetch('/api/magazine-subscribers', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('admin_token') || '') },
+        });
+        if (!res.ok) { document.getElementById('subs-loading').textContent = 'Could not load subscribers.'; return; }
+        allSubs = await res.json();
+        loaded = true;
+        updateSubStats();
+        renderSubs('');
+      } catch (e) {
+        document.getElementById('subs-loading').textContent = 'Network error loading subscribers.';
+      }
+    };
+
+    function updateSubStats() {
+      document.getElementById('subs-stat-total').textContent = allSubs.length;
+      const now = new Date();
+      const thisM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('subs-stat-month').textContent =
+        allSubs.filter(s => (s.createdAt || s.date || '').slice(0, 7) === thisM).length;
+      if (allSubs.length) {
+        const latest = allSubs.slice().sort((a, b) =>
+          (b.createdAt || b.date || '').localeCompare(a.createdAt || a.date || ''))[0];
+        document.getElementById('subs-stat-latest').textContent = getName(latest) + ' — ' + getDate(latest);
+      }
+    }
+
+    function renderSubs(q) {
+      const query = (q || '').toLowerCase().trim();
+      let rows = allSubs.filter(s => {
+        if (!query) return true;
+        return getName(s).toLowerCase().includes(query) ||
+               (s.email || '').toLowerCase().includes(query) ||
+               (s.phone || '').toLowerCase().includes(query);
+      });
+      rows.sort((a, b) => {
+        let va, vb;
+        if (subSort.col === 'name')    { va = getName(a); vb = getName(b); }
+        else if (subSort.col === 'email')   { va = a.email || ''; vb = b.email || ''; }
+        else if (subSort.col === 'phone')   { va = a.phone || ''; vb = b.phone || ''; }
+        else if (subSort.col === 'address') { va = a.address || ''; vb = b.address || ''; }
+        else if (subSort.col === 'agreed')  { va = getAgreed(a) ? '1' : '0'; vb = getAgreed(b) ? '1' : '0'; }
+        else { va = getDate(a); vb = getDate(b); }
+        const cmp = va.localeCompare(vb);
+        return subSort.dir === 'asc' ? cmp : -cmp;
+      });
+
+      document.getElementById('subs-loading').style.display = 'none';
+      const tbody = document.getElementById('subs-tbody');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+      if (!rows.length) {
+        document.getElementById('subs-table').style.display = 'none';
+        document.getElementById('subs-empty').style.display = 'block';
+        return;
+      }
+      document.getElementById('subs-empty').style.display = 'none';
+      document.getElementById('subs-table').style.display = 'table';
+
+      rows.forEach(s => {
+        const tr = document.createElement('tr');
+        function td(text, extra) {
+          const c = document.createElement('td');
+          c.textContent = text || '';
+          if (extra) Object.assign(c.style, extra);
+          return c;
+        }
+        tr.appendChild(td(getName(s)));
+        tr.appendChild(td(s.email || '', { color: '#7eb89a' }));
+        tr.appendChild(td(s.phone || ''));
+        tr.appendChild(td(s.address || ''));
+        const agTd = document.createElement('td');
+        agTd.style.textAlign = 'center';
+        agTd.textContent = getAgreed(s) ? 'Yes' : 'No';
+        tr.appendChild(agTd);
+        tr.appendChild(td(getDate(s), { fontSize: '0.78rem', opacity: '0.55', whiteSpace: 'nowrap' }));
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* Sort headers */
+    document.querySelectorAll('th[data-subs-col]').forEach(th => {
+      th.addEventListener('click', function () {
+        const col = this.dataset.subsCol;
+        if (subSort.col === col) subSort.dir = subSort.dir === 'asc' ? 'desc' : 'asc';
+        else { subSort.col = col; subSort.dir = 'asc'; }
+        renderSubs(document.getElementById('subs-search').value);
+      });
+    });
+
+    /* Search */
+    document.getElementById('subs-search').addEventListener('input', function () {
+      renderSubs(this.value);
+    });
+
+    /* Refresh */
+    document.getElementById('subs-refresh-btn').addEventListener('click', function () {
+      loaded = false;
+      loadSubscribers();
+    });
+
+    /* CSV download */
+    document.getElementById('subs-csv-btn').addEventListener('click', function () {
+      const header = ['First Name','Last Name','Email','Phone','Address','Agreed','Date'];
+      const dataRows = allSubs.map(s => [
+        s.firstName || s.first || '',
+        s.lastName  || s.last  || '',
+        s.email     || '',
+        s.phone     || '',
+        s.address   || '',
+        getAgreed(s) ? 'Yes' : 'No',
+        getDate(s),
+      ]);
+      const csv = [header, ...dataRows]
+        .map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))
+        .join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = 'best-medicines-subscribers-' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   }());
 
 })();

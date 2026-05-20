@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Best Medicines Subscribers | Admin</title>
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1a10;
+      color: #e8e3d9;
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-card {
+      background: #1a2b1b;
+      border: 1px solid rgba(245,240,232,0.1);
+      border-radius: 8px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .login-card h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #c8b89a;
+      margin-bottom: 6px;
+    }
+    .login-card p {
+      font-size: 0.8rem;
+      color: rgba(232,227,217,0.5);
+      margin-bottom: 28px;
+    }
+    .login-card input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(245,240,232,0.15);
+      border-radius: 4px;
+      padding: 11px 14px;
+      color: #e8e3d9;
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .login-card input:focus { border-color: #4a7c5a; }
+    .login-card button {
+      width: 100%;
+      background: #2C3E2D;
+      border: none;
+      border-radius: 4px;
+      color: #e8e3d9;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px;
+      cursor: pointer;
+    }
+    .login-card button:hover { background: #3a4e3b; }
+    #login-err {
+      font-size: 0.78rem;
+      color: #e07060;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    /* ── Dashboard ── */
+    #dashboard { display: none; }
+
+    .dash-header {
+      background: #1a2b1b;
+      border-bottom: 1px solid rgba(245,240,232,0.08);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .dash-header__title {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #c8b89a;
+    }
+    .dash-header__sub {
+      font-size: 0.72rem;
+      color: rgba(232,227,217,0.45);
+      margin-top: 2px;
+    }
+    .dash-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(245,240,232,0.2);
+      border-radius: 4px;
+      color: #e8e3d9;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-outline:hover { border-color: rgba(245,240,232,0.4); }
+    .btn-primary {
+      background: #2C3E2D;
+      border: none;
+      border-radius: 4px;
+      color: #e8e3d9;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #3a4e3b; }
+
+    /* ── Stats ── */
+    .stats-row {
+      display: flex;
+      gap: 1px;
+      background: rgba(245,240,232,0.06);
+      border-bottom: 1px solid rgba(245,240,232,0.08);
+    }
+    .stat {
+      flex: 1;
+      background: #0f1a10;
+      padding: 18px 24px;
+      min-width: 120px;
+    }
+    .stat__num {
+      font-size: 1.6rem;
+      font-weight: 300;
+      color: #c8b89a;
+      line-height: 1;
+    }
+    .stat__label {
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(232,227,217,0.4);
+      margin-top: 4px;
+    }
+
+    /* ── Search ── */
+    .search-bar {
+      padding: 16px 28px;
+      border-bottom: 1px solid rgba(245,240,232,0.06);
+    }
+    .search-bar input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(245,240,232,0.12);
+      border-radius: 4px;
+      padding: 9px 14px;
+      color: #e8e3d9;
+      font-size: 0.85rem;
+      width: 100%;
+      max-width: 360px;
+      outline: none;
+    }
+    .search-bar input:focus { border-color: #4a7c5a; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    thead tr {
+      background: #1a2b1b;
+      border-bottom: 1px solid rgba(245,240,232,0.1);
+    }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.67rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(200,184,154,0.7);
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { color: #c8b89a; }
+    th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+    th.sort-asc .sort-arrow::after  { content: ' ↑'; opacity: 1; }
+    th.sort-desc .sort-arrow::after { content: ' ↓'; opacity: 1; }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(245,240,232,0.05);
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    td {
+      padding: 13px 16px;
+      color: rgba(232,227,217,0.85);
+      vertical-align: middle;
+    }
+    td.email { color: #7eb89a; }
+    td.date  { font-size: 0.78rem; color: rgba(232,227,217,0.45); white-space: nowrap; }
+    td.agreed { text-align: center; }
+    td.agreed span {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      background: rgba(46,100,60,0.35);
+      color: #7eb89a;
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(232,227,217,0.3);
+      font-size: 0.85rem;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(232,227,217,0.3);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>Best Medicines</h1>
+      <p>Subscriber admin access</p>
+      <input type="password" id="pw-input" placeholder="Admin password" autocomplete="current-password" />
+      <button id="pw-btn">Sign In</button>
+      <p id="login-err">Incorrect password. Try again.</p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+
+    <div class="dash-header">
+      <div>
+        <div class="dash-header__title">Best Medicines &mdash; Subscribers</div>
+        <div class="dash-header__sub" id="last-updated"></div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn-outline" id="refresh-btn">Refresh</button>
+        <button class="btn-primary" id="csv-btn">Download CSV</button>
+        <button class="btn-outline" id="logout-btn">Log Out</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat__num" id="stat-total">—</div>
+        <div class="stat__label">Total Subscribers</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num" id="stat-month">—</div>
+        <div class="stat__label">This Month</div>
+      </div>
+      <div class="stat">
+        <div class="stat__num" id="stat-latest">—</div>
+        <div class="stat__label">Latest Sign-up</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <input type="search" id="search-input" placeholder="Search by name, email, or phone…" />
+    </div>
+
+    <div class="table-wrap">
+      <div id="loading">Loading subscribers…</div>
+      <table id="sub-table" style="display:none;">
+        <thead>
+          <tr>
+            <th data-col="name">Name <span class="sort-arrow"></span></th>
+            <th data-col="email">Email <span class="sort-arrow"></span></th>
+            <th data-col="phone">Phone <span class="sort-arrow"></span></th>
+            <th data-col="address">Address <span class="sort-arrow"></span></th>
+            <th data-col="agreed" style="text-align:center;">Agreed <span class="sort-arrow"></span></th>
+            <th data-col="date">Date <span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="sub-tbody"></tbody>
+      </table>
+      <div id="no-results" class="no-results" style="display:none;">No subscribers match your search.</div>
+    </div>
+
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var TOKEN_KEY = 'admin_token';
+    var allSubs   = [];
+    var sortCol   = 'date';
+    var sortDir   = 'desc';
+
+    /* ── Auth ── */
+    function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+    function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+    function clearToken() { localStorage.removeItem(TOKEN_KEY); }
+
+    async function tryLogin() {
+      var pw = document.getElementById('pw-input').value;
+      var err = document.getElementById('login-err');
+      err.style.display = 'none';
+      try {
+        var res = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw }),
+        });
+        if (!res.ok) { err.style.display = 'block'; return; }
+        var data = await res.json();
+        setToken(data.token);
+        showDashboard();
+      } catch (e) {
+        err.textContent = 'Connection error. Try again.';
+        err.style.display = 'block';
+      }
+    }
+
+    document.getElementById('pw-btn').addEventListener('click', tryLogin);
+    document.getElementById('pw-input').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') tryLogin();
+    });
+    document.getElementById('logout-btn').addEventListener('click', function () {
+      clearToken();
+      location.reload();
+    });
+
+    /* ── Load data ── */
+    async function loadSubs() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('sub-table').style.display = 'none';
+      document.getElementById('no-results').style.display = 'none';
+      try {
+        var res = await fetch('/api/magazine-subscribers', {
+          headers: { 'Authorization': 'Bearer ' + getToken() },
+        });
+        if (res.status === 401) { clearToken(); location.reload(); return; }
+        allSubs = await res.json();
+        document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        updateStats();
+        renderTable(document.getElementById('search-input').value);
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load. Check connection.';
+      }
+    }
+
+    /* ── Stats ── */
+    function updateStats() {
+      document.getElementById('stat-total').textContent = allSubs.length;
+      var now   = new Date();
+      var thisM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      var monthCount = allSubs.filter(function (s) {
+        return (s.createdAt || s.date || '').slice(0, 7) === thisM;
+      }).length;
+      document.getElementById('stat-month').textContent = monthCount;
+      if (allSubs.length) {
+        var sorted = allSubs.slice().sort(function (a, b) {
+          return (b.createdAt || b.date || '').localeCompare(a.createdAt || a.date || '');
+        });
+        var latest = sorted[0];
+        document.getElementById('stat-latest').textContent =
+          (latest.firstName || latest.first || '') + ' ' + (latest.lastName || latest.last || '');
+      }
+    }
+
+    /* ── Table render ── */
+    function getName(s) { return (s.firstName || s.first || '') + ' ' + (s.lastName || s.last || ''); }
+    function getDate(s) { return (s.createdAt || s.date || '').slice(0, 10); }
+    function getAgreed(s) { return !!(s.agreedToUpdates || s.agreed); }
+
+    function renderTable(q) {
+      var query = (q || '').toLowerCase().trim();
+      var filtered = allSubs.filter(function (s) {
+        if (!query) return true;
+        var name  = getName(s).toLowerCase();
+        var email = (s.email || '').toLowerCase();
+        var phone = (s.phone || '').toLowerCase();
+        return name.includes(query) || email.includes(query) || phone.includes(query);
+      });
+
+      filtered.sort(function (a, b) {
+        var va, vb;
+        if (sortCol === 'name')    { va = getName(a);  vb = getName(b); }
+        else if (sortCol === 'email')   { va = a.email || '';   vb = b.email || ''; }
+        else if (sortCol === 'phone')   { va = a.phone || '';   vb = b.phone || ''; }
+        else if (sortCol === 'address') { va = a.address || ''; vb = b.address || ''; }
+        else if (sortCol === 'date')    { va = getDate(a); vb = getDate(b); }
+        else if (sortCol === 'agreed')  { va = getAgreed(a) ? '1' : '0'; vb = getAgreed(b) ? '1' : '0'; }
+        else { va = ''; vb = ''; }
+        var cmp = va.localeCompare(vb);
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+
+      document.getElementById('loading').style.display = 'none';
+      var tbody = document.getElementById('sub-tbody');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+      if (!filtered.length) {
+        document.getElementById('sub-table').style.display = 'none';
+        document.getElementById('no-results').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('no-results').style.display = 'none';
+      document.getElementById('sub-table').style.display = 'table';
+
+      filtered.forEach(function (s) {
+        var tr = document.createElement('tr');
+
+        function td(text, cls) {
+          var cell = document.createElement('td');
+          cell.textContent = text || '';
+          if (cls) cell.className = cls;
+          return cell;
+        }
+
+        tr.appendChild(td(getName(s)));
+        tr.appendChild(td(s.email || '', 'email'));
+        tr.appendChild(td(s.phone || ''));
+        tr.appendChild(td(s.address || ''));
+
+        var agreedTd = document.createElement('td');
+        agreedTd.className = 'agreed';
+        var badge = document.createElement('span');
+        badge.textContent = getAgreed(s) ? 'Yes' : 'No';
+        agreedTd.appendChild(badge);
+        tr.appendChild(agreedTd);
+
+        tr.appendChild(td(getDate(s), 'date'));
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ── Sort ── */
+    document.querySelectorAll('th[data-col]').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var col = this.dataset.col;
+        if (sortCol === col) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortCol = col;
+          sortDir = 'asc';
+        }
+        document.querySelectorAll('th[data-col]').forEach(function (h) {
+          h.classList.remove('sort-asc', 'sort-desc');
+        });
+        this.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+        renderTable(document.getElementById('search-input').value);
+      });
+    });
+
+    /* ── Search ── */
+    document.getElementById('search-input').addEventListener('input', function () {
+      renderTable(this.value);
+    });
+
+    /* ── CSV download ── */
+    document.getElementById('csv-btn').addEventListener('click', function () {
+      var a = document.createElement('a');
+      a.href = '/api/magazine-subscribers/csv';
+      /* Pass auth via query is not ideal; use server-side session token in header isn't
+         possible for direct link download — so build CSV client-side from loaded data */
+      var header = ['First Name','Last Name','Email','Phone','Address','Agreed','Date'];
+      var rows = [header].concat(allSubs.map(function (s) {
+        return [
+          s.firstName || s.first || '',
+          s.lastName  || s.last  || '',
+          s.email     || '',
+          s.phone     || '',
+          s.address   || '',
+          getAgreed(s) ? 'Yes' : 'No',
+          getDate(s),
+        ];
+      }));
+      var csv = rows.map(function (r) {
+        return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+      }).join('\r\n');
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url  = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = 'best-medicines-subscribers-' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('refresh-btn').addEventListener('click', loadSubs);
+
+    /* ── Show dashboard if already logged in ── */
+    async function showDashboard() {
+      try {
+        var res = await fetch('/admin/check', {
+          headers: { 'Authorization': 'Bearer ' + getToken() },
+        });
+        if (!res.ok) { clearToken(); return; }
+      } catch (e) { return; }
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadSubs();
+    }
+
+    /* ── Init ── */
+    if (getToken()) {
+      showDashboard();
+    }
+  })();
+  </script>
+</body>
+</html>

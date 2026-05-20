@@ -1529,6 +1529,72 @@ app.post('/admin/shipping/buy-label', requireAdmin, async (req, res) => {
 });
 
 // =========================================
+// MAGAZINE SUBSCRIBERS
+// =========================================
+
+const MAG_SUBS_FILE     = path.join(__dirname, 'magazine-subscribers.json');
+const OBSIDIAN_MAG_SUBS = '/Users/deborahsmith/Documents/collab/HOTO/Best Medicines/subscribers';
+
+function readMagSubs() {
+  try { return JSON.parse(fs.readFileSync(MAG_SUBS_FILE, 'utf8')); }
+  catch { return []; }
+}
+function saveMagSubs(subs) {
+  fs.writeFileSync(MAG_SUBS_FILE, JSON.stringify(subs, null, 2));
+}
+
+app.post('/api/magazine-subscribe', async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, address } = req.body;
+    if (!firstName || !lastName || !email || !phone) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const now = new Date();
+    const sub = { firstName, lastName, email, phone, address: address || '', agreedToUpdates: true, createdAt: now.toISOString() };
+    const subs = readMagSubs();
+    subs.push(sub);
+    saveMagSubs(subs);
+
+    // Write Obsidian note
+    try {
+      if (!fs.existsSync(OBSIDIAN_MAG_SUBS)) fs.mkdirSync(OBSIDIAN_MAG_SUBS, { recursive: true });
+      const slug = `${now.toISOString().slice(0,10)}-${firstName.toLowerCase()}-${lastName.toLowerCase()}`.replace(/[^a-z0-9-]/g, '-');
+      const md = `---\ntitle: "${firstName} ${lastName} — Best Medicines Subscriber"\ndate: ${now.toISOString().slice(0,10)}\ntags: [magazine, subscriber, best-medicines]\n---\n\n# ${firstName} ${lastName}\n\n| Field | Value |\n|-------|-------|\n| **Email** | ${email} |\n| **Phone** | ${phone} |\n| **Address** | ${address || 'Not provided'} |\n| **Signed up** | ${now.toLocaleString('en-US', { timeZone: 'America/Chicago' })} |\n| **Agreed to updates** | Yes |\n`;
+      fs.writeFileSync(path.join(OBSIDIAN_MAG_SUBS, slug + '.md'), md);
+    } catch (obsErr) {
+      console.warn('Obsidian write skipped:', obsErr.message);
+    }
+
+    res.json({ success: true, count: subs.length });
+  } catch (err) {
+    console.error('Magazine subscribe error:', err.message);
+    res.status(500).json({ error: 'Could not save subscriber' });
+  }
+});
+
+app.get('/api/magazine-subscribers', requireAdmin, (req, res) => {
+  res.json(readMagSubs());
+});
+
+app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
+  const subs = readMagSubs();
+  const header = ['First Name','Last Name','Email','Phone','Address','Agreed to Updates','Date'];
+  const rows = [header, ...subs.map(s => [
+    s.firstName || s.first || '',
+    s.lastName  || s.last  || '',
+    s.email     || '',
+    s.phone     || '',
+    s.address   || '',
+    s.agreedToUpdates || s.agreed ? 'Yes' : 'No',
+    (s.createdAt || s.date || '').slice(0, 10),
+  ])];
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="best-medicines-subscribers.csv"');
+  res.send(csv);
+});
+
+// =========================================
 // START
 // =========================================
 

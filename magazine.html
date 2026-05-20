@@ -737,7 +737,7 @@
       ['mf-first-err','mf-last-err','mf-email-err','mf-phone-err'].forEach(function (id) { showErr(id, false); });
     }
 
-    /* ── Submit ─────────────────────────────────── */
+    /* ── Submit → save info → Stripe checkout ── */
     submitBtn.addEventListener('click', async function () {
       var sub = {
         first:   fFirst.value.trim(),
@@ -749,23 +749,39 @@
         date:    new Date().toISOString().slice(0, 10),
       };
 
-      submitBtn.textContent = 'Subscribing…';
+      submitBtn.textContent = 'Heading to checkout…';
       submitBtn.disabled = true;
       errorMsg.style.display = 'none';
 
+      /* Save subscriber data locally and to server */
+      saveSub(sub);
       try {
-        var res = await fetch('/api/magazine-subscribe', {
+        await fetch('/api/magazine-subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(sub),
+          body: JSON.stringify({ firstName: sub.first, lastName: sub.last, email: sub.email, phone: sub.phone, address: sub.address }),
         });
-        if (!res.ok) throw new Error('server');
-      } catch (e) {
-        /* Non-fatal: still save locally if server unreachable */
-      }
+      } catch (e) { /* non-fatal */ }
 
-      saveSub(sub);
-      showSuccess(sub);
+      /* Stash subscriber so we can show confirmation after Stripe redirect */
+      localStorage.setItem('pending_mag_sub', JSON.stringify(sub));
+
+      /* Create Stripe session and redirect */
+      try {
+        var res = await fetch('/create-magazine-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: sub.email }),
+        });
+        var data = await res.json();
+        if (data.url) { window.location.href = data.url; return; }
+        throw new Error(data.error || 'no url');
+      } catch (err) {
+        errorMsg.textContent = 'Could not start checkout. Please try again.';
+        errorMsg.style.display = 'block';
+        submitBtn.textContent = 'Subscribe Now';
+        submitBtn.disabled = false;
+      }
     });
 
     /* ── Success state (safe DOM construction) ── */
@@ -812,6 +828,21 @@
 
     /* ── Init ───────────────────────────────────── */
     initDemo();
+
+    /* ── Handle return from Stripe checkout ─────── */
+    (function () {
+      if (new URLSearchParams(window.location.search).get('subscribed') !== '1') return;
+      history.replaceState(null, '', 'magazine.html');
+      var pending = null;
+      try { pending = JSON.parse(localStorage.getItem('pending_mag_sub')); } catch (e) {}
+      localStorage.removeItem('pending_mag_sub');
+      if (pending) {
+        formState.style.display = 'none';
+        succState.style.display = '';
+        overlay.classList.add('is-open');
+        showSuccess(pending);
+      }
+    })();
   })();
   </script>
 </body>

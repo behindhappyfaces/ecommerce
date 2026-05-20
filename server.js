@@ -1576,6 +1576,52 @@ app.get('/api/magazine-subscribers', requireAdmin, (req, res) => {
   res.json(readMagSubs());
 });
 
+app.get('/api/staples-subscribers', requireAdmin, async (req, res) => {
+  try {
+    const result = [];
+    let startingAfter;
+    do {
+      const params = {
+        limit: 100,
+        status: 'active',
+        expand: ['data.customer', 'data.items.data.price.product'],
+      };
+      if (startingAfter) params.starting_after = startingAfter;
+      const page = await stripe.subscriptions.list(params);
+      for (const sub of page.data) {
+        const isMag = sub.items.data.some(item => {
+          const name = (item.price?.product?.name || '').toLowerCase();
+          return name.includes('magazine') || name.includes('best medicines');
+        });
+        if (isMag) continue;
+        const c = sub.customer;
+        const addr = c.address
+          ? [c.address.line1, c.address.city, c.address.state, c.address.postal_code]
+              .filter(Boolean).join(', ')
+          : '';
+        result.push({
+          customerId: c.id,
+          name:       c.name  || '',
+          email:      c.email || '',
+          phone:      c.phone || '',
+          address:    addr,
+          items:      sub.metadata?.items || sub.items.data.map(i => i.price?.product?.name || 'Monthly Box').join(', '),
+          delivery:   sub.metadata?.delivery_method || '',
+          amountCents: sub.items.data.reduce((s, i) => s + (i.price?.unit_amount || 0) * (i.quantity || 1), 0),
+          nextCharge: sub.current_period_end,
+          status:     sub.status,
+          createdAt:  new Date(sub.created * 1000).toISOString(),
+        });
+      }
+      startingAfter = page.has_more ? page.data[page.data.length - 1].id : null;
+    } while (startingAfter);
+    res.json(result);
+  } catch (err) {
+    console.error('Staples subscribers error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
   const subs = readMagSubs();
   const header = ['First Name','Last Name','Email','Phone','Address','Agreed to Updates','Date'];

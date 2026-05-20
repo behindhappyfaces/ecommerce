@@ -449,7 +449,8 @@
     <button class="tab-btn" data-tab="settings">Settings</button>
     <button class="tab-btn" data-tab="shipping">Shipping</button>
     <button class="tab-btn" data-tab="orders">Orders</button>
-    <button class="tab-btn" data-tab="subscribers">Subscribers</button>
+    <button class="tab-btn" data-tab="subscribers">Magazine Subscribers</button>
+    <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -826,7 +827,7 @@
   <!-- TAB: SUBSCRIBERS -->
   <div class="panel" id="panel-subscribers">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-      <h3 class="section-title" style="margin:0;">Best Medicines Subscribers</h3>
+      <h3 class="section-title" style="margin:0;">Best Medicines Magazine Subscribers</h3>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn-sm btn-ghost" id="subs-refresh-btn">&#8635; Refresh</button>
         <button class="btn" id="subs-csv-btn" style="font-size:0.78rem;padding:7px 16px;">&#8595; Download CSV</button>
@@ -868,6 +869,57 @@
           </tr>
         </thead>
         <tbody id="subs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: STAPLES BOX SUBSCRIBERS -->
+  <div class="panel" id="panel-staples">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <h3 class="section-title" style="margin:0;">Behind Happy Faces Staples Box Subscribers</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-sm btn-ghost" id="staples-refresh-btn">&#8635; Refresh</button>
+        <button class="btn" id="staples-csv-btn" style="font-size:0.78rem;padding:7px 16px;">&#8595; Download CSV</button>
+      </div>
+    </div>
+
+    <div id="staples-stats" style="display:flex;gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px;">
+      <div style="flex:1;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--accent-warm);" id="staples-stat-total">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">Active Subscribers</div>
+      </div>
+      <div style="flex:1;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--accent-warm);" id="staples-stat-mrr">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">Monthly Revenue</div>
+      </div>
+      <div style="flex:2;background:var(--dark);padding:14px 18px;">
+        <div style="font-size:0.9rem;font-weight:400;color:var(--accent-warm);" id="staples-stat-latest">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(232,227,217,0.4);margin-top:3px;">Most Recent</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <input type="search" id="staples-search" placeholder="Search name, email, or items…"
+        style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:9px 14px;color:var(--cream);font-size:0.85rem;width:100%;max-width:340px;outline:none;">
+    </div>
+
+    <div class="table-wrap">
+      <p id="staples-loading" style="color:rgba(232,227,217,0.35);font-size:0.85rem;padding:20px 0;">Loading…</p>
+      <p id="staples-empty" style="display:none;color:rgba(232,227,217,0.35);font-size:0.85rem;padding:20px 0;">No subscribers match your search.</p>
+      <table class="data" id="staples-table" style="display:none;">
+        <thead>
+          <tr>
+            <th style="cursor:pointer;" data-staples-col="name">Name</th>
+            <th style="cursor:pointer;" data-staples-col="email">Email</th>
+            <th style="cursor:pointer;" data-staples-col="phone">Phone</th>
+            <th style="cursor:pointer;" data-staples-col="items">Box Contents</th>
+            <th style="cursor:pointer;" data-staples-col="delivery">Delivery</th>
+            <th style="cursor:pointer;" data-staples-col="amount">Monthly</th>
+            <th style="cursor:pointer;" data-staples-col="next">Next Charge</th>
+            <th style="cursor:pointer;" data-staples-col="date">Since</th>
+          </tr>
+        </thead>
+        <tbody id="staples-tbody"></tbody>
       </table>
     </div>
   </div>
@@ -991,6 +1043,7 @@
       if (btn.dataset.tab === 'reports') loadReports();
       if (btn.dataset.tab === 'settings') loadSettings();
       if (btn.dataset.tab === 'subscribers') loadSubscribers();
+      if (btn.dataset.tab === 'staples') loadStaples();
     });
   });
 
@@ -2621,6 +2674,148 @@
     document.getElementById('orders-refresh-btn').addEventListener('click', loadOrders);
 
     document.querySelector('[data-tab="orders"]').addEventListener('click', loadOrders);
+  }());
+
+  // ---- Staples Box Subscribers tab ----
+  (function () {
+    var allStaples  = [];
+    var stSort = { col: 'date', dir: 'desc' };
+    var stLoaded = false;
+
+    function fmtMoney(cents) { return '$' + (cents / 100).toFixed(2); }
+    function fmtDate(ts)  { return ts ? new Date(ts * 1000).toISOString().slice(0, 10) : ''; }
+    function getDate(s)   { return s.createdAt ? s.createdAt.slice(0, 10) : ''; }
+    function getNext(s)   { return fmtDate(s.nextCharge); }
+
+    window.loadStaples = async function () {
+      if (stLoaded) { renderStaples(document.getElementById('staples-search').value); return; }
+      document.getElementById('staples-loading').style.display = 'block';
+      document.getElementById('staples-table').style.display = 'none';
+      document.getElementById('staples-empty').style.display = 'none';
+      try {
+        const res = await fetch('/api/staples-subscribers', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('admin_token') || '') },
+        });
+        if (!res.ok) { document.getElementById('staples-loading').textContent = 'Could not load subscribers.'; return; }
+        allStaples = await res.json();
+        stLoaded = true;
+        updateStaplesStats();
+        renderStaples('');
+      } catch (e) {
+        document.getElementById('staples-loading').textContent = 'Network error loading subscribers.';
+      }
+    };
+
+    function updateStaplesStats() {
+      document.getElementById('staples-stat-total').textContent = allStaples.length;
+      const mrr = allStaples.reduce((s, sub) => s + (sub.amountCents || 0), 0);
+      document.getElementById('staples-stat-mrr').textContent = fmtMoney(mrr);
+      if (allStaples.length) {
+        const latest = allStaples.slice().sort((a, b) =>
+          (b.createdAt || '').localeCompare(a.createdAt || ''))[0];
+        document.getElementById('staples-stat-latest').textContent =
+          (latest.name || latest.email || '') + ' — ' + getDate(latest);
+      }
+    }
+
+    function renderStaples(q) {
+      const query = (q || '').toLowerCase().trim();
+      let rows = allStaples.filter(s => {
+        if (!query) return true;
+        return (s.name || '').toLowerCase().includes(query) ||
+               (s.email || '').toLowerCase().includes(query) ||
+               (s.items || '').toLowerCase().includes(query);
+      });
+      rows.sort((a, b) => {
+        let va, vb;
+        if (stSort.col === 'name')     { va = a.name || '';     vb = b.name || ''; }
+        else if (stSort.col === 'email')    { va = a.email || '';    vb = b.email || ''; }
+        else if (stSort.col === 'phone')    { va = a.phone || '';    vb = b.phone || ''; }
+        else if (stSort.col === 'items')    { va = a.items || '';    vb = b.items || ''; }
+        else if (stSort.col === 'delivery') { va = a.delivery || ''; vb = b.delivery || ''; }
+        else if (stSort.col === 'amount')   { va = String(a.amountCents || 0); vb = String(b.amountCents || 0); }
+        else if (stSort.col === 'next')     { va = getNext(a); vb = getNext(b); }
+        else { va = getDate(a); vb = getDate(b); }
+        const cmp = va.localeCompare(vb);
+        return stSort.dir === 'asc' ? cmp : -cmp;
+      });
+
+      document.getElementById('staples-loading').style.display = 'none';
+      const tbody = document.getElementById('staples-tbody');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+      if (!rows.length) {
+        document.getElementById('staples-table').style.display = 'none';
+        document.getElementById('staples-empty').style.display = 'block';
+        return;
+      }
+      document.getElementById('staples-empty').style.display = 'none';
+      document.getElementById('staples-table').style.display = 'table';
+
+      rows.forEach(s => {
+        const tr = document.createElement('tr');
+        function td(text, extra) {
+          const c = document.createElement('td');
+          c.textContent = text || '';
+          if (extra) Object.assign(c.style, extra);
+          return c;
+        }
+        tr.appendChild(td(s.name || '—'));
+        tr.appendChild(td(s.email || '', { color: '#7eb89a' }));
+        tr.appendChild(td(s.phone || ''));
+        tr.appendChild(td(s.items || '', { fontSize: '0.78rem', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }));
+        const delivTd = document.createElement('td');
+        delivTd.textContent = s.delivery === 'pickup' ? 'Pick-up' : s.delivery === 'ship' ? 'Ship' : s.delivery || '';
+        tr.appendChild(delivTd);
+        tr.appendChild(td(s.amountCents ? fmtMoney(s.amountCents) : '', { whiteSpace: 'nowrap' }));
+        tr.appendChild(td(getNext(s), { fontSize: '0.78rem', opacity: '0.6', whiteSpace: 'nowrap' }));
+        tr.appendChild(td(getDate(s), { fontSize: '0.78rem', opacity: '0.55', whiteSpace: 'nowrap' }));
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.querySelectorAll('th[data-staples-col]').forEach(th => {
+      th.addEventListener('click', function () {
+        const col = this.dataset.staplesCol;
+        if (stSort.col === col) stSort.dir = stSort.dir === 'asc' ? 'desc' : 'asc';
+        else { stSort.col = col; stSort.dir = 'asc'; }
+        renderStaples(document.getElementById('staples-search').value);
+      });
+    });
+
+    document.getElementById('staples-search').addEventListener('input', function () {
+      renderStaples(this.value);
+    });
+
+    document.getElementById('staples-refresh-btn').addEventListener('click', function () {
+      stLoaded = false;
+      loadStaples();
+    });
+
+    document.getElementById('staples-csv-btn').addEventListener('click', function () {
+      const header = ['Name','Email','Phone','Address','Box Contents','Delivery','Monthly Amount','Next Charge','Subscriber Since'];
+      const dataRows = allStaples.map(s => [
+        s.name || '',
+        s.email || '',
+        s.phone || '',
+        s.address || '',
+        s.items || '',
+        s.delivery === 'pickup' ? 'Pick-up' : 'Ship',
+        s.amountCents ? (s.amountCents / 100).toFixed(2) : '',
+        getNext(s),
+        getDate(s),
+      ]);
+      const csv = [header, ...dataRows]
+        .map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))
+        .join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = 'staples-box-subscribers-' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   }());
 
   // ---- Subscribers tab ----

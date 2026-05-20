@@ -531,6 +531,7 @@ app.post('/create-magazine-subscription', async (req, res) => {
       mode: 'subscription',
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       success_url: `${origin}/magazine.html?subscribed=1`,
       cancel_url:  `${origin}/magazine.html`,
     });

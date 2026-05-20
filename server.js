@@ -1671,4 +1671,7 @@ app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Heart of Texas Organics running at http://localhost:${PORT}`);
+  const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+  const stripeMode = stripeKey.includes('_test_') ? 'TEST' : stripeKey.includes('_live_') ? 'LIVE' : 'UNKNOWN';
+  console.log(`[Stripe] mode=${stripeMode} key=${stripeKey.slice(0,12)}...`);
 });

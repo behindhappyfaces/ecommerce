@@ -1068,6 +1068,29 @@ function deductStockForOrder(lineItems, orderId) {
   }
 }
 
+// TEMP: create FREE test promo code using this server's Stripe key
+app.post('/admin/create-test-promo', requireAdmin, async (req, res) => {
+  try {
+    const keyPrefix = (process.env.STRIPE_SECRET_KEY || '').slice(0, 12);
+    try { await stripe.coupons.del('TEST_FREE'); } catch (_) {}
+    const coupon = await stripe.coupons.create({
+      id: 'TEST_FREE', name: 'Test — 100% Off',
+      percent_off: 100, duration: 'forever', max_redemptions: 50,
+    });
+    let promoCode;
+    try {
+      promoCode = await stripe.promotionCodes.create({ coupon: coupon.id, code: 'FREE', max_redemptions: 50 });
+    } catch (e) {
+      // Already exists — find and return it
+      const list = await stripe.promotionCodes.list({ limit: 20 });
+      promoCode = list.data.find(p => p.code === 'FREE') || { code: 'FREE (already existed)', active: true };
+    }
+    res.json({ keyPrefix, coupon: coupon.id, promoCode: promoCode.code, active: promoCode.active });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Admin auth routes ---
 app.post('/admin/login', (req, res) => {
   const { password } = req.body || {};

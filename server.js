@@ -1669,9 +1669,33 @@ app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
 // =========================================
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Heart of Texas Organics running at http://localhost:${PORT}`);
   const stripeKey = process.env.STRIPE_SECRET_KEY || '';
   const stripeMode = stripeKey.includes('_test_') ? 'TEST' : stripeKey.includes('_live_') ? 'LIVE' : 'UNKNOWN';
   console.log(`[Stripe] mode=${stripeMode} key=${stripeKey.slice(0,12)}...`);
+
+  // Ensure FREE test promo code exists on this account
+  try {
+    let couponId = 'HOTO_TEST_FREE';
+    try {
+      await stripe.coupons.retrieve(couponId);
+      console.log('[Stripe] TEST coupon already exists');
+    } catch {
+      await stripe.coupons.create({
+        id: couponId, name: 'Test — 100% Off',
+        percent_off: 100, duration: 'forever', max_redemptions: 100,
+      });
+      console.log('[Stripe] TEST coupon created');
+    }
+    try {
+      await stripe.promotionCodes.create({ coupon: couponId, code: 'FREE', max_redemptions: 100 });
+      console.log('[Stripe] FREE promo code created');
+    } catch (e) {
+      if (e.code === 'resource_already_exists') console.log('[Stripe] FREE promo code already exists');
+      else console.warn('[Stripe] promo code warning:', e.message);
+    }
+  } catch (err) {
+    console.warn('[Stripe] Could not create test promo:', err.message);
+  }
 });

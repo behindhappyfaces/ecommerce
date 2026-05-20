@@ -197,6 +197,164 @@
       border-color: rgba(245,240,232,0.4);
     }
 
+    /* ── MAGAZINE SUBSCRIBE MODAL ──────────────── */
+    .mag-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 900;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .mag-modal-overlay.is-open { opacity: 1; pointer-events: all; }
+
+    .mag-modal {
+      background: #111;
+      border: 1px solid rgba(245,240,232,0.1);
+      border-radius: 6px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(12px);
+      transition: transform 0.25s ease;
+    }
+    .mag-modal-overlay.is-open .mag-modal { transform: translateY(0); }
+
+    .mag-modal__header {
+      background: #2C3E2D;
+      padding: 28px 28px 20px;
+      border-radius: 6px 6px 0 0;
+    }
+    .mag-modal__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.5rem; font-weight: 400; font-style: italic;
+      color: #f5f0e8; margin: 0 0 4px;
+    }
+    .mag-modal__subtitle {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.75rem; color: rgba(245,240,232,0.5);
+      letter-spacing: 0.08em; margin: 0;
+    }
+
+    .mag-modal__body { padding: 24px 28px; }
+
+    .mag-field { margin-bottom: 16px; }
+    .mag-field label {
+      display: block;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(245,240,232,0.45); margin-bottom: 6px;
+    }
+    .mag-field input {
+      width: 100%; box-sizing: border-box;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(245,240,232,0.14);
+      border-radius: 3px;
+      color: #f5f0e8;
+      font-family: 'Raleway', sans-serif; font-size: 0.9rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .mag-field input::placeholder { color: rgba(245,240,232,0.22); }
+    .mag-field input:focus { border-color: rgba(196,113,74,0.6); }
+    .mag-field input.invalid { border-color: rgba(220,80,60,0.7); }
+    .mag-field .mag-field__err {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.7rem; color: #e07060;
+      margin-top: 4px; display: none;
+    }
+    .mag-field .mag-field__err.show { display: block; }
+
+    .mag-field--optional label::after {
+      content: ' (optional)';
+      font-weight: 400; letter-spacing: 0.08em;
+      color: rgba(245,240,232,0.25);
+    }
+
+    .mag-checkbox-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin: 18px 0 20px;
+    }
+    .mag-checkbox-row input[type="checkbox"] {
+      width: 18px; height: 18px; flex-shrink: 0;
+      accent-color: #2C3E2D; margin-top: 2px; cursor: pointer;
+    }
+    .mag-checkbox-row label {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.8rem; color: rgba(245,240,232,0.55);
+      line-height: 1.5; cursor: pointer;
+    }
+
+    .mag-modal__actions {
+      display: flex; gap: 10px; flex-direction: column;
+    }
+    .mag-btn-submit {
+      width: 100%; padding: 14px;
+      background: #2C3E2D; border: 1px solid rgba(245,240,232,0.2);
+      border-radius: 3px; color: #f5f0e8;
+      font-family: 'Raleway', sans-serif; font-size: 0.75rem;
+      font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .mag-btn-submit:hover:not(:disabled) { background: #3a5040; }
+    .mag-btn-submit:disabled { opacity: 0.38; cursor: not-allowed; }
+    .mag-btn-cancel {
+      width: 100%; padding: 11px;
+      background: none; border: 1px solid rgba(245,240,232,0.12);
+      border-radius: 3px; color: rgba(245,240,232,0.4);
+      font-family: 'Raleway', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.12em; cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .mag-btn-cancel:hover { border-color: rgba(245,240,232,0.3); color: rgba(245,240,232,0.7); }
+
+    /* success state */
+    .mag-modal__success {
+      padding: 36px 28px; text-align: center; display: none;
+    }
+    .mag-modal__success.show { display: block; }
+    .mag-modal__success-icon {
+      font-size: 2.4rem; margin-bottom: 12px;
+    }
+    .mag-modal__success-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.3rem; color: #a8d5a2; margin: 0 0 8px;
+    }
+    .mag-modal__success-msg {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.82rem; color: rgba(245,240,232,0.5);
+      line-height: 1.7; margin: 0 0 18px;
+    }
+    .mag-modal__success-detail {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(245,240,232,0.08);
+      border-radius: 4px; padding: 14px 16px;
+      text-align: left; margin-bottom: 18px;
+    }
+    .mag-modal__success-detail p {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.75rem; color: rgba(245,240,232,0.5);
+      margin: 0 0 4px; line-height: 1.6;
+    }
+    .mag-modal__success-detail p:last-child { margin: 0; }
+    .mag-modal__success-detail strong { color: rgba(245,240,232,0.8); }
+    .mag-btn-csv {
+      padding: 11px 20px;
+      background: none; border: 1px solid rgba(245,240,232,0.2);
+      border-radius: 3px; color: rgba(245,240,232,0.55);
+      font-family: 'Raleway', sans-serif; font-size: 0.68rem;
+      letter-spacing: 0.12em; cursor: pointer; transition: all 0.2s;
+    }
+    .mag-btn-csv:hover { border-color: rgba(245,240,232,0.4); color: rgba(245,240,232,0.85); }
+    .mag-btn-done {
+      margin-top: 8px; width: 100%; padding: 13px;
+      background: #2C3E2D; border: 1px solid rgba(245,240,232,0.2);
+      border-radius: 3px; color: #f5f0e8;
+      font-family: 'Raleway', sans-serif; font-size: 0.72rem;
+      letter-spacing: 0.12em; cursor: pointer;
+    }
+
     /* ── SUBSCRIBE BOX (below cover, dark bg) ─── */
     .mag-sub-box {
       width: 100%;
@@ -349,16 +507,10 @@
     <div class="mag-sub-box" id="mag-sub-form-wrap">
       <h2 class="mag-sub-box__title">Get Best Medicines in your inbox.</h2>
       <p class="mag-sub-box__sub">
-        Subscribe for <strong style="color:#f5f0e8;">$6.99&thinsp;/&thinsp;month</strong>
         Stories, recipes, and farm wisdom delivered monthly.
       </p>
-      <form class="mag-sub-box__form" id="mag-form" novalidate>
-        <input class="mag-sub-box__input" type="email" id="mag-email"
-               placeholder="your@email.com" autocomplete="email" required />
-        <button class="mag-sub-box__btn" type="submit">Subscribe &rarr;</button>
-      </form>
-      <p class="mag-sub-box__msg" id="mag-msg" aria-live="polite"></p>
-      <p class="mag-sub-box__fine">Billed monthly &bull; Cancel anytime &bull; Secure checkout via Stripe</p>
+      <button class="mag-sub-box__btn" id="mag-open-modal-btn" type="button">Subscribe &rarr;</button>
+      <p class="mag-sub-box__fine">Cancel anytime &bull; Your info stays private</p>
     </div>
 
     <div class="mag-actions">
@@ -401,49 +553,266 @@
     </div>
   </footer>
 
+  <!-- SUBSCRIBE MODAL -->
+  <div class="mag-modal-overlay" id="mag-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mag-modal-title">
+    <div class="mag-modal" id="mag-modal">
+
+      <!-- FORM STATE -->
+      <div id="mag-modal-form-state">
+        <div class="mag-modal__header">
+          <h2 class="mag-modal__title" id="mag-modal-title">Subscribe to Best Medicines</h2>
+          <p class="mag-modal__subtitle">Stories &middot; Recipes &middot; Farm Wisdom, delivered monthly</p>
+        </div>
+        <div class="mag-modal__body">
+
+          <div class="mag-field">
+            <label for="mf-first">First Name</label>
+            <input type="text" id="mf-first" placeholder="Jane" autocomplete="given-name" />
+            <p class="mag-field__err" id="mf-first-err">First name is required.</p>
+          </div>
+
+          <div class="mag-field">
+            <label for="mf-last">Last Name</label>
+            <input type="text" id="mf-last" placeholder="Smith" autocomplete="family-name" />
+            <p class="mag-field__err" id="mf-last-err">Last name is required.</p>
+          </div>
+
+          <div class="mag-field">
+            <label for="mf-email">Email Address</label>
+            <input type="email" id="mf-email" placeholder="jane@example.com" autocomplete="email" />
+            <p class="mag-field__err" id="mf-email-err">Please enter a valid email address.</p>
+          </div>
+
+          <div class="mag-field">
+            <label for="mf-phone">Phone Number</label>
+            <input type="tel" id="mf-phone" placeholder="(512) 555-0100" autocomplete="tel" maxlength="14" />
+            <p class="mag-field__err" id="mf-phone-err">Please enter a valid 10-digit phone number.</p>
+          </div>
+
+          <div class="mag-field mag-field--optional">
+            <label for="mf-address">Mailing Address</label>
+            <input type="text" id="mf-address" placeholder="123 Main St, City, TX 78701" autocomplete="street-address" />
+          </div>
+
+          <div class="mag-checkbox-row">
+            <input type="checkbox" id="mf-agree" />
+            <label for="mf-agree">I agree to receive updates, stories, and news from Heart of Texas Organics.</label>
+          </div>
+
+          <div class="mag-modal__actions">
+            <button class="mag-btn-submit" id="mf-submit" type="button" disabled>Subscribe Now</button>
+            <button class="mag-btn-cancel" id="mf-cancel" type="button">Cancel</button>
+          </div>
+          <p id="mf-error-msg" aria-live="polite" style="font-family:'Raleway',sans-serif;font-size:0.75rem;color:#e07060;margin:10px 0 0;text-align:center;display:none;"></p>
+        </div>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div class="mag-modal__success" id="mag-modal-success">
+        <div class="mag-modal__success-icon">&#10003;</div>
+        <h3 class="mag-modal__success-title">You&rsquo;re subscribed!</h3>
+        <p class="mag-modal__success-msg">Thanks! Check your email to confirm your subscription.</p>
+        <div class="mag-modal__success-detail" id="mf-confirm-detail"></div>
+        <button class="mag-btn-csv" id="mf-csv-btn" type="button">&#8595; Download Subscriber List (CSV)</button>
+        <button class="mag-btn-done" id="mf-done-btn" type="button">Done</button>
+      </div>
+
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>
   <script>
-    /* Show success banner if returning from Stripe */
-    if (new URLSearchParams(window.location.search).get('subscribed') === '1') {
-      document.getElementById('mag-success-msg').style.display  = 'block';
-      document.getElementById('mag-sub-form-wrap').style.display = 'none';
-      history.replaceState(null, '', 'magazine.html');
+  (function () {
+    'use strict';
+
+    var LS_KEY = 'mag_subscribers';
+
+    /* ── Demo seed data ─────────────────────────── */
+    var DEMO = [
+      { first: 'Sarah', last: 'Mitchell', email: 'sarah.mitchell@example.com', phone: '(512) 448-2031', address: '204 Juniper Trail, Bastrop, TX 78602', agreed: true, date: '2026-04-01' },
+      { first: 'Tom',   last: 'Reyes',    email: 'tom.reyes@example.com',    phone: '(737) 201-5588', address: '',                                            agreed: true, date: '2026-04-14' },
+      { first: 'Linda', last: 'Cho',      email: 'linda.cho@example.com',    phone: '(512) 984-7703', address: '910 Elm Creek Rd, Georgetown, TX 78628',       agreed: true, date: '2026-05-02' },
+    ];
+    function initDemo() {
+      if (!localStorage.getItem(LS_KEY)) {
+        localStorage.setItem(LS_KEY, JSON.stringify(DEMO));
+      }
+    }
+    function getSubs() {
+      try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
+    }
+    function saveSub(sub) {
+      var list = getSubs();
+      list.push(sub);
+      localStorage.setItem(LS_KEY, JSON.stringify(list));
     }
 
-    /* Subscribe → Stripe checkout */
-    document.getElementById('mag-form').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var email = document.getElementById('mag-email').value.trim();
-      var msg   = document.getElementById('mag-msg');
-      var btn   = this.querySelector('button');
+    /* ── Element refs ───────────────────────────── */
+    var overlay   = document.getElementById('mag-modal-overlay');
+    var formState = document.getElementById('mag-modal-form-state');
+    var succState = document.getElementById('mag-modal-success');
+    var fFirst    = document.getElementById('mf-first');
+    var fLast     = document.getElementById('mf-last');
+    var fEmail    = document.getElementById('mf-email');
+    var fPhone    = document.getElementById('mf-phone');
+    var fAddress  = document.getElementById('mf-address');
+    var fAgree    = document.getElementById('mf-agree');
+    var submitBtn = document.getElementById('mf-submit');
+    var cancelBtn = document.getElementById('mf-cancel');
+    var doneBtn   = document.getElementById('mf-done-btn');
+    var csvBtn    = document.getElementById('mf-csv-btn');
+    var errorMsg  = document.getElementById('mf-error-msg');
+    var confirmDetail = document.getElementById('mf-confirm-detail');
+    var openBtn   = document.getElementById('mag-open-modal-btn');
 
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msg.textContent = 'Please enter a valid email address.';
-        return;
-      }
+    /* ── Modal open / close ─────────────────────── */
+    function openModal() {
+      resetForm();
+      formState.style.display = '';
+      succState.style.display = 'none';
+      overlay.classList.add('is-open');
+      fFirst.focus();
+    }
+    function closeModal() {
+      overlay.classList.remove('is-open');
+    }
 
-      btn.textContent = 'Loading…';
-      btn.disabled = true;
+    openBtn.addEventListener('click', openModal);
+    cancelBtn.addEventListener('click', closeModal);
+    doneBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+
+    /* ── Phone auto-format (XXX) XXX-XXXX ──────── */
+    fPhone.addEventListener('input', function () {
+      var digits = this.value.replace(/\D/g, '').slice(0, 10);
+      var out = '';
+      if (digits.length > 0) out = '(' + digits.slice(0, 3);
+      if (digits.length >= 4) out += ') ' + digits.slice(3, 6);
+      if (digits.length >= 7) out += '-' + digits.slice(6, 10);
+      this.value = out;
+      syncSubmit();
+    });
+
+    /* ── Validation helpers ─────────────────────── */
+    function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+    function validPhone(v) { return v.replace(/\D/g, '').length === 10; }
+
+    function showErr(id, show) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = show ? 'block' : 'none';
+    }
+
+    function syncSubmit() {
+      var ok = fFirst.value.trim() &&
+               fLast.value.trim() &&
+               validEmail(fEmail.value) &&
+               validPhone(fPhone.value) &&
+               fAgree.checked;
+      submitBtn.disabled = !ok;
+    }
+
+    [fFirst, fLast, fEmail, fPhone].forEach(function (el) {
+      el.addEventListener('input', syncSubmit);
+    });
+    fAgree.addEventListener('change', syncSubmit);
+
+    /* Show field-level errors only after blur */
+    fFirst.addEventListener('blur', function () { showErr('mf-first-err', !this.value.trim()); });
+    fLast.addEventListener('blur',  function () { showErr('mf-last-err',  !this.value.trim()); });
+    fEmail.addEventListener('blur', function () { showErr('mf-email-err', !validEmail(this.value)); });
+    fPhone.addEventListener('blur', function () { showErr('mf-phone-err', !validPhone(this.value)); });
+
+    /* ── Reset ──────────────────────────────────── */
+    function resetForm() {
+      [fFirst, fLast, fEmail, fPhone, fAddress].forEach(function (el) { el.value = ''; });
+      fAgree.checked = false;
+      submitBtn.disabled = true;
+      errorMsg.style.display = 'none';
+      ['mf-first-err','mf-last-err','mf-email-err','mf-phone-err'].forEach(function (id) { showErr(id, false); });
+    }
+
+    /* ── Submit ─────────────────────────────────── */
+    submitBtn.addEventListener('click', async function () {
+      var sub = {
+        first:   fFirst.value.trim(),
+        last:    fLast.value.trim(),
+        email:   fEmail.value.trim(),
+        phone:   fPhone.value.trim(),
+        address: fAddress.value.trim(),
+        agreed:  fAgree.checked,
+        date:    new Date().toISOString().slice(0, 10),
+      };
+
+      submitBtn.textContent = 'Subscribing…';
+      submitBtn.disabled = true;
+      errorMsg.style.display = 'none';
 
       try {
-        var res  = await fetch('/create-magazine-subscription', {
+        var res = await fetch('/api/magazine-subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email }),
+          body: JSON.stringify(sub),
         });
-        var data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          throw new Error(data.error || 'No checkout URL');
-        }
-      } catch (_) {
-        msg.textContent = 'Something went wrong. Please try again.';
-        btn.textContent = 'Subscribe →';
-        btn.disabled = false;
+        if (!res.ok) throw new Error('server');
+      } catch (e) {
+        /* Non-fatal: still save locally if server unreachable */
       }
+
+      saveSub(sub);
+      showSuccess(sub);
     });
+
+    /* ── Success state (safe DOM construction) ── */
+    function makeP(text, style) {
+      var p = document.createElement('p');
+      p.textContent = text;
+      if (style) p.style.cssText = style;
+      return p;
+    }
+    function showSuccess(sub) {
+      while (confirmDetail.firstChild) confirmDetail.removeChild(confirmDetail.firstChild);
+      var strong = document.createElement('strong');
+      strong.textContent = sub.first + ' ' + sub.last;
+      var nameP = document.createElement('p');
+      nameP.appendChild(strong);
+      confirmDetail.appendChild(nameP);
+      confirmDetail.appendChild(makeP(sub.email));
+      confirmDetail.appendChild(makeP(sub.phone));
+      if (sub.address) confirmDetail.appendChild(makeP(sub.address));
+      confirmDetail.appendChild(makeP('Signed up ' + sub.date, 'font-size:0.72rem;opacity:0.55;margin-top:6px;'));
+      formState.style.display = 'none';
+      succState.style.display = '';
+      submitBtn.textContent = 'Subscribe Now';
+    }
+
+    /* ── CSV download ───────────────────────────── */
+    csvBtn.addEventListener('click', function () {
+      var subs = getSubs();
+      var rows = [['First Name','Last Name','Email','Phone','Address','Agreed','Date']];
+      subs.forEach(function (s) {
+        rows.push([s.first, s.last, s.email, s.phone, s.address || '', s.agreed ? 'Yes' : 'No', s.date]);
+      });
+      var csv = rows.map(function (r) {
+        return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+      }).join('\r\n');
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href = url;
+      a.download = 'best-medicines-subscribers.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    /* ── Init ───────────────────────────────────── */
+    initDemo();
+  })();
   </script>
 </body>
 </html>

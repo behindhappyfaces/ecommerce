@@ -248,6 +248,25 @@
             </div>
           </div>
         </article>
+
+        <article class="offering-card offering-card--featured-turkey" data-fade id="thanksgiving-turkey-section">
+          <div class="offering-card__image-wrap" style="position:relative;">
+            <div class="offering-card__placeholder" style="display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--color-green);min-height:180px;">🦃</div>
+            <div style="position:absolute;top:10px;left:10px;background:var(--color-rust);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Limited — Reserve Now</div>
+          </div>
+          <div class="offering-card__body">
+            <p class="offering-card__category">Thanksgiving Special</p>
+            <h3 class="offering-card__name">Thanksgiving Turkey</h3>
+            <p class="offering-card__desc">
+              Pasture-raised, moved daily, never caged. Heritage breed raised the right way —
+              no antibiotics, no shortcuts, ever. Reserve yours before they're gone.
+            </p>
+            <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">$0 &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">Reserve &amp; we'll contact you</span></p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="thanksgiving-turkey" style="background:var(--color-rust);border-color:var(--color-rust);">Reserve My Turkey</button>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -728,8 +747,8 @@
       }
 
       function scrollToTurkey() {
-        var el = document.getElementById('whole-chicken-section') ||
-                 document.querySelector('[data-add-to-cart="whole-chicken"]');
+        var el = document.getElementById('thanksgiving-turkey-section') ||
+                 document.querySelector('[data-add-to-cart="thanksgiving-turkey"]');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 

@@ -1088,6 +1088,21 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (data.url) {
       localStorage.setItem('hoto-checkout-delivery', deliveryMethod || 'pickup');
       localStorage.setItem('hoto-checkout-location', pickupLocation || '');
+      // Save abandoned cart so SMS reminders can fire if they don't complete
+      if (deliveryMethod === 'pickup' && pickupContact?.phone) {
+        try {
+          await fetch('/api/save-pending-cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone:    pickupContact.phone,
+              email:    pickupContact.email || '',
+              items,
+              location: pickupLocation || '',
+            }),
+          });
+        } catch {}
+      }
       window.location.href = data.url;
     } else {
       throw new Error(data.error || 'Unknown error');
@@ -1405,6 +1420,10 @@ function openPickupContactModal(location, onConfirm) {
   sub.className = 'pickup-contact__sub';
   sub.textContent = 'So we can coordinate your ' + location + ' pick-up.';
 
+  // Restore previously entered info (same browser)
+  var _saved = {};
+  try { _saved = JSON.parse(localStorage.getItem('hoto-pickup-contact') || '{}'); } catch {}
+
   // Phone
   const phoneInput  = mkInput('tel',   '(555) 000-0000',           'pc-phone');
   // Email
@@ -1424,6 +1443,15 @@ function openPickupContactModal(location, onConfirm) {
   cityRow.appendChild(cityInput);
   cityRow.appendChild(stateInput);
   cityRow.appendChild(zipInput);
+
+  // Pre-fill from saved info
+  if (_saved.phone)   phoneInput.value   = _saved.phone;
+  if (_saved.email)   emailInput.value   = _saved.email;
+  if (_saved.street1) street1Input.value = _saved.street1;
+  if (_saved.street2) street2Input.value = _saved.street2;
+  if (_saved.city)    cityInput.value    = _saved.city;
+  if (_saved.state)   stateInput.value   = _saved.state;
+  if (_saved.zip)     zipInput.value     = _saved.zip;
 
   // Auto-fill city/state from ZIP
   zipInput.addEventListener('input', async () => {
@@ -1492,6 +1520,21 @@ function openPickupContactModal(location, onConfirm) {
     });
   });
 
+  // Pre-select saved comm prefs
+  if (_saved.commPref) {
+    const savedPrefs = _saved.commPref.split(',').filter(Boolean);
+    commSelected = savedPrefs.slice(0, 2);
+    commOpts.querySelectorAll('.pickup-contact__comm-btn').forEach(b => {
+      const i = commSelected.indexOf(b.dataset.value);
+      const bg = b.querySelector('.pickup-contact__comm-badge');
+      if (i !== -1) {
+        b.classList.add('selected');
+        bg.textContent = (i + 1) + (i === 0 ? 'st' : 'nd');
+        bg.style.display = 'inline-flex';
+      }
+    });
+  }
+
   const errMsg = document.createElement('p');
   errMsg.className = 'pickup-contact__error';
 
@@ -1539,7 +1582,9 @@ function openPickupContactModal(location, onConfirm) {
           continueBtn.textContent = 'Verify Address & Continue';
           showAddressChoice(entered, v, chosen => {
             overlay.remove();
-            onConfirm({ phone, email, street1: chosen.street1, street2: chosen.street2 || street2, city: chosen.city, state: chosen.state, zip: chosen.zip, commPref: commSelected.join(',') });
+            var _contact = { phone, email, street1: chosen.street1, street2: chosen.street2 || street2, city: chosen.city, state: chosen.state, zip: chosen.zip, commPref: commSelected.join(',') };
+            localStorage.setItem('hoto-pickup-contact', JSON.stringify(_contact));
+            onConfirm(_contact);
           });
           return;
         }
@@ -1549,7 +1594,9 @@ function openPickupContactModal(location, onConfirm) {
     continueBtn.disabled = false;
     continueBtn.textContent = 'Verify Address & Continue';
     overlay.remove();
-    onConfirm({ phone, email, street1, street2, city, state, zip, commPref: commSelected.join(',') });
+    var _contact = { phone, email, street1, street2, city, state, zip, commPref: commSelected.join(',') };
+    localStorage.setItem('hoto-pickup-contact', JSON.stringify(_contact));
+    onConfirm(_contact);
   }
 
   continueBtn.addEventListener('click', verifyAndContinue);
@@ -1772,6 +1819,31 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation) {
 }
 
 // --- Init ---
+
+// Restore cart from SMS abandon-link (?rc=TOKEN)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var rc = params.get('rc');
+  if (!rc) return;
+  fetch('/api/restore-cart?token=' + encodeURIComponent(rc))
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) {
+      if (!d || !d.items || !d.items.length) return;
+      var cart = { items: [] };
+      d.items.forEach(function(item) {
+        var pid = Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
+        if (pid) cart.items.push({ id: pid, qty: item.quantity || item.qty || 1, price: item.price ?? PRODUCTS[pid].price });
+      });
+      if (cart.items.length) {
+        localStorage.setItem('hoto-cart', JSON.stringify(cart));
+        // Clean URL without reload
+        var url = new URL(window.location.href);
+        url.searchParams.delete('rc');
+        window.history.replaceState({}, '', url.toString());
+      }
+    })
+    .catch(function() {});
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
   injectCartDrawer();

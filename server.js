@@ -11,6 +11,17 @@ const db       = require('./db');
 let cron;
 try { cron = require('node-cron'); } catch(e) { console.log('[Cron] node-cron not available'); }
 
+// Twilio — loads only when credentials are configured
+let twilioClient = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  try {
+    twilioClient = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    console.log('[Twilio] SMS client ready');
+  } catch(e) { console.warn('[Twilio] Failed to load:', e.message); }
+} else {
+  console.log('[Twilio] Credentials not set — SMS reminders disabled');
+}
+
 const EasyPostClient = require('@easypost/api');
 const easypost = process.env.EASYPOST_API_KEY ? new EasyPostClient(process.env.EASYPOST_API_KEY) : null;
 
@@ -213,7 +224,8 @@ function lineItemsHtml(items) {
 // ORDER TRACKING  (orders.json)
 // =========================================
 
-const ORDERS_FILE = path.join(__dirname, 'orders.json');
+const ORDERS_FILE        = path.join(__dirname, 'orders.json');
+const PENDING_CARTS_FILE = path.join(__dirname, 'pending-carts.json');
 
 function readOrders() {
   try { return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8')); }
@@ -228,6 +240,50 @@ function saveOrder(paymentIntentId, data) {
     updatedAt: new Date().toISOString(),
   };
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+}
+
+function readPendingCarts() {
+  try { return JSON.parse(fs.readFileSync(PENDING_CARTS_FILE, 'utf8')); }
+  catch { return {}; }
+}
+
+function writePendingCarts(carts) {
+  fs.writeFileSync(PENDING_CARTS_FILE, JSON.stringify(carts, null, 2));
+}
+
+// Normalize any phone format → E.164 (+1XXXXXXXXXX)
+function normalizePhone(raw) {
+  if (!raw) return null;
+  const digits = String(raw).replace(/\D/g, '');
+  if (digits.length === 10) return '+1' + digits;
+  if (digits.length === 11 && digits[0] === '1') return '+' + digits;
+  return null;
+}
+
+const SITE_URL_BASE = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+
+const SMS_MESSAGES = [
+  // reminder 0 — 1 hour
+  (cart) => `Hey! 🌾 Your Heart of Texas cart is waiting — ${cart.itemSummary} and more, made fresh with zero shortcuts. You're SO close to something real! Grab it here: ${SITE_URL_BASE}/offerings.html?rc=${cart.token} · Reply STOP to opt out`,
+  // reminder 1 — 4 hours
+  (cart) => `Psst... 🍞✨ Those ${cart.itemSummary} in your Heart of Texas cart won't bake themselves! Real food, raised right here in Texas — finish your order before the batch is gone: ${SITE_URL_BASE}/offerings.html?rc=${cart.token} · Reply STOP to opt out`,
+  // reminder 2 — 24 hours
+  (cart) => `Last nudge, we promise! 🌻 Your Heart of Texas goodies are still waiting. Handmade, farm-fresh, no shortcuts EVER — but they do go fast. Don't miss out: ${SITE_URL_BASE}/offerings.html?rc=${cart.token} · Reply STOP to opt out`,
+];
+
+async function sendAbandonedCartSMS(cart, reminderIndex) {
+  if (!twilioClient || !process.env.TWILIO_FROM_NUMBER) return false;
+  const to = cart.phone;
+  if (!to) return false;
+  const body = SMS_MESSAGES[reminderIndex](cart);
+  try {
+    await twilioClient.messages.create({ to, from: process.env.TWILIO_FROM_NUMBER, body });
+    console.log(`[SMS] Reminder ${reminderIndex + 1} sent to ${to.slice(0,6)}***`);
+    return true;
+  } catch(e) {
+    console.warn('[SMS] Send failed:', e.message);
+    return false;
+  }
 }
 
 function fulfillmentBadge(status) {
@@ -374,6 +430,19 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           deductStockForOrder(items, session.id);
 
+          // Mark any abandoned cart as completed
+          try {
+            const pc = readPendingCarts();
+            const phone = normalizePhone(session.metadata?.pickup_phone || '');
+            const email = session.customer_details?.email || '';
+            Object.keys(pc).forEach(k => {
+              if (!pc[k].completed && (pc[k].phone === phone || pc[k].email === email)) {
+                pc[k].completed = true;
+              }
+            });
+            writePendingCarts(pc);
+          } catch {}
+
           // Customer confirmation with PDF receipt
           if (customerEmail) {
             const orderDataForPdf = {
@@ -456,6 +525,19 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             giftMsg: giftMsg || '',
           });
           deductStockForOrder(items, session.id);
+
+          // Mark any abandoned cart as completed
+          try {
+            const pc = readPendingCarts();
+            const phone = normalizePhone(session.metadata?.pickup_phone || '');
+            const email = session.customer_details?.email || '';
+            Object.keys(pc).forEach(k => {
+              if (!pc[k].completed && (pc[k].phone === phone || pc[k].email === email)) {
+                pc[k].completed = true;
+              }
+            });
+            writePendingCarts(pc);
+          } catch {}
 
           // Customer confirmation (note: not shipped until ACH clears)
           if (customerEmail) {
@@ -1537,6 +1619,107 @@ app.post('/admin/sync-from-stripe', requireAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// =========================================
+// ABANDONED CART — SAVE & RESTORE
+// =========================================
+
+app.post('/api/save-pending-cart', express.json(), (req, res) => {
+  try {
+    const { phone, email, items, location } = req.body || {};
+    const normalized = normalizePhone(phone);
+    if (!normalized && !email) return res.status(400).json({ error: 'phone or email required' });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const itemSummary = Array.isArray(items)
+      ? items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : '')
+      : 'your items';
+
+    const carts = readPendingCarts();
+
+    // Dedupe: remove older pending cart from same phone/email
+    Object.keys(carts).forEach(k => {
+      if (!carts[k].completed && (carts[k].phone === normalized || carts[k].email === email)) {
+        delete carts[k];
+      }
+    });
+
+    carts[token] = {
+      token,
+      phone:       normalized || null,
+      email:       email || null,
+      items:       items || [],
+      itemSummary,
+      location:    location || '',
+      createdAt:   new Date().toISOString(),
+      remindersSent: 0,
+      lastReminderAt: null,
+      completed:   false,
+    };
+    writePendingCarts(carts);
+    res.json({ ok: true, token });
+  } catch(e) {
+    console.error('[PendingCart] save error:', e.message);
+    res.status(500).json({ error: 'Could not save cart' });
+  }
+});
+
+app.get('/api/restore-cart', (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ error: 'token required' });
+    const carts = readPendingCarts();
+    const cart = carts[token];
+    if (!cart) return res.status(404).json({ error: 'Cart not found or expired' });
+    res.json({ ok: true, items: cart.items, location: cart.location });
+  } catch(e) {
+    res.status(500).json({ error: 'Could not restore cart' });
+  }
+});
+
+// Cron: every 30 minutes — send SMS reminders for abandoned carts
+if (cron) {
+  cron.schedule('*/30 * * * *', async () => {
+    if (!twilioClient) return;
+    const now = Date.now();
+    const carts = readPendingCarts();
+    let changed = false;
+
+    // Reminder schedule (ms after createdAt)
+    const schedule = [
+      60 * 60 * 1000,       // 1 hour  → reminder 0
+      4  * 60 * 60 * 1000,  // 4 hours → reminder 1
+      24 * 60 * 60 * 1000,  // 24 hours → reminder 2
+    ];
+
+    for (const token of Object.keys(carts)) {
+      const cart = carts[token];
+      if (cart.completed) continue;
+      if (cart.remindersSent >= SMS_MESSAGES.length) continue;
+      if (!cart.phone) continue;
+
+      const age       = now - new Date(cart.createdAt).getTime();
+      const threshold = schedule[cart.remindersSent];
+      if (age < threshold) continue;
+
+      const sent = await sendAbandonedCartSMS(cart, cart.remindersSent);
+      if (sent) {
+        cart.remindersSent++;
+        cart.lastReminderAt = new Date().toISOString();
+        changed = true;
+      }
+    }
+
+    // Clean up carts older than 48h
+    Object.keys(carts).forEach(k => {
+      const age = now - new Date(carts[k].createdAt).getTime();
+      if (age > 48 * 60 * 60 * 1000) { delete carts[k]; changed = true; }
+    });
+
+    if (changed) writePendingCarts(carts);
+  });
+  console.log('[Cron] Abandoned cart SMS scheduler running');
+}
 
 // --- Webhook health check ---
 app.get('/admin/webhook-status', requireAdmin, (req, res) => {

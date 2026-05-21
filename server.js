@@ -1354,6 +1354,101 @@ function deductStockForOrder(lineItems, orderId) {
   }
 }
 
+// =========================================
+// EMAIL SIGNUP & WELCOME DISCOUNT
+// =========================================
+
+const SUBSCRIBERS_FILE   = path.join(__dirname, 'subscribers.json');
+const WELCOME_PROMO_CODE = 'WELCOME10';
+
+function readSubscribers() {
+  try { return JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8')); }
+  catch { return []; }
+}
+
+// Ensure the WELCOME10 Stripe promo code exists on startup
+async function ensureWelcomeCoupon() {
+  try {
+    // Check if promo code already exists
+    const existing = await stripe.promotionCodes.list({ limit: 100 });
+    if (existing.data.find(p => p.code === WELCOME_PROMO_CODE && p.active)) {
+      console.log('[Stripe] WELCOME10 promo code already active');
+      return;
+    }
+    // Create or find the underlying 10% coupon
+    let couponId = 'HOTO_WELCOME_10PCT';
+    try { await stripe.coupons.retrieve(couponId); }
+    catch {
+      await stripe.coupons.create({
+        id:                 couponId,
+        name:               '10% Off First Order',
+        percent_off:        10,
+        duration:           'once',
+        max_redemptions:    10000,
+      });
+    }
+    // Create the promo code
+    await stripe.promotionCodes.create({
+      coupon:           couponId,
+      code:             WELCOME_PROMO_CODE,
+      max_redemptions:  10000,
+    });
+    console.log('[Stripe] WELCOME10 promo code created');
+  } catch(e) {
+    console.warn('[Stripe] Could not ensure WELCOME10 coupon:', e.message);
+  }
+}
+
+app.post('/subscribe', express.json(), async (req, res) => {
+  const { email, source } = req.body || {};
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email required' });
+
+  // Save subscriber
+  try {
+    const subs = readSubscribers();
+    if (!subs.find(s => s.email === email)) {
+      subs.push({ email, source: source || 'popup', subscribedAt: new Date().toISOString() });
+      fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subs, null, 2));
+    }
+  } catch(e) { console.warn('[Subscribe] Could not save subscriber:', e.message); }
+
+  // Send welcome email with discount code
+  const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+  try {
+    await sendEmailTo(email,
+      'Your 10% Off Code from Heart of Texas Organics 🌾',
+      `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+        <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
+        <h2 style="color:#2C3E2D;font-size:1.6rem;margin:0 0 12px;">Welcome to the farm family.</h2>
+        <p style="color:#3d3d3d;line-height:1.8;margin:0 0 24px;">
+          We're so glad you're here. Real food, raised with intention — that's the only way we know how to do it.
+          As a thank you for joining us, here's 10% off your first order:
+        </p>
+        <div style="background:#2C3E2D;padding:28px;text-align:center;border-radius:4px;margin-bottom:28px;">
+          <p style="color:#B89B6E;font-family:sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 10px;">Your Discount Code</p>
+          <p style="color:#F5F0E8;font-family:sans-serif;font-size:2rem;font-weight:700;letter-spacing:0.12em;margin:0;">${WELCOME_PROMO_CODE}</p>
+        </div>
+        <p style="color:#3d3d3d;line-height:1.8;margin:0 0 8px;">
+          Enter this code at checkout to take 10% off your first order.
+          No shortcuts, no fillers — just real food made by real people right here in the heart of Texas.
+        </p>
+        <a href="${siteUrl}/offerings.html"
+           style="display:inline-block;margin-top:20px;background:#8B4A2F;color:#F5F0E8;padding:14px 32px;text-decoration:none;font-family:sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:3px;">
+          Shop Now →
+        </a>
+        <p style="color:#888;font-size:0.78rem;line-height:1.7;margin-top:32px;">
+          You're receiving this because you signed up at heartoftexasorganics.com.
+          Reply anytime — we actually read these.
+        </p>
+      </div>`
+    );
+  } catch(e) {
+    console.warn('[Subscribe] Email send failed:', e.message);
+  }
+
+  res.json({ ok: true });
+});
+
 // TEMP: create FREE test promo code using this server's Stripe key
 app.post('/admin/create-test-promo', requireAdmin, async (req, res) => {
   try {
@@ -2223,6 +2318,9 @@ app.listen(PORT, async () => {
   } catch (err) {
     console.warn('[Startup] Order sync failed (will retry on manual sync):', err.message);
   }
+
+  // Ensure WELCOME10 promo code exists for email signups
+  await ensureWelcomeCoupon();
 
   // Ensure FREE test promo code exists on this account
   try {

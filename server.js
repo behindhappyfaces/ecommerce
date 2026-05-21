@@ -347,6 +347,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           saveOrder(piId, {
             sessionId: session.id,
             status: 'READY_TO_SHIP',
+            source: 'website',
             total: session.amount_total,
             items: items.map(li => ({ name: li.description, qty: li.quantity })),
             paymentMethod: 'card',
@@ -429,6 +430,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           saveOrder(piId, {
             sessionId: session.id,
             status: 'AWAITING_PAYMENT',
+            source: 'website',
             total: session.amount_total,
             items: items.map(li => ({ name: li.description, qty: li.quantity })),
             paymentMethod: 'us_bank_account',
@@ -1427,27 +1429,30 @@ async function performStripeSync(limit = 50) {
     if (!piId) { skipped++; continue; }
     if (orders[piId]) { skipped++; continue; }
 
-    const items          = session.line_items?.data ?? [];
-    const deliveryMethod = session.metadata?.delivery_method || 'ship';
-    const pickupLoc      = session.metadata?.pickup_location || '';
-    const pickupPhone    = session.metadata?.pickup_phone    || '';
-    const pickupEmail    = session.metadata?.pickup_email    || '';
-    const pickupStreet1  = session.metadata?.pickup_street1  || '';
-    const pickupStreet2  = session.metadata?.pickup_street2  || '';
-    const pickupCity     = session.metadata?.pickup_city     || '';
-    const pickupState    = session.metadata?.pickup_state    || '';
-    const pickupZip      = session.metadata?.pickup_zip      || '';
-    const pickupAddress  = [pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupZip].filter(Boolean).join(', ');
-    const pickupCommPref = session.metadata?.pickup_comm     || '';
-    const customerName   = session.customer_details?.name  || 'Valued Customer';
-    const customerEmail  = session.customer_details?.email || '';
-    const shippingAddr   = session.shipping_details?.address;
-    const isPaid         = session.payment_status === 'paid';
-    const isGift         = session.metadata?.is_gift === 'true';
+    const items           = session.line_items?.data ?? [];
+    const hasWebsiteMeta  = !!session.metadata?.delivery_method;
+    const isInPerson      = !hasWebsiteMeta;
+    const deliveryMethod  = session.metadata?.delivery_method || 'ship';
+    const pickupLoc       = session.metadata?.pickup_location || '';
+    const pickupPhone     = session.metadata?.pickup_phone    || '';
+    const pickupEmail     = session.metadata?.pickup_email    || '';
+    const pickupStreet1   = session.metadata?.pickup_street1  || '';
+    const pickupStreet2   = session.metadata?.pickup_street2  || '';
+    const pickupCity      = session.metadata?.pickup_city     || '';
+    const pickupState     = session.metadata?.pickup_state    || '';
+    const pickupZip       = session.metadata?.pickup_zip      || '';
+    const pickupAddress   = [pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupZip].filter(Boolean).join(', ');
+    const pickupCommPref  = session.metadata?.pickup_comm     || '';
+    const customerName    = session.customer_details?.name  || 'Valued Customer';
+    const customerEmail   = session.customer_details?.email || '';
+    const shippingAddr    = session.shipping_details?.address;
+    const isPaid          = session.payment_status === 'paid';
+    const isGift          = session.metadata?.is_gift === 'true';
 
     saveOrder(piId, {
       sessionId:       session.id,
-      status:          isPaid ? 'READY_TO_SHIP' : 'AWAITING_PAYMENT',
+      status:          isInPerson ? 'IN_PERSON_SALE' : (isPaid ? 'READY_TO_SHIP' : 'AWAITING_PAYMENT'),
+      source:          isInPerson ? 'in-person' : 'website',
       total:           session.amount_total,
       items:           items.map(li => ({ name: li.description, qty: li.quantity })),
       paymentMethod:   'stripe-sync',
@@ -1473,7 +1478,8 @@ async function performStripeSync(limit = 50) {
       giftMsg:      session.metadata?.gift_msg      || '',
     });
 
-    if (isPaid) {
+    // Only deduct stock for website orders — in-person sales are already fulfilled
+    if (!isInPerson && isPaid) {
       const productItems = items.filter(li =>
         li.description && !li.description.startsWith('Shipping')
       );

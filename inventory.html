@@ -413,7 +413,9 @@
   .ocbadge-AWAITING_PAYMENT { background: rgba(230,126,34,0.18);  color: var(--orange); }
   .ocbadge-PAYMENT_FAILED   { background: rgba(231,76,60,0.18);   color: var(--red); }
   .ocbadge-COMPLETED        { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
+  .ocbadge-IN_PERSON_SALE   { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
   .ocbadge-method           { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
+  .order-card--inperson     { opacity: 0.5; border-color: rgba(245,240,232,0.12); }
   .order-customer { font-size: 0.9rem; font-weight: 600; color: var(--cream); margin-bottom: 2px; }
   .order-date     { font-size: 0.75rem; color: var(--cream-dim); }
   .order-divider  { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
@@ -972,6 +974,12 @@
         <button class="orders-filter-btn active" data-order-method="all">All</button>
         <button class="orders-filter-btn" data-order-method="ship">Ship</button>
         <button class="orders-filter-btn" data-order-method="pickup">Pick-up</button>
+      </div>
+      <div class="orders-filter-group">
+        <span class="orders-filter-label">Source:</span>
+        <button class="orders-filter-btn" data-order-source="all">All</button>
+        <button class="orders-filter-btn active" data-order-source="online">Online Orders</button>
+        <button class="orders-filter-btn" data-order-source="inperson">In-Person Sales</button>
       </div>
       <button class="btn-sm btn-ghost" id="orders-refresh-btn">&#8635; Refresh</button>
       <button class="btn-sm" id="stripe-sync-btn" style="background:var(--terra);color:var(--cream);border:none;">&#8645; Sync from Stripe</button>
@@ -2487,12 +2495,14 @@
     let allOrders   = [];
     let filterStatus = 'all';
     let filterMethod = 'all';
+    let filterSource = 'online';
 
     const STATUS_LABELS = {
       READY_TO_SHIP:    'Ready to Fulfill',
       AWAITING_PAYMENT: 'Awaiting Payment',
       PAYMENT_FAILED:   'Payment Failed',
       COMPLETED:        'Completed',
+      IN_PERSON_SALE:   'In-Person Sale',
     };
 
     async function loadOrders() {
@@ -2520,6 +2530,8 @@
         if (filterStatus === 'done'     && !['COMPLETED','PAYMENT_FAILED'].includes(o.status)) return false;
         if (filterMethod === 'ship'     && o.deliveryMethod === 'pickup')       return false;
         if (filterMethod === 'pickup'   && o.deliveryMethod !== 'pickup')       return false;
+        if (filterSource === 'online'   && o.source === 'in-person')            return false;
+        if (filterSource === 'inperson' && o.source !== 'in-person')            return false;
         return true;
       });
 
@@ -2549,9 +2561,10 @@
     function buildOrderCard(order) {
       const card = document.createElement('div');
       card.className = 'order-card' +
-        (order.status === 'COMPLETED'      ? ' order-card--done'   : '') +
-        (order.status === 'PAYMENT_FAILED' ? ' order-card--failed' : '') +
-        (selectedPiIds.has(order.piId)     ? ' selected'           : '');
+        (order.status === 'COMPLETED'      ? ' order-card--done'    : '') +
+        (order.status === 'PAYMENT_FAILED' ? ' order-card--failed'  : '') +
+        (order.source  === 'in-person'     ? ' order-card--inperson': '') +
+        (selectedPiIds.has(order.piId)     ? ' selected'            : '');
       card.dataset.piId = order.piId;
 
       // Select checkbox
@@ -2882,6 +2895,14 @@
         document.querySelectorAll('[data-order-method]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         filterMethod = btn.dataset.orderMethod;
+        renderOrders();
+      });
+    });
+    document.querySelectorAll('[data-order-source]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-order-source]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterSource = btn.dataset.orderSource;
         renderOrders();
       });
     });

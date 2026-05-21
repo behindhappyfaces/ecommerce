@@ -1407,8 +1407,6 @@ function openPickupContactModal(location, onConfirm) {
 
   // Phone
   const phoneInput  = mkInput('tel',   '(555) 000-0000',           'pc-phone');
-  // Email
-  const emailInput  = mkInput('email', 'you@example.com',           'pc-email');
   // Address fields
   const street1Input = mkInput('text', 'Street Address',            'pc-street1');
   const street2Input = mkInput('text', 'Apt, Suite, Unit (optional)','pc-street2');
@@ -1501,7 +1499,6 @@ function openPickupContactModal(location, onConfirm) {
 
   async function verifyAndContinue() {
     const phone   = phoneInput.value.trim();
-    const email   = emailInput.value.trim();
     const street1 = street1Input.value.trim();
     const street2 = street2Input.value.trim();
     const city    = cityInput.value.trim();
@@ -1509,7 +1506,6 @@ function openPickupContactModal(location, onConfirm) {
     const zip     = zipInput.value.trim().replace(/\D/g,'');
 
     if (!phone)          { errMsg.textContent = 'Please enter your phone number.'; return; }
-    if (!email)          { errMsg.textContent = 'Please enter your email address.'; return; }
     if (!street1)        { errMsg.textContent = 'Please enter your street address.'; return; }
     if (!city)           { errMsg.textContent = 'Please enter your city.'; return; }
     if (!state)          { errMsg.textContent = 'Please enter your state (e.g. TX).'; return; }
@@ -1539,7 +1535,7 @@ function openPickupContactModal(location, onConfirm) {
           continueBtn.textContent = 'Verify Address & Continue';
           showAddressChoice(entered, v, chosen => {
             overlay.remove();
-            onConfirm({ phone, email, street1: chosen.street1, street2: chosen.street2 || street2, city: chosen.city, state: chosen.state, zip: chosen.zip, commPref: commSelected.join(',') });
+            onConfirm({ phone, street1: chosen.street1, street2: chosen.street2 || street2, city: chosen.city, state: chosen.state, zip: chosen.zip, commPref: commSelected.join(',') });
           });
           return;
         }
@@ -1549,7 +1545,7 @@ function openPickupContactModal(location, onConfirm) {
     continueBtn.disabled = false;
     continueBtn.textContent = 'Verify Address & Continue';
     overlay.remove();
-    onConfirm({ phone, email, street1, street2, city, state, zip, commPref: commSelected.join(',') });
+    onConfirm({ phone, street1, street2, city, state, zip, commPref: commSelected.join(',') });
   }
 
   continueBtn.addEventListener('click', verifyAndContinue);
@@ -1558,8 +1554,6 @@ function openPickupContactModal(location, onConfirm) {
   box.appendChild(sub);
   box.appendChild(mkLabel('Phone Number'));
   box.appendChild(phoneInput);
-  box.appendChild(mkLabel('Email Address'));
-  box.appendChild(emailInput);
   box.appendChild(mkLabel('Home Address'));
   box.appendChild(street1Input);
   box.appendChild(street2Input);

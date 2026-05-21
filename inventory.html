@@ -419,6 +419,25 @@
   .order-divider  { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
   .order-items    { font-size: 0.85rem; color: var(--cream-dim); margin-bottom: 8px; line-height: 1.5; }
   .order-delivery { font-size: 0.88rem; color: var(--cream); }
+  .order-contact-block {
+    margin-top: 8px; padding: 10px 14px; background: rgba(245,240,232,0.05);
+    border-radius: 6px; border: 1px solid rgba(245,240,232,0.1);
+    font-size: 0.82rem; line-height: 1.8; color: var(--cream-dim);
+  }
+  .order-contact-block span { color: var(--cream); font-weight: 500; }
+  /* Checkbox + select */
+  .order-card { position: relative; }
+  .order-select-cb { position: absolute; top: 18px; right: 16px; width: 17px; height: 17px; cursor: pointer; accent-color: var(--terra); }
+  .order-card.selected { border-color: var(--terra); background: rgba(139,74,47,0.08); }
+  /* Bulk bar */
+  #orders-bulk-bar {
+    display: none; align-items: center; gap: 12px; padding: 10px 14px;
+    background: rgba(139,74,47,0.15); border: 1px solid rgba(139,74,47,0.35);
+    border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem; color: var(--cream);
+  }
+  #orders-bulk-bar.visible { display: flex; }
+  /* Export bar */
+  .orders-export-btns { display: flex; gap: 8px; margin-left: auto; }
   .order-gift-banner {
     background: rgba(139,74,47,0.15); border-left: 3px solid var(--terra);
     border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 12px;
@@ -956,6 +975,15 @@
       </div>
       <button class="btn-sm btn-ghost" id="orders-refresh-btn">&#8635; Refresh</button>
       <button class="btn-sm" id="stripe-sync-btn" style="background:var(--terra);color:var(--cream);border:none;">&#8645; Sync from Stripe</button>
+      <div class="orders-export-btns">
+        <button class="btn-sm btn-ghost" id="orders-export-csv">&#11123; Export CSV</button>
+        <button class="btn-sm btn-ghost" id="orders-export-pdf">&#128438; Print / PDF</button>
+      </div>
+    </div>
+    <div id="orders-bulk-bar">
+      <span id="bulk-count-label">0 selected</span>
+      <button class="btn-sm" id="bulk-delete-btn" style="background:var(--red);color:#fff;border:none;">&#128465; Delete Selected</button>
+      <button class="btn-sm btn-ghost" id="bulk-cancel-btn">Cancel</button>
     </div>
     <div id="webhook-status-bar" style="display:none;"></div>
     <div id="sync-result-msg"></div>
@@ -2505,11 +2533,38 @@
       filtered.forEach(o => container.appendChild(buildOrderCard(o)));
     }
 
+    let selectedPiIds = new Set();
+
+    function updateBulkBar() {
+      const bar = document.getElementById('orders-bulk-bar');
+      const label = document.getElementById('bulk-count-label');
+      if (selectedPiIds.size > 0) {
+        bar.classList.add('visible');
+        label.textContent = selectedPiIds.size + ' selected';
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
     function buildOrderCard(order) {
       const card = document.createElement('div');
       card.className = 'order-card' +
         (order.status === 'COMPLETED'      ? ' order-card--done'   : '') +
-        (order.status === 'PAYMENT_FAILED' ? ' order-card--failed' : '');
+        (order.status === 'PAYMENT_FAILED' ? ' order-card--failed' : '') +
+        (selectedPiIds.has(order.piId)     ? ' selected'           : '');
+      card.dataset.piId = order.piId;
+
+      // Select checkbox
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'order-select-cb';
+      cb.checked = selectedPiIds.has(order.piId);
+      cb.addEventListener('change', () => {
+        if (cb.checked) { selectedPiIds.add(order.piId); card.classList.add('selected'); }
+        else            { selectedPiIds.delete(order.piId); card.classList.remove('selected'); }
+        updateBulkBar();
+      });
+      card.appendChild(cb);
 
       // Header: status badge + method badge + total
       const hdr = document.createElement('div');
@@ -2532,11 +2587,10 @@
       hdr.appendChild(totalEl);
       card.appendChild(hdr);
 
-      // Customer + date
+      // Customer name + date
       const cust = document.createElement('div');
       cust.className = 'order-customer';
-      cust.textContent = (order.customerName || 'Unknown Customer') +
-        (order.customerEmail ? ': ' + order.customerEmail : '');
+      cust.textContent = order.customerName || 'Unknown Customer';
       card.appendChild(cust);
 
       if (order.created) {
@@ -2553,9 +2607,9 @@
       div1.className = 'order-divider';
       card.appendChild(div1);
 
-      // Items (exclude shipping line items)
+      // Items
       if (order.items && order.items.length) {
-        const productItems = order.items.filter(i => !i.name.startsWith('Shipping -') && !i.name.startsWith('Shipping -'));
+        const productItems = order.items.filter(i => i.name && !i.name.startsWith('Shipping'));
         if (productItems.length) {
           const itemsEl = document.createElement('div');
           itemsEl.className = 'order-items';
@@ -2564,7 +2618,7 @@
         }
       }
 
-      // Delivery address / pickup location
+      // Delivery / pickup location
       const delivery = document.createElement('div');
       delivery.className = 'order-delivery';
       if (order.deliveryMethod === 'pickup') {
@@ -2577,27 +2631,32 @@
       }
       card.appendChild(delivery);
 
-      // Pickup contact info
-      if (order.deliveryMethod === 'pickup' && (order.pickupPhone || order.pickupAddress || order.pickupCommPref)) {
-        const contactBlock = document.createElement('div');
-        contactBlock.style.cssText = 'margin-top:8px;padding:10px 14px;background:rgba(245,240,232,0.06);border-radius:6px;border:1px solid rgba(245,240,232,0.1);font-size:0.82rem;line-height:1.7;';
-        if (order.pickupPhone) {
-          const ph = document.createElement('div');
-          ph.textContent = '📞 ' + order.pickupPhone;
-          contactBlock.appendChild(ph);
-        }
-        if (order.pickupAddress) {
-          const addr = document.createElement('div');
-          addr.textContent = '🏠 ' + order.pickupAddress;
-          contactBlock.appendChild(addr);
-        }
-        if (order.pickupCommPref) {
-          const comm = document.createElement('div');
-          const label = order.pickupCommPref.charAt(0).toUpperCase() + order.pickupCommPref.slice(1);
-          comm.textContent = '💬 Prefers: ' + label;
-          contactBlock.appendChild(comm);
-        }
-        card.appendChild(contactBlock);
+      // Contact info block (always shown when data exists)
+      const phone   = order.pickupPhone || order.shippingAddress?.phone || '';
+      const address = order.pickupAddress || (order.shippingAddress
+        ? [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state, order.shippingAddress.zip].filter(Boolean).join(', ')
+        : '');
+      const email   = order.customerEmail || '';
+      const commPref = order.pickupCommPref || '';
+
+      if (phone || address || email || commPref) {
+        const cb2 = document.createElement('div');
+        cb2.className = 'order-contact-block';
+        const rows = [
+          email   ? ['✉', 'Email', email]   : null,
+          phone   ? ['📞', 'Phone', phone]   : null,
+          address && order.deliveryMethod === 'pickup' ? ['🏠', 'Address', address] : null,
+          commPref ? ['💬', 'Prefers', commPref.charAt(0).toUpperCase() + commPref.slice(1)] : null,
+        ].filter(Boolean);
+        rows.forEach(([icon, label, val]) => {
+          const row = document.createElement('div');
+          const sp = document.createElement('span');
+          sp.textContent = icon + ' ' + label + ': ';
+          row.appendChild(sp);
+          row.appendChild(document.createTextNode(val));
+          cb2.appendChild(row);
+        });
+        card.appendChild(cb2);
       }
 
       // Gift banner
@@ -2625,74 +2684,181 @@
       }
 
       // Actions
-      if (order.status !== 'COMPLETED' && order.status !== 'PAYMENT_FAILED') {
-        const actions = document.createElement('div');
-        actions.className = 'order-actions';
+      const actions = document.createElement('div');
+      actions.className = 'order-actions';
 
-        if (order.deliveryMethod !== 'pickup' && order.status === 'READY_TO_SHIP') {
-          const shipBtn = document.createElement('button');
-          shipBtn.className = 'btn-sm btn-ghost';
-          shipBtn.textContent = 'Set Up Shipment →';
-          shipBtn.addEventListener('click', () => {
-            // Switch to the Shipping tab
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            const shippingTabBtn = document.querySelector('[data-tab="shipping"]');
-            shippingTabBtn.classList.add('active');
-            document.getElementById('panel-shipping').classList.add('active');
-            shippingTabBtn.dispatchEvent(new Event('click', { bubbles: true }));
+      if (order.deliveryMethod !== 'pickup' && order.status === 'READY_TO_SHIP') {
+        const shipBtn = document.createElement('button');
+        shipBtn.className = 'btn-sm btn-ghost';
+        shipBtn.textContent = 'Set Up Shipment →';
+        shipBtn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+          const shippingTabBtn = document.querySelector('[data-tab="shipping"]');
+          shippingTabBtn.classList.add('active');
+          document.getElementById('panel-shipping').classList.add('active');
+          shippingTabBtn.dispatchEvent(new Event('click', { bubbles: true }));
+          const a = order.shippingAddress;
+          if (a) {
+            document.getElementById('sf-name').value   = a.name   || order.customerName || '';
+            document.getElementById('sf-street').value = a.street || '';
+            document.getElementById('sf-city').value   = a.city   || '';
+            document.getElementById('sf-state').value  = (a.state || '').toUpperCase();
+            document.getElementById('sf-zip').value    = a.zip    || '';
+            document.getElementById('sf-phone').value  = a.phone  || '';
+          }
+          showToast('Address pre-filled. Add products, calculate, then Get Rates');
+        });
+        actions.appendChild(shipBtn);
+      }
 
-            // Pre-fill customer address
-            const a = order.shippingAddress;
-            if (a) {
-              document.getElementById('sf-name').value   = a.name   || order.customerName || '';
-              document.getElementById('sf-street').value = a.street || '';
-              document.getElementById('sf-city').value   = a.city   || '';
-              document.getElementById('sf-state').value  = (a.state || '').toUpperCase();
-              document.getElementById('sf-zip').value    = a.zip    || '';
-              document.getElementById('sf-phone').value  = a.phone  || '';
-            }
-            showToast('Address pre-filled. Add products, calculate, then Get Rates');
-          });
-          actions.appendChild(shipBtn);
-        }
-
-        if (order.status === 'READY_TO_SHIP') {
-          const completeBtn = document.createElement('button');
-          completeBtn.className = 'btn-sm btn-terra';
-          completeBtn.textContent = '✓ Mark Complete';
-          completeBtn.addEventListener('click', async () => {
-            completeBtn.disabled = true;
-            completeBtn.textContent = '…';
-            try {
-              const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId) + '/complete', {
-                method: 'PUT',
-                headers: authHeaders(),
-              });
-              if (!r.ok) {
-                showToast('Could not mark order complete', true);
-                completeBtn.disabled = false;
-                completeBtn.textContent = '✓ Mark Complete';
-                return;
-              }
-              order.status = 'COMPLETED';
-              const parent = card.parentNode;
-              if (parent) parent.replaceChild(buildOrderCard(order), card);
-              showToast('Order marked complete');
-            } catch {
-              showToast('Connection error', true);
+      if (order.status === 'READY_TO_SHIP') {
+        const completeBtn = document.createElement('button');
+        completeBtn.className = 'btn-sm btn-terra';
+        completeBtn.textContent = '✓ Mark Complete';
+        completeBtn.addEventListener('click', async () => {
+          completeBtn.disabled = true;
+          completeBtn.textContent = '…';
+          try {
+            const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId) + '/complete', {
+              method: 'PUT', headers: authHeaders(),
+            });
+            if (!r.ok) {
+              showToast('Could not mark order complete', true);
               completeBtn.disabled = false;
               completeBtn.textContent = '✓ Mark Complete';
+              return;
             }
-          });
-          actions.appendChild(completeBtn);
-        }
-
-        if (actions.children.length) card.appendChild(actions);
+            order.status = 'COMPLETED';
+            const parent = card.parentNode;
+            if (parent) parent.replaceChild(buildOrderCard(order), card);
+            showToast('Order marked complete');
+          } catch {
+            showToast('Connection error', true);
+            completeBtn.disabled = false;
+            completeBtn.textContent = '✓ Mark Complete';
+          }
+        });
+        actions.appendChild(completeBtn);
       }
+
+      // Delete button (always present)
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-sm btn-ghost';
+      delBtn.style.cssText = 'color:var(--red);border-color:rgba(231,76,60,0.3);margin-left:auto;';
+      delBtn.textContent = '🗑 Delete';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this order? This cannot be undone.')) return;
+        delBtn.disabled = true;
+        try {
+          const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId), {
+            method: 'DELETE', headers: authHeaders(),
+          });
+          if (!r.ok) { showToast('Could not delete order', true); delBtn.disabled = false; return; }
+          allOrders = allOrders.filter(o => o.piId !== order.piId);
+          selectedPiIds.delete(order.piId);
+          updateBulkBar();
+          card.remove();
+          showToast('Order deleted');
+        } catch { showToast('Connection error', true); delBtn.disabled = false; }
+      });
+      actions.appendChild(delBtn);
+      card.appendChild(actions);
 
       return card;
     }
+
+    // Bulk delete
+    document.getElementById('bulk-delete-btn').addEventListener('click', async () => {
+      const ids = [...selectedPiIds];
+      if (!ids.length) return;
+      if (!confirm('Delete ' + ids.length + ' order(s)? This cannot be undone.')) return;
+      try {
+        const r = await fetch('/admin/orders', {
+          method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ piIds: ids }),
+        });
+        if (!r.ok) { showToast('Bulk delete failed', true); return; }
+        allOrders = allOrders.filter(o => !selectedPiIds.has(o.piId));
+        selectedPiIds.clear();
+        updateBulkBar();
+        renderOrders();
+        showToast('Deleted ' + ids.length + ' order(s)');
+      } catch { showToast('Connection error', true); }
+    });
+
+    document.getElementById('bulk-cancel-btn').addEventListener('click', () => {
+      selectedPiIds.clear();
+      updateBulkBar();
+      renderOrders();
+    });
+
+    // Export CSV (opens as download, opens in Excel)
+    document.getElementById('orders-export-csv').addEventListener('click', () => {
+      const header = ['Date','Customer','Email','Phone','Items','Total','Method','Location','Address','Comm Pref','Status'];
+      const csvRows = [header];
+      allOrders.forEach(o => {
+        const items = (o.items || []).filter(i => i.name && !i.name.startsWith('Shipping')).map(i => i.qty + 'x ' + i.name).join('; ');
+        const addr  = o.pickupAddress || (o.shippingAddress ? [o.shippingAddress.street, o.shippingAddress.city, o.shippingAddress.state, o.shippingAddress.zip].filter(Boolean).join(', ') : '');
+        csvRows.push([
+          o.created ? new Date(o.created).toLocaleDateString() : '',
+          o.customerName || '', o.customerEmail || '',
+          o.pickupPhone || o.shippingAddress?.phone || '',
+          items, '$' + ((o.total || 0) / 100).toFixed(2),
+          o.deliveryMethod || '', o.pickupLocation || '',
+          addr, o.pickupCommPref || '', o.status || '',
+        ]);
+      });
+      const esc = v => { const s = String(v ?? ''); return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+      const csv = csvRows.map(r => r.map(esc).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'orders-' + new Date().toISOString().slice(0,10) + '.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    // Export / Print PDF
+    document.getElementById('orders-export-pdf').addEventListener('click', () => {
+      const safeText = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const trs = allOrders.map(o => {
+        const items = (o.items || []).filter(i => i.name && !i.name.startsWith('Shipping')).map(i => safeText(i.qty + '× ' + i.name)).join(', ');
+        const addr  = safeText(o.pickupAddress || (o.shippingAddress ? [o.shippingAddress.street, o.shippingAddress.city, o.shippingAddress.state, o.shippingAddress.zip].filter(Boolean).join(', ') : ''));
+        return '<tr><td>' + [
+          safeText(o.created ? new Date(o.created).toLocaleDateString() : ''),
+          safeText(o.customerName || '') + (o.customerEmail ? '<br><small>' + safeText(o.customerEmail) + '</small>' : ''),
+          safeText(o.pickupPhone || o.shippingAddress?.phone || ''),
+          items,
+          safeText('$' + ((o.total || 0) / 100).toFixed(2)),
+          safeText(o.deliveryMethod === 'pickup' ? (o.pickupLocation || 'Pick-up') : 'Ship'),
+          addr,
+          safeText(o.pickupCommPref || ''),
+          safeText(STATUS_LABELS[o.status] || o.status),
+        ].join('</td><td>') + '</td></tr>';
+      }).join('');
+      const html = [
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+        '<title>Orders — Heart of Texas Organics</title>',
+        '<style>body{font-family:sans-serif;font-size:12px;padding:20px}',
+        'table{border-collapse:collapse;width:100%}',
+        'th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}',
+        'th{background:#f0f0f0}small{color:#666}',
+        '@media print{button{display:none}}</style>',
+        '</head><body>',
+        '<h2>Orders — Heart of Texas Organics</h2>',
+        '<p>Exported ' + safeText(new Date().toLocaleString()) + '</p>',
+        '<table><thead><tr>',
+        '<th>Date</th><th>Customer</th><th>Phone</th><th>Items</th>',
+        '<th>Total</th><th>Method</th><th>Address</th><th>Comm Pref</th><th>Status</th>',
+        '</tr></thead><tbody>' + trs + '</tbody></table>',
+        '</body></html>',
+      ].join('');
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const win  = window.open(url, '_blank');
+      if (win) { win.focus(); setTimeout(() => { win.print(); URL.revokeObjectURL(url); }, 800); }
+      else URL.revokeObjectURL(url);
+    });
 
     // Filter button wiring
     document.querySelectorAll('[data-order-status]').forEach(btn => {

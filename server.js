@@ -1192,6 +1192,24 @@ app.get('/admin/orders', requireAdmin, (req, res) => {
   res.json(list);
 });
 
+app.delete('/admin/orders/:piId', requireAdmin, (req, res) => {
+  const { piId } = req.params;
+  const orders = readOrders();
+  if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
+  delete orders[piId];
+  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  res.json({ ok: true });
+});
+
+app.delete('/admin/orders', requireAdmin, (req, res) => {
+  const { piIds } = req.body;
+  if (!Array.isArray(piIds) || !piIds.length) return res.status(400).json({ error: 'piIds array required' });
+  const orders = readOrders();
+  piIds.forEach(id => { delete orders[id]; });
+  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  res.json({ ok: true, deleted: piIds.length });
+});
+
 app.put('/admin/orders/:piId/complete', requireAdmin, (req, res) => {
   const { piId } = req.params;
   const orders = readOrders();

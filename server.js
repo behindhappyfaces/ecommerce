@@ -1192,94 +1192,94 @@ app.put('/admin/orders/:piId/complete', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// --- Stripe Order Sync (recovers orders when webhook missed them) ---
+// --- Shared Stripe sync logic (used by startup + manual sync endpoint) ---
+async function performStripeSync(limit = 50) {
+  let allSessions = [];
+  let hasMore = true;
+  let startingAfter = undefined;
+
+  while (hasMore && allSessions.length < limit) {
+    const params = { limit: 100, expand: ['data.line_items'] };
+    if (startingAfter) params.starting_after = startingAfter;
+    const page = await stripe.checkout.sessions.list(params);
+    const completed = page.data.filter(s => s.status === 'complete');
+    allSessions.push(...completed);
+    hasMore = page.has_more;
+    if (page.data.length) startingAfter = page.data[page.data.length - 1].id;
+    if (allSessions.length >= limit) break;
+  }
+
+  const orders = readOrders();
+  let synced = 0;
+  let skipped = 0;
+  const syncedDetails = [];
+
+  for (const session of allSessions.slice(0, limit)) {
+    const piId = session.payment_intent;
+    if (!piId) { skipped++; continue; }
+    if (orders[piId]) { skipped++; continue; }
+
+    const items          = session.line_items?.data ?? [];
+    const deliveryMethod = session.metadata?.delivery_method || 'ship';
+    const pickupLoc      = session.metadata?.pickup_location || '';
+    const customerName   = session.customer_details?.name  || 'Valued Customer';
+    const customerEmail  = session.customer_details?.email || '';
+    const shippingAddr   = session.shipping_details?.address;
+    const isPaid         = session.payment_status === 'paid';
+    const isGift         = session.metadata?.is_gift === 'true';
+
+    saveOrder(piId, {
+      sessionId:       session.id,
+      status:          isPaid ? 'READY_TO_SHIP' : 'AWAITING_PAYMENT',
+      total:           session.amount_total,
+      items:           items.map(li => ({ name: li.description, qty: li.quantity })),
+      paymentMethod:   'stripe-sync',
+      created:         new Date(session.created * 1000).toISOString(),
+      customerName,
+      customerEmail,
+      deliveryMethod,
+      pickupLocation:  pickupLoc,
+      shippingAddress: shippingAddr ? {
+        name:   customerName,
+        street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
+        city:   shippingAddr.city,
+        state:  shippingAddr.state,
+        zip:    shippingAddr.postal_code,
+        phone:  session.customer_details?.phone || '',
+      } : null,
+      isGift,
+      giftOccasion: session.metadata?.gift_occasion || '',
+      giftMsg:      session.metadata?.gift_msg      || '',
+    });
+
+    if (isPaid) {
+      const productItems = items.filter(li =>
+        li.description && !li.description.startsWith('Shipping')
+      );
+      deductStockForOrder(productItems, session.id);
+    }
+
+    synced++;
+    syncedDetails.push({
+      piId,
+      customer: customerName,
+      total:    session.amount_total,
+      delivery: deliveryMethod,
+      pickup:   pickupLoc,
+      created:  new Date(session.created * 1000).toISOString(),
+    });
+  }
+
+  return { synced, skipped, orders: syncedDetails };
+}
+
+// --- Stripe Order Sync endpoint (manual trigger from dashboard) ---
 app.post('/admin/sync-from-stripe', requireAdmin, async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.body?.limit) || 50, 100);
-    let allSessions = [];
-    let hasMore = true;
-    let startingAfter = undefined;
-
-    // Page through Stripe sessions until we have `limit` completed ones
-    while (hasMore && allSessions.length < limit) {
-      const params = { limit: 100, expand: ['data.line_items'] };
-      if (startingAfter) params.starting_after = startingAfter;
-      const page = await stripe.checkout.sessions.list(params);
-      const completed = page.data.filter(s => s.status === 'complete');
-      allSessions.push(...completed);
-      hasMore = page.has_more;
-      if (page.data.length) startingAfter = page.data[page.data.length - 1].id;
-      if (allSessions.length >= limit) break;
-    }
-
-    const orders = readOrders();
-    let synced = 0;
-    let skipped = 0;
-    const syncedDetails = [];
-
-    for (const session of allSessions.slice(0, limit)) {
-      const piId = session.payment_intent;
-      if (!piId) { skipped++; continue; }
-
-      // Already in system — skip (don't overwrite)
-      if (orders[piId]) { skipped++; continue; }
-
-      const items            = session.line_items?.data ?? [];
-      const deliveryMethod   = session.metadata?.delivery_method || 'ship';
-      const pickupLoc        = session.metadata?.pickup_location || '';
-      const customerName     = session.customer_details?.name  || 'Valued Customer';
-      const customerEmail    = session.customer_details?.email || '';
-      const shippingAddr     = session.shipping_details?.address;
-      const isPaid           = session.payment_status === 'paid';
-      const isGift           = session.metadata?.is_gift === 'true';
-
-      const orderData = {
-        sessionId:       session.id,
-        status:          isPaid ? 'READY_TO_SHIP' : 'AWAITING_PAYMENT',
-        total:           session.amount_total,
-        items:           items.map(li => ({ name: li.description, qty: li.quantity })),
-        paymentMethod:   'stripe-sync',
-        created:         new Date(session.created * 1000).toISOString(),
-        customerName,
-        customerEmail,
-        deliveryMethod,
-        pickupLocation:  pickupLoc,
-        shippingAddress: shippingAddr ? {
-          name:   customerName,
-          street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
-          city:   shippingAddr.city,
-          state:  shippingAddr.state,
-          zip:    shippingAddr.postal_code,
-          phone:  session.customer_details?.phone || '',
-        } : null,
-        isGift,
-        giftOccasion: session.metadata?.gift_occasion || '',
-        giftMsg:      session.metadata?.gift_msg      || '',
-      };
-
-      saveOrder(piId, orderData);
-
-      // Deduct inventory for product items only
-      if (isPaid) {
-        const productItems = items.filter(li =>
-          li.description && !li.description.startsWith('Shipping')
-        );
-        deductStockForOrder(productItems, session.id);
-      }
-
-      synced++;
-      syncedDetails.push({
-        piId,
-        customer: customerName,
-        total:    session.amount_total,
-        delivery: deliveryMethod,
-        pickup:   pickupLoc,
-        created:  new Date(session.created * 1000).toISOString(),
-      });
-    }
-
-    console.log(`[Sync] Synced ${synced} orders from Stripe, skipped ${skipped}`);
-    res.json({ ok: true, synced, skipped, orders: syncedDetails });
+    const result = await performStripeSync(limit);
+    console.log(`[Sync] Synced ${result.synced} orders from Stripe, skipped ${result.skipped}`);
+    res.json({ ok: true, ...result });
   } catch (err) {
     console.error('[Sync] Error:', err.message);
     res.status(500).json({ error: err.message });
@@ -1780,6 +1780,14 @@ app.listen(PORT, async () => {
   const stripeKey = process.env.STRIPE_SECRET_KEY || '';
   const stripeMode = stripeKey.includes('_test_') ? 'TEST' : stripeKey.includes('_live_') ? 'LIVE' : 'UNKNOWN';
   console.log(`[Stripe] mode=${stripeMode} key=${stripeKey.slice(0,12)}...`);
+
+  // Auto-sync orders from Stripe on every startup so orders survive Render restarts
+  try {
+    const result = await performStripeSync(100);
+    console.log(`[Startup] Order sync complete — ${result.synced} new, ${result.skipped} already on file`);
+  } catch (err) {
+    console.warn('[Startup] Order sync failed (will retry on manual sync):', err.message);
+  }
 
   // Ensure FREE test promo code exists on this account
   try {

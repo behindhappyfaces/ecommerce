@@ -1337,8 +1337,13 @@ function injectPickupLocationModal() {
     noteSpan.className = 'pickup-loc-opt__note';
     noteSpan.textContent = note;
 
+    const comingSoon = document.createElement('span');
+    comingSoon.className = 'pickup-loc-opt__coming-soon';
+    comingSoon.textContent = '*Location Coming Soon';
+
     textWrap.appendChild(labelSpan);
     textWrap.appendChild(noteSpan);
+    textWrap.appendChild(comingSoon);
     btn.appendChild(iconSpan);
     btn.appendChild(textWrap);
     opts.appendChild(btn);

@@ -119,16 +119,16 @@
 
     .ty-confetti__dot {
       position: absolute;
-      top: -10px;
-      width: 8px;
-      height: 8px;
+      top: -20px;
       border-radius: 2px;
       animation: confettiFall linear both;
     }
 
     @keyframes confettiFall {
-      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+      0%   { transform: translateY(0) rotate(0deg) translateX(0);   opacity: 1; }
+      25%  { transform: translateY(25vh) rotate(240deg) translateX(var(--drift-mid)); opacity: 1; }
+      75%  { transform: translateY(75vh) rotate(540deg) translateX(var(--drift-full)); opacity: 0.7; }
+      100% { transform: translateY(115vh) rotate(900deg) translateX(var(--drift-full)); opacity: 0; }
     }
 
     /* ── What Happens Next ──────────────────────── */
@@ -592,12 +592,12 @@
         <div class="ty-step">
           <div class="ty-step__num">2</div>
           <span class="ty-step__label">Prepared with Care</span>
-          <p class="ty-step__desc">Your order is hand-packed fresh. No shortcuts, ever.</p>
+          <p class="ty-step__desc">No shortcuts, EVER!</p>
         </div>
-        <div class="ty-step">
+        <div class="ty-step" id="step3">
           <div class="ty-step__num">3</div>
-          <span class="ty-step__label">Ships Every Friday</span>
-          <p class="ty-step__desc">Your order goes out the next Friday pickup or delivery window.</p>
+          <span class="ty-step__label" id="step3-label">Ships Every Friday</span>
+          <p class="ty-step__desc" id="step3-desc">Your order goes out the next Friday pickup or delivery window.</p>
         </div>
       </div>
     </section>
@@ -704,23 +704,55 @@
     // Clear cart on successful checkout
     localStorage.removeItem('hoto-cart');
 
-    // Confetti burst
+    // Step 3 — pickup vs ship
     (function() {
-      var colors = ['#B89B6E','#D4BA8A','#6B7F5A','#F5F0E8','#C4714A'];
+      var delivery = localStorage.getItem('hoto-checkout-delivery') || 'ship';
+      var location = localStorage.getItem('hoto-checkout-location') || '';
+      localStorage.removeItem('hoto-checkout-delivery');
+      localStorage.removeItem('hoto-checkout-location');
+      if (delivery === 'pickup') {
+        var labelEl = document.getElementById('step3-label');
+        var descEl  = document.getElementById('step3-desc');
+        if (labelEl) labelEl.textContent = 'Local Pick-up';
+        if (descEl)  descEl.textContent  = location
+          ? 'Your order will be available for pick-up in ' + location + '.'
+          : 'Your order will be available for local pick-up. We\'ll reach out to confirm.';
+      }
+    })();
+
+    // Confetti burst — 10x celebration
+    (function() {
+      var colors = ['#B89B6E','#D4BA8A','#6B7F5A','#F5F0E8','#C4714A','#E8C97A','#4A7A5A','#D4915A'];
       var container = document.getElementById('confetti');
       if (!container) return;
-      for (var i = 0; i < 48; i++) {
-        var dot = document.createElement('div');
-        dot.className = 'ty-confetti__dot';
-        dot.style.left = Math.random() * 100 + '%';
-        dot.style.background = colors[Math.floor(Math.random() * colors.length)];
-        dot.style.width  = (6 + Math.random() * 8) + 'px';
-        dot.style.height = (6 + Math.random() * 8) + 'px';
-        dot.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-        dot.style.animationDuration = (2.5 + Math.random() * 3) + 's';
-        dot.style.animationDelay    = (Math.random() * 1.5) + 's';
-        container.appendChild(dot);
+
+      function spawnBatch(count, delayBase) {
+        for (var i = 0; i < count; i++) {
+          var dot = document.createElement('div');
+          dot.className = 'ty-confetti__dot';
+
+          var size = 6 + Math.random() * 18;
+          var isRect = Math.random() > 0.6;
+          var isCircle = !isRect && Math.random() > 0.5;
+          var drift = (Math.random() - 0.5) * 160;
+
+          dot.style.left   = (Math.random() * 105 - 2) + '%';
+          dot.style.width  = size + 'px';
+          dot.style.height = isRect ? (size * (0.3 + Math.random() * 0.5)) + 'px' : size + 'px';
+          dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+          dot.style.borderRadius = isCircle ? '50%' : isRect ? '1px' : '3px';
+          dot.style.setProperty('--drift-mid',  (drift * 0.5) + 'px');
+          dot.style.setProperty('--drift-full', drift + 'px');
+          dot.style.animationDuration = (2 + Math.random() * 3.5) + 's';
+          dot.style.animationDelay    = (delayBase + Math.random() * 1.2) + 's';
+          dot.style.opacity = '1';
+          container.appendChild(dot);
+        }
       }
+
+      spawnBatch(120, 0);     // immediate burst
+      spawnBatch(80, 0.8);    // second wave
+      spawnBatch(60, 1.8);    // third wave trailing in
     })();
 
     // Copy referral code

@@ -1086,6 +1086,8 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     });
     const data = await res.json();
     if (data.url) {
+      localStorage.setItem('hoto-checkout-delivery', deliveryMethod || 'pickup');
+      localStorage.setItem('hoto-checkout-location', pickupLocation || '');
       window.location.href = data.url;
     } else {
       throw new Error(data.error || 'Unknown error');
@@ -1168,6 +1170,8 @@ async function checkoutSubscription(deliveryMethod, pickupLocation, pickupContac
     });
     const data = await res.json();
     if (data.url) {
+      localStorage.setItem('hoto-checkout-delivery', deliveryMethod || 'ship');
+      localStorage.setItem('hoto-checkout-location', pickupLocation || '');
       window.location.href = data.url;
     } else {
       throw new Error(data.error || 'Unknown error');

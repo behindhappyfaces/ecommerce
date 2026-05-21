@@ -466,6 +466,80 @@
     <a class="nav__mobile-link" href="offerings.html">Order Now</a>
   </div>
 
+  <!-- ===================== WELCOME MOTION GRAPHIC ===================== -->
+  <div class="wf-splash" id="wfSplash" aria-live="polite" aria-label="Welcome message">
+    <div class="wf-splash__inner">
+      <div class="wf-splash__line wf-splash__line--top"></div>
+      <p class="wf-splash__text">WELCOME TO<br>THE FAMILY!</p>
+      <div class="wf-splash__line wf-splash__line--bottom"></div>
+    </div>
+  </div>
+
+  <style>
+    .wf-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: var(--color-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: wfFadeOut 0.7s ease forwards 2.8s;
+      pointer-events: none;
+    }
+
+    @keyframes wfFadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    .wf-splash__inner {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .wf-splash__text {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: clamp(3rem, 10vw, 7.5rem);
+      color: var(--color-cream);
+      line-height: 1.05;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      animation: wfTextIn 0.7s cubic-bezier(0.22,1,0.36,1) both 0.2s;
+    }
+
+    .wf-splash__text span {
+      display: block;
+      color: var(--color-tan);
+    }
+
+    @keyframes wfTextIn {
+      from { opacity: 0; transform: scale(0.75) translateY(30px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .wf-splash__line {
+      width: 0;
+      height: 2px;
+      background: var(--color-tan);
+    }
+
+    .wf-splash__line--top {
+      animation: wfLineGrow 0.5s ease forwards 0.9s;
+    }
+
+    .wf-splash__line--bottom {
+      animation: wfLineGrow 0.5s ease forwards 1.1s;
+    }
+
+    @keyframes wfLineGrow {
+      to { width: min(480px, 80vw); }
+    }
+  </style>
+
   <main class="ty-page">
 
     <!-- ── Hero ─────────────────────────────────── -->

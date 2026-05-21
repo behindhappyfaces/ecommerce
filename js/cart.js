@@ -8,14 +8,14 @@ const PRODUCTS = {
   'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
   'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0,    subPrice: null, image: 'images/focaccia-loaf.jpg' },
-  'whole-chicken':      { name: 'Whole Chicken',       price: 1800, subPrice: 1500, image: 'images/chicken.jpg' },
-  'cultured-butter':    { name: 'Real Cream Butter',   price: 900,  subPrice: 700,  image: 'images/butter.jpg' },
-  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 800,  subPrice: 600,  image: 'images/eggs.jpg' },
-  'harvest-basket':     { name: 'Harvest Basket',      price: 3500, subPrice: 2800, image: 'images/harvest.jpg' },
+  'whole-chicken':      { name: 'Whole Chicken',       price: 0, subPrice: null, image: 'images/chicken.jpg' },
+  'cultured-butter':    { name: 'Real Cream Butter',   price: 0, subPrice: null, image: 'images/butter.jpg' },
+  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
+  'harvest-basket':     { name: 'Harvest Basket',      price: 0, subPrice: null, image: 'images/harvest.jpg' },
 };
 
 const STORAGE_KEY   = 'hoto-cart';
-const SHIP_MINIMUM  = 7500; // $75.00 in cents — minimum pre-tax total required for shipping
+const SHIP_MINIMUM  = 0;
 
 // Approximate product weights in lbs (used for shipping rate calculation)
 const PRODUCT_WEIGHTS = {

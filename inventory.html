@@ -383,6 +383,20 @@
   .orders-filter-btn:hover { border-color: var(--terra); color: var(--cream); }
   .orders-filter-btn.active { background: var(--terra); border-color: var(--terra); color: var(--cream); font-weight: 600; }
   #orders-list { display: flex; flex-direction: column; gap: 14px; }
+  #webhook-status-bar {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 14px; font-size: 0.82rem; color: var(--cream-dim);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  #webhook-status-bar .ws-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  #webhook-status-bar .ws-dot.ok   { background: var(--green); }
+  #webhook-status-bar .ws-dot.warn { background: var(--orange); }
+  #sync-result-msg {
+    font-size: 0.82rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+    border: 1px solid var(--border); display: none;
+  }
   .order-card {
     background: var(--card); border-radius: 10px; padding: 18px 16px;
     border: 1px solid var(--border);
@@ -941,7 +955,10 @@
         <button class="orders-filter-btn" data-order-method="pickup">Pick-up</button>
       </div>
       <button class="btn-sm btn-ghost" id="orders-refresh-btn">&#8635; Refresh</button>
+      <button class="btn-sm" id="stripe-sync-btn" style="background:var(--terra);color:var(--cream);border:none;">&#8645; Sync from Stripe</button>
     </div>
+    <div id="webhook-status-bar" style="display:none;"></div>
+    <div id="sync-result-msg"></div>
     <div id="orders-list">
       <p class="empty-msg">Select the Orders tab to load your fulfillment queue.</p>
     </div>
@@ -2673,7 +2690,66 @@
     });
     document.getElementById('orders-refresh-btn').addEventListener('click', loadOrders);
 
-    document.querySelector('[data-tab="orders"]').addEventListener('click', loadOrders);
+    // Webhook status banner
+    async function loadWebhookStatus() {
+      const bar = document.getElementById('webhook-status-bar');
+      try {
+        const r = await fetch('/admin/webhook-status', { headers: authHeaders() });
+        if (!r.ok) return;
+        const d = await r.json();
+        bar.style.display = 'flex';
+        const dot = document.createElement('span');
+        dot.className = 'ws-dot ' + (d.webhook_secret_configured ? 'ok' : 'warn');
+        const txt = document.createElement('span');
+        txt.textContent = d.webhook_secret_configured
+          ? 'Webhook active — ' + d.orders_on_file + ' order' + (d.orders_on_file !== 1 ? 's' : '') + ' on file'
+          : 'Webhook NOT configured — ' + d.tip;
+        bar.textContent = '';
+        bar.appendChild(dot);
+        bar.appendChild(txt);
+      } catch { /* non-critical */ }
+    }
+
+    // Sync from Stripe button
+    document.getElementById('stripe-sync-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('stripe-sync-btn');
+      const resultDiv = document.getElementById('sync-result-msg');
+      btn.disabled = true;
+      btn.textContent = 'Syncing…';
+      resultDiv.style.display = 'none';
+      try {
+        const r = await fetch('/admin/sync-from-stripe', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ limit: 50 }),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error || 'Sync failed');
+        resultDiv.style.background = 'rgba(39,174,96,0.12)';
+        resultDiv.style.borderColor = 'rgba(39,174,96,0.3)';
+        resultDiv.style.color = 'var(--green)';
+        resultDiv.textContent = 'Synced ' + d.synced + ' new order' + (d.synced !== 1 ? 's' : '') + ' from Stripe (' + d.skipped + ' already on file).';
+        resultDiv.style.display = 'block';
+        if (d.synced > 0) {
+          await loadOrders();
+          await loadWebhookStatus();
+        }
+      } catch (err) {
+        resultDiv.style.background = 'rgba(231,76,60,0.12)';
+        resultDiv.style.borderColor = 'rgba(231,76,60,0.3)';
+        resultDiv.style.color = 'var(--red)';
+        resultDiv.textContent = 'Sync error: ' + err.message;
+        resultDiv.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⇅ Sync from Stripe';
+      }
+    });
+
+    document.querySelector('[data-tab="orders"]').addEventListener('click', () => {
+      loadOrders();
+      loadWebhookStatus();
+    });
   }());
 
   // ---- Staples Box Subscribers tab ----

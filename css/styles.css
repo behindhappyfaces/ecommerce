@@ -164,7 +164,7 @@ h1, h2, h3, h4 {
 
 .nav {
   position: fixed;
-  top: 0;
+  top: 40px; /* sits below the 40px announcement bar */
   left: 0;
   right: 0;
   z-index: 100;
@@ -2596,6 +2596,301 @@ h1, h2, h3, h4 {
 
 @media (max-width: 1024px) {
   .subscriptions__grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+}
+
+/* =========================================
+   ANNOUNCEMENT BAR
+   ========================================= */
+
+.announce-bar {
+  background: var(--color-green);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-align: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  height: 40px;
+}
+
+.announce-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 48px 10px 16px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.announce-bar__close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-cream);
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.announce-bar__close:hover { opacity: 1; }
+
+/* =========================================
+   HERO STAR RATING
+   ========================================= */
+
+.hero__stars {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.hero__stars-icons {
+  color: var(--color-tan);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+}
+
+.hero__stars-label {
+  color: rgba(255,255,255,0.92);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* =========================================
+   TESTIMONIALS SECTION
+   ========================================= */
+
+.testimonials {
+  background: var(--color-green);
+  padding: var(--section-padding) 0;
+}
+
+.testimonials__header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.testimonials__header .eyebrow {
+  color: var(--color-tan);
+}
+
+.testimonials__title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--color-cream);
+  margin-top: 10px;
+}
+
+.testimonials__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.testimonial__card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 36px 32px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: background 0.25s ease;
+}
+
+.testimonial__card:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.testimonial__stars {
+  color: var(--color-tan);
+  font-size: 1rem;
+  letter-spacing: 3px;
+}
+
+.testimonial__quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgba(245,240,232,0.9);
+  flex: 1;
+}
+
+.testimonial__author {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.testimonial__author strong {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-cream);
+  letter-spacing: 0.02em;
+}
+
+.testimonial__author span {
+  font-size: 0.78rem;
+  color: var(--color-tan-light);
+  opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+  .testimonials__grid { grid-template-columns: 1fr; gap: 20px; }
+  .testimonial__card { padding: 28px 24px; }
+}
+
+/* =========================================
+   EMAIL POPUP
+   ========================================= */
+
+.email-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.email-popup[hidden] { display: none; }
+
+.email-popup__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(28,28,28,0.65);
+  backdrop-filter: blur(3px);
+}
+
+.email-popup__box {
+  position: relative;
+  background: var(--color-cream);
+  border-radius: 4px;
+  padding: 48px 44px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+  animation: popupIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.email-popup__close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  line-height: 1;
+}
+
+.email-popup__close:hover { color: var(--color-charcoal); }
+
+.email-popup__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-tan);
+  margin-bottom: 12px;
+}
+
+.email-popup__title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: var(--color-green);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.email-popup__body {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+
+.email-popup__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.email-popup__input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid var(--color-cream-dark);
+  border-radius: 3px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  background: var(--color-white);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.email-popup__input:focus {
+  border-color: var(--color-green);
+}
+
+.email-popup__submit {
+  width: 100%;
+  padding: 15px 24px;
+  background: var(--color-green);
+  color: var(--color-cream);
+  border: none;
+  border-radius: 3px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.email-popup__submit:hover { background: var(--color-green-mid); }
+
+.email-popup__fine {
+  margin-top: 14px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.email-popup__success {
+  padding: 12px 0;
+}
+
+.email-popup__success .email-popup__title {
+  margin-top: 12px;
+}
+
+@media (max-width: 520px) {
+  .email-popup__box { padding: 36px 24px; }
 }
 
 @media (max-width: 768px) {

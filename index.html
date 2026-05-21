@@ -10,6 +10,16 @@
 </head>
 <body>
 
+  <!-- ===================== ANNOUNCEMENT BAR ===================== -->
+  <div class="announce-bar" id="announceBar">
+    <div class="announce-bar__inner">
+      <span class="announce-bar__text">
+        🌿 Orders ship every Friday &nbsp;·&nbsp; Free local pickup available &nbsp;·&nbsp; Subscribe &amp; Save 15%
+      </span>
+      <button class="announce-bar__close" aria-label="Close announcement" onclick="this.closest('.announce-bar').remove(); document.querySelector('.nav').style.top='0';">✕</button>
+    </div>
+  </div>
+
   <!-- ===================== NAV ===================== -->
   <nav class="nav nav--transparent" aria-label="Main navigation">
     <a class="nav__logo" href="index.html">
@@ -72,6 +82,12 @@
         <span class="hero__badge">No shortcuts</span>
         <span class="hero__badge">No compromise</span>
       </div>
+      <!-- Star Rating -->
+      <div class="hero__stars" aria-label="Customer reviews">
+        <span class="hero__stars-icons" aria-hidden="true">★★★★★</span>
+        <span class="hero__stars-label">Loved by 200+ Texas families</span>
+      </div>
+
       <a class="btn btn--light" href="offerings.html">Shop the Pantry</a>
     </div>
   </section>
@@ -281,6 +297,47 @@
     </div>
   </section>
 
+  <!-- ===================== TESTIMONIALS ===================== -->
+  <section class="testimonials" aria-labelledby="testimonials-title">
+    <div class="container">
+      <header class="testimonials__header" data-fade>
+        <p class="eyebrow">What People Are Saying</p>
+        <h2 class="testimonials__title" id="testimonials-title">Real families. Real food. Real results.</h2>
+      </header>
+
+      <div class="testimonials__grid">
+
+        <blockquote class="testimonial__card" data-fade>
+          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial__quote">"I never thought I'd say this, but we've completely replaced store-bought eggs and bread. The pasture-raised eggs are a different color, a different taste — my kids notice. This is the real thing."</p>
+          <footer class="testimonial__author">
+            <strong>— Keisha M.</strong>
+            <span>Austin, TX</span>
+          </footer>
+        </blockquote>
+
+        <blockquote class="testimonial__card" data-fade>
+          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial__quote">"The Japanese Milk Loaf is unreal. Soft, rich, and nothing like what you get at the grocery store. I've ordered three times now and every loaf has been perfect. You can taste the care in it."</p>
+          <footer class="testimonial__author">
+            <strong>— Marcus T.</strong>
+            <span>Waco, TX</span>
+          </footer>
+        </blockquote>
+
+        <blockquote class="testimonial__card" data-fade>
+          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
+          <p class="testimonial__quote">"Deborah doesn't cut corners — and you feel it. The butter alone converted my whole family. Knowing where our food comes from and who grows it matters. Heart of Texas Organics is the answer to that."</p>
+          <footer class="testimonial__author">
+            <strong>— Angela R.</strong>
+            <span>Round Rock, TX</span>
+          </footer>
+        </blockquote>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== FOOTER ===================== -->
   <footer class="footer">
     <div class="container">
@@ -385,6 +442,81 @@
         list.appendChild(li);
       }
     })();
+  </script>
+
+  <!-- ===================== EMAIL POPUP ===================== -->
+  <div class="email-popup" id="emailPopup" role="dialog" aria-modal="true" aria-labelledby="popupTitle" hidden>
+    <div class="email-popup__backdrop" onclick="closeEmailPopup()"></div>
+    <div class="email-popup__box">
+      <button class="email-popup__close" onclick="closeEmailPopup()" aria-label="Close">✕</button>
+      <p class="email-popup__eyebrow">Welcome to the Farm</p>
+      <h2 class="email-popup__title" id="popupTitle">Get 10% Off Your First Order</h2>
+      <p class="email-popup__body">Join our farm family. Get recipes, farm updates, and an exclusive discount — straight to your inbox.</p>
+      <form class="email-popup__form" id="emailPopupForm">
+        <input class="email-popup__input" type="email" placeholder="Enter your email" required aria-label="Email address" />
+        <button class="email-popup__submit" type="submit">Claim My 10% Off →</button>
+      </form>
+      <p class="email-popup__fine">No spam. Unsubscribe anytime.</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      if (!sessionStorage.getItem('popupSeen')) {
+        setTimeout(function() {
+          var popup = document.getElementById('emailPopup');
+          if (popup) {
+            popup.hidden = false;
+            var input = popup.querySelector('input');
+            if (input) input.focus();
+          }
+        }, 6000);
+      }
+    })();
+
+    function closeEmailPopup() {
+      var popup = document.getElementById('emailPopup');
+      if (popup) popup.hidden = true;
+      sessionStorage.setItem('popupSeen', '1');
+    }
+
+    document.getElementById('emailPopupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var email = this.querySelector('input').value;
+      fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, source: 'homepage-popup' })
+      }).catch(function() {});
+
+      var box = document.getElementById('emailPopup').querySelector('.email-popup__box');
+      while (box.firstChild) box.removeChild(box.firstChild);
+
+      var wrap = document.createElement('div');
+      wrap.className = 'email-popup__success';
+
+      var eyebrow = document.createElement('p');
+      eyebrow.className = 'email-popup__eyebrow';
+      eyebrow.textContent = "You're in!";
+
+      var title = document.createElement('h2');
+      title.className = 'email-popup__title';
+      title.textContent = 'Check your inbox for your 10% discount.';
+
+      var body = document.createElement('p');
+      body.className = 'email-popup__body';
+      body.textContent = 'Welcome to the Heart of Texas Organics family. 🌿';
+
+      wrap.appendChild(eyebrow);
+      wrap.appendChild(title);
+      wrap.appendChild(body);
+      box.appendChild(wrap);
+      setTimeout(closeEmailPopup, 4000);
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeEmailPopup();
+    });
   </script>
 </body>
 </html>

@@ -1317,7 +1317,7 @@ function injectPickupLocationModal() {
   const locations = [
     { id: 'pl-lakeway',   icon: '📍', label: 'Lakeway / Bee Cave',  note: 'Central location near Lake Travis' },
     { id: 'pl-dripping',  icon: '📍', label: 'Dripping Springs',    note: 'Hill Country pick-up point' },
-    { id: 'pl-austin',    icon: '📍', label: 'Austin',              note: 'Downtown area pick-up' },
+    { id: 'pl-austin',    icon: '📍', label: 'Austin',              note: 'South Austin area pick-up' },
   ];
 
   locations.forEach(({ id, icon, label, note }) => {

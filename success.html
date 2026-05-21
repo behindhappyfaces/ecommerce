@@ -3,12 +3,423 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Order Confirmed at Heart of Texas Organics</title>
-  <meta name="description" content="Your order is confirmed. Thank you for supporting Heart of Texas Organics." />
+  <title>Order Confirmed — Heart of Texas Organics</title>
+  <meta name="robots" content="noindex" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="images/logo.png" />
+
+  <!-- ── Google Ads Conversion Tracking ──────────────────────────────
+       Replace AW-XXXXXXXXXX with your Google Ads Account ID
+       Replace CONVERSION_LABEL with your conversion action label
+       Both are found in: Google Ads → Goals → Conversions → your action → Tag setup
+  ─────────────────────────────────────────────────────────────────── -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-XXXXXXXXXX');
+    gtag('event', 'conversion', { 'send_to': 'AW-XXXXXXXXXX/CONVERSION_LABEL' });
+  </script>
+
+  <style>
+    /* ── Page Reset ─────────────────────────────── */
+    .ty-page {
+      min-height: 100vh;
+      background: var(--color-cream);
+      padding-top: 112px; /* announce bar + nav */
+      overflow-x: hidden;
+    }
+
+    /* ── Hero Banner ────────────────────────────── */
+    .ty-hero {
+      background: var(--color-green);
+      padding: 72px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ty-hero::before,
+    .ty-hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(184,155,110,0.08);
+    }
+    .ty-hero::before { width: 600px; height: 600px; top: -200px; left: -150px; }
+    .ty-hero::after  { width: 400px; height: 400px; bottom: -150px; right: -80px; }
+
+    .ty-hero__check {
+      width: 72px;
+      height: 72px;
+      background: var(--color-tan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      font-size: 2rem;
+      animation: checkPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    @keyframes checkPop {
+      from { opacity: 0; transform: scale(0.4); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .ty-hero__eyebrow {
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+      margin-bottom: 16px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+
+    .ty-hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      color: var(--color-cream);
+      line-height: 1.15;
+      margin-bottom: 20px;
+      animation: fadeUp 0.5s 0.3s ease both;
+    }
+
+    .ty-hero__title em {
+      font-style: italic;
+      color: var(--color-tan-light);
+    }
+
+    .ty-hero__sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.1rem;
+      color: rgba(245,240,232,0.75);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.7;
+      animation: fadeUp 0.5s 0.4s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Confetti Particles ─────────────────────── */
+    .ty-confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ty-confetti__dot {
+      position: absolute;
+      top: -10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      animation: confettiFall linear both;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── What Happens Next ──────────────────────── */
+    .ty-steps {
+      padding: 72px 24px;
+      max-width: 860px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .ty-steps__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+      margin-bottom: 12px;
+    }
+
+    .ty-steps__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--color-green);
+      margin-bottom: 52px;
+    }
+
+    .ty-steps__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      position: relative;
+    }
+
+    .ty-steps__grid::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(16.66% + 16px);
+      right: calc(16.66% + 16px);
+      height: 2px;
+      background: var(--color-tan-light);
+      opacity: 0.4;
+    }
+
+    .ty-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ty-step__num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--color-green);
+      color: var(--color-cream);
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ty-step__label {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--color-green);
+      letter-spacing: 0.02em;
+    }
+
+    .ty-step__desc {
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Share & Review ─────────────────────────── */
+    .ty-social {
+      background: var(--color-cream-dark);
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .ty-social__inner {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .ty-social__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+      margin-bottom: 12px;
+    }
+
+    .ty-social__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      color: var(--color-green);
+      margin-bottom: 12px;
+    }
+
+    .ty-social__body {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    .ty-social__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .ty-social__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 3px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: filter 0.2s ease, transform 0.15s ease;
+    }
+
+    .ty-social__btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+
+    .ty-social__btn--google {
+      background: #fff;
+      color: #2A2A2A;
+      border: 1.5px solid #E0E0E0;
+    }
+
+    .ty-social__btn--instagram {
+      background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      color: #fff;
+    }
+
+    .ty-social__btn--facebook {
+      background: #1877F2;
+      color: #fff;
+    }
+
+    /* ── Referral Block ─────────────────────────── */
+    .ty-referral {
+      padding: 64px 24px;
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .ty-referral__badge {
+      display: inline-block;
+      background: var(--color-green);
+      color: var(--color-tan-light);
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 2px;
+      margin-bottom: 24px;
+    }
+
+    .ty-referral__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      color: var(--color-green);
+      margin-bottom: 12px;
+    }
+
+    .ty-referral__body {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .ty-referral__code-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      max-width: 360px;
+      margin: 0 auto 32px;
+      border: 2px dashed var(--color-tan);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .ty-referral__code {
+      flex: 1;
+      padding: 14px 20px;
+      font-family: var(--font-sans);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--color-green);
+      background: transparent;
+      border: none;
+      text-align: center;
+    }
+
+    .ty-referral__copy {
+      padding: 14px 20px;
+      background: var(--color-green);
+      color: var(--color-cream);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .ty-referral__copy:hover { background: var(--color-green-mid); }
+
+    .ty-referral__cta {
+      display: inline-block;
+    }
+
+    /* ── Quote ──────────────────────────────────── */
+    .ty-quote {
+      background: var(--color-green);
+      padding: 56px 24px;
+      text-align: center;
+    }
+
+    .ty-quote__text {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+      color: var(--color-cream);
+      max-width: 640px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+
+    .ty-quote__attr {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-tan);
+    }
+
+    /* ── Continue Shopping ──────────────────────── */
+    .ty-continue {
+      padding: 56px 24px;
+      text-align: center;
+    }
+
+    .ty-continue__title {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--color-green);
+      margin-bottom: 24px;
+    }
+
+    /* ── Mobile ─────────────────────────────────── */
+    @media (max-width: 640px) {
+      .ty-hero { padding: 52px 20px 60px; }
+      .ty-steps__grid { grid-template-columns: 1fr; gap: 24px; }
+      .ty-steps__grid::before { display: none; }
+      .ty-social__actions { flex-direction: column; align-items: center; }
+      .ty-referral__code-wrap { flex-direction: column; }
+      .ty-referral__code { border-bottom: 2px dashed var(--color-tan); }
+    }
+  </style>
 </head>
 <body>
+
   <!-- ===================== ANNOUNCEMENT BAR ===================== -->
   <div class="announce-bar" id="announceBar">
     <div class="announce-bar__inner">
@@ -18,8 +429,6 @@
       <button class="announce-bar__close" aria-label="Close announcement" onclick="this.closest('.announce-bar').remove(); document.querySelector('.nav').style.top='0';">✕</button>
     </div>
   </div>
-
-
 
   <nav class="nav" aria-label="Main navigation">
     <a class="nav__logo" href="index.html">
@@ -57,22 +466,179 @@
     <a class="nav__mobile-link" href="offerings.html">Order Now</a>
   </div>
 
-  <main class="success-page">
-    <div class="success-page__inner">
-      <div class="success-page__line" aria-hidden="true"></div>
-      <h1 class="success-page__title">Thank you.</h1>
-      <p class="success-page__body">
-        Your order is confirmed. We'll send a confirmation to your email shortly.
-        Everything is grown and made without shortcuts and it's on its way to you.
+  <main class="ty-page">
+
+    <!-- ── Hero ─────────────────────────────────── -->
+    <section class="ty-hero" aria-label="Order confirmed">
+
+      <!-- Confetti particles (built by JS below) -->
+      <div class="ty-confetti" id="confetti" aria-hidden="true"></div>
+
+      <div class="ty-hero__check" aria-hidden="true">✓</div>
+      <p class="ty-hero__eyebrow">Order Confirmed</p>
+      <h1 class="ty-hero__title">
+        Your table just got<br><em>a whole lot better.</em>
+      </h1>
+      <p class="ty-hero__sub">
+        Real food, raised with intention, is on its way to you.
+        Check your email — confirmation is headed there now.
       </p>
-      <a class="btn btn--dark" href="offerings.html">Continue Shopping</a>
-    </div>
+    </section>
+
+    <!-- ── What Happens Next ─────────────────────── -->
+    <section class="ty-steps">
+      <p class="ty-steps__eyebrow">What Happens Next</p>
+      <h2 class="ty-steps__title">From our farm to your table</h2>
+
+      <div class="ty-steps__grid">
+        <div class="ty-step">
+          <div class="ty-step__num">1</div>
+          <span class="ty-step__label">Confirmation Sent</span>
+          <p class="ty-step__desc">Check your inbox for your order receipt and details.</p>
+        </div>
+        <div class="ty-step">
+          <div class="ty-step__num">2</div>
+          <span class="ty-step__label">Prepared with Care</span>
+          <p class="ty-step__desc">Your order is hand-packed fresh — no shortcuts, ever.</p>
+        </div>
+        <div class="ty-step">
+          <div class="ty-step__num">3</div>
+          <span class="ty-step__label">Ships Every Friday</span>
+          <p class="ty-step__desc">Your order goes out the next Friday pickup or delivery window.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Share & Review ──────────────────────────  -->
+    <section class="ty-social">
+      <div class="ty-social__inner">
+        <p class="ty-social__eyebrow">Spread the Love</p>
+        <h2 class="ty-social__title">Tell someone real food exists.</h2>
+        <p class="ty-social__body">
+          Tag us when your order arrives — we love seeing it on your table.
+          And if you're feeling generous, a Google review means the world
+          to a small farm like ours.
+        </p>
+        <div class="ty-social__actions">
+          <a class="ty-social__btn ty-social__btn--google"
+             href="https://g.page/r/YOUR_GOOGLE_REVIEW_LINK/review"
+             target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.3 1.2 8.5 3.1l6.4-6.4C34.9 2.5 29.8 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.5 5.8C12.2 13 17.6 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.3-4 6.8-9.9 6.8-16.9z" transform="translate(1,0)"/>
+              <path fill="#FBBC05" d="M10.2 28.5c-.6-1.6-.9-3.3-.9-5s.3-3.4.9-5L2.7 13.3C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.5-6.2z"/>
+              <path fill="#34A853" d="M24 48c5.8 0 10.7-1.9 14.3-5.2l-7.4-5.7c-2 1.3-4.5 2.1-6.9 2.1-6.4 0-11.8-4.3-13.8-10.2l-7.5 6.2C6.6 42.6 14.6 48 24 48z"/>
+            </svg>
+            Leave a Google Review
+          </a>
+          <a class="ty-social__btn ty-social__btn--instagram"
+             href="https://www.instagram.com/heartoftxorganics"
+             target="_blank" rel="noopener">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Tag Us on Instagram
+          </a>
+          <a class="ty-social__btn ty-social__btn--facebook"
+             href="https://www.facebook.com/heartoftxorganics/"
+             target="_blank" rel="noopener">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073C24 5.404 18.627 0 12 0S0 5.404 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+            Share on Facebook
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Referral Code ───────────────────────────  -->
+    <section class="ty-referral">
+      <div class="ty-referral__badge">For Your People</div>
+      <h2 class="ty-referral__title">Give a friend 10% off their first order</h2>
+      <p class="ty-referral__body">
+        Know someone who deserves real food? Share your personal discount code.
+        When they order, they save — and you'll be the one who introduced them
+        to something they'll never forget.
+      </p>
+      <div class="ty-referral__code-wrap">
+        <span class="ty-referral__code" id="referralCode">HOTO-FRIEND10</span>
+        <button class="ty-referral__copy" id="copyBtn" onclick="copyCode()">Copy Code</button>
+      </div>
+      <div class="ty-referral__cta">
+        <a class="btn btn--dark" href="offerings.html">Shop Again</a>
+      </div>
+    </section>
+
+    <!-- ── Farm Quote ──────────────────────────────  -->
+    <section class="ty-quote">
+      <p class="ty-quote__text">
+        "Every order is a vote for food that's grown with intention,
+        raised with dignity, and made without shortcuts.
+        Thank you for choosing real."
+      </p>
+      <p class="ty-quote__attr">— Deborah, Heart of Texas Organics</p>
+    </section>
+
   </main>
+
+  <!-- ── Footer ───────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="faq.html">FAQ</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
 
   <script src="js/main.js"></script>
   <script>
     // Clear cart on successful checkout
     localStorage.removeItem('hoto-cart');
+
+    // Confetti burst
+    (function() {
+      var colors = ['#B89B6E','#D4BA8A','#6B7F5A','#F5F0E8','#C4714A'];
+      var container = document.getElementById('confetti');
+      if (!container) return;
+      for (var i = 0; i < 48; i++) {
+        var dot = document.createElement('div');
+        dot.className = 'ty-confetti__dot';
+        dot.style.left = Math.random() * 100 + '%';
+        dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+        dot.style.width  = (6 + Math.random() * 8) + 'px';
+        dot.style.height = (6 + Math.random() * 8) + 'px';
+        dot.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        dot.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+        dot.style.animationDelay    = (Math.random() * 1.5) + 's';
+        container.appendChild(dot);
+      }
+    })();
+
+    // Copy referral code
+    function copyCode() {
+      var code = document.getElementById('referralCode').textContent;
+      navigator.clipboard.writeText(code).then(function() {
+        var btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(function() { btn.textContent = 'Copy Code'; }, 2500);
+      });
+    }
   </script>
 </body>
 </html>

@@ -428,8 +428,7 @@
   }
   .order-contact-block span { color: var(--cream); font-weight: 500; }
   /* Checkbox + select */
-  .order-card { position: relative; }
-  .order-select-cb { position: absolute; top: 18px; right: 16px; width: 17px; height: 17px; cursor: pointer; accent-color: var(--terra); }
+  .order-select-cb { width: 17px; height: 17px; cursor: pointer; accent-color: var(--terra); flex-shrink: 0; margin-left: 10px; }
   .order-card.selected { border-color: var(--terra); background: rgba(139,74,47,0.08); }
   /* Bulk bar */
   #orders-bulk-bar {
@@ -2567,19 +2566,7 @@
         (selectedPiIds.has(order.piId)     ? ' selected'            : '');
       card.dataset.piId = order.piId;
 
-      // Select checkbox
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.className = 'order-select-cb';
-      cb.checked = selectedPiIds.has(order.piId);
-      cb.addEventListener('change', () => {
-        if (cb.checked) { selectedPiIds.add(order.piId); card.classList.add('selected'); }
-        else            { selectedPiIds.delete(order.piId); card.classList.remove('selected'); }
-        updateBulkBar();
-      });
-      card.appendChild(cb);
-
-      // Header: status badge + method badge + total
+      // Header: status badge + method badge + total + checkbox
       const hdr = document.createElement('div');
       hdr.className = 'order-card-header';
 
@@ -2595,9 +2582,20 @@
       totalEl.className = 'order-total';
       totalEl.textContent = '$' + ((order.total || 0) / 100).toFixed(2);
 
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'order-select-cb';
+      cb.checked = selectedPiIds.has(order.piId);
+      cb.addEventListener('change', () => {
+        if (cb.checked) { selectedPiIds.add(order.piId); card.classList.add('selected'); }
+        else            { selectedPiIds.delete(order.piId); card.classList.remove('selected'); }
+        updateBulkBar();
+      });
+
       hdr.appendChild(sBadge);
       hdr.appendChild(mBadge);
       hdr.appendChild(totalEl);
+      hdr.appendChild(cb);
       card.appendChild(hdr);
 
       // Customer name + date

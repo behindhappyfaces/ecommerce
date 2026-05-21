@@ -1221,13 +1221,15 @@ app.post('/contact', async (req, res) => {
 // INVENTORY MANAGEMENT
 // =========================================
 
-// --- Auth (in-memory sessions, 24h expiry) ---
-const sessions = new Map();
-function mkToken() { return crypto.randomBytes(32).toString('hex'); }
+// --- Auth (stateless HMAC token — survives server restarts) ---
+function makeAdminToken() {
+  return crypto.createHmac('sha256', process.env.ADMIN_PASSWORD || 'no-password-set')
+    .update('hoto-admin-v1')
+    .digest('hex');
+}
 function requireAdmin(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
-  const exp = sessions.get(token);
-  if (!exp || Date.now() > exp) return res.status(401).json({ error: 'Not authenticated' });
+  if (!token || token !== makeAdminToken()) return res.status(401).json({ error: 'Not authenticated' });
   next();
 }
 
@@ -1289,14 +1291,11 @@ app.post('/admin/login', (req, res) => {
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Invalid password' });
   }
-  const token = mkToken();
-  sessions.set(token, Date.now() + 24 * 60 * 60 * 1000);
-  res.json({ token });
+  res.json({ token: makeAdminToken() });
 });
 
 app.post('/admin/logout', (req, res) => {
-  const token = (req.headers.authorization || '').replace('Bearer ', '');
-  sessions.delete(token);
+  // Token is stateless; client drops it from localStorage on logout
   res.json({ ok: true });
 });
 
@@ -1425,8 +1424,7 @@ async function performStripeSync(limit = 50) {
   const syncedDetails = [];
 
   for (const session of allSessions.slice(0, limit)) {
-    const piId = session.payment_intent;
-    if (!piId) { skipped++; continue; }
+    const piId = session.payment_intent || ('sess_' + session.id);
     if (orders[piId]) { skipped++; continue; }
 
     const items           = session.line_items?.data ?? [];

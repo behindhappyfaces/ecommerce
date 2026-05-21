@@ -2577,6 +2577,29 @@
       }
       card.appendChild(delivery);
 
+      // Pickup contact info
+      if (order.deliveryMethod === 'pickup' && (order.pickupPhone || order.pickupAddress || order.pickupCommPref)) {
+        const contactBlock = document.createElement('div');
+        contactBlock.style.cssText = 'margin-top:8px;padding:10px 14px;background:rgba(245,240,232,0.06);border-radius:6px;border:1px solid rgba(245,240,232,0.1);font-size:0.82rem;line-height:1.7;';
+        if (order.pickupPhone) {
+          const ph = document.createElement('div');
+          ph.textContent = '📞 ' + order.pickupPhone;
+          contactBlock.appendChild(ph);
+        }
+        if (order.pickupAddress) {
+          const addr = document.createElement('div');
+          addr.textContent = '🏠 ' + order.pickupAddress;
+          contactBlock.appendChild(addr);
+        }
+        if (order.pickupCommPref) {
+          const comm = document.createElement('div');
+          const label = order.pickupCommPref.charAt(0).toUpperCase() + order.pickupCommPref.slice(1);
+          comm.textContent = '💬 Prefers: ' + label;
+          contactBlock.appendChild(comm);
+        }
+        card.appendChild(contactBlock);
+      }
+
       // Gift banner
       if (order.isGift) {
         const giftBanner = document.createElement('div');

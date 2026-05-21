@@ -176,7 +176,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
         const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
 
-        const pickupLoc  = session.metadata?.pickup_location || '';
+        const pickupLoc      = session.metadata?.pickup_location || '';
+        const pickupPhone    = session.metadata?.pickup_phone   || '';
+        const pickupAddress  = session.metadata?.pickup_address || '';
+        const pickupCommPref = session.metadata?.pickup_comm    || '';
         const addrLine = shippingAddr
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
           : (deliveryMethod === 'pickup'
@@ -237,6 +240,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             customerEmail: customerEmail || '',
             deliveryMethod: deliveryMethod,
             pickupLocation: pickupLoc || '',
+            pickupPhone:    pickupPhone,
+            pickupAddress:  pickupAddress,
+            pickupCommPref: pickupCommPref,
             shippingAddress: shippingAddr ? {
               name: customerName,
               street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
@@ -288,6 +294,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             customerEmail: customerEmail || '',
             deliveryMethod: deliveryMethod,
             pickupLocation: pickupLoc || '',
+            pickupPhone:    pickupPhone,
+            pickupAddress:  pickupAddress,
+            pickupCommPref: pickupCommPref,
             shippingAddress: shippingAddr ? {
               name: customerName,
               street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
@@ -690,7 +699,7 @@ function escHtml(str) {
 
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items, shipping, delivery_method, billing, gift, pickup_location } = req.body;
+    const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
 
@@ -718,6 +727,11 @@ app.post('/create-checkout-session', async (req, res) => {
     // Build metadata (Stripe limits: 50 keys, values ≤ 500 chars)
     const metadata = { delivery_method: delivery_method || 'ship' };
     if (pickup_location) metadata.pickup_location = pickup_location;
+    if (pickup_contact) {
+      metadata.pickup_phone   = (pickup_contact.phone   || '').slice(0, 500);
+      metadata.pickup_address = (pickup_contact.address || '').slice(0, 500);
+      metadata.pickup_comm    = (pickup_contact.commPref || 'text').slice(0, 50);
+    }
     if (billing) {
       metadata.bill_name   = billing.name   || '';
       metadata.bill_street = billing.street || '';
@@ -1222,6 +1236,9 @@ async function performStripeSync(limit = 50) {
     const items          = session.line_items?.data ?? [];
     const deliveryMethod = session.metadata?.delivery_method || 'ship';
     const pickupLoc      = session.metadata?.pickup_location || '';
+    const pickupPhone    = session.metadata?.pickup_phone    || '';
+    const pickupAddress  = session.metadata?.pickup_address  || '';
+    const pickupCommPref = session.metadata?.pickup_comm     || '';
     const customerName   = session.customer_details?.name  || 'Valued Customer';
     const customerEmail  = session.customer_details?.email || '';
     const shippingAddr   = session.shipping_details?.address;
@@ -1239,6 +1256,9 @@ async function performStripeSync(limit = 50) {
       customerEmail,
       deliveryMethod,
       pickupLocation:  pickupLoc,
+      pickupPhone,
+      pickupAddress,
+      pickupCommPref,
       shippingAddress: shippingAddr ? {
         name:   customerName,
         street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),

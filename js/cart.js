@@ -1062,7 +1062,7 @@ async function submitOrderWithDetails() {
 
 // --- Checkout ---
 
-async function checkout(deliveryMethod, pickupLocation) {
+async function checkout(deliveryMethod, pickupLocation, pickupContact) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -1078,6 +1078,7 @@ async function checkout(deliveryMethod, pickupLocation) {
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
     if (pickupLocation) body.pickup_location = pickupLocation;
+    if (pickupContact)  body.pickup_contact  = pickupContact;
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1126,7 +1127,7 @@ function openCartDeliveryModal() {
   overlay.classList.add('open');
   applyShipMinimum(getTotal());
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkoutSubscription('pickup', loc)); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -1136,11 +1137,11 @@ function openOneTimeDeliveryChoice() {
   overlay.classList.add('open');
   applyShipMinimum(getTotal());
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); openShipCalcModal(); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => checkout('pickup', loc)); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
-async function checkoutSubscription(deliveryMethod, pickupLocation) {
+async function checkoutSubscription(deliveryMethod, pickupLocation, pickupContact) {
   const cart = getCart();
   if (!cart.items.length) return;
 
@@ -1159,6 +1160,7 @@ async function checkoutSubscription(deliveryMethod, pickupLocation) {
   try {
     const body = { items, delivery_method: deliveryMethod || 'ship' };
     if (pickupLocation) body.pickup_location = pickupLocation;
+    if (pickupContact)  body.pickup_contact  = pickupContact;
     const res = await fetch('/create-cart-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1367,6 +1369,100 @@ function closePickupLocationModal() {
   document.getElementById('pickup-loc-overlay')?.classList.remove('open');
 }
 
+function openPickupContactModal(location, onConfirm) {
+  document.getElementById('pickup-contact-overlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'pickup-contact-overlay';
+  overlay.className = 'sub-prompt-overlay';
+
+  const box = document.createElement('div');
+  box.className = 'pickup-contact-box';
+
+  const heading = document.createElement('h2');
+  heading.className = 'pickup-contact__heading';
+  heading.textContent = 'Your Contact Info';
+
+  const sub = document.createElement('p');
+  sub.className = 'pickup-contact__sub';
+  sub.textContent = 'So we can coordinate your ' + location + ' pick-up.';
+
+  const phoneLabel = document.createElement('label');
+  phoneLabel.className = 'pickup-contact__label';
+  phoneLabel.textContent = 'Phone Number';
+
+  const phoneInput = document.createElement('input');
+  phoneInput.type = 'tel';
+  phoneInput.id = 'pc-phone';
+  phoneInput.className = 'pickup-contact__input';
+  phoneInput.placeholder = '(555) 000-0000';
+
+  const addrLabel = document.createElement('label');
+  addrLabel.className = 'pickup-contact__label';
+  addrLabel.textContent = 'Home Address';
+
+  const addrInput = document.createElement('input');
+  addrInput.type = 'text';
+  addrInput.id = 'pc-address';
+  addrInput.className = 'pickup-contact__input';
+  addrInput.placeholder = '123 Main St, City, TX 78701';
+
+  const commLabel = document.createElement('p');
+  commLabel.className = 'pickup-contact__label';
+  commLabel.textContent = 'Preferred Contact Method';
+
+  const commOpts = document.createElement('div');
+  commOpts.className = 'pickup-contact__comm-opts';
+
+  ['Text', 'Call', 'Email'].forEach((opt, i) => {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'pickup-contact__comm-opt';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'pc-comm';
+    radio.value = opt.toLowerCase();
+    if (i === 0) radio.checked = true;
+    const span = document.createElement('span');
+    span.textContent = opt;
+    wrapper.appendChild(radio);
+    wrapper.appendChild(span);
+    commOpts.appendChild(wrapper);
+  });
+
+  const errMsg = document.createElement('p');
+  errMsg.className = 'pickup-contact__error';
+
+  const continueBtn = document.createElement('button');
+  continueBtn.className = 'pickup-contact__submit';
+  continueBtn.textContent = 'Continue to Checkout';
+
+  continueBtn.addEventListener('click', () => {
+    const phone   = phoneInput.value.trim();
+    const address = addrInput.value.trim();
+    const commPref = document.querySelector('input[name="pc-comm"]:checked')?.value || 'text';
+    if (!phone)   { errMsg.textContent = 'Please enter your phone number.'; return; }
+    if (!address) { errMsg.textContent = 'Please enter your home address.'; return; }
+    errMsg.textContent = '';
+    overlay.remove();
+    onConfirm({ phone, address, commPref });
+  });
+
+  box.appendChild(heading);
+  box.appendChild(sub);
+  box.appendChild(phoneLabel);
+  box.appendChild(phoneInput);
+  box.appendChild(addrLabel);
+  box.appendChild(addrInput);
+  box.appendChild(commLabel);
+  box.appendChild(commOpts);
+  box.appendChild(errMsg);
+  box.appendChild(continueBtn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
 function openPickupLocationModal(onSelect) {
   const overlay = document.getElementById('pickup-loc-overlay');
   if (!overlay) return;
@@ -1381,7 +1477,7 @@ function openPickupLocationModal(onSelect) {
   locations.forEach(({ id, label }) => {
     document.getElementById(id).onclick = () => {
       closePickupLocationModal();
-      onSelect(label);
+      openPickupContactModal(label, contact => onSelect(label, contact));
     };
   });
 

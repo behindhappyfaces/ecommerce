@@ -1522,6 +1522,50 @@ h1, h2, h3, h4 {
 }
 .pickup-loc-cancel:hover { color: #555; border-color: #aaa; }
 
+/* ---- Pickup contact info modal ---- */
+.pickup-contact-box {
+  background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%;
+  max-width: 420px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+.pickup-contact__heading {
+  font-family: 'Playfair Display', serif; font-size: 1.25rem;
+  color: var(--color-green); margin-bottom: 6px;
+}
+.pickup-contact__sub { font-size: 0.82rem; color: #888; margin-bottom: 20px; }
+.pickup-contact__label {
+  display: block; font-size: 0.78rem; font-weight: 700; color: var(--color-green);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; margin-top: 16px;
+}
+.pickup-contact__input {
+  display: block; width: 100%; padding: 10px 12px; border: 1.5px solid #ddd;
+  border-radius: 8px; font-size: 0.92rem; font-family: inherit;
+  color: #333; outline: none; transition: border-color 0.2s;
+}
+.pickup-contact__input:focus { border-color: var(--color-green); }
+.pickup-contact__comm-opts {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+}
+.pickup-contact__comm-opt {
+  display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+  border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer;
+  font-size: 0.88rem; font-family: inherit; transition: border-color 0.2s, background 0.2s;
+}
+.pickup-contact__comm-opt:has(input:checked) {
+  border-color: var(--color-green); background: #f0f7f0;
+}
+.pickup-contact__comm-opt input { accent-color: var(--color-green); }
+.pickup-contact__error {
+  font-size: 0.8rem; color: var(--color-rust); min-height: 18px; margin-top: 10px;
+}
+.pickup-contact__submit {
+  display: block; width: 100%; margin-top: 18px; padding: 13px;
+  background: var(--color-green); color: #fff; border: none; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em;
+  cursor: pointer; font-family: inherit; transition: background 0.2s;
+}
+.pickup-contact__submit:hover { background: #1e7a42; }
+
 /* =========================================
    ABOUT PAGES
    ========================================= */

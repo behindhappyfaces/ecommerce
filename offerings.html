@@ -506,11 +506,13 @@
       justify-content: center;
       padding: 16px;
       opacity: 0;
-      transition: opacity 0.35s ease;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
       pointer-events: none;
     }
     .turkey-overlay.open {
       opacity: 1;
+      visibility: visible;
       pointer-events: all;
     }
     .turkey-modal {
@@ -753,10 +755,7 @@
       }
 
       function closePopup() {
-        var overlay = document.getElementById('turkey-overlay');
-        overlay.style.opacity = '0';
-        overlay.style.pointerEvents = 'none';
-        setTimeout(function () { overlay.style.display = 'none'; }, 350);
+        document.getElementById('turkey-overlay').classList.remove('open');
         document.getElementById('turkey-strip').classList.add('visible');
       }
 
@@ -778,7 +777,8 @@
 
         document.getElementById('turkey-strip-btn').addEventListener('click', scrollToTurkey);
         document.getElementById('turkey-strip-close').addEventListener('click', function () {
-          document.getElementById('turkey-strip').style.display = 'none';
+          document.getElementById('turkey-strip').classList.remove('visible');
+          document.getElementById('turkey-strip').style.transform = 'translateY(100%)';
         });
       });
     }());

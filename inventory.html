@@ -2631,27 +2631,35 @@
       }
       card.appendChild(delivery);
 
-      // Contact info block (always shown when data exists)
-      const phone   = order.pickupPhone || order.shippingAddress?.phone || '';
-      const address = order.pickupAddress || (order.shippingAddress
+      // Contact info block
+      const phone    = order.pickupPhone || order.shippingAddress?.phone || '';
+      const email    = order.pickupEmail || order.customerEmail || '';
+      const address  = order.pickupAddress || (order.shippingAddress
         ? [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state, order.shippingAddress.zip].filter(Boolean).join(', ')
         : '');
-      const email   = order.customerEmail || '';
-      const commPref = order.pickupCommPref || '';
+      const commRaw  = order.pickupCommPref || '';
 
-      if (phone || address || email || commPref) {
+      // Format ordered comm prefs: "text,email" → "1st: Text  2nd: Email"
+      let commDisplay = '';
+      if (commRaw) {
+        commDisplay = commRaw.split(',').map((v, i) => {
+          const ord = i === 0 ? '1st' : '2nd';
+          return ord + ': ' + v.charAt(0).toUpperCase() + v.slice(1);
+        }).join('  ·  ');
+      }
+
+      if (phone || address || email || commDisplay) {
         const cb2 = document.createElement('div');
         cb2.className = 'order-contact-block';
-        const rows = [
-          email   ? ['✉', 'Email', email]   : null,
-          phone   ? ['📞', 'Phone', phone]   : null,
+        [
+          email       ? ['✉', 'Email',   email]       : null,
+          phone       ? ['📞', 'Phone',   phone]       : null,
           address && order.deliveryMethod === 'pickup' ? ['🏠', 'Address', address] : null,
-          commPref ? ['💬', 'Prefers', commPref.charAt(0).toUpperCase() + commPref.slice(1)] : null,
-        ].filter(Boolean);
-        rows.forEach(([icon, label, val]) => {
+          commDisplay ? ['💬', 'Contact', commDisplay] : null,
+        ].filter(Boolean).forEach(([icon, lbl, val]) => {
           const row = document.createElement('div');
           const sp = document.createElement('span');
-          sp.textContent = icon + ' ' + label + ': ';
+          sp.textContent = icon + ' ' + lbl + ': ';
           row.appendChild(sp);
           row.appendChild(document.createTextNode(val));
           cb2.appendChild(row);

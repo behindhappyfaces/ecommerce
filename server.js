@@ -178,7 +178,13 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
         const pickupLoc      = session.metadata?.pickup_location || '';
         const pickupPhone    = session.metadata?.pickup_phone   || '';
-        const pickupAddress  = session.metadata?.pickup_address || '';
+        const pickupEmail    = session.metadata?.pickup_email   || '';
+        const pickupStreet1  = session.metadata?.pickup_street1 || '';
+        const pickupStreet2  = session.metadata?.pickup_street2 || '';
+        const pickupCity     = session.metadata?.pickup_city    || '';
+        const pickupState    = session.metadata?.pickup_state   || '';
+        const pickupZip      = session.metadata?.pickup_zip     || '';
+        const pickupAddress  = [pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupZip].filter(Boolean).join(', ');
         const pickupCommPref = session.metadata?.pickup_comm    || '';
         const addrLine = shippingAddr
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
@@ -241,6 +247,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             deliveryMethod: deliveryMethod,
             pickupLocation: pickupLoc || '',
             pickupPhone:    pickupPhone,
+            pickupEmail:    pickupEmail,
             pickupAddress:  pickupAddress,
             pickupCommPref: pickupCommPref,
             shippingAddress: shippingAddr ? {
@@ -295,6 +302,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             deliveryMethod: deliveryMethod,
             pickupLocation: pickupLoc || '',
             pickupPhone:    pickupPhone,
+            pickupEmail:    pickupEmail,
             pickupAddress:  pickupAddress,
             pickupCommPref: pickupCommPref,
             shippingAddress: shippingAddr ? {
@@ -728,8 +736,13 @@ app.post('/create-checkout-session', async (req, res) => {
     const metadata = { delivery_method: delivery_method || 'ship' };
     if (pickup_location) metadata.pickup_location = pickup_location;
     if (pickup_contact) {
-      metadata.pickup_phone   = (pickup_contact.phone   || '').slice(0, 500);
-      metadata.pickup_address = (pickup_contact.address || '').slice(0, 500);
+      metadata.pickup_phone   = (pickup_contact.phone   || '').slice(0, 100);
+      metadata.pickup_email   = (pickup_contact.email   || '').slice(0, 200);
+      metadata.pickup_street1 = (pickup_contact.street1 || '').slice(0, 200);
+      metadata.pickup_street2 = (pickup_contact.street2 || '').slice(0, 100);
+      metadata.pickup_city    = (pickup_contact.city    || '').slice(0, 100);
+      metadata.pickup_state   = (pickup_contact.state   || '').slice(0, 10);
+      metadata.pickup_zip     = (pickup_contact.zip     || '').slice(0, 10);
       metadata.pickup_comm    = (pickup_contact.commPref || 'text').slice(0, 50);
     }
     if (billing) {
@@ -1255,7 +1268,13 @@ async function performStripeSync(limit = 50) {
     const deliveryMethod = session.metadata?.delivery_method || 'ship';
     const pickupLoc      = session.metadata?.pickup_location || '';
     const pickupPhone    = session.metadata?.pickup_phone    || '';
-    const pickupAddress  = session.metadata?.pickup_address  || '';
+    const pickupEmail    = session.metadata?.pickup_email    || '';
+    const pickupStreet1  = session.metadata?.pickup_street1  || '';
+    const pickupStreet2  = session.metadata?.pickup_street2  || '';
+    const pickupCity     = session.metadata?.pickup_city     || '';
+    const pickupState    = session.metadata?.pickup_state    || '';
+    const pickupZip      = session.metadata?.pickup_zip      || '';
+    const pickupAddress  = [pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupZip].filter(Boolean).join(', ');
     const pickupCommPref = session.metadata?.pickup_comm     || '';
     const customerName   = session.customer_details?.name  || 'Valued Customer';
     const customerEmail  = session.customer_details?.email || '';
@@ -1275,6 +1294,7 @@ async function performStripeSync(limit = 50) {
       deliveryMethod,
       pickupLocation:  pickupLoc,
       pickupPhone,
+      pickupEmail,
       pickupAddress,
       pickupCommPref,
       shippingAddress: shippingAddr ? {

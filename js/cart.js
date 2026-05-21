@@ -1379,6 +1379,20 @@ function openPickupContactModal(location, onConfirm) {
   const box = document.createElement('div');
   box.className = 'pickup-contact-box';
 
+  function mkLabel(text) {
+    const l = document.createElement('p');
+    l.className = 'pickup-contact__label';
+    l.textContent = text;
+    return l;
+  }
+  function mkInput(type, placeholder, id) {
+    const i = document.createElement('input');
+    i.type = type; i.placeholder = placeholder;
+    if (id) i.id = id;
+    i.className = 'pickup-contact__input';
+    return i;
+  }
+
   const heading = document.createElement('h2');
   heading.className = 'pickup-contact__heading';
   heading.textContent = 'Your Contact Info';
@@ -1387,46 +1401,91 @@ function openPickupContactModal(location, onConfirm) {
   sub.className = 'pickup-contact__sub';
   sub.textContent = 'So we can coordinate your ' + location + ' pick-up.';
 
-  const phoneLabel = document.createElement('label');
-  phoneLabel.className = 'pickup-contact__label';
-  phoneLabel.textContent = 'Phone Number';
+  // Phone
+  const phoneInput  = mkInput('tel',   '(555) 000-0000',           'pc-phone');
+  // Email
+  const emailInput  = mkInput('email', 'you@example.com',           'pc-email');
+  // Address fields
+  const street1Input = mkInput('text', 'Street Address',            'pc-street1');
+  const street2Input = mkInput('text', 'Apt, Suite, Unit (optional)','pc-street2');
 
-  const phoneInput = document.createElement('input');
-  phoneInput.type = 'tel';
-  phoneInput.id = 'pc-phone';
-  phoneInput.className = 'pickup-contact__input';
-  phoneInput.placeholder = '(555) 000-0000';
+  const cityRow = document.createElement('div');
+  cityRow.className = 'pickup-contact__city-row';
+  const cityInput  = mkInput('text', 'City',  'pc-city');
+  const stateInput = mkInput('text', 'State', 'pc-state');
+  const zipInput   = mkInput('text', 'ZIP',   'pc-zip');
+  stateInput.maxLength = 2;
+  zipInput.maxLength = 5;
+  zipInput.setAttribute('inputmode', 'numeric');
+  cityRow.appendChild(cityInput);
+  cityRow.appendChild(stateInput);
+  cityRow.appendChild(zipInput);
 
-  const addrLabel = document.createElement('label');
-  addrLabel.className = 'pickup-contact__label';
-  addrLabel.textContent = 'Home Address';
+  // Auto-fill city/state from ZIP
+  zipInput.addEventListener('input', async () => {
+    const z = zipInput.value.replace(/\D/g, '');
+    if (z.length === 5) {
+      try {
+        const r = await fetch('/api/zip-lookup?zip=' + z);
+        if (r.ok) {
+          const d = await r.json();
+          if (d.city  && !cityInput.value)  cityInput.value  = d.city;
+          if (d.state && !stateInput.value) stateInput.value = d.state;
+        }
+      } catch {}
+    }
+  });
 
-  const addrInput = document.createElement('input');
-  addrInput.type = 'text';
-  addrInput.id = 'pc-address';
-  addrInput.className = 'pickup-contact__input';
-  addrInput.placeholder = '123 Main St, City, TX 78701';
-
-  const commLabel = document.createElement('p');
-  commLabel.className = 'pickup-contact__label';
-  commLabel.textContent = 'Preferred Contact Method';
+  // Comm preference — multi-select, ordered
+  const commNote = document.createElement('p');
+  commNote.className = 'pickup-contact__sub';
+  commNote.style.margin = '4px 0 10px';
+  commNote.textContent = 'Select up to 2 in order of preference.';
 
   const commOpts = document.createElement('div');
   commOpts.className = 'pickup-contact__comm-opts';
+  let commSelected = [];
 
-  ['Text', 'Call', 'Email'].forEach((opt, i) => {
-    const wrapper = document.createElement('label');
-    wrapper.className = 'pickup-contact__comm-opt';
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'pc-comm';
-    radio.value = opt.toLowerCase();
-    if (i === 0) radio.checked = true;
-    const span = document.createElement('span');
-    span.textContent = opt;
-    wrapper.appendChild(radio);
-    wrapper.appendChild(span);
-    commOpts.appendChild(wrapper);
+  ['Text', 'Call', 'Email'].forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pickup-contact__comm-btn';
+    btn.dataset.value = opt.toLowerCase();
+
+    const badge = document.createElement('span');
+    badge.className = 'pickup-contact__comm-badge';
+    badge.style.display = 'none';
+
+    const lbl = document.createElement('span');
+    lbl.textContent = opt;
+
+    btn.appendChild(badge);
+    btn.appendChild(lbl);
+    commOpts.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.value;
+      const idx = commSelected.indexOf(val);
+      if (idx !== -1) {
+        commSelected.splice(idx, 1);
+      } else if (commSelected.length < 2) {
+        commSelected.push(val);
+      } else { return; }
+
+      commOpts.querySelectorAll('.pickup-contact__comm-btn').forEach(b => {
+        const i = commSelected.indexOf(b.dataset.value);
+        const bg = b.querySelector('.pickup-contact__comm-badge');
+        if (i !== -1) {
+          b.classList.add('selected');
+          bg.textContent = (i + 1) + (i === 0 ? 'st' : 'nd');
+          bg.style.display = 'inline-flex';
+        } else {
+          b.classList.remove('selected');
+          bg.textContent = '';
+          bg.style.display = 'none';
+        }
+      });
+    });
   });
 
   const errMsg = document.createElement('p');
@@ -1434,26 +1493,75 @@ function openPickupContactModal(location, onConfirm) {
 
   const continueBtn = document.createElement('button');
   continueBtn.className = 'pickup-contact__submit';
-  continueBtn.textContent = 'Continue to Checkout';
+  continueBtn.textContent = 'Verify Address & Continue';
 
-  continueBtn.addEventListener('click', () => {
+  async function verifyAndContinue() {
     const phone   = phoneInput.value.trim();
-    const address = addrInput.value.trim();
-    const commPref = document.querySelector('input[name="pc-comm"]:checked')?.value || 'text';
-    if (!phone)   { errMsg.textContent = 'Please enter your phone number.'; return; }
-    if (!address) { errMsg.textContent = 'Please enter your home address.'; return; }
+    const email   = emailInput.value.trim();
+    const street1 = street1Input.value.trim();
+    const street2 = street2Input.value.trim();
+    const city    = cityInput.value.trim();
+    const state   = stateInput.value.trim().toUpperCase();
+    const zip     = zipInput.value.trim().replace(/\D/g,'');
+
+    if (!phone)          { errMsg.textContent = 'Please enter your phone number.'; return; }
+    if (!email)          { errMsg.textContent = 'Please enter your email address.'; return; }
+    if (!street1)        { errMsg.textContent = 'Please enter your street address.'; return; }
+    if (!city)           { errMsg.textContent = 'Please enter your city.'; return; }
+    if (!state)          { errMsg.textContent = 'Please enter your state (e.g. TX).'; return; }
+    if (zip.length < 5)  { errMsg.textContent = 'Please enter a valid 5-digit ZIP code.'; return; }
+    if (!commSelected.length) { errMsg.textContent = 'Please select at least one contact method.'; return; }
     errMsg.textContent = '';
+
+    continueBtn.disabled = true;
+    continueBtn.textContent = 'Verifying address…';
+
+    const entered = { street1, street2, city, state, zip };
+
+    try {
+      const r = await fetch('/api/verify-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street1, city, state, zip }),
+      });
+      const d = await r.json();
+
+      if (d.success && d.standardized) {
+        const v = d.standardized;
+        const eStr = [street1, city, state, zip].join(' ').toLowerCase().replace(/\s+/g,' ');
+        const vStr = [v.street1, v.city, v.state, v.zip].join(' ').toLowerCase().replace(/\s+/g,' ');
+        if (eStr !== vStr) {
+          continueBtn.disabled = false;
+          continueBtn.textContent = 'Verify Address & Continue';
+          showAddressChoice(entered, v, chosen => {
+            overlay.remove();
+            onConfirm({ phone, email, street1: chosen.street1, street2: chosen.street2 || street2, city: chosen.city, state: chosen.state, zip: chosen.zip, commPref: commSelected.join(',') });
+          });
+          return;
+        }
+      }
+    } catch {}
+
+    continueBtn.disabled = false;
+    continueBtn.textContent = 'Verify Address & Continue';
     overlay.remove();
-    onConfirm({ phone, address, commPref });
-  });
+    onConfirm({ phone, email, street1, street2, city, state, zip, commPref: commSelected.join(',') });
+  }
+
+  continueBtn.addEventListener('click', verifyAndContinue);
 
   box.appendChild(heading);
   box.appendChild(sub);
-  box.appendChild(phoneLabel);
+  box.appendChild(mkLabel('Phone Number'));
   box.appendChild(phoneInput);
-  box.appendChild(addrLabel);
-  box.appendChild(addrInput);
-  box.appendChild(commLabel);
+  box.appendChild(mkLabel('Email Address'));
+  box.appendChild(emailInput);
+  box.appendChild(mkLabel('Home Address'));
+  box.appendChild(street1Input);
+  box.appendChild(street2Input);
+  box.appendChild(cityRow);
+  box.appendChild(mkLabel('Preferred Contact Methods'));
+  box.appendChild(commNote);
   box.appendChild(commOpts);
   box.appendChild(errMsg);
   box.appendChild(continueBtn);
@@ -1461,6 +1569,75 @@ function openPickupContactModal(location, onConfirm) {
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('open'));
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function showAddressChoice(entered, verified, onSelect) {
+  const overlay = document.createElement('div');
+  overlay.className = 'sub-prompt-overlay';
+  overlay.style.zIndex = '10001';
+
+  const box = document.createElement('div');
+  box.className = 'pickup-contact-box';
+
+  const h = document.createElement('h2');
+  h.className = 'pickup-contact__heading';
+  h.textContent = 'Confirm Your Address';
+
+  const sub = document.createElement('p');
+  sub.className = 'pickup-contact__sub';
+  sub.textContent = 'USPS found a standardized version. Which would you like to use?';
+
+  box.appendChild(h);
+  box.appendChild(sub);
+
+  let chosen = 'verified';
+
+  function mkAddrBtn(labelText, addr, value) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'addr-choice-btn' + (value === 'verified' ? ' selected' : '');
+    btn.dataset.choice = value;
+
+    const lbl = document.createElement('strong');
+    lbl.textContent = labelText;
+    const br = document.createElement('br');
+    const addrTxt = document.createTextNode(
+      [addr.street1, addr.street2, addr.city, addr.state, addr.zip].filter(Boolean).join(', ')
+    );
+    btn.appendChild(lbl);
+    btn.appendChild(br);
+    btn.appendChild(addrTxt);
+    btn.addEventListener('click', () => {
+      chosen = value;
+      box.querySelectorAll('.addr-choice-btn').forEach(b =>
+        b.classList.toggle('selected', b.dataset.choice === value)
+      );
+    });
+    return btn;
+  }
+
+  box.appendChild(mkAddrBtn('✅ USPS Verified', verified, 'verified'));
+
+  const or = document.createElement('p');
+  or.style.cssText = 'text-align:center;color:#aaa;font-size:0.8rem;margin:8px 0;';
+  or.textContent = '— or —';
+  box.appendChild(or);
+
+  box.appendChild(mkAddrBtn('✏️ My Entered Address', entered, 'entered'));
+
+  const useBtn = document.createElement('button');
+  useBtn.className = 'pickup-contact__submit';
+  useBtn.style.marginTop = '16px';
+  useBtn.textContent = 'Use This Address';
+  useBtn.addEventListener('click', () => {
+    overlay.remove();
+    onSelect(chosen === 'verified' ? verified : entered);
+  });
+  box.appendChild(useBtn);
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('open'));
 }
 
 function openPickupLocationModal(onSelect) {

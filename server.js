@@ -938,6 +938,16 @@ app.post('/create-checkout-session', async (req, res) => {
       sessionParams.phone_number_collection     = { enabled: true };
     }
 
+    // For pickup orders: pre-attach customer by email so Stripe skips the email field
+    if (!isShip && pickup_contact?.email) {
+      const email = pickup_contact.email.trim();
+      const existing = await stripe.customers.list({ email, limit: 1 });
+      const customer = existing.data.length
+        ? existing.data[0]
+        : await stripe.customers.create({ email });
+      sessionParams.customer = customer.id;
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {

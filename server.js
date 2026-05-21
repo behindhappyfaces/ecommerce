@@ -3,6 +3,7 @@ if (!process.env.STRIPE_SECRET_KEY) require('dotenv').config();
 const express  = require('express');
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const nodemailer = require('nodemailer');
+const PDFDocument = require('pdfkit');
 const path     = require('path');
 const fs       = require('fs');
 const crypto   = require('crypto');
@@ -61,18 +62,126 @@ async function sendEmail(subject, html) {
   console.log('Email sent:', subject);
 }
 
-async function sendEmailTo(to, subject, html) {
+async function sendEmailTo(to, subject, html, attachments = []) {
   if (!process.env.OUTLOOK_PASSWORD || process.env.OUTLOOK_PASSWORD === 'your_outlook_password_here') {
     console.log('[Customer email skipped]\nTo:', to, '\nSubject:', subject);
     return;
   }
+  const fromAddr = process.env.ORDERS_FROM || 'orders@heartoftexasorganics.com';
   await mailer.sendMail({
-    from: `"Heart of Texas Organics" <${process.env.OUTLOOK_USER}>`,
+    from: `"Heart of Texas Organics" <${fromAddr}>`,
     to,
     subject,
     html,
+    attachments,
   });
   console.log('Customer email sent:', to, subject);
+}
+
+function generateReceiptPDF(order) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'LETTER', margin: 56 });
+    const chunks = [];
+    doc.on('data', c => chunks.push(c));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const green  = '#2C3E2D';
+    const rust   = '#8B4A2F';
+    const gray   = '#555555';
+    const lgray  = '#888888';
+    const lgreen = '#D4EDDA';
+
+    // Header
+    doc.fontSize(20).fillColor(green).text('Heart of Texas Organics', { align: 'center' });
+    doc.fontSize(10).fillColor(lgray).text('heartoftexasorganics.com  ·  orders@heartoftexasorganics.com', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.moveTo(56, doc.y).lineTo(556, doc.y).strokeColor(green).stroke();
+    doc.moveDown(0.8);
+
+    // Receipt title
+    doc.fontSize(15).fillColor(rust).text('Order Receipt', { align: 'center' });
+    doc.moveDown(0.5);
+
+    // Order meta
+    const orderDate = order.created
+      ? new Date(order.created).toLocaleString('en-US', { timeZone: 'America/Chicago', dateStyle: 'long', timeStyle: 'short' })
+      : 'N/A';
+    doc.fontSize(10).fillColor(gray);
+    doc.text(`Date: ${orderDate}`);
+    doc.text(`Order Ref: ${order.sessionId || 'N/A'}`);
+    doc.text(`Customer: ${order.customerName || 'N/A'}`);
+    if (order.customerEmail) doc.text(`Email: ${order.customerEmail}`);
+    doc.moveDown(0.8);
+
+    // Items table header
+    doc.moveTo(56, doc.y).lineTo(556, doc.y).strokeColor('#cccccc').stroke();
+    doc.moveDown(0.3);
+    doc.fontSize(10).fillColor(green).font('Helvetica-Bold');
+    doc.text('Item', 56, doc.y, { width: 300, continued: true });
+    doc.text('Qty', 356, doc.y, { width: 60, align: 'center', continued: true });
+    doc.text('Price', 416, doc.y, { width: 140, align: 'right' });
+    doc.moveDown(0.3);
+    doc.moveTo(56, doc.y).lineTo(556, doc.y).strokeColor('#cccccc').stroke();
+    doc.moveDown(0.3);
+
+    // Items rows
+    doc.font('Helvetica').fillColor(gray);
+    const items = order.items || [];
+    for (const item of items) {
+      const rowY = doc.y;
+      doc.text(item.name || '', 56, rowY, { width: 300 });
+      const textH = doc.y - rowY;
+      doc.text(String(item.qty || item.quantity || 1), 356, rowY, { width: 60, align: 'center' });
+      if (item.price != null) {
+        doc.text('$' + (item.price / 100).toFixed(2), 416, rowY, { width: 140, align: 'right' });
+      }
+      doc.y = rowY + Math.max(textH, 16);
+      doc.moveDown(0.2);
+    }
+
+    doc.moveDown(0.3);
+    doc.moveTo(56, doc.y).lineTo(556, doc.y).strokeColor('#cccccc').stroke();
+    doc.moveDown(0.4);
+
+    // Total
+    doc.font('Helvetica-Bold').fillColor(green).fontSize(11);
+    const totalStr = order.total != null ? '$' + (order.total / 100).toFixed(2) : 'N/A';
+    doc.text('Total', 56, doc.y, { width: 300 + 60, continued: true });
+    doc.text(totalStr, 416, doc.y, { width: 140, align: 'right' });
+    doc.moveDown(1.2);
+
+    // Delivery info
+    doc.font('Helvetica-Bold').fillColor(rust).fontSize(10).text('Delivery Information');
+    doc.font('Helvetica').fillColor(gray);
+    if (order.deliveryMethod === 'pickup') {
+      doc.text(`Method: Local Pick-up${order.pickupLocation ? ' — ' + order.pickupLocation : ''}`);
+      if (order.pickupAddress) doc.text(`Address: ${order.pickupAddress}`);
+      if (order.pickupPhone)   doc.text(`Phone: ${order.pickupPhone}`);
+      if (order.pickupEmail)   doc.text(`Contact Email: ${order.pickupEmail}`);
+      if (order.pickupCommPref) {
+        const prefs = order.pickupCommPref.split(',').map((v, i) => `${i === 0 ? '1st' : '2nd'}: ${v.charAt(0).toUpperCase() + v.slice(1)}`).join(' · ');
+        doc.text(`Preferred Contact: ${prefs}`);
+      }
+      doc.moveDown(0.4);
+      doc.fillColor(rust).text('We will reach out to confirm your pick-up time and location.');
+    } else if (order.shippingAddress) {
+      const sa = order.shippingAddress;
+      doc.text(`Method: Shipped`);
+      doc.text(`Ship to: ${sa.name || ''}, ${sa.street || ''}, ${sa.city || ''}, ${sa.state || ''} ${sa.zip || ''}`);
+    }
+    doc.moveDown(1.2);
+
+    // Footer
+    doc.moveTo(56, doc.y).lineTo(556, doc.y).strokeColor(green).stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(9).fillColor(lgray).text(
+      'Thank you for supporting Heart of Texas Organics! Questions? Reply to this email or visit heartoftexasorganics.com.',
+      { align: 'center' }
+    );
+
+    doc.end();
+  });
 }
 
 function formatMoney(cents) {
@@ -264,11 +373,38 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           deductStockForOrder(items, session.id);
 
-          // Customer confirmation
+          // Customer confirmation with PDF receipt
           if (customerEmail) {
+            const orderDataForPdf = {
+              sessionId: session.id,
+              created: new Date().toISOString(),
+              customerName,
+              customerEmail,
+              deliveryMethod,
+              pickupLocation: pickupLoc,
+              pickupPhone,
+              pickupEmail,
+              pickupAddress,
+              pickupCommPref,
+              shippingAddress: shippingAddr ? {
+                name: customerName,
+                street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
+                city: shippingAddr.city, state: shippingAddr.state, zip: shippingAddr.postal_code,
+              } : null,
+              items: productItems.map(li => ({ name: li.description, qty: li.quantity, price: li.price?.unit_amount })),
+              total: session.amount_total,
+            };
+            let pdfAttachments = [];
+            try {
+              const pdfBuf = await generateReceiptPDF(orderDataForPdf);
+              pdfAttachments = [{ filename: 'HOTO-Receipt.pdf', content: pdfBuf, contentType: 'application/pdf' }];
+            } catch (pdfErr) {
+              console.error('PDF generation error:', pdfErr.message);
+            }
             await sendEmailTo(customerEmail,
               'Your Heart of Texas Organics Order is Confirmed',
-              orderConfirmEmail('thank you for your order! We\'re preparing it now.', null)
+              orderConfirmEmail('thank you for your order! We\'re preparing it now.', null),
+              pdfAttachments
             );
           }
 
@@ -321,12 +457,39 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
           // Customer confirmation (note: not shipped until ACH clears)
           if (customerEmail) {
+            const orderDataForPdf = {
+              sessionId: session.id,
+              created: new Date().toISOString(),
+              customerName,
+              customerEmail,
+              deliveryMethod,
+              pickupLocation: pickupLoc,
+              pickupPhone,
+              pickupEmail,
+              pickupAddress,
+              pickupCommPref,
+              shippingAddress: shippingAddr ? {
+                name: customerName,
+                street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
+                city: shippingAddr.city, state: shippingAddr.state, zip: shippingAddr.postal_code,
+              } : null,
+              items: productItems.map(li => ({ name: li.description, qty: li.quantity, price: li.price?.unit_amount })),
+              total: session.amount_total,
+            };
+            let pdfAttachments = [];
+            try {
+              const pdfBuf = await generateReceiptPDF(orderDataForPdf);
+              pdfAttachments = [{ filename: 'HOTO-Receipt.pdf', content: pdfBuf, contentType: 'application/pdf' }];
+            } catch (pdfErr) {
+              console.error('PDF generation error:', pdfErr.message);
+            }
             await sendEmailTo(customerEmail,
               'Your Heart of Texas Organics Order is Received',
               orderConfirmEmail(
                 'we\'ve received your order! Your bank transfer is processing.',
                 'Note: ACH bank transfers take 3–5 business days to settle. We\'ll ship your order once payment clears and send you a follow-up email.'
-              )
+              ),
+              pdfAttachments
             );
           }
 

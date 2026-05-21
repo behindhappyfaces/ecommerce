@@ -191,7 +191,7 @@
         Pasture-Raised &amp; Farm-Fresh
       </h2>
       <div class="offerings-grid__list">
-        <article class="offering-card" data-fade>
+        <article class="offering-card" data-fade id="whole-chicken-section">
           <div class="offering-card__image-wrap">
             <img src="images/chicken.jpg"
                  alt="Pasture-raised whole chicken" loading="lazy" />
@@ -430,6 +430,340 @@
       </div>
     </div>
   </footer>
+
+  <!-- TURKEY POPUP -->
+  <div id="turkey-overlay" class="turkey-overlay" role="dialog" aria-modal="true" aria-labelledby="turkey-heading">
+    <div class="turkey-modal">
+      <button class="turkey-modal__close" id="turkey-close" aria-label="Close">✕</button>
+      <div class="turkey-modal__badge">LIMITED AVAILABILITY</div>
+      <div class="turkey-modal__bird">🦃</div>
+      <h2 class="turkey-modal__heading" id="turkey-heading">Don't Wait.</h2>
+      <p class="turkey-modal__sub">Reserve Your Thanksgiving Turkey TODAY</p>
+      <p class="turkey-modal__body">
+        Pasture-raised, no shortcuts, no shortcuts, <em>ever</em>. Our heritage turkeys
+        sell out fast — once they're gone, they're gone.
+      </p>
+      <div class="turkey-modal__countdown">
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-days">--</span>
+          <span class="turkey-countdown__label">Days</span>
+        </div>
+        <div class="turkey-countdown__sep">:</div>
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-hours">--</span>
+          <span class="turkey-countdown__label">Hours</span>
+        </div>
+        <div class="turkey-countdown__sep">:</div>
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-mins">--</span>
+          <span class="turkey-countdown__label">Mins</span>
+        </div>
+      </div>
+      <p class="turkey-modal__urgency">Selling fast — spots are going quickly!</p>
+      <div class="turkey-modal__actions">
+        <button class="turkey-modal__cta" id="turkey-cta">Reserve Mine Now</button>
+        <button class="turkey-modal__skip" id="turkey-skip">I'll risk it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STICKY TURKEY STRIP -->
+  <div class="turkey-strip" id="turkey-strip">
+    <span class="turkey-strip__icon">🦃</span>
+    <span class="turkey-strip__text"><strong>Thanksgiving Turkeys — Selling Fast!</strong> Reserve yours before they're gone.</span>
+    <button class="turkey-strip__btn" id="turkey-strip-btn">Reserve Now</button>
+    <button class="turkey-strip__close" id="turkey-strip-close" aria-label="Dismiss">✕</button>
+  </div>
+
+  <style>
+    /* ---- Turkey Popup ---- */
+    .turkey-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(28,28,28,0.82);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .turkey-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .turkey-modal {
+      background: var(--color-green);
+      color: var(--color-cream);
+      border-radius: 18px;
+      max-width: 480px;
+      width: 100%;
+      padding: 40px 36px 32px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      border: 2px solid var(--color-tan);
+      animation: turkeyPop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes turkeyPop {
+      from { transform: scale(0.78) translateY(24px); opacity: 0; }
+      to   { transform: scale(1) translateY(0);       opacity: 1; }
+    }
+    .turkey-modal__close {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: none;
+      border: none;
+      color: var(--color-tan-light);
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .turkey-modal__close:hover { opacity: 1; }
+    .turkey-modal__badge {
+      display: inline-block;
+      background: var(--color-rust);
+      color: var(--color-cream);
+      font-family: var(--font-sans);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+      animation: pulse-badge 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+    .turkey-modal__bird {
+      font-size: 4.5rem;
+      line-height: 1;
+      margin-bottom: 10px;
+      display: block;
+      animation: wobble 2.4s ease-in-out infinite;
+    }
+    @keyframes wobble {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+    .turkey-modal__heading {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 700;
+      color: var(--color-tan-light);
+      margin: 0 0 4px;
+      line-height: 1.1;
+    }
+    .turkey-modal__sub {
+      font-family: var(--font-serif);
+      font-size: clamp(1.1rem, 3vw, 1.45rem);
+      color: var(--color-cream);
+      margin: 0 0 16px;
+      font-style: italic;
+    }
+    .turkey-modal__body {
+      font-family: var(--font-sans);
+      font-size: 0.93rem;
+      color: var(--color-tan-light);
+      line-height: 1.65;
+      margin: 0 0 22px;
+    }
+    .turkey-modal__countdown {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 0 10px;
+    }
+    .turkey-countdown__block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 10px 18px;
+      min-width: 72px;
+    }
+    .turkey-countdown__num {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--color-tan-light);
+      line-height: 1;
+    }
+    .turkey-countdown__label {
+      font-family: var(--font-sans);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-cream);
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+    .turkey-countdown__sep {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--color-tan);
+      margin-bottom: 14px;
+    }
+    .turkey-modal__urgency {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: #f0a070;
+      letter-spacing: 0.04em;
+      margin: 0 0 22px;
+      animation: pulse-text 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-text {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .turkey-modal__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .turkey-modal__cta {
+      background: var(--color-rust);
+      color: var(--color-cream);
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 16px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .turkey-modal__cta:hover { background: var(--color-rust-light); transform: translateY(-2px); }
+    .turkey-modal__skip {
+      background: none;
+      border: none;
+      color: var(--color-tan);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .turkey-modal__skip:hover { opacity: 1; }
+
+    /* ---- Sticky Strip ---- */
+    .turkey-strip {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--color-rust);
+      color: var(--color-cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 14px 20px;
+      z-index: 9990;
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+      flex-wrap: wrap;
+    }
+    .turkey-strip.visible { transform: translateY(0); }
+    .turkey-strip__icon { font-size: 1.4rem; }
+    .turkey-strip__text {
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      flex: 1;
+      min-width: 200px;
+    }
+    .turkey-strip__btn {
+      background: var(--color-cream);
+      color: var(--color-rust);
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 9px 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .turkey-strip__btn:hover { background: var(--color-cream-dark); }
+    .turkey-strip__close {
+      background: none;
+      border: none;
+      color: var(--color-cream);
+      font-size: 1rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .turkey-strip__close:hover { opacity: 1; }
+  </style>
+
+  <script>
+    (function () {
+      var THANKSGIVING = new Date('2026-11-26T00:00:00');
+
+      function updateCountdown() {
+        var now = new Date();
+        var diff = THANKSGIVING - now;
+        if (diff <= 0) {
+          document.getElementById('tc-days').textContent = '0';
+          document.getElementById('tc-hours').textContent = '00';
+          document.getElementById('tc-mins').textContent = '00';
+          return;
+        }
+        var days  = Math.floor(diff / 864e5);
+        var hours = Math.floor((diff % 864e5) / 36e5);
+        var mins  = Math.floor((diff % 36e5)  / 6e4);
+        document.getElementById('tc-days').textContent  = days;
+        document.getElementById('tc-hours').textContent = String(hours).padStart(2,'0');
+        document.getElementById('tc-mins').textContent  = String(mins).padStart(2,'0');
+      }
+
+      function scrollToTurkey() {
+        var el = document.getElementById('whole-chicken-section') ||
+                 document.querySelector('[data-add-to-cart="whole-chicken"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function closePopup() {
+        var overlay = document.getElementById('turkey-overlay');
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
+        setTimeout(function () { overlay.style.display = 'none'; }, 350);
+        document.getElementById('turkey-strip').classList.add('visible');
+      }
+
+      window.addEventListener('DOMContentLoaded', function () {
+        updateCountdown();
+        setInterval(updateCountdown, 30000);
+
+        var overlay = document.getElementById('turkey-overlay');
+        setTimeout(function () { overlay.classList.add('open'); }, 600);
+
+        document.getElementById('turkey-close').addEventListener('click', closePopup);
+        document.getElementById('turkey-skip').addEventListener('click', closePopup);
+        overlay.addEventListener('click', function (e) { if (e.target === overlay) closePopup(); });
+
+        document.getElementById('turkey-cta').addEventListener('click', function () {
+          closePopup();
+          setTimeout(scrollToTurkey, 400);
+        });
+
+        document.getElementById('turkey-strip-btn').addEventListener('click', scrollToTurkey);
+        document.getElementById('turkey-strip-close').addEventListener('click', function () {
+          document.getElementById('turkey-strip').style.display = 'none';
+        });
+      });
+    }());
+  </script>
 
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>

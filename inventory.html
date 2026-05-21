@@ -2749,6 +2749,7 @@
               return;
             }
             order.status = 'COMPLETED';
+            order.previousStatus = 'READY_TO_SHIP';
             const parent = card.parentNode;
             if (parent) parent.replaceChild(buildOrderCard(order), card);
             showToast('Order marked complete');
@@ -2759,6 +2760,39 @@
           }
         });
         actions.appendChild(completeBtn);
+      }
+
+      if (order.status === 'COMPLETED') {
+        const undoBtn = document.createElement('button');
+        undoBtn.className = 'btn-sm btn-ghost';
+        undoBtn.style.cssText = 'color:var(--orange);border-color:rgba(230,126,34,0.35);';
+        undoBtn.textContent = '↩ Undo Complete';
+        undoBtn.addEventListener('click', async () => {
+          undoBtn.disabled = true;
+          undoBtn.textContent = '…';
+          try {
+            const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId) + '/uncomplete', {
+              method: 'PUT', headers: authHeaders(),
+            });
+            if (!r.ok) {
+              showToast('Could not undo', true);
+              undoBtn.disabled = false;
+              undoBtn.textContent = '↩ Undo Complete';
+              return;
+            }
+            const d = await r.json();
+            order.status = d.status || 'READY_TO_SHIP';
+            order.previousStatus = null;
+            const parent = card.parentNode;
+            if (parent) parent.replaceChild(buildOrderCard(order), card);
+            showToast('Order reverted');
+          } catch {
+            showToast('Connection error', true);
+            undoBtn.disabled = false;
+            undoBtn.textContent = '↩ Undo Complete';
+          }
+        });
+        actions.appendChild(undoBtn);
       }
 
       // Delete button (always present)

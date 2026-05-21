@@ -1403,12 +1403,29 @@ app.put('/admin/orders/:piId/complete', requireAdmin, (req, res) => {
   if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
   orders[piId] = {
     ...orders[piId],
+    previousStatus: orders[piId].status,
     status: 'COMPLETED',
     completedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
   res.json({ ok: true });
+});
+
+app.put('/admin/orders/:piId/uncomplete', requireAdmin, (req, res) => {
+  const { piId } = req.params;
+  const orders = readOrders();
+  if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
+  const revertTo = orders[piId].previousStatus || 'READY_TO_SHIP';
+  orders[piId] = {
+    ...orders[piId],
+    status: revertTo,
+    previousStatus: null,
+    completedAt: null,
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  res.json({ ok: true, status: revertTo });
 });
 
 // --- Shared Stripe sync logic (used by startup + manual sync endpoint) ---

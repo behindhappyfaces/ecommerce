@@ -143,7 +143,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_ORDERS);
   } catch (err) {
     console.error('Webhook signature error:', err.message);
     return res.status(400).send(`Webhook error: ${err.message}`);
@@ -1288,7 +1288,7 @@ app.post('/admin/sync-from-stripe', requireAdmin, async (req, res) => {
 
 // --- Webhook health check ---
 app.get('/admin/webhook-status', requireAdmin, (req, res) => {
-  const hasSecret = !!process.env.STRIPE_WEBHOOK_SECRET;
+  const hasSecret = !!process.env.STRIPE_WEBHOOK_SECRET_ORDERS;
   const orderCount = Object.keys(readOrders()).length;
   res.json({
     webhook_secret_configured: hasSecret,

@@ -764,7 +764,10 @@
         setInterval(updateCountdown, 30000);
 
         var overlay = document.getElementById('turkey-overlay');
-        setTimeout(function () { overlay.classList.add('open'); }, 600);
+        if (!sessionStorage.getItem('turkeyPopupSeen')) {
+          setTimeout(function () { overlay.classList.add('open'); }, 600);
+          sessionStorage.setItem('turkeyPopupSeen', '1');
+        }
 
         document.getElementById('turkey-close').addEventListener('click', closePopup);
         document.getElementById('turkey-skip').addEventListener('click', closePopup);

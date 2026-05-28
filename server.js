@@ -1310,6 +1310,34 @@ app.post('/contact', async (req, res) => {
 });
 
 // =========================================
+// RESERVATION FORM
+app.post('/reserve', async (req, res) => {
+  const { name, email, phone, items, notes } = req.body;
+
+  if (!name || !email || !items || items.length === 0) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const itemList = items.map(i => `<li>${i}</li>`).join('');
+  try {
+    await sendEmail(
+      `New Reservation from ${name}`,
+      `<h2 style="color:#2C3E2D;">New Reservation Request</h2>
+       <p><strong>Name:</strong> ${name}</p>
+       <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+       <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+       <p><strong>Items:</strong></p>
+       <ul>${itemList}</ul>
+       <p><strong>Notes:</strong> ${notes || 'None'}</p>`
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Reservation email error:', err.message);
+    res.status(500).json({ error: 'Email failed' });
+  }
+});
+
+// =========================================
 // INVENTORY MANAGEMENT
 // =========================================
 

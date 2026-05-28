@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reserve Your Order — Heart of Texas Organics</title>
+  <meta name="description" content="Reserve a whole chicken, dinner rolls, cinnamon rolls, or Thanksgiving turkey from Heart of Texas Organics." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    .reserve-hero {
+      background: var(--color-green);
+      padding: 80px 20px 60px;
+      text-align: center;
+      color: var(--color-white);
+    }
+    .reserve-hero__eyebrow {
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-tan-light);
+      margin-bottom: 12px;
+    }
+    .reserve-hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--color-white);
+      margin-bottom: 16px;
+    }
+    .reserve-hero__sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.75);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .reserve-section {
+      padding: 60px 20px 80px;
+      background: var(--color-cream);
+    }
+
+    .reserve-card {
+      background: var(--color-white);
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 620px;
+      margin: 0 auto;
+      box-shadow: 0 4px 24px rgba(44,62,45,0.08);
+    }
+
+    .reserve-card__heading {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--color-green);
+      margin-bottom: 8px;
+    }
+    .reserve-card__sub {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 7px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--color-cream-dark);
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--color-text);
+      background: var(--color-cream);
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--color-green);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #AAA49A; }
+
+    .items-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .reserve-items {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 480px) {
+      .reserve-items { grid-template-columns: 1fr; }
+      .reserve-card { padding: 28px 20px; }
+    }
+
+    .item-card {
+      border: 1.5px solid var(--color-cream-dark);
+      border-radius: 8px;
+      padding: 16px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--color-cream);
+    }
+    .item-card:hover { border-color: var(--color-green-light); }
+    .item-card.selected {
+      border-color: var(--color-green);
+      background: rgba(44,62,45,0.05);
+    }
+    .item-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      accent-color: var(--color-green);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+    .item-card__info { flex: 1; }
+    .item-card__name {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      color: var(--color-green);
+      margin-bottom: 2px;
+    }
+    .item-card__desc {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    .qty-row {
+      display: none;
+      margin-top: 10px;
+      align-items: center;
+      gap: 8px;
+    }
+    .qty-row.visible { display: flex; }
+    .qty-row label {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .qty-row select {
+      padding: 6px 10px;
+      border: 1.5px solid var(--color-cream-dark);
+      border-radius: 5px;
+      font-size: 0.85rem;
+      background: var(--color-cream);
+      color: var(--color-text);
+      width: auto;
+    }
+
+    .form-submit {
+      width: 100%;
+      padding: 15px;
+      background: var(--color-green);
+      color: var(--color-white);
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      margin-top: 8px;
+    }
+    .form-submit:hover:not(:disabled) { background: var(--color-green-mid); transform: translateY(-1px); }
+    .form-submit:disabled { opacity: 0.6; cursor: default; }
+
+    .form-message {
+      margin-top: 14px;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 20px;
+    }
+    .form-message--success { color: var(--color-green); font-weight: 600; }
+    .form-message--error   { color: var(--color-rust); }
+
+    .reserve-note {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announce-bar" id="announceBar">
+    <div class="announce-bar__inner">
+      <span class="announce-bar__text">
+        Orders ship every Friday &nbsp;·&nbsp; Free local pickup available &nbsp;·&nbsp; Subscribe &amp; Save 15% OFF EVERY ORDER!
+      </span>
+      <button class="announce-bar__close" aria-label="Close announcement" onclick="this.closest('.announce-bar').remove(); document.querySelector('.nav').style.top='0';">✕</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li class="nav__item nav__item--has-dropdown">
+        <a class="nav__link nav__link--dropdown" href="offerings.html">Offerings</a>
+        <ul class="nav__dropdown" role="menu">
+          <div class="nav__dropdown-inner">
+            <li><a class="nav__dropdown-link" href="offerings.html">Provisions</a></li>
+            <li><a class="nav__dropdown-link" href="workshops.html?view=month">Lost Arts</a></li>
+          </div>
+        </ul>
+      </li>
+      <li><a class="nav__link" href="about-behind-happy-faces.html">Behind Happy Faces</a></li>
+      <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Order Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="offerings.html">Provisions</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="about-behind-happy-faces.html">Behind Happy Faces</a>
+    <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="offerings.html">Order Now</a>
+  </div>
+
+  <!-- HERO -->
+  <div class="reserve-hero">
+    <p class="reserve-hero__eyebrow">Heart of Texas Organics</p>
+    <h1 class="reserve-hero__title">Reserve Your Order</h1>
+    <p class="reserve-hero__sub">Secure your pastured whole chicken, dinner rolls, cinnamon rolls, or Thanksgiving turkey before they sell out.</p>
+  </div>
+
+  <!-- FORM -->
+  <section class="reserve-section">
+    <div class="reserve-card">
+      <h2 class="reserve-card__heading">Reservation Form</h2>
+      <p class="reserve-card__sub">We'll confirm your reservation by email within 1 business day.</p>
+
+      <form id="reserve-form" novalidate>
+
+        <div class="form-group">
+          <label for="r-name">Full Name</label>
+          <input type="text" id="r-name" placeholder="Jane Smith" autocomplete="name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="r-email">Email Address</label>
+          <input type="email" id="r-email" placeholder="jane@email.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="r-phone">Phone Number</label>
+          <input type="tel" id="r-phone" placeholder="(512) 555-0100" autocomplete="tel" />
+        </div>
+
+        <span class="items-label">Select Items to Reserve</span>
+
+        <div class="reserve-items">
+
+          <div class="item-card" id="card-chicken" onclick="toggleItem('chicken', this)">
+            <input type="checkbox" id="chk-chicken" />
+            <div class="item-card__info">
+              <p class="item-card__name">Whole Chicken</p>
+              <p class="item-card__desc">Pasture-raised, fresh from the farm</p>
+              <div class="qty-row" id="qty-chicken">
+                <label for="qty-chicken-sel">Qty:</label>
+                <select id="qty-chicken-sel">
+                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-card" id="card-rolls" onclick="toggleItem('rolls', this)">
+            <input type="checkbox" id="chk-rolls" />
+            <div class="item-card__info">
+              <p class="item-card__name">Dinner Rolls</p>
+              <p class="item-card__desc">Golden, pull-apart yeast rolls — sold by the dozen</p>
+              <div class="qty-row" id="qty-rolls">
+                <label for="qty-rolls-sel">Dozens:</label>
+                <select id="qty-rolls-sel">
+                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-card" id="card-cinnamon" onclick="toggleItem('cinnamon', this)">
+            <input type="checkbox" id="chk-cinnamon" />
+            <div class="item-card__info">
+              <p class="item-card__name">Cinnamon Rolls</p>
+              <p class="item-card__desc">Cream cheese glazed, baked fresh per order</p>
+              <div class="qty-row" id="qty-cinnamon">
+                <label for="qty-cinnamon-sel">Qty:</label>
+                <select id="qty-cinnamon-sel">
+                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-card" id="card-turkey" onclick="toggleItem('turkey', this)">
+            <input type="checkbox" id="chk-turkey" />
+            <div class="item-card__info">
+              <p class="item-card__name">Thanksgiving Turkey</p>
+              <p class="item-card__desc">Pasture-raised — limited availability</p>
+              <div class="qty-row" id="qty-turkey">
+                <label for="qty-turkey-sel">Qty:</label>
+                <select id="qty-turkey-sel">
+                  <option>1</option><option>2</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label for="r-notes">Notes or Special Requests (optional)</label>
+          <textarea id="r-notes" rows="3" placeholder="Preferred pickup date, size preference, etc."></textarea>
+        </div>
+
+        <button class="form-submit" type="submit" id="r-submit">Submit Reservation</button>
+        <p class="form-message" id="r-status"></p>
+      </form>
+
+      <p class="reserve-note">No payment required now — we'll reach out to confirm details and arrange payment.</p>
+    </div>
+  </section>
+
+  <script src="js/main.js"></script>
+  <script>
+    function toggleItem(key, card) {
+      const chk = document.getElementById('chk-' + key);
+      const qty = document.getElementById('qty-' + key);
+      chk.checked = !chk.checked;
+      card.classList.toggle('selected', chk.checked);
+      qty.classList.toggle('visible', chk.checked);
+    }
+
+    document.getElementById('reserve-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const name  = document.getElementById('r-name').value.trim();
+      const email = document.getElementById('r-email').value.trim();
+      const phone = document.getElementById('r-phone').value.trim();
+      const notes = document.getElementById('r-notes').value.trim();
+      const btn   = document.getElementById('r-submit');
+      const status = document.getElementById('r-status');
+
+      if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.textContent = 'Please enter your name and a valid email address.';
+        status.className = 'form-message form-message--error';
+        return;
+      }
+
+      const items = [];
+      ['chicken', 'rolls', 'cinnamon', 'turkey'].forEach(function (key) {
+        if (document.getElementById('chk-' + key).checked) {
+          const qty = document.getElementById('qty-' + key + '-sel').value;
+          const labels = { chicken: 'Whole Chicken', rolls: 'Dinner Rolls (dozens)', cinnamon: 'Cinnamon Rolls', turkey: 'Thanksgiving Turkey' };
+          items.push(qty + ' × ' + labels[key]);
+        }
+      });
+
+      if (items.length === 0) {
+        status.textContent = 'Please select at least one item to reserve.';
+        status.className = 'form-message form-message--error';
+        return;
+      }
+
+      btn.textContent = 'Submitting...';
+      btn.disabled = true;
+      status.textContent = '';
+      status.className = 'form-message';
+
+      try {
+        const res = await fetch('/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, items, notes }),
+        });
+
+        if (!res.ok) throw new Error('Server error');
+
+        btn.textContent = 'Reservation Submitted!';
+        status.textContent = 'Thank you, ' + name + '! We\'ll confirm your reservation within 1 business day.';
+        status.className = 'form-message form-message--success';
+        document.getElementById('reserve-form').reset();
+        document.querySelectorAll('.item-card').forEach(function (c) { c.classList.remove('selected'); });
+        document.querySelectorAll('.qty-row').forEach(function (q) { q.classList.remove('visible'); });
+      } catch {
+        btn.textContent = 'Submit Reservation';
+        btn.disabled = false;
+        status.textContent = 'Something went wrong. Please email us at operations@heartoftexasorganics.com';
+        status.className = 'form-message form-message--error';
+      }
+    });
+  </script>
+</body>
+</html>

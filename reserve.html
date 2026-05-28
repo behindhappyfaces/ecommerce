@@ -270,7 +270,7 @@
   <div class="reserve-hero">
     <p class="reserve-hero__eyebrow">Heart of Texas Organics</p>
     <h1 class="reserve-hero__title">Reserve Your Order</h1>
-    <p class="reserve-hero__sub">Secure your pastured whole chicken, dinner rolls, cinnamon rolls, or Thanksgiving turkey before they sell out.</p>
+    <p class="reserve-hero__sub">Two exclusive bundles — handcrafted from the farm, limited availability.</p>
   </div>
 
   <!-- FORM -->
@@ -296,63 +296,33 @@
           <input type="tel" id="r-phone" placeholder="(512) 555-0100" autocomplete="tel" />
         </div>
 
-        <span class="items-label">Select Items to Reserve</span>
+        <span class="items-label">Select a Bundle</span>
 
-        <div class="reserve-items">
+        <div class="reserve-items" style="grid-template-columns:1fr;gap:16px;">
 
-          <div class="item-card" id="card-chicken" onclick="toggleItem('chicken', this)">
-            <input type="checkbox" id="chk-chicken" />
+          <div class="item-card" id="card-bundle1" onclick="selectBundle('bundle1', this)">
+            <input type="radio" name="bundle" id="chk-bundle1" style="width:18px;height:18px;min-width:18px;accent-color:var(--color-green);margin-top:4px;cursor:pointer;" />
             <div class="item-card__info">
-              <p class="item-card__name">Whole Chicken</p>
-              <p class="item-card__desc">Pasture-raised, fresh from the farm</p>
-              <div class="qty-row" id="qty-chicken">
-                <label for="qty-chicken-sel">Qty:</label>
-                <select id="qty-chicken-sel">
-                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                </select>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                <p class="item-card__name" style="font-size:1.1rem;">Farm Bundle</p>
+                <p style="font-family:var(--font-serif);font-size:1.25rem;color:var(--color-rust);font-weight:700;white-space:nowrap;">$125</p>
               </div>
+              <p class="item-card__desc" style="margin-top:6px;line-height:1.6;">
+                1 Whole Pasture-Raised Chicken &nbsp;·&nbsp; 1 Dozen Dinner Rolls &nbsp;·&nbsp; ½ Dozen Cinnamon Rolls
+              </p>
             </div>
           </div>
 
-          <div class="item-card" id="card-rolls" onclick="toggleItem('rolls', this)">
-            <input type="checkbox" id="chk-rolls" />
+          <div class="item-card" id="card-bundle2" onclick="selectBundle('bundle2', this)">
+            <input type="radio" name="bundle" id="chk-bundle2" style="width:18px;height:18px;min-width:18px;accent-color:var(--color-green);margin-top:4px;cursor:pointer;" />
             <div class="item-card__info">
-              <p class="item-card__name">Dinner Rolls</p>
-              <p class="item-card__desc">Golden, pull-apart yeast rolls — sold by the dozen</p>
-              <div class="qty-row" id="qty-rolls">
-                <label for="qty-rolls-sel">Dozens:</label>
-                <select id="qty-rolls-sel">
-                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                </select>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                <p class="item-card__name" style="font-size:1.1rem;">Thanksgiving Turkey Bundle</p>
+                <p style="font-family:var(--font-serif);font-size:1.25rem;color:var(--color-rust);font-weight:700;white-space:nowrap;">$100</p>
               </div>
-            </div>
-          </div>
-
-          <div class="item-card" id="card-cinnamon" onclick="toggleItem('cinnamon', this)">
-            <input type="checkbox" id="chk-cinnamon" />
-            <div class="item-card__info">
-              <p class="item-card__name">Cinnamon Rolls</p>
-              <p class="item-card__desc">Cream cheese glazed, baked fresh per order</p>
-              <div class="qty-row" id="qty-cinnamon">
-                <label for="qty-cinnamon-sel">Qty:</label>
-                <select id="qty-cinnamon-sel">
-                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="item-card" id="card-turkey" onclick="toggleItem('turkey', this)">
-            <input type="checkbox" id="chk-turkey" />
-            <div class="item-card__info">
-              <p class="item-card__name">Thanksgiving Turkey</p>
-              <p class="item-card__desc">Pasture-raised — limited availability</p>
-              <div class="qty-row" id="qty-turkey">
-                <label for="qty-turkey-sel">Qty:</label>
-                <select id="qty-turkey-sel">
-                  <option>1</option><option>2</option>
-                </select>
-              </div>
+              <p class="item-card__desc" style="margin-top:6px;line-height:1.6;">
+                2 Pasture-Raised Thanksgiving Turkeys &nbsp;·&nbsp; Heritage breed, no antibiotics, no shortcuts
+              </p>
             </div>
           </div>
 
@@ -373,12 +343,10 @@
 
   <script src="js/main.js"></script>
   <script>
-    function toggleItem(key, card) {
-      const chk = document.getElementById('chk-' + key);
-      const qty = document.getElementById('qty-' + key);
-      chk.checked = !chk.checked;
-      card.classList.toggle('selected', chk.checked);
-      qty.classList.toggle('visible', chk.checked);
+    function selectBundle(key, card) {
+      document.querySelectorAll('.item-card').forEach(function(c) { c.classList.remove('selected'); });
+      document.getElementById('chk-' + key).checked = true;
+      card.classList.add('selected');
     }
 
     document.getElementById('reserve-form').addEventListener('submit', async function (e) {
@@ -397,20 +365,18 @@
         return;
       }
 
-      const items = [];
-      ['chicken', 'rolls', 'cinnamon', 'turkey'].forEach(function (key) {
-        if (document.getElementById('chk-' + key).checked) {
-          const qty = document.getElementById('qty-' + key + '-sel').value;
-          const labels = { chicken: 'Whole Chicken', rolls: 'Dinner Rolls (dozens)', cinnamon: 'Cinnamon Rolls', turkey: 'Thanksgiving Turkey' };
-          items.push(qty + ' × ' + labels[key]);
-        }
-      });
-
-      if (items.length === 0) {
-        status.textContent = 'Please select at least one item to reserve.';
+      const bundles = {
+        bundle1: 'Farm Bundle — 1 Whole Chicken, 1 Dozen Dinner Rolls, ½ Dozen Cinnamon Rolls ($125)',
+        bundle2: 'Thanksgiving Turkey Bundle — 2 Pasture-Raised Turkeys ($100)'
+      };
+      const selected = document.querySelector('input[name="bundle"]:checked');
+      if (!selected) {
+        status.textContent = 'Please select a bundle to reserve.';
         status.className = 'form-message form-message--error';
         return;
       }
+      const items = [bundles[selected.id.replace('chk-', '')]];
+
 
       btn.textContent = 'Submitting...';
       btn.disabled = true;

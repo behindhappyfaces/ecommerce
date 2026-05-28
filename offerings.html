@@ -479,9 +479,33 @@
         </div>
       </div>
       <p class="turkey-modal__urgency">Selling fast — spots are going quickly!</p>
-      <div class="turkey-modal__actions">
-        <button class="turkey-modal__cta" id="turkey-cta">Reserve Mine Now</button>
-        <button class="turkey-modal__skip" id="turkey-skip">I'll risk it</button>
+
+      <!-- Step 1: CTA -->
+      <div id="turkey-step1">
+        <div class="turkey-modal__actions">
+          <button class="turkey-modal__cta" id="turkey-cta">Reserve Mine Now</button>
+          <button class="turkey-modal__skip" id="turkey-skip">I'll risk it</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Mini form -->
+      <div id="turkey-step2" style="display:none;margin-top:16px;text-align:left;">
+        <p style="font-family:var(--font-serif);font-size:1rem;color:var(--color-tan-light);margin-bottom:14px;text-align:center;">Complete your reservation</p>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Full Name</label>
+          <input id="tr-name" type="text" placeholder="Jane Smith" autocomplete="name" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Phone Number</label>
+          <input id="tr-phone" type="tel" placeholder="(512) 555-0100" autocomplete="tel" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Email Address</label>
+          <input id="tr-email" type="email" placeholder="jane@email.com" autocomplete="email" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <p id="tr-error" style="color:#f4a261;font-size:0.8rem;margin-bottom:10px;display:none;"></p>
+        <button id="tr-submit" class="turkey-modal__cta" style="width:100%;">Proceed to Payment</button>
+        <p style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;line-height:1.5;">$100 deposit · final cost billed at $12/lb · all sales non-refundable</p>
       </div>
     </div>
   </div>
@@ -773,9 +797,50 @@
         document.getElementById('turkey-skip').addEventListener('click', closePopup);
         overlay.addEventListener('click', function (e) { if (e.target === overlay) closePopup(); });
 
+        // Step 1 → Step 2
         document.getElementById('turkey-cta').addEventListener('click', function () {
-          closePopup();
-          setTimeout(scrollToTurkey, 400);
+          document.getElementById('turkey-step1').style.display = 'none';
+          document.getElementById('turkey-step2').style.display = 'block';
+        });
+
+        // Step 2 submit → checkout
+        document.getElementById('tr-submit').addEventListener('click', async function () {
+          var name  = document.getElementById('tr-name').value.trim();
+          var phone = document.getElementById('tr-phone').value.trim();
+          var email = document.getElementById('tr-email').value.trim();
+          var err   = document.getElementById('tr-error');
+          var btn   = document.getElementById('tr-submit');
+
+          if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            err.textContent = 'Please fill in your name and a valid email address.';
+            err.style.display = 'block';
+            return;
+          }
+          err.style.display = 'none';
+          btn.textContent = 'Redirecting...';
+          btn.disabled = true;
+
+          try {
+            var res = await fetch('/reserve-checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name, email: email, phone: phone, bundle: 'bundle2', notes: 'From popup on offerings page' }),
+            });
+            var data = await res.json();
+            if (!res.ok) {
+              err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : 'Something went wrong. Please try again.';
+              err.style.display = 'block';
+              btn.textContent = 'Proceed to Payment';
+              btn.disabled = false;
+              return;
+            }
+            window.location.href = data.url;
+          } catch {
+            err.textContent = 'Something went wrong. Please try again.';
+            err.style.display = 'block';
+            btn.textContent = 'Proceed to Payment';
+            btn.disabled = false;
+          }
         });
 
         document.getElementById('turkey-strip-btn').addEventListener('click', scrollToTurkey);

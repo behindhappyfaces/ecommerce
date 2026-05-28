@@ -46,6 +46,16 @@ const _data = load();
 if (_data.products.length === 0) {
   _data.products = SEED.map(p => ({ ...p, created_at: new Date().toISOString() }));
   persist(_data);
+} else {
+  // Add any SEED products that don't exist yet (new products added after initial deploy)
+  let changed = false;
+  for (const s of SEED) {
+    if (!_data.products.find(p => p.id === s.id)) {
+      _data.products.push({ ...s, created_at: new Date().toISOString() });
+      changed = true;
+    }
+  }
+  if (changed) persist(_data);
 }
 console.log(`[Store] Loaded ${_data.products.length} products, ${_data.transactions.length} transactions`);
 

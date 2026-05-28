@@ -310,6 +310,7 @@
               <p class="item-card__desc" style="margin-top:6px;line-height:1.6;">
                 1 Whole Pasture-Raised Chicken &nbsp;·&nbsp; 1 Dozen Dinner Rolls &nbsp;·&nbsp; ½ Dozen Cinnamon Rolls
               </p>
+              <p style="font-size:0.78rem;color:var(--color-green);font-weight:600;margin-top:8px;">Pick-Up Date: Beginning June 10</p>
             </div>
           </div>
 
@@ -434,15 +435,17 @@
         if (stock <= 0) {
           tag.textContent = 'SOLD OUT';
           tag.style.color = 'var(--color-rust)';
+          tag.style.fontWeight = '700';
           card.style.opacity = '0.5';
           card.style.pointerEvents = 'none';
           chk.disabled = true;
+          card.querySelector('.item-card__info').appendChild(tag);
         } else if (stock <= 3) {
-          tag.textContent = 'Only ' + stock + ' left!';
+          tag.textContent = 'Only ' + stock + ' remaining — hurry!';
           tag.style.color = 'var(--color-rust)';
           card.querySelector('.item-card__info').appendChild(tag);
         } else {
-          tag.textContent = stock + ' available';
+          tag.textContent = stock + ' remaining';
           tag.style.color = 'var(--color-green-light)';
           card.querySelector('.item-card__info').appendChild(tag);
         }

@@ -12,7 +12,7 @@ const PRODUCTS = {
   'cultured-butter':    { name: 'Real Cream Butter',   price: 0, subPrice: null, image: 'images/butter.jpg' },
   'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
-  'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 0, subPrice: null, image: 'images/chicken.jpg' },
+  'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 5000, subPrice: null, image: 'images/chicken.jpg' },
 };
 
 const STORAGE_KEY   = 'hoto-cart';

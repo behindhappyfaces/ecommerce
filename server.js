@@ -1310,6 +1310,37 @@ app.post('/contact', async (req, res) => {
 });
 
 // =========================================
+// RESERVATION CHECKOUT
+app.post('/reserve-checkout', async (req, res) => {
+  const { name, email, phone, bundle, notes } = req.body;
+  if (!name || !email || !bundle) return res.status(400).json({ error: 'Missing required fields' });
+
+  const bundles = {
+    bundle1: { name: 'Farm Bundle — Whole Chicken, Dinner Rolls, Cinnamon Rolls', amount: 12500 },
+    bundle2: { name: 'Thanksgiving Turkey Bundle — 1 Pasture-Raised Turkey (deposit; final billed at $12/lb)', amount: 10000 },
+  };
+  const chosen = bundles[bundle];
+  if (!chosen) return res.status(400).json({ error: 'Invalid bundle' });
+
+  try {
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{ price_data: { currency: 'usd', product_data: { name: chosen.name }, unit_amount: chosen.amount }, quantity: 1 }],
+      customer_email: email,
+      metadata: { reservation_name: name, reservation_phone: phone || '', reservation_notes: notes || '', bundle },
+      success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${origin}/reserve.html`,
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('Reserve checkout error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =========================================
 // RESERVATION FORM
 app.post('/reserve', async (req, res) => {
   const { name, email, phone, items, notes } = req.body;

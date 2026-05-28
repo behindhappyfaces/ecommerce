@@ -17,6 +17,8 @@ const SEED = [
   { id:'seasonal-preserves',  name:'Seasonal Preserves',       category:'Larder',    stock:15, reorder_level:8,  unit:'jar',    price_cents:1200, cost_cents:350,  allow_preorder:0, active:1 },
   { id:'garlic-chili-crunch', name:'Garlic Chili Crunch',      category:'Larder',    stock:10, reorder_level:5,  unit:'jar',    price_cents:1400, cost_cents:400,  allow_preorder:0, active:1 },
   { id:'herb-dipping-oil',    name:'Tuscany Herb Dipping Oil', category:'Larder',    stock:7,  reorder_level:5,  unit:'bottle', price_cents:1600, cost_cents:480,  allow_preorder:0, active:1 },
+  { id:'bundle-farm',         name:'Farm Bundle',              category:'Reservations', stock:15, reorder_level:3, unit:'bundle', price_cents:12500, cost_cents:0,   allow_preorder:0, active:1 },
+  { id:'bundle-turkey',       name:'Thanksgiving Turkey Bundle', category:'Reservations', stock:10, reorder_level:2, unit:'bundle', price_cents:10000, cost_cents:0, allow_preorder:0, active:1 },
 ];
 
 function load() {

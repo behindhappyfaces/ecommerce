@@ -428,7 +428,13 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
           });
-          deductStockForOrder(items, session.id);
+          const _invId = session.metadata?.inventory_id;
+          if (_invId) {
+            const _r = db.adjustStock(_invId, -1);
+            db.addTransaction(_invId, 'sale', -1, null, session.id, 'Reservation checkout', 'online', _r?.before, _r?.after);
+          } else {
+            deductStockForOrder(items, session.id);
+          }
 
           // Mark any abandoned cart as completed
           try {
@@ -1316,11 +1322,17 @@ app.post('/reserve-checkout', async (req, res) => {
   if (!name || !email || !bundle) return res.status(400).json({ error: 'Missing required fields' });
 
   const bundles = {
-    bundle1: { name: 'Farm Bundle — Whole Chicken, Dinner Rolls, Cinnamon Rolls', amount: 12500 },
-    bundle2: { name: 'Thanksgiving Turkey Bundle — 1 Pasture-Raised Turkey (deposit; final billed at $12/lb)', amount: 10000 },
+    bundle1: { name: 'Farm Bundle',                 inventoryId: 'bundle-farm',   amount: 12500 },
+    bundle2: { name: 'Thanksgiving Turkey Bundle',  inventoryId: 'bundle-turkey', amount: 10000 },
   };
   const chosen = bundles[bundle];
   if (!chosen) return res.status(400).json({ error: 'Invalid bundle' });
+
+  // Check inventory
+  const product = db.getProduct(chosen.inventoryId);
+  if (product && product.stock <= 0) {
+    return res.status(400).json({ error: 'sold_out' });
+  }
 
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -1329,7 +1341,7 @@ app.post('/reserve-checkout', async (req, res) => {
       payment_method_types: ['card'],
       line_items: [{ price_data: { currency: 'usd', product_data: { name: chosen.name }, unit_amount: chosen.amount }, quantity: 1 }],
       customer_email: email,
-      metadata: { reservation_name: name, reservation_phone: phone || '', reservation_notes: notes || '', bundle },
+      metadata: { reservation_name: name, reservation_phone: phone || '', reservation_notes: notes || '', bundle, inventory_id: chosen.inventoryId },
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/reserve.html`,
     });
@@ -1399,6 +1411,8 @@ const PRODUCT_MAP = {
   'Garlic Chili Crunch':         'garlic-chili-crunch',
   'Tuscany Herb Dipping Oil':    'herb-dipping-oil',
   'Tuscany Herb Bread Dipping Oil': 'herb-dipping-oil',
+  'Farm Bundle':                    'bundle-farm',
+  'Thanksgiving Turkey Bundle':     'bundle-turkey',
 };
 
 function deductStockForOrder(lineItems, orderId) {

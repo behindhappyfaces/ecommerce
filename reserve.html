@@ -391,8 +391,18 @@
           body: JSON.stringify({ name, email, phone, bundle, notes }),
         });
 
-        if (!res.ok) throw new Error('Server error');
         const data = await res.json();
+        if (!res.ok) {
+          btn.textContent = 'Reserve &amp; Pay Now';
+          btn.disabled = false;
+          if (data.error === 'sold_out') {
+            status.textContent = 'Sorry — this bundle is sold out.';
+          } else {
+            status.textContent = 'Something went wrong. Please email us at operations@heartoftexasorganics.com';
+          }
+          status.className = 'form-message form-message--error';
+          return;
+        }
         window.location.href = data.url;
       } catch {
         btn.textContent = 'Reserve &amp; Pay Now';
@@ -401,6 +411,43 @@
         status.className = 'form-message form-message--error';
       }
     });
+
+    // Load live stock and show remaining / sold-out on each bundle card
+    fetch('/api/stock').then(r => r.json()).then(function(products) {
+      var stockMap = {};
+      products.forEach(function(p) { stockMap[p.id] = p.stock; });
+
+      var bundles = [
+        { cardId: 'card-bundle1', chkId: 'chk-bundle1', invId: 'bundle-farm' },
+        { cardId: 'card-bundle2', chkId: 'chk-bundle2', invId: 'bundle-turkey' },
+      ];
+
+      bundles.forEach(function(b) {
+        var stock = stockMap[b.invId];
+        var card  = document.getElementById(b.cardId);
+        var chk   = document.getElementById(b.chkId);
+        if (stock === undefined) return;
+
+        var tag = document.createElement('p');
+        tag.style.cssText = 'font-size:0.75rem;font-weight:600;margin-top:8px;';
+
+        if (stock <= 0) {
+          tag.textContent = 'SOLD OUT';
+          tag.style.color = 'var(--color-rust)';
+          card.style.opacity = '0.5';
+          card.style.pointerEvents = 'none';
+          chk.disabled = true;
+        } else if (stock <= 3) {
+          tag.textContent = 'Only ' + stock + ' left!';
+          tag.style.color = 'var(--color-rust)';
+          card.querySelector('.item-card__info').appendChild(tag);
+        } else {
+          tag.textContent = stock + ' available';
+          tag.style.color = 'var(--color-green-light)';
+          card.querySelector('.item-card__info').appendChild(tag);
+        }
+      });
+    }).catch(function() {});
   </script>
 </body>
 </html>

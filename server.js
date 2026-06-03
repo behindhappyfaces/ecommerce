@@ -479,10 +479,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           const _invId = session.metadata?.inventory_id;
           if (_invId) {
-            const _r = db.adjustStock(_invId, -1);
-            db.addTransaction(_invId, 'sale', -1, null, session.id, 'Reservation checkout', 'online', _r?.before, _r?.after);
+            const _r = await db.adjustStock(_invId, -1);
+            await db.addTransaction(_invId, 'sale', -1, null, session.id, 'Reservation checkout', 'online', _r?.before, _r?.after);
           } else {
-            deductStockForOrder(items, session.id);
+            await deductStockForOrder(items, session.id);
           }
 
           // Mark any abandoned cart as completed
@@ -1375,7 +1375,7 @@ app.post('/reserve-checkout', async (req, res) => {
   if (!chosen) return res.status(400).json({ error: 'Invalid bundle' });
 
   // Check inventory
-  const product = db.getProduct(chosen.inventoryId);
+  const product = await db.getProduct(chosen.inventoryId);
   if (product && product.stock <= 0) {
     return res.status(400).json({ error: 'sold_out' });
   }
@@ -1461,15 +1461,15 @@ const PRODUCT_MAP = {
   'Thanksgiving Turkey Bundle':     'bundle-turkey',
 };
 
-function deductStockForOrder(lineItems, orderId) {
+async function deductStockForOrder(lineItems, orderId) {
   for (const item of lineItems) {
     const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
     if (!pid) continue;
     const qty = item.quantity || 1;
-    const result = db.adjustStock(pid, -qty);
+    const result = await db.adjustStock(pid, -qty);
     const before = result ? result.before : null;
     const after  = result ? result.after  : null;
-    db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout', 'online', before, after);
+    await db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout', 'online', before, after);
   }
 }
 
@@ -1684,20 +1684,20 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 });
 
 // --- Public stock endpoint (for website sold-out indicators) ---
-app.get('/api/stock', (req, res) => {
-  const rows = db.getAll().map(p => ({ id: p.id, name: p.name, stock: p.stock, reorder_level: p.reorder_level, allow_preorder: p.allow_preorder }));
+app.get('/api/stock', async (req, res) => {
+  const rows = (await db.getAll()).map(p => ({ id: p.id, name: p.name, stock: p.stock, reorder_level: p.reorder_level, allow_preorder: p.allow_preorder }));
   res.json(rows);
 });
 
 // --- Inventory CRUD ---
-app.get('/admin/inventory', requireAdmin, (req, res) => {
-  res.json(db.getAll());
+app.get('/admin/inventory', requireAdmin, async (req, res) => {
+  res.json(await db.getAll());
 });
 
-app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
+app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { reorder_level, price_cents, cost_cents, unit, allow_preorder } = req.body || {};
-  const product = db.getProduct(id);
+  const product = await db.getProduct(id);
   if (!product) return res.status(404).json({ error: 'Product not found' });
   const fields = {};
   if (reorder_level  != null) fields.reorder_level  = parseInt(reorder_level);
@@ -1705,40 +1705,40 @@ app.put('/admin/inventory/:id', requireAdmin, (req, res) => {
   if (cost_cents     != null) fields.cost_cents      = parseInt(cost_cents);
   if (unit           != null) fields.unit            = unit;
   if (allow_preorder != null) fields.allow_preorder  = allow_preorder ? 1 : 0;
-  db.updateProduct(id, fields);
+  await db.updateProduct(id, fields);
   res.json({ ok: true });
 });
 
-app.post('/admin/inventory/:id/adjust', requireAdmin, (req, res) => {
+app.post('/admin/inventory/:id/adjust', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { quantity, notes, channel } = req.body || {};
   if (quantity == null || isNaN(parseInt(quantity))) return res.status(400).json({ error: 'quantity required' });
   const qty = parseInt(quantity);
-  if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
-  const result = db.adjustStock(id, qty);
-  db.addTransaction(id, 'adjustment', qty, null, null, notes || null, channel || null, result.before, result.after);
+  if (!await db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
+  const result = await db.adjustStock(id, qty);
+  await db.addTransaction(id, 'adjustment', qty, null, null, notes || null, channel || null, result.before, result.after);
   res.json({ ok: true, stock: result.after });
 });
 
-app.post('/admin/inventory/:id/restock', requireAdmin, (req, res) => {
+app.post('/admin/inventory/:id/restock', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { quantity, batch_number, notes, channel, prod_date, expiry_date, batch_cost_cents } = req.body || {};
   const qty = parseInt(quantity);
   if (!qty || qty <= 0) return res.status(400).json({ error: 'quantity must be a positive integer' });
-  if (!db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
-  const result = db.adjustStock(id, qty);
+  if (!await db.getProduct(id)) return res.status(404).json({ error: 'Product not found' });
+  const result = await db.adjustStock(id, qty);
   const extra = {};
   if (prod_date)         extra.prod_date        = prod_date;
   if (expiry_date)       extra.expiry_date       = expiry_date;
   if (batch_cost_cents != null) extra.batch_cost_cents = Math.round(parseFloat(batch_cost_cents) * 100);
-  db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null, channel || null, result.before, result.after, extra);
+  await db.addTransaction(id, 'restock', qty, batch_number || null, null, notes || null, channel || null, result.before, result.after, extra);
   res.json({ ok: true, stock: result.after });
 });
 
 // --- Transaction history ---
-app.get('/admin/transactions', requireAdmin, (req, res) => {
+app.get('/admin/transactions', requireAdmin, async (req, res) => {
   const { product_id, date_from, date_to } = req.query;
-  res.json(db.getTransactions(product_id || null, 150, date_from || null, date_to || null));
+  res.json(await db.getTransactions(product_id || null, 150, date_from || null, date_to || null));
 });
 
 app.get('/admin/orders', requireAdmin, (req, res) => {
@@ -2022,26 +2022,26 @@ app.get('/admin/webhook-status', requireAdmin, (req, res) => {
 });
 
 // --- Reports ---
-app.get('/admin/reports/weekly', requireAdmin, (req, res) => {
-  const sales = db.getSales(7);
+app.get('/admin/reports/weekly', requireAdmin, async (req, res) => {
+  const sales = await db.getSales(7);
   res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
 });
 
-app.get('/admin/reports/monthly', requireAdmin, (req, res) => {
-  const sales = db.getSales(30);
+app.get('/admin/reports/monthly', requireAdmin, async (req, res) => {
+  const sales = await db.getSales(30);
   res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
 });
 
-app.get('/admin/reports/range', requireAdmin, (req, res) => {
+app.get('/admin/reports/range', requireAdmin, async (req, res) => {
   const { date_from, date_to } = req.query;
   if (!date_from || !date_to) return res.status(400).json({ error: 'date_from and date_to required (YYYY-MM-DD)' });
-  const sales = db.getSales(0, date_from, date_to);
+  const sales = await db.getSales(0, date_from, date_to);
   res.json({ sales, total_revenue: sales.reduce((s, r) => s + r.revenue_cents, 0), total_profit: sales.reduce((s, r) => s + r.profit_cents, 0) });
 });
 
 // --- CSV export ---
-app.get('/admin/export/csv', requireAdmin, (req, res) => {
-  const { products, transactions: txns } = db.getAllForCSV();
+app.get('/admin/export/csv', requireAdmin, async (req, res) => {
+  const { products, transactions: txns } = await db.getAllForCSV();
 
   const esc = (v) => {
     if (v == null) return '';
@@ -2073,7 +2073,7 @@ app.get('/admin/export/csv', requireAdmin, (req, res) => {
 // --- Send weekly report email on demand ---
 app.post('/admin/reports/send-weekly', requireAdmin, async (req, res) => {
   try {
-    const report = buildWeeklyReport();
+    const report = await buildWeeklyReport();
     await sendEmail('Weekly Inventory Report — Heart of Texas Organics', report);
     res.json({ ok: true });
   } catch (err) {
@@ -2082,9 +2082,9 @@ app.post('/admin/reports/send-weekly', requireAdmin, async (req, res) => {
   }
 });
 
-function buildWeeklyReport() {
-  const sales    = db.getSales(7);
-  const products = db.getAll().sort((a, b) => a.stock - b.stock);
+async function buildWeeklyReport() {
+  const sales    = await db.getSales(7);
+  const products = (await db.getAll()).sort((a, b) => a.stock - b.stock);
   const lowStock = products.filter(p => p.stock <= p.reorder_level);
   const totalRev = sales.reduce((s, r) => s + (r.revenue_cents || 0), 0);
 
@@ -2138,7 +2138,7 @@ if (cron) {
   cron.schedule('0 8 * * 0', async () => {
     try {
       console.log('[Cron] Sending weekly inventory report');
-      const report = buildWeeklyReport();
+      const report = await buildWeeklyReport();
       await sendEmail('Weekly Inventory Report — Heart of Texas Organics', report);
     } catch (err) {
       console.error('[Cron] Weekly report error:', err.message);
@@ -2503,6 +2503,13 @@ app.listen(PORT, async () => {
   const stripeKey = process.env.STRIPE_SECRET_KEY || '';
   const stripeMode = stripeKey.includes('_test_') ? 'TEST' : stripeKey.includes('_live_') ? 'LIVE' : 'UNKNOWN';
   console.log(`[Stripe] mode=${stripeMode} key=${stripeKey.slice(0,12)}...`);
+
+  // Initialize database (creates tables and seeds products if needed)
+  try {
+    await db.init();
+  } catch (err) {
+    console.error('[DB] Init failed:', err.message);
+  }
 
   // Auto-sync orders from Stripe on every startup so orders survive Render restarts
   try {

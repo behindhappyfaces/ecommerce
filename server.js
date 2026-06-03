@@ -49,14 +49,14 @@ const app = express();
 // =========================================
 
 const mailer = nodemailer.createTransport({
-  host: 'smtp-mail.outlook.com',
+  host: 'smtp.office365.com',
   port: 587,
   secure: false,
   auth: {
     user: process.env.OUTLOOK_USER,
     pass: process.env.OUTLOOK_PASSWORD,
   },
-  tls: { ciphers: 'SSLv3' },
+  tls: { rejectUnauthorized: true },
 });
 
 async function sendEmail(subject, html) {

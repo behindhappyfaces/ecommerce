@@ -380,21 +380,69 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
              </p>`
           : '';
 
-        function orderConfirmEmail(intro, statusNote) {
+        function orderConfirmEmail(statusNote) {
+          const deliveryBlock = deliveryMethod === 'pickup'
+            ? `<p style="margin:0;color:#3d3d3d;line-height:1.8;"><strong>Delivery:</strong> Local Pick-up — we'll be in touch soon to confirm your pick-up time and location.</p>`
+            : addrLine
+              ? `<p style="margin:0;color:#3d3d3d;line-height:1.8;"><strong>Delivery:</strong> Shipping to ${addrLine}</p>`
+              : '';
+
           return `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+
             <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
-            <h2 style="color:#2C3E2D;margin:0 0 8px;">Order Confirmed</h2>
-            <p style="color:#3d3d3d;line-height:1.8;margin:0 0 24px;">Hi ${customerName}, ${intro}</p>
-            <table style="width:100%;border-collapse:collapse;background:#fff;margin-bottom:20px;">
-              ${productItems.map(li => `<tr><td style="padding:10px 16px;border-bottom:1px solid #eee;">${li.description}</td><td style="padding:10px 16px;border-bottom:1px solid #eee;text-align:right;">×${li.quantity}</td></tr>`).join('')}
-              ${shippingItem ? `<tr><td style="padding:10px 16px;border-bottom:1px solid #eee;color:#666;">${shippingItem.description}</td><td style="padding:10px 16px;border-bottom:1px solid #eee;text-align:right;color:#666;">${formatMoney(shippingItem.amount_total)}</td></tr>` : ''}
-              <tr><td style="padding:10px 16px;font-weight:700;color:#2C3E2D;">Total</td><td style="padding:10px 16px;font-weight:700;text-align:right;">${total}</td></tr>
-            </table>
-            ${addrLine ? `<p style="color:#3d3d3d;font-size:0.9rem;"><strong>Delivery:</strong> ${addrLine}</p>` : ''}
+
+            <h2 style="color:#2C3E2D;font-size:1.6rem;margin:0 0 20px;">Your order is confirmed! 🌾</h2>
+
+            <p style="color:#3d3d3d;line-height:1.9;margin:0 0 24px;">
+              Hi ${customerName},<br><br>
+              Your order just came through and we are so glad you're here. Every item in your box
+              was made with intention — no shortcuts, no fillers, just real food raised the way
+              food is supposed to be raised.
+            </p>
+
+            <div style="background:#fff;border-radius:4px;overflow:hidden;margin-bottom:24px;">
+              <div style="background:#2C3E2D;padding:12px 16px;">
+                <p style="color:#F5F0E8;font-family:sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin:0;">Your Order</p>
+              </div>
+              <table style="width:100%;border-collapse:collapse;">
+                ${productItems.map(li => `
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#3d3d3d;">${li.description}</td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#3d3d3d;">×${li.quantity}</td>
+                </tr>`).join('')}
+                ${shippingItem ? `
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#888;">${shippingItem.description}</td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#888;">${formatMoney(shippingItem.amount_total)}</td>
+                </tr>` : ''}
+                <tr style="background:#F5F0E8;">
+                  <td style="padding:12px 16px;font-weight:700;color:#2C3E2D;">Total</td>
+                  <td style="padding:12px 16px;font-weight:700;text-align:right;color:#2C3E2D;">${total}</td>
+                </tr>
+              </table>
+            </div>
+
+            ${deliveryBlock}
             ${billHtml}
             ${giftHtml}
-            ${statusNote ? `<p style="color:#8B4A2F;font-size:0.85rem;margin-top:8px;">${statusNote}</p>` : ''}
-            <p style="color:#888;font-size:12px;margin-top:24px;">Order ref: ${session.id}</p>
+            ${statusNote ? `<p style="color:#8B4A2F;font-size:0.85rem;margin-top:16px;line-height:1.7;">${statusNote}</p>` : ''}
+
+            <p style="color:#3d3d3d;line-height:1.9;margin:28px 0 0;">
+              If you have any questions, just reply to this email — we actually read these.
+            </p>
+
+            <div style="border-top:2px solid #2C3E2D;margin-top:32px;padding-top:24px;">
+              <p style="color:#3d3d3d;line-height:1.8;margin:0 0 4px;font-size:1rem;">Welcome to the family. 🌿</p>
+              <p style="color:#2C3E2D;font-weight:700;margin:0 0 2px;font-size:0.95rem;">Deborah</p>
+              <p style="color:#555;font-size:0.85rem;margin:0 0 2px;">Head Hen in Charge</p>
+              <p style="color:#8B4A2F;font-size:0.85rem;margin:0;">❤️ of Texas Organics</p>
+            </div>
+
+            <p style="color:#aaa;font-size:11px;margin-top:28px;line-height:1.7;">
+              Order ref: ${session.id}<br>
+              You're receiving this because you placed an order at heartoftexasorganics.com.
+            </p>
+
           </div>`;
         }
 
@@ -478,8 +526,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
               console.error('PDF generation error:', pdfErr.message);
             }
             await sendEmailTo(customerEmail,
-              'Your Heart of Texas Organics Order is Confirmed',
-              orderConfirmEmail('thank you for your order! We\'re preparing it now.', null),
+              'Your Heart of Texas Organics Order is Confirmed 🌾',
+              orderConfirmEmail(null),
               pdfAttachments
             );
           }
@@ -574,11 +622,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
               console.error('PDF generation error:', pdfErr.message);
             }
             await sendEmailTo(customerEmail,
-              'Your Heart of Texas Organics Order is Received',
-              orderConfirmEmail(
-                'we\'ve received your order! Your bank transfer is processing.',
-                'Note: ACH bank transfers take 3–5 business days to settle. We\'ll ship your order once payment clears and send you a follow-up email.'
-              ),
+              'Your Heart of Texas Organics Order is Received 🌾',
+              orderConfirmEmail('Note: ACH bank transfers take 3–5 business days to settle. We\'ll be in touch once payment clears and your order is on its way.'),
               pdfAttachments
             );
           }

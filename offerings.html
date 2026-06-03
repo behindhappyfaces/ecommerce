@@ -854,5 +854,33 @@
 
   <script src="js/main.js"></script>
   <script src="js/cart.js"></script>
+  <script>
+    (function loadLiveStock() {
+      fetch('/api/stock').then(r => r.json()).then(function(items) {
+        items.forEach(function(item) {
+          var btn = document.querySelector('[data-add-to-cart="' + item.id + '"]');
+          if (!btn) return;
+          var card = btn.closest('.offering-card');
+          if (!card) return;
+          if (item.stock <= 0 && !item.allow_preorder) {
+            btn.textContent = 'Sold Out';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            var badge = document.createElement('div');
+            badge.className = 'sold-out-banner';
+            badge.textContent = 'Sold Out';
+            var wrap = card.querySelector('.offering-card__image-wrap');
+            if (wrap) wrap.appendChild(badge);
+          } else if (item.stock > 0 && item.stock <= 3) {
+            var low = document.createElement('p');
+            low.style.cssText = 'color:#8B4A2F;font-size:0.8rem;margin:4px 0 0;font-weight:600;';
+            low.textContent = 'Only ' + item.stock + ' left';
+            btn.insertAdjacentElement('beforebegin', low);
+          }
+        });
+      }).catch(function() {});
+    })();
+  </script>
 </body>
 </html>

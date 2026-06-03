@@ -78,7 +78,7 @@ async function sendEmailTo(to, subject, html, attachments = []) {
     console.log('[Customer email skipped]\nTo:', to, '\nSubject:', subject);
     return;
   }
-  const fromAddr = process.env.ORDERS_FROM || 'orders@heartoftexasorganics.com';
+  const fromAddr = process.env.OUTLOOK_USER;
   await mailer.sendMail({
     from: `"Heart of Texas Organics" <${fromAddr}>`,
     to,
@@ -308,7 +308,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_ORDERS);
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET_ORDERS || process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('Webhook signature error:', err.message);
     return res.status(400).send(`Webhook error: ${err.message}`);

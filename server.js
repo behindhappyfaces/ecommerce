@@ -48,44 +48,45 @@ const app = express();
 // EMAIL
 // =========================================
 
-const mailer = nodemailer.createTransport({
-  host: 'smtp.office365.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.OUTLOOK_USER,
-    pass: process.env.OUTLOOK_PASSWORD,
-  },
-  tls: { rejectUnauthorized: true },
-});
+const { Resend } = require('resend');
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'operations@heartoftexasorganics.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || FROM_EMAIL;
 
 async function sendEmail(subject, html) {
-  if (!process.env.OUTLOOK_PASSWORD || process.env.OUTLOOK_PASSWORD === 'your_outlook_password_here') {
-    console.log('[Email skipped OUTLOOK_PASSWORD not set]\nSubject:', subject);
+  if (!resendClient) {
+    console.log('[Email skipped — RESEND_API_KEY not set]\nSubject:', subject);
     return;
   }
-  await mailer.sendMail({
-    from: `"Heart of Texas Organics" <${process.env.OUTLOOK_USER}>`,
-    to: process.env.OUTLOOK_USER,
+  const { error } = await resendClient.emails.send({
+    from: `Heart of Texas Organics <${FROM_EMAIL}>`,
+    to: ADMIN_EMAIL,
     subject,
     html,
   });
-  console.log('Email sent:', subject);
+  if (error) throw new Error(error.message);
+  console.log('Admin email sent:', subject);
 }
 
 async function sendEmailTo(to, subject, html, attachments = []) {
-  if (!process.env.OUTLOOK_PASSWORD || process.env.OUTLOOK_PASSWORD === 'your_outlook_password_here') {
-    console.log('[Customer email skipped]\nTo:', to, '\nSubject:', subject);
+  if (!resendClient) {
+    console.log('[Customer email skipped — RESEND_API_KEY not set]\nTo:', to, '\nSubject:', subject);
     return;
   }
-  const fromAddr = process.env.OUTLOOK_USER;
-  await mailer.sendMail({
-    from: `"Heart of Texas Organics" <${fromAddr}>`,
+  const payload = {
+    from: `Heart of Texas Organics <${FROM_EMAIL}>`,
     to,
     subject,
     html,
-    attachments,
-  });
+  };
+  if (attachments.length) {
+    payload.attachments = attachments.map(a => ({
+      filename: a.filename,
+      content:  a.content,
+    }));
+  }
+  const { error } = await resendClient.emails.send(payload);
+  if (error) throw new Error(error.message);
   console.log('Customer email sent:', to, subject);
 }
 
@@ -1622,6 +1623,23 @@ app.post('/subscribe', express.json(), async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+// --- Test email endpoint ---
+app.post('/admin/test-email', requireAdmin, async (req, res) => {
+  try {
+    await sendEmail(
+      'Test Email — Heart of Texas Organics',
+      `<div style="font-family:Georgia,serif;padding:32px;background:#F5F0E8;">
+        <h2 style="color:#2C3E2D;">Email is working! ✅</h2>
+        <p>Sent at: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })}</p>
+      </div>`
+    );
+    res.json({ ok: true, sentTo: ADMIN_EMAIL });
+  } catch (err) {
+    console.error('[Test email] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // TEMP: create FREE test promo code using this server's Stripe key

@@ -1500,11 +1500,11 @@ async function ensureWelcomeCoupon() {
   }
 }
 
-// Generate a unique readable promo code e.g. HOTO-A3K9X2
+// Generate a unique readable promo code e.g. HOTO-A3K9X2R4
 function generateUniqueCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'HOTO-';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 8; i++) code += chars[crypto.randomInt(0, chars.length)];
   return code;
 }
 

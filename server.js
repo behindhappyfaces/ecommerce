@@ -579,7 +579,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
           });
-          deductStockForOrder(items, session.id);
+          await deductStockForOrder(items, session.id);
 
           // Mark any abandoned cart as completed
           try {
@@ -1878,7 +1878,11 @@ async function performStripeSync(limit = 50) {
       const productItems = items.filter(li =>
         li.description && !li.description.startsWith('Shipping')
       );
-      deductStockForOrder(productItems, session.id);
+      try {
+        await deductStockForOrder(productItems, session.id);
+      } catch(e) {
+        console.warn('[Sync] Stock deduction failed for', session.id, ':', e.message);
+      }
     }
 
     synced++;

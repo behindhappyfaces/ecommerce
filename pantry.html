@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's In Your Box — Heart of Texas Organics</title>
+  <meta name="description" content="Full ingredient lists, nutritional facts, and descriptions for every item in our farm boxes." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    /* ---- Pantry Page ---- */
+    .pantry-hero {
+      background: var(--color-green);
+      padding: 80px 0 64px;
+      text-align: center;
+    }
+    .pantry-hero__eyebrow {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-rust, #8B4A2F);
+      margin: 0 0 16px;
+    }
+    .pantry-hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      color: var(--color-cream);
+      font-weight: 400;
+      margin: 0 0 16px;
+    }
+    .pantry-hero__sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--color-tan-light, #D4B896);
+      margin: 0 0 32px;
+    }
+    .pantry-hero__cta {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-cream);
+      border: 1.5px solid rgba(245,240,232,0.4);
+      padding: 12px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .pantry-hero__cta:hover {
+      background: rgba(245,240,232,0.1);
+      border-color: rgba(245,240,232,0.7);
+    }
+
+    /* ---- Category tabs ---- */
+    .pantry-tabs {
+      background: #fff;
+      border-bottom: 1px solid rgba(44,62,45,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .pantry-tabs__inner {
+      display: flex;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      overflow-x: auto;
+    }
+    .pantry-tab {
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.5);
+      padding: 18px 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .pantry-tab:hover { color: var(--color-green); }
+    .pantry-tab.active {
+      color: var(--color-green);
+      border-bottom-color: var(--color-rust, #8B4A2F);
+    }
+
+    /* ---- Category sections ---- */
+    .pantry-section {
+      padding: 64px 0;
+      border-bottom: 1px solid rgba(44,62,45,0.07);
+    }
+    .pantry-section:last-of-type { border-bottom: none; }
+    .pantry-section__header {
+      margin-bottom: 40px;
+    }
+    .pantry-section__eyebrow {
+      font-family: var(--font-sans);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-rust, #8B4A2F);
+      margin: 0 0 10px;
+    }
+    .pantry-section__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--color-green);
+      font-weight: 400;
+      margin: 0;
+    }
+
+    /* ---- Item accordion ---- */
+    .pantry-items { display: flex; flex-direction: column; gap: 2px; }
+    .pantry-item {
+      border: 1px solid rgba(44,62,45,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .pantry-item__trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px 28px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    .pantry-item__trigger:hover { background: var(--color-cream, #F5F0E8); }
+    .pantry-item__img {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: rgba(44,62,45,0.06);
+    }
+    .pantry-item__img-placeholder {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      background: rgba(44,62,45,0.06);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.3);
+    }
+    .pantry-item__meta { flex: 1; }
+    .pantry-item__category {
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-rust, #8B4A2F);
+      margin: 0 0 4px;
+    }
+    .pantry-item__name {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      color: var(--color-green);
+      margin: 0 0 4px;
+      font-weight: 400;
+    }
+    .pantry-item__short {
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: rgba(44,62,45,0.55);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .pantry-item__chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: rgba(44,62,45,0.35);
+      transition: transform 0.3s ease;
+    }
+    .pantry-item.open .pantry-item__chevron { transform: rotate(180deg); }
+
+    .pantry-item__body {
+      display: none;
+      padding: 0 28px 32px;
+      border-top: 1px solid rgba(44,62,45,0.07);
+    }
+    .pantry-item.open .pantry-item__body { display: block; }
+
+    .pantry-item__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      padding-top: 28px;
+    }
+    @media (max-width: 640px) { .pantry-item__grid { grid-template-columns: 1fr; } }
+
+    .pantry-detail__label {
+      font-family: var(--font-sans);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-rust, #8B4A2F);
+      margin: 0 0 10px;
+    }
+    .pantry-detail__text {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--color-text, #3d3d3d);
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    /* Nutrition table */
+    .nutrition-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+    }
+    .nutrition-table th {
+      text-align: left;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.5);
+      border-bottom: 1px solid rgba(44,62,45,0.1);
+      padding: 0 0 8px;
+    }
+    .nutrition-table td {
+      padding: 8px 0;
+      color: var(--color-text, #3d3d3d);
+      border-bottom: 1px solid rgba(44,62,45,0.06);
+    }
+    .nutrition-table td:last-child { text-align: right; color: rgba(44,62,45,0.6); }
+    .nutrition-table tr:last-child td { border-bottom: none; }
+
+    /* ---- Subscribe CTA bar ---- */
+    .pantry-cta {
+      background: var(--color-green);
+      padding: 56px 0;
+      text-align: center;
+    }
+    .pantry-cta__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      color: var(--color-cream);
+      font-weight: 400;
+      margin: 0 0 12px;
+    }
+    .pantry-cta__sub {
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: rgba(245,240,232,0.7);
+      margin: 0 0 28px;
+    }
+    .pantry-cta__btn {
+      display: inline-block;
+      background: var(--color-rust, #8B4A2F);
+      color: var(--color-cream);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .pantry-cta__btn:hover { background: #6d3822; }
+  </style>
+</head>
+<body>
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announce-bar" id="announceBar">
+    <div class="announce-bar__inner">
+      <span class="announce-bar__text">
+        Orders ship every Friday &nbsp;·&nbsp; Free local pickup available &nbsp;·&nbsp; Subscribe &amp; Save.
+      </span>
+      <button class="announce-bar__close" aria-label="Close announcement" onclick="this.closest('.announce-bar').remove(); document.querySelector('.nav').style.top='0';">✕</button>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Main navigation">
+    <a class="nav__logo" href="index.html">
+      <img src="images/logo.png" alt="Heart of Texas Organics logo" />
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a class="nav__link" href="index.html">Home</a></li>
+      <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
+      <li class="nav__item nav__item--has-dropdown">
+        <a class="nav__link nav__link--dropdown" href="offerings.html">Offerings</a>
+        <ul class="nav__dropdown" role="menu">
+          <div class="nav__dropdown-inner">
+            <li><a class="nav__dropdown-link" href="offerings.html">Subscribe</a></li>
+            <li><a class="nav__dropdown-link" href="pantry.html">What's In Your Box</a></li>
+            <li><a class="nav__dropdown-link" href="workshops.html?view=month">Lost Arts</a></li>
+          </div>
+        </ul>
+      </li>
+      <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+    </ul>
+    <a class="nav__cta" href="offerings.html">Subscribe Now</a>
+    <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav__mobile-menu" role="dialog" aria-label="Mobile navigation">
+    <a class="nav__mobile-link" href="index.html">Home</a>
+    <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
+    <a class="nav__mobile-link" href="offerings.html">Offerings</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="offerings.html">Subscribe</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="pantry.html">What's In Your Box</a>
+    <a class="nav__mobile-link nav__mobile-link--sub" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="offerings.html">Subscribe Now</a>
+  </div>
+
+  <!-- HERO -->
+  <div class="pantry-hero">
+    <div class="container">
+      <p class="pantry-hero__eyebrow">Full Transparency</p>
+      <h1 class="pantry-hero__title">What's In Your Box</h1>
+      <p class="pantry-hero__sub">Every ingredient. Every nutrient. Nothing hidden.</p>
+      <a class="pantry-hero__cta" href="offerings.html#subscriptions">← Choose Your Subscription</a>
+    </div>
+  </div>
+
+  <!-- STICKY CATEGORY TABS -->
+  <div class="pantry-tabs">
+    <div class="pantry-tabs__inner">
+      <button class="pantry-tab active" data-target="bakery">Artisan Bakery</button>
+      <button class="pantry-tab" data-target="farm">Farm Goods</button>
+      <button class="pantry-tab" data-target="larder">The Larder</button>
+    </div>
+  </div>
+
+  <!-- ARTISAN BAKERY -->
+  <section class="pantry-section" id="bakery">
+    <div class="container">
+      <div class="pantry-section__header">
+        <p class="pantry-section__eyebrow">Artisan Bakery</p>
+        <h2 class="pantry-section__title">Breads &amp; Pastries</h2>
+      </div>
+      <div class="pantry-items">
+
+        <!-- Japanese Milk Loaf -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Milk Bread</p>
+              <h3 class="pantry-item__name">Japanese Milk Loaf</h3>
+              <p class="pantry-item__short">Soft, pillowy, slightly sweet. Baked with whole milk and honey.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">A Japanese-style shokupan loaf made with the tangzhong method — a cooked flour paste that traps moisture for an exceptionally soft, pillowy crumb. Lightly sweet with a tender crust.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Bread flour, whole milk, heavy cream, eggs, unsalted butter, honey, granulated sugar, active dry yeast, sea salt.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Wheat, Milk, Eggs. Made in a facility that handles tree nuts.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per slice, approx. 45g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>130</td></tr>
+                    <tr><td>Total Fat</td><td>3.5g</td></tr>
+                    <tr><td>Saturated Fat</td><td>2g</td></tr>
+                    <tr><td>Cholesterol</td><td>25mg</td></tr>
+                    <tr><td>Sodium</td><td>160mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>21g</td></tr>
+                    <tr><td>Dietary Fiber</td><td>1g</td></tr>
+                    <tr><td>Total Sugars</td><td>4g</td></tr>
+                    <tr><td>Protein</td><td>4g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Whole Wheat Loaf -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Whole Wheat</p>
+              <h3 class="pantry-item__name">Whole Wheat Loaf</h3>
+              <p class="pantry-item__short">Hearty, nutty, tender crumb. Stone-ground, no fillers.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">100% whole wheat, stone-ground and freshly milled. Dense enough to hold up to thick spreads but tender enough to eat plain. No enriched flour, no additives — just grain, water, salt, and time.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Stone-ground whole wheat flour, filtered water, sea salt, active dry yeast, honey.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Wheat. May contain traces of Milk and Eggs.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per slice, approx. 50g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>110</td></tr>
+                    <tr><td>Total Fat</td><td>1g</td></tr>
+                    <tr><td>Saturated Fat</td><td>0g</td></tr>
+                    <tr><td>Cholesterol</td><td>0mg</td></tr>
+                    <tr><td>Sodium</td><td>180mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>22g</td></tr>
+                    <tr><td>Dietary Fiber</td><td>3g</td></tr>
+                    <tr><td>Total Sugars</td><td>2g</td></tr>
+                    <tr><td>Protein</td><td>5g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cinnamon Rolls -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Sweet Bread</p>
+              <h3 class="pantry-item__name">Cinnamon Rolls</h3>
+              <p class="pantry-item__short">Rolled thick, baked soft. Real cinnamon, cream cheese glaze.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Made with an enriched brioche-style dough, rolled generously with real cinnamon and brown sugar, baked until just set, and finished with a tangy cream cheese glaze. Each roll is large — meant to be shared or savored slowly.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Bread flour, whole milk, unsalted butter, eggs, granulated sugar, active dry yeast, sea salt, ground cinnamon, brown sugar, cream cheese, powdered sugar, vanilla extract.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Wheat, Milk, Eggs.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per roll, approx. 120g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>380</td></tr>
+                    <tr><td>Total Fat</td><td>14g</td></tr>
+                    <tr><td>Saturated Fat</td><td>8g</td></tr>
+                    <tr><td>Cholesterol</td><td>70mg</td></tr>
+                    <tr><td>Sodium</td><td>280mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>56g</td></tr>
+                    <tr><td>Dietary Fiber</td><td>2g</td></tr>
+                    <tr><td>Total Sugars</td><td>24g</td></tr>
+                    <tr><td>Protein</td><td>7g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yeast Rolls -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Rolls</p>
+              <h3 class="pantry-item__name">Yeast Rolls</h3>
+              <p class="pantry-item__short">Light, golden, pull-apart tender. Fresh per order.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Classic Southern-style yeast rolls — buttery, pull-apart soft, and golden on top. Baked fresh per order, never frozen. One dozen per pack.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">All-purpose flour, whole milk, unsalted butter, eggs, granulated sugar, active dry yeast, sea salt.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Wheat, Milk, Eggs.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per roll, approx. 45g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>140</td></tr>
+                    <tr><td>Total Fat</td><td>4g</td></tr>
+                    <tr><td>Saturated Fat</td><td>2.5g</td></tr>
+                    <tr><td>Cholesterol</td><td>30mg</td></tr>
+                    <tr><td>Sodium</td><td>150mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>22g</td></tr>
+                    <tr><td>Dietary Fiber</td><td>1g</td></tr>
+                    <tr><td>Total Sugars</td><td>3g</td></tr>
+                    <tr><td>Protein</td><td>4g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Focaccia -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Focaccia</p>
+              <h3 class="pantry-item__name">Focaccia Loaf</h3>
+              <p class="pantry-item__short">Olive oil soaked, sea salt topped. Crisp outside, airy inside.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">A high-hydration dough slow-fermented overnight, then baked in a generous pool of olive oil. Dimpled by hand, finished with flaky sea salt and fresh rosemary. Crisp on the bottom, pillowy and open-crumbed inside.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Bread flour, filtered water, extra virgin olive oil, sea salt (flaky and fine), active dry yeast, fresh rosemary.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Wheat. Vegan. May contain traces of tree nuts.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per piece, approx. 70g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>190</td></tr>
+                    <tr><td>Total Fat</td><td>7g</td></tr>
+                    <tr><td>Saturated Fat</td><td>1g</td></tr>
+                    <tr><td>Cholesterol</td><td>0mg</td></tr>
+                    <tr><td>Sodium</td><td>310mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>27g</td></tr>
+                    <tr><td>Dietary Fiber</td><td>1g</td></tr>
+                    <tr><td>Total Sugars</td><td>0g</td></tr>
+                    <tr><td>Protein</td><td>5g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FARM GOODS -->
+  <section class="pantry-section" id="farm">
+    <div class="container">
+      <div class="pantry-section__header">
+        <p class="pantry-section__eyebrow">Straight from the Farm</p>
+        <h2 class="pantry-section__title">Pasture-Raised &amp; Farm-Fresh</h2>
+      </div>
+      <div class="pantry-items">
+
+        <!-- Whole Chicken -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Pasture-Raised</p>
+              <h3 class="pantry-item__name">Whole Chicken</h3>
+              <p class="pantry-item__short">Raised on open pasture, moved daily. No antibiotics, no hormones.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Raised on open pasture and moved to fresh ground daily. Fed a non-GMO diet, never given antibiotics or growth hormones. Processed on-farm and available fresh or frozen. Average weight 4–5 lbs.</p>
+                <br>
+                <p class="pantry-detail__label">How Raised</p>
+                <p class="pantry-detail__text">Pasture-raised · Moved daily on fresh grass · Non-GMO feed · No antibiotics ever · No added hormones · Processed on-farm</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per 4oz / 113g cooked, skinless)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>165</td></tr>
+                    <tr><td>Total Fat</td><td>3.5g</td></tr>
+                    <tr><td>Saturated Fat</td><td>1g</td></tr>
+                    <tr><td>Cholesterol</td><td>85mg</td></tr>
+                    <tr><td>Sodium</td><td>75mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>0g</td></tr>
+                    <tr><td>Protein</td><td>31g</td></tr>
+                    <tr><td>Iron</td><td>1mg</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Butter -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Dairy</p>
+              <h3 class="pantry-item__name">Real Cream Butter</h3>
+              <p class="pantry-item__short">Slow-churned from cream sourced from grass-fed cows.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Slow-churned from cream sourced from local grass-fed cows. Available sea-salted and unsalted. Higher butterfat content than commercial butter — richer flavor, better for baking and finishing.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Pasteurized cream (grass-fed), sea salt (salted variety).</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Milk.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per tbsp / 14g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>102</td></tr>
+                    <tr><td>Total Fat</td><td>11.5g</td></tr>
+                    <tr><td>Saturated Fat</td><td>7.2g</td></tr>
+                    <tr><td>Cholesterol</td><td>30mg</td></tr>
+                    <tr><td>Sodium</td><td>90mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>0g</td></tr>
+                    <tr><td>Protein</td><td>0.1g</td></tr>
+                    <tr><td>Vitamin A</td><td>11% DV</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farm Eggs -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Farm Fresh</p>
+              <h3 class="pantry-item__name">Farm Eggs</h3>
+              <p class="pantry-item__short">Deep golden yolks. Hens that roam freely. One dozen per pack.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">One dozen pasture-raised eggs from hens that roam freely on open land. Deep golden yolks — a sign of a varied natural diet. No cages, no corners cut. Collected daily and packed fresh.</p>
+                <br>
+                <p class="pantry-detail__label">How Raised</p>
+                <p class="pantry-detail__text">Pasture-raised · Cage-free · No antibiotics · Non-GMO feed supplemented · Access to bugs, grass, and open land daily</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Eggs.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per large egg / 50g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>70</td></tr>
+                    <tr><td>Total Fat</td><td>5g</td></tr>
+                    <tr><td>Saturated Fat</td><td>1.5g</td></tr>
+                    <tr><td>Cholesterol</td><td>185mg</td></tr>
+                    <tr><td>Sodium</td><td>65mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>0g</td></tr>
+                    <tr><td>Protein</td><td>6g</td></tr>
+                    <tr><td>Vitamin D</td><td>6% DV</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- THE LARDER -->
+  <section class="pantry-section" id="larder">
+    <div class="container">
+      <div class="pantry-section__header">
+        <p class="pantry-section__eyebrow">The Larder</p>
+        <h2 class="pantry-section__title">Shelf-Stable Essentials</h2>
+      </div>
+      <div class="pantry-items">
+
+        <!-- Garlic Chili Crunch -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Farmhouse Favorite</p>
+              <h3 class="pantry-item__name">Garlic Chili Crunch</h3>
+              <p class="pantry-item__short">Toasted garlic, chili peppers, coconut oil. Rich, sweet, spicy crunch.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Handcrafted in small batches using toasted garlic, chili peppers, and coconut oil. A rich, sweet and spicy crunch made to elevate everything — from fresh eggs and soups to a classic turkey sandwich. No artificial preservatives, no seed oils.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Coconut oil, dried chili peppers, garlic, sesame seeds, shallots, coconut sugar, sea salt, rice vinegar.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">Contains: Sesame. Gluten-free · Dairy-free · Vegan.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per tsp / 5g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>35</td></tr>
+                    <tr><td>Total Fat</td><td>3g</td></tr>
+                    <tr><td>Saturated Fat</td><td>2.5g</td></tr>
+                    <tr><td>Cholesterol</td><td>0mg</td></tr>
+                    <tr><td>Sodium</td><td>55mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>2g</td></tr>
+                    <tr><td>Total Sugars</td><td>1g</td></tr>
+                    <tr><td>Protein</td><td>0g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tuscany Herb Dipping Oil -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Farmhouse Table</p>
+              <h3 class="pantry-item__name">Tuscany Herb Bread Dipping Oil</h3>
+              <p class="pantry-item__short">Slow-infused olive oil with fragrant Italian herbs.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">A slow-infused blend of extra virgin olive oil and fragrant Italian herbs. Perfect for dipping fresh focaccia, drizzling over roasted vegetables, finishing pasta, or elevating any farmhouse meal. Made in small batches, no fillers.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients</p>
+                <p class="pantry-detail__text">Extra virgin olive oil, dried rosemary, dried basil, dried oregano, dried thyme, red pepper flakes, garlic, sea salt, black pepper.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">None. Gluten-free · Dairy-free · Vegan.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per tbsp / 14g)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>120</td></tr>
+                    <tr><td>Total Fat</td><td>14g</td></tr>
+                    <tr><td>Saturated Fat</td><td>2g</td></tr>
+                    <tr><td>Cholesterol</td><td>0mg</td></tr>
+                    <tr><td>Sodium</td><td>40mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>0g</td></tr>
+                    <tr><td>Protein</td><td>0g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seasonal Preserves -->
+        <div class="pantry-item">
+          <button class="pantry-item__trigger" aria-expanded="false">
+            <div class="pantry-item__img-placeholder">Photo</div>
+            <div class="pantry-item__meta">
+              <p class="pantry-item__category">Farmhouse Staple</p>
+              <h3 class="pantry-item__name">Seasonal Preserves</h3>
+              <p class="pantry-item__short">Small-batch, no pectin. Peak-season fruits and traditional methods.</p>
+            </div>
+            <svg class="pantry-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pantry-item__body">
+            <div class="pantry-item__grid">
+              <div>
+                <p class="pantry-detail__label">Description</p>
+                <p class="pantry-detail__text">Handcrafted in small batches using peak-season fruits, herbs, and traditional preserving methods. NO pectin — ever. Each jar captures one-of-a-kind artisan flavors: blackberry vanilla, fig and honey, apricot ginger, persimmon and cardamom. Flavor varies by season.</p>
+                <br>
+                <p class="pantry-detail__label">Ingredients (vary by flavor)</p>
+                <p class="pantry-detail__text">Fresh seasonal fruit, cane sugar, lemon juice, spices (cardamom, ginger, or vanilla depending on variety). No pectin. No artificial preservatives. No added colors.</p>
+                <br>
+                <p class="pantry-detail__label">Allergens</p>
+                <p class="pantry-detail__text">None. Gluten-free · Dairy-free · Vegan.</p>
+              </div>
+              <div>
+                <p class="pantry-detail__label">Nutrition Facts <span style="font-weight:400;text-transform:none;letter-spacing:0;">(per tbsp / 20g, approx.)</span></p>
+                <table class="nutrition-table">
+                  <thead><tr><th>Nutrient</th><th>Amount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Calories</td><td>50</td></tr>
+                    <tr><td>Total Fat</td><td>0g</td></tr>
+                    <tr><td>Cholesterol</td><td>0mg</td></tr>
+                    <tr><td>Sodium</td><td>0mg</td></tr>
+                    <tr><td>Total Carbohydrate</td><td>13g</td></tr>
+                    <tr><td>Total Sugars</td><td>12g</td></tr>
+                    <tr><td>Protein</td><td>0g</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSCRIBE CTA -->
+  <div class="pantry-cta">
+    <div class="container">
+      <h2 class="pantry-cta__title">Ready to Build Your Box?</h2>
+      <p class="pantry-cta__sub">Choose a subscription and customize what comes to your door each month.</p>
+      <a class="pantry-cta__btn" href="offerings.html#subscriptions">Choose Your Subscription →</a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <img src="images/logo.png" alt="Heart of Texas Organics" />
+          <p class="footer__tagline">Real food, made by real people.<br>NO shortcuts!</p>
+        </div>
+        <div>
+          <ul class="footer__col-links">
+            <li><a class="footer__col-link" href="faq.html">FAQ</a></li>
+            <li><a class="footer__col-link" href="contact.html">Contact Us</a></li>
+            <li><a class="footer__col-link" href="https://www.instagram.com/heartoftxorganics" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a class="footer__col-link" href="https://www.facebook.com/heartoftxorganics/" target="_blank" rel="noopener">Facebook</a></li>
+            <li><a class="footer__col-link" href="https://www.pinterest.com/heartoftexasorganics526/" target="_blank" rel="noopener">Pinterest</a></li>
+            <li><a class="footer__col-link" href="https://www.youtube.com/channel/UCV9FhC-HsTqeOQ580l_ABLw" target="_blank" rel="noopener">YouTube</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Heart of Texas Organics. All rights reserved.</p>
+        <nav class="footer__legal" aria-label="Legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Accordion toggle
+    document.querySelectorAll('.pantry-item__trigger').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = this.closest('.pantry-item');
+        var isOpen = item.classList.contains('open');
+        // close all
+        document.querySelectorAll('.pantry-item').forEach(function(i) {
+          i.classList.remove('open');
+          i.querySelector('.pantry-item__trigger').setAttribute('aria-expanded', 'false');
+        });
+        // open clicked if it was closed
+        if (!isOpen) {
+          item.classList.add('open');
+          this.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // Sticky tab highlighting on scroll
+    var sections = ['bakery', 'farm', 'larder'];
+    var tabs = document.querySelectorAll('.pantry-tab');
+    window.addEventListener('scroll', function() {
+      var scrollY = window.scrollY + 120;
+      sections.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.offsetTop <= scrollY && el.offsetTop + el.offsetHeight > scrollY) {
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          var tab = document.querySelector('[data-target="' + id + '"]');
+          if (tab) tab.classList.add('active');
+        }
+      });
+    });
+
+    // Tab click scrolls to section
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var target = document.getElementById(this.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>

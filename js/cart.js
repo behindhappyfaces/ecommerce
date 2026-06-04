@@ -1763,9 +1763,10 @@ const ADDON_OPTIONS = [
   { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 0 },
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 0 },
-  { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1100 },
-  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 0 },
-  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 0 },
+  { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
+  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18' },
+  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1899 },
+  { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1699 },
   { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0 },
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];
@@ -1867,7 +1868,7 @@ function openBoxCustomizer(subId, name, price) {
     nameSpan.textContent = addon.name;
     const priceSpan = document.createElement('span');
     priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);white-space:nowrap;';
-    priceSpan.textContent = addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(0);
+    priceSpan.textContent = addon.priceLabel ? addon.priceLabel : (addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, ''));
     label.appendChild(cb);
     label.appendChild(nameSpan);
     label.appendChild(priceSpan);

@@ -1867,7 +1867,7 @@ function openBoxCustomizer(subId, name, price) {
     nameSpan.textContent = addon.name;
     const priceSpan = document.createElement('span');
     priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);white-space:nowrap;';
-    priceSpan.textContent = addon.price === 0 ? '$0' : '$' + addon.price.toFixed(2);
+    priceSpan.textContent = addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(0);
     label.appendChild(cb);
     label.appendChild(nameSpan);
     label.appendChild(priceSpan);

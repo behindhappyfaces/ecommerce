@@ -1459,6 +1459,7 @@ const PRODUCT_MAP = {
   'Tuscany Herb Bread Dipping Oil': 'herb-dipping-oil',
   'Farm Bundle':                    'bundle-farm',
   'Thanksgiving Turkey Bundle':     'bundle-turkey',
+  'Farm Sampler Box':               'sampler-box',
 };
 
 async function deductStockForOrder(lineItems, orderId) {

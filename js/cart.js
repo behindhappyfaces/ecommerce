@@ -1701,10 +1701,9 @@ const BOX_CONTENTS = {
   'bread-box': {
     label: 'The Bread & Butter Board Box',
     items: [
-      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',   swapGroup: 'bread' },
-      { id: 'yeast-rolls',        name: 'Yeast Rolls (1 doz)',   swapGroup: 'rolls' },
-      { id: 'cultured-butter',    name: 'Real Cream Butter',     swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',    swapGroup: 'larder' },
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',      swapGroup: 'bread' },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',        swapGroup: null },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',       swapGroup: 'larder' },
       { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', swapGroup: 'larder' },
     ],
   },
@@ -1747,11 +1746,6 @@ const SWAP_OPTIONS = {
     { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf' },
     { id: 'focaccia-loaf',      name: 'Focaccia Loaf' },
     { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls' },
-    { id: 'yeast-rolls',        name: 'Yeast Rolls' },
-  ],
-  rolls: [
-    { id: 'yeast-rolls',    name: 'Yeast Rolls' },
-    { id: 'cinnamon-rolls', name: 'Cinnamon Rolls' },
   ],
   larder: [
     { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },
@@ -1761,12 +1755,12 @@ const SWAP_OPTIONS = {
 };
 
 const ADDON_OPTIONS = [
-  { id: 'addon-yeast-rolls',     name: 'Extra Yeast Rolls (½ doz)' },
-  { id: 'addon-cinnamon-rolls',  name: 'Extra Cinnamon Rolls (½ doz)' },
-  { id: 'addon-butter',          name: 'Extra Real Cream Butter' },
-  { id: 'addon-eggs',            name: 'Farm Eggs (1 doz)' },
-  { id: 'addon-preserves',       name: 'Seasonal Preserves (extra jar)' },
-  { id: 'addon-chili-crunch',    name: 'Garlic Chili Crunch (extra jar)' },
+  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 0 },
+  { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 0 },
+  { id: 'addon-butter',         name: 'Extra Real Cream Butter',    price: 0 },
+  { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 0 },
+  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 0 },
+  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 0 },
 ];
 
 function injectBoxCustomizer() {
@@ -1854,20 +1848,33 @@ function openBoxCustomizer(subId, name, price) {
   addonsEl.innerHTML = '';
   ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-',''))).forEach(addon => {
     const label = document.createElement('label');
-    label.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);';
+    label.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = addon.id;
+    cb.dataset.addonName = addon.name;
+    cb.dataset.addonPrice = addon.price;
     cb.style.cssText = 'accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;';
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    nameSpan.textContent = addon.name;
+    const priceSpan = document.createElement('span');
+    priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);white-space:nowrap;';
+    priceSpan.textContent = addon.price === 0 ? '$0' : '$' + addon.price.toFixed(2);
     label.appendChild(cb);
-    label.appendChild(document.createTextNode(addon.name));
+    label.appendChild(nameSpan);
+    label.appendChild(priceSpan);
     addonsEl.appendChild(label);
   });
 
   // Continue → delivery modal
   document.getElementById('bc-continue').onclick = () => {
     const swaps = [...document.querySelectorAll('#bc-items select')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
-    const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => c.value);
+    const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => ({
+      id: c.value,
+      name: c.dataset.addonName,
+      price: parseFloat(c.dataset.addonPrice) || 0,
+    }));
     closeBoxCustomizer();
     openDeliveryModal(_bcPendingArgs.subId, _bcPendingArgs.name, _bcPendingArgs.price, swaps, addons);
   };

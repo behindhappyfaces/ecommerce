@@ -1695,6 +1695,197 @@ function makeDeliveryOpt(id, icon, label, note) {
   return btn;
 }
 
+// ─── Box Customizer ──────────────────────────────────────────────────────────
+
+const BOX_CONTENTS = {
+  'bread-box': {
+    label: 'The Bread & Butter Board Box',
+    items: [
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',   swapGroup: 'bread' },
+      { id: 'yeast-rolls',        name: 'Yeast Rolls (1 doz)',   swapGroup: 'rolls' },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',     swapGroup: null },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',    swapGroup: 'larder' },
+      { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', swapGroup: 'larder' },
+    ],
+  },
+  'harvest-subscription': {
+    label: 'The Supper Starter Box',
+    items: [
+      { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf',      swapGroup: 'bread' },
+      { id: 'focaccia-loaf',      name: 'Focaccia Loaf',          swapGroup: 'bread' },
+      { id: 'farm-eggs',          name: 'Farm Eggs (1 doz)',       swapGroup: null },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',      swapGroup: null },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',    swapGroup: 'larder' },
+    ],
+  },
+  'farm-box': {
+    label: "Monthly Farm Butcher's Box",
+    items: [
+      { id: 'whole-chicken',      name: 'Whole Chicken',          swapGroup: null },
+      { id: 'farm-eggs',          name: 'Farm Eggs (1 doz)',       swapGroup: null },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',      swapGroup: null },
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',     swapGroup: 'bread' },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',    swapGroup: 'larder' },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',     swapGroup: 'larder' },
+    ],
+  },
+  'sampler-box': {
+    label: 'The Farm Sampler Box',
+    items: [
+      { id: 'yeast-rolls',        name: 'Yeast Rolls (1 doz)',    swapGroup: null },
+      { id: 'cultured-butter',    name: 'Real Cream Butter (½ lb)', swapGroup: null },
+      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls (½ doz)', swapGroup: null },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',    swapGroup: null },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',     swapGroup: null },
+    ],
+  },
+};
+
+const SWAP_OPTIONS = {
+  bread: [
+    { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf' },
+    { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf' },
+    { id: 'focaccia-loaf',      name: 'Focaccia Loaf' },
+    { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls' },
+    { id: 'yeast-rolls',        name: 'Yeast Rolls' },
+  ],
+  rolls: [
+    { id: 'yeast-rolls',    name: 'Yeast Rolls' },
+    { id: 'cinnamon-rolls', name: 'Cinnamon Rolls' },
+  ],
+  larder: [
+    { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },
+    { id: 'herb-dipping-oil',    name: 'Tuscany Herb Dipping Oil' },
+    { id: 'seasonal-preserves',  name: 'Seasonal Preserves' },
+  ],
+};
+
+const ADDON_OPTIONS = [
+  { id: 'addon-yeast-rolls',     name: 'Extra Yeast Rolls (½ doz)' },
+  { id: 'addon-cinnamon-rolls',  name: 'Extra Cinnamon Rolls (½ doz)' },
+  { id: 'addon-butter',          name: 'Extra Real Cream Butter' },
+  { id: 'addon-eggs',            name: 'Farm Eggs (1 doz)' },
+  { id: 'addon-preserves',       name: 'Seasonal Preserves (extra jar)' },
+  { id: 'addon-chili-crunch',    name: 'Garlic Chili Crunch (extra jar)' },
+];
+
+function injectBoxCustomizer() {
+  if (document.getElementById('box-customizer-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'box-customizer-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity 0.3s,visibility 0.3s;';
+  overlay.innerHTML = `
+    <div id="box-customizer-panel" style="background:#fff;border-radius:20px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.25);">
+      <div style="position:sticky;top:0;background:#fff;padding:24px 28px 16px;border-bottom:1px solid rgba(44,62,45,0.08);z-index:1;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:0 0 4px;">Your Box</p>
+          <h2 id="bc-title" style="font-family:var(--font-serif);font-size:1.4rem;color:var(--color-green);margin:0;font-weight:400;"></h2>
+        </div>
+        <button id="bc-close" style="background:none;border:none;font-size:1.2rem;color:rgba(44,62,45,0.4);cursor:pointer;padding:4px;">✕</button>
+      </div>
+      <div style="padding:24px 28px;">
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 16px;">What's Included</p>
+        <div id="bc-items" style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;"></div>
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 16px;">Add-Ons <span style="font-weight:400;color:rgba(44,62,45,0.4);font-size:0.7rem;text-transform:none;letter-spacing:0;">(optional — we'll confirm availability)</span></p>
+        <div id="bc-addons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;"></div>
+        <div style="display:flex;gap:12px;">
+          <button id="bc-cancel" style="flex:1;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:1.5px solid rgba(44,62,45,0.2);background:transparent;color:rgba(44,62,45,0.6);border-radius:8px;cursor:pointer;">Cancel</button>
+          <button id="bc-continue" style="flex:2;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;background:var(--color-green);color:var(--color-cream,#F5F0E8);border-radius:8px;cursor:pointer;">Continue →</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeBoxCustomizer(); });
+  document.getElementById('bc-close').onclick = closeBoxCustomizer;
+  document.getElementById('bc-cancel').onclick = closeBoxCustomizer;
+}
+
+let _bcPendingArgs = null;
+
+function openBoxCustomizer(subId, name, price) {
+  _bcPendingArgs = { subId, name, price };
+  const box = BOX_CONTENTS[subId];
+  const overlay = document.getElementById('box-customizer-overlay');
+  document.getElementById('bc-title').textContent = box ? box.label : name;
+
+  // Render items
+  const itemsEl = document.getElementById('bc-items');
+  itemsEl.innerHTML = '';
+  const defaultItems = box ? box.items : [];
+  defaultItems.forEach(item => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--color-cream,#F5F0E8);border-radius:10px;gap:12px;';
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    nameSpan.textContent = item.name;
+    row.appendChild(nameSpan);
+    if (item.swapGroup && SWAP_OPTIONS[item.swapGroup]) {
+      const sel = document.createElement('select');
+      sel.dataset.originalId = item.id;
+      sel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
+      SWAP_OPTIONS[item.swapGroup].forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.id;
+        o.textContent = opt.id === item.id ? opt.name + ' ✓' : opt.name;
+        o.selected = opt.id === item.id;
+        sel.appendChild(o);
+      });
+      sel.onchange = () => { nameSpan.textContent = sel.options[sel.selectedIndex].text.replace(' ✓',''); };
+      const swapWrap = document.createElement('div');
+      swapWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
+      const swapLabel = document.createElement('span');
+      swapLabel.style.cssText = 'font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);';
+      swapLabel.textContent = 'Swap';
+      swapWrap.appendChild(swapLabel);
+      swapWrap.appendChild(sel);
+      row.appendChild(swapWrap);
+    } else {
+      const fixed = document.createElement('span');
+      fixed.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:rgba(44,62,45,0.35);letter-spacing:0.06em;';
+      fixed.textContent = 'included';
+      row.appendChild(fixed);
+    }
+    itemsEl.appendChild(row);
+  });
+
+  // Render add-ons (hide ones already in the box)
+  const boxItemIds = new Set(defaultItems.map(i => i.id));
+  const addonsEl = document.getElementById('bc-addons');
+  addonsEl.innerHTML = '';
+  ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-',''))).forEach(addon => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = addon.id;
+    cb.style.cssText = 'accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;';
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(addon.name));
+    addonsEl.appendChild(label);
+  });
+
+  // Continue → delivery modal
+  document.getElementById('bc-continue').onclick = () => {
+    const swaps = [...document.querySelectorAll('#bc-items select')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
+    const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => c.value);
+    closeBoxCustomizer();
+    openDeliveryModal(_bcPendingArgs.subId, _bcPendingArgs.name, _bcPendingArgs.price, swaps, addons);
+  };
+
+  overlay.style.opacity = '0';
+  overlay.style.visibility = 'visible';
+  overlay.style.pointerEvents = 'all';
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
+function closeBoxCustomizer() {
+  const overlay = document.getElementById('box-customizer-overlay');
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }, 300);
+  _bcPendingArgs = null;
+}
+
 function injectDeliveryModal() {
   if (document.getElementById('delivery-modal-overlay')) return;
 
@@ -1731,13 +1922,13 @@ function injectDeliveryModal() {
 
 let _pendingSubArgs = null;
 
-function openDeliveryModal(subId, name, price) {
-  _pendingSubArgs = { subId, name, price };
+function openDeliveryModal(subId, name, price, swaps = [], addons = []) {
+  _pendingSubArgs = { subId, name, price, swaps, addons };
   const overlay = document.getElementById('delivery-modal-overlay');
   overlay.classList.add('open');
   applyShipMinimum(price);
-  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship'); };
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup', loc)); };
+  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship',   null, _pendingSubArgs.swaps, _pendingSubArgs.addons); };
+  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup', loc, _pendingSubArgs.swaps, _pendingSubArgs.addons)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -1748,7 +1939,7 @@ function closeDeliveryModal() {
 
 // --- Subscribe ---
 
-async function subscribe(subId, name, price, deliveryMethod, pickupLocation) {
+async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swaps = [], addons = []) {
   const btn = document.querySelector(`[data-sub-id="${CSS.escape(subId)}"]`);
   const original = btn?.textContent;
   if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
@@ -1756,6 +1947,8 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation) {
   try {
     const body = { item: { name, price }, delivery_method: deliveryMethod || 'ship' };
     if (pickupLocation) body.pickup_location = pickupLocation;
+    if (swaps && swaps.length) body.swaps = swaps;
+    if (addons && addons.length) body.addons = addons;
     const res = await fetch('/create-subscription-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1809,6 +2002,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectShipCalcModal();
   injectAddressConfirmModal();
   injectOrderDetailsModal();
+  injectBoxCustomizer();
   renderCart();
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {
@@ -1820,7 +2014,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-sub-id]').forEach(btn => {
     btn.addEventListener('click', () =>
-      openDeliveryModal(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice, 10))
+      openBoxCustomizer(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice, 10))
     );
   });
 });

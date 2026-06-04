@@ -1766,6 +1766,8 @@ const ADDON_OPTIONS = [
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 0 },
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 0 },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 0 },
+  { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0 },
+  { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];
 
 function injectBoxCustomizer() {

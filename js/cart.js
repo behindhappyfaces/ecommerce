@@ -13,6 +13,10 @@ const PRODUCTS = {
   'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
+  'sampler-box':           { name: 'The Farm Sampler Box',  price: 9900,  subPrice: null, image: null },
+  'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 0,     subPrice: null, image: 'images/chili-crunch.jpg' },
+  'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 0,  subPrice: null, image: 'images/herb-dipping-oil.jpg' },
+  'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
 };
 
 const STORAGE_KEY   = 'hoto-cart';
@@ -32,6 +36,7 @@ const PRODUCT_WEIGHTS = {
   'garlic-chili-crunch': 0.8,
   'herb-dipping-oil':   1.0,
   'seasonal-preserves': 1.2,
+  'sampler-box':        4.0,
 };
 
 function calcCartWeight() {

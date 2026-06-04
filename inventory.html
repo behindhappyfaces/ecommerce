@@ -607,6 +607,7 @@
   <div class="panel" id="panel-reports">
     <div class="action-row">
       <button class="btn" id="send-weekly-btn">Send Weekly Report Email</button>
+      <button class="btn" id="test-email-btn">Send Test Email</button>
       <button class="btn green" id="export-csv-btn">Export CSV</button>
     </div>
 
@@ -1533,6 +1534,19 @@
   }
 
   // ---- REPORTS TAB ----
+  document.getElementById('test-email-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('test-email-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+      const r = await fetch('/admin/test-email', { method: 'POST', headers: authHeaders() });
+      const data = await r.json();
+      if (r.ok) showToast('Test email sent to ' + data.sentTo + ' — check your inbox!');
+      else showToast('Error: ' + (data.error || 'Email failed'), true);
+    } catch { showToast('Connection error', true); }
+    finally { btn.disabled = false; btn.textContent = 'Send Test Email'; }
+  });
+
   document.getElementById('send-weekly-btn').addEventListener('click', async () => {
     const btn = document.getElementById('send-weekly-btn');
     btn.disabled = true;

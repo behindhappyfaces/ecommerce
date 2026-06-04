@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farm Eggs & Supper Starter Box — Heart of Texas Organics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:  #2C3E2D;
+      --cream:  #F5F0E8;
+      --rust:   #8B4A2F;
+      --tan:    #C4A882;
+      --serif:  'Playfair Display', Georgia, serif;
+      --sans:   'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: #e8e4dc;
+      font-family: var(--sans);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+      gap: 40px;
+    }
+
+    /* Print controls — hidden when printing */
+    .print-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .print-bar button {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-print { background: var(--green); color: var(--cream); }
+    .btn-back  { background: transparent; color: var(--green); border: 1.5px solid var(--green) !important; }
+    @media print {
+      .print-bar { display: none; }
+      body { background: #fff; padding: 0; }
+    }
+
+    /* ── Flyer sheet ── */
+    .flyer {
+      width: 100%;
+      max-width: 680px;
+      background: var(--cream);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      page-break-after: always;
+    }
+
+    /* Header band */
+    .flyer__header {
+      background: var(--green);
+      padding: 32px 48px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .flyer__logo-text {
+      font-family: var(--serif);
+      font-size: 1rem;
+      color: var(--cream);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+    .flyer__logo-sub {
+      font-family: var(--sans);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--tan);
+      margin-top: 3px;
+    }
+    .flyer__tagline {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 0.82rem;
+      color: rgba(245,240,232,0.6);
+      text-align: right;
+    }
+
+    /* Hero */
+    .flyer__hero {
+      background: var(--green);
+      padding: 48px 48px 52px;
+      text-align: center;
+      position: relative;
+    }
+    .flyer__hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 32px;
+      background: var(--cream);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .flyer__eyebrow {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 12px;
+    }
+    .flyer__headline {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 6vw, 3rem);
+      color: var(--cream);
+      font-weight: 400;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .flyer__sub {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--tan);
+    }
+
+    /* Content */
+    .flyer__body { padding: 48px 48px 40px; }
+
+    /* Product row */
+    .product {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      padding: 28px 0;
+      border-bottom: 1px solid rgba(44,62,45,0.1);
+    }
+    .product:last-child { border-bottom: none; padding-bottom: 0; }
+    .product__eyebrow {
+      font-family: var(--sans);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 6px;
+    }
+    .product__name {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      color: var(--green);
+      font-weight: 400;
+      margin-bottom: 10px;
+    }
+    .product__desc {
+      font-family: var(--sans);
+      font-size: 0.84rem;
+      color: rgba(44,62,45,0.65);
+      line-height: 1.75;
+      max-width: 380px;
+    }
+    .product__bullets {
+      list-style: none;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .product__bullets li {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      color: rgba(44,62,45,0.7);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .product__bullets li::before {
+      content: '✦';
+      color: var(--rust);
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+    .product__price-wrap { text-align: right; flex-shrink: 0; }
+    .product__price {
+      font-family: var(--serif);
+      font-size: 1.8rem;
+      color: var(--rust);
+      font-weight: 700;
+      line-height: 1;
+    }
+    .product__price-note {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(44,62,45,0.4);
+      margin-top: 4px;
+    }
+
+    /* Divider */
+    .flyer__divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(44,62,45,0.15), transparent);
+      margin: 0 48px;
+    }
+
+    /* Footer CTA */
+    .flyer__footer {
+      background: var(--green);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .flyer__footer-text {
+      font-family: var(--serif);
+      font-size: 1rem;
+      color: var(--cream);
+      font-weight: 400;
+    }
+    .flyer__footer-sub {
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      color: rgba(245,240,232,0.55);
+      margin-top: 3px;
+      letter-spacing: 0.04em;
+    }
+    .flyer__cta {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--rust);
+      color: var(--cream);
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    /* Stamp/badge */
+    .badge {
+      display: inline-block;
+      background: var(--rust);
+      color: var(--cream);
+      font-family: var(--sans);
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .flyer__header, .flyer__body, .flyer__footer { padding-left: 28px; padding-right: 28px; }
+      .flyer__hero { padding-left: 28px; padding-right: 28px; }
+      .flyer__divider { margin: 0 28px; }
+      .product { grid-template-columns: 1fr; }
+      .product__price-wrap { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-bar">
+    <button class="btn-back" onclick="window.location='offerings.html'">← Back to Site</button>
+    <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <!-- ── FLYER ── -->
+  <div class="flyer">
+
+    <!-- Header -->
+    <div class="flyer__header">
+      <div>
+        <p class="flyer__logo-text">Heart of Texas Organics</p>
+        <p class="flyer__logo-sub">Real food · No shortcuts</p>
+      </div>
+      <p class="flyer__tagline">Raised right.<br>Made by hand.</p>
+    </div>
+
+    <!-- Hero -->
+    <div class="flyer__hero">
+      <p class="flyer__eyebrow">Fresh from the Farm</p>
+      <h1 class="flyer__headline">Farm Fresh.<br>Honest Ingredients.</h1>
+      <p class="flyer__sub">Pasture-raised eggs &amp; handcrafted farm boxes<br>delivered to your door.</p>
+    </div>
+
+    <!-- Body -->
+    <div class="flyer__body">
+
+      <!-- Eggs -->
+      <div class="product">
+        <div>
+          <p class="product__eyebrow">Farm Fresh</p>
+          <h2 class="product__name">Pasture-Raised Farm Eggs</h2>
+          <p class="product__desc">
+            One dozen eggs from hens that roam freely on open pasture — moved to fresh ground daily.
+            Deep golden yolks. No cages, no corners cut. Collected daily and packed fresh.
+          </p>
+          <ul class="product__bullets">
+            <li>Pasture-raised · cage-free · moved daily</li>
+            <li>Deep golden yolks — rich in omega-3s</li>
+            <li>No antibiotics · non-GMO supplemented feed</li>
+            <li>Collected &amp; packed fresh every week</li>
+          </ul>
+        </div>
+        <div class="product__price-wrap">
+          <p class="product__price">$13</p>
+          <p class="product__price-note">per dozen</p>
+        </div>
+      </div>
+
+      <!-- Starter Box -->
+      <div class="product">
+        <div>
+          <span class="badge">Monthly Subscription</span>
+          <p class="product__eyebrow">Farm Box</p>
+          <h2 class="product__name">The Supper Starter Box</h2>
+          <p class="product__desc">
+            A curated monthly box built for the farmhouse table — artisan breads, rich dairy,
+            and small-batch pantry staples, all made by hand with zero shortcuts.
+          </p>
+          <ul class="product__bullets">
+            <li>Your choice of artisan bread (swap to your preference)</li>
+            <li>Focaccia Loaf — olive oil soaked, sea salt topped</li>
+            <li>Farm Eggs (1 dozen) — pasture-raised</li>
+            <li>Real Cream Butter — slow-churned, grass-fed</li>
+            <li>Garlic Chili Crunch — handcrafted in small batches</li>
+          </ul>
+        </div>
+        <div class="product__price-wrap">
+          <p class="product__price">$0</p>
+          <p class="product__price-note">per month<br>(pricing<br>coming soon)</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer CTA -->
+    <div class="flyer__footer">
+      <div>
+        <p class="flyer__footer-text">Order at heartoftexasorganics.com</p>
+        <p class="flyer__footer-sub">Subscribe &amp; save · Free local pickup available · Ships every Friday</p>
+      </div>
+      <a class="flyer__cta" href="offerings.html">Subscribe Now →</a>
+    </div>
+
+  </div>
+
+</body>
+</html>

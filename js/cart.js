@@ -1764,8 +1764,8 @@ const ADDON_OPTIONS = [
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18' },
-  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1899 },
-  { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1699 },
+  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1800 },
+  { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1800 },
   { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0, priceLabel: '$7/lb' },
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];

@@ -1767,7 +1767,7 @@ const ADDON_OPTIONS = [
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18' },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1899 },
   { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1699 },
-  { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0 },
+  { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0, priceLabel: '$7/lb' },
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];
 

@@ -1750,7 +1750,6 @@ const SWAP_OPTIONS = {
     { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf' },
     { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf' },
     { id: 'focaccia-loaf',      name: 'Focaccia Loaf' },
-    { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls' },
   ],
   larder: [
     { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },

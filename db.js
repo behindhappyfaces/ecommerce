@@ -29,7 +29,7 @@ if (USE_PG) {
   const { Pool } = require('pg');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: true,
+    ssl: { rejectUnauthorized: false },
   });
   console.log('[DB] Using PostgreSQL (Supabase)');
 } else {

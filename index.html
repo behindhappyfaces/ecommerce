@@ -445,78 +445,106 @@
   </script>
 
   <!-- ===================== EMAIL POPUP ===================== -->
-  <div class="email-popup" id="emailPopup" role="dialog" aria-modal="true" aria-labelledby="popupTitle" hidden>
-    <div class="email-popup__backdrop" onclick="closeEmailPopup()"></div>
-    <div class="email-popup__box">
-      <button class="email-popup__close" onclick="closeEmailPopup()" aria-label="Close">✕</button>
-      <p class="email-popup__eyebrow">Welcome to the Farm</p>
-      <h2 class="email-popup__title" id="popupTitle">Get 10% Off Your First Order</h2>
-      <p class="email-popup__body">Join our farm family. Get recipes, farm updates, and an exclusive discount — straight to your inbox.</p>
-      <form class="email-popup__form" id="emailPopupForm">
-        <input class="email-popup__input" type="email" placeholder="Enter your email" required aria-label="Email address" />
-        <button class="email-popup__submit" type="submit">Claim My 10% Off →</button>
-      </form>
-      <p class="email-popup__fine">No spam. Unsubscribe anytime.</p>
+  <!-- Turkey Reservation Popup (shown on homepage) -->
+  <div id="turkey-overlay" class="turkey-overlay" role="dialog" aria-modal="true" aria-labelledby="turkey-heading">
+    <div class="turkey-modal">
+      <button class="turkey-modal__close" id="turkey-close" aria-label="Close">✕</button>
+      <div class="turkey-modal__badge">LIMITED AVAILABILITY</div>
+      <div class="turkey-modal__bird">🦃</div>
+      <h2 class="turkey-modal__heading" id="turkey-heading">Don't Wait.</h2>
+      <p class="turkey-modal__sub">Reserve Your Thanksgiving Turkey TODAY</p>
+      <p class="turkey-modal__body">
+        Pasture-raised, no shortcuts, <em>ever</em>. Our heritage turkeys
+        sell out fast — once they're gone, they're gone.
+      </p>
+      <div id="turkey-step1">
+        <div class="turkey-modal__actions">
+          <button class="turkey-modal__cta" id="turkey-cta">Reserve Mine Now</button>
+          <button class="turkey-modal__skip" id="turkey-skip">I'll risk it</button>
+        </div>
+      </div>
+      <div id="turkey-step2" style="display:none;margin-top:16px;text-align:left;">
+        <p style="font-family:var(--font-serif);font-size:1rem;color:var(--color-tan-light);margin-bottom:14px;text-align:center;">Complete your reservation</p>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Full Name</label>
+          <input id="tr-name" type="text" placeholder="Jane Smith" autocomplete="name" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Phone Number</label>
+          <input id="tr-phone" type="tel" placeholder="(512) 555-0100" autocomplete="tel" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Email Address</label>
+          <input id="tr-email" type="email" placeholder="jane@email.com" autocomplete="email" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+        </div>
+        <p id="tr-error" style="color:#f4a261;font-size:0.8rem;margin-bottom:10px;display:none;"></p>
+        <button id="tr-submit" class="turkey-modal__cta" style="width:100%;">Proceed to Payment</button>
+        <p style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;line-height:1.5;">$100 deposit · final cost billed at $12/lb · all sales non-refundable</p>
+      </div>
     </div>
   </div>
 
+  <style>
+    .turkey-overlay {
+      position: fixed; inset: 0; background: rgba(28,28,28,0.82);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+      padding: 16px; opacity: 0; visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease; pointer-events: none;
+    }
+    .turkey-overlay.open { opacity: 1; visibility: visible; pointer-events: all; }
+    .turkey-modal {
+      background: var(--color-green, #2C3E2D); color: var(--color-cream, #F5F0E8);
+      border-radius: 18px; max-width: 480px; width: 100%; padding: 40px 36px 32px;
+      text-align: center; position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6); border: 2px solid var(--color-tan, #B89B6E);
+    }
+    .turkey-modal__close {
+      position: absolute; top: 14px; right: 16px; background: none; border: none;
+      color: rgba(255,255,255,0.5); font-size: 1.2rem; cursor: pointer;
+    }
+    .turkey-modal__badge {
+      display: inline-block; background: var(--color-rust, #8B4A2F); color: #fff;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; padding: 4px 14px; border-radius: 100px; margin-bottom: 12px;
+    }
+    .turkey-modal__bird { font-size: 2.8rem; margin-bottom: 8px; }
+    .turkey-modal__heading { font-size: 1.8rem; margin: 0 0 4px; }
+    .turkey-modal__sub { font-size: 1rem; font-weight: 700; margin: 0 0 12px; color: var(--color-tan, #B89B6E); }
+    .turkey-modal__body { font-size: 0.9rem; line-height: 1.7; margin: 0 0 20px; opacity: 0.85; }
+    .turkey-modal__cta {
+      display: inline-block; background: var(--color-rust, #8B4A2F); color: #fff;
+      border: none; border-radius: 8px; padding: 14px 32px; font-size: 0.95rem;
+      font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 10px;
+    }
+    .turkey-modal__skip {
+      background: none; border: none; color: rgba(255,255,255,0.4);
+      font-size: 0.8rem; cursor: pointer; text-decoration: underline;
+    }
+  </style>
+
   <script>
     (function() {
-      if (!sessionStorage.getItem('popupSeen')) {
-        setTimeout(function() {
-          var popup = document.getElementById('emailPopup');
-          if (popup) {
-            popup.hidden = false;
-            var input = popup.querySelector('input');
-            if (input) input.focus();
-          }
-        }, 6000);
+      var overlay = document.getElementById('turkey-overlay');
+
+      function closePopup() {
+        overlay.classList.remove('open');
+        sessionStorage.setItem('turkeyPopupSeen', '1');
       }
+
+      if (!sessionStorage.getItem('turkeyPopupSeen')) {
+        setTimeout(function() { overlay.classList.add('open'); }, 3000);
+      }
+
+      document.getElementById('turkey-close').addEventListener('click', closePopup);
+      document.getElementById('turkey-skip').addEventListener('click', closePopup);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closePopup(); });
+
+      document.getElementById('turkey-cta').addEventListener('click', function() {
+        window.location.href = '/reserve.html';
+      });
+
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
     })();
-
-    function closeEmailPopup() {
-      var popup = document.getElementById('emailPopup');
-      if (popup) popup.hidden = true;
-      sessionStorage.setItem('popupSeen', '1');
-    }
-
-    document.getElementById('emailPopupForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      var email = this.querySelector('input').value;
-      fetch('/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, source: 'homepage-popup' })
-      }).catch(function() {});
-
-      var box = document.getElementById('emailPopup').querySelector('.email-popup__box');
-      while (box.firstChild) box.removeChild(box.firstChild);
-
-      var wrap = document.createElement('div');
-      wrap.className = 'email-popup__success';
-
-      var eyebrow = document.createElement('p');
-      eyebrow.className = 'email-popup__eyebrow';
-      eyebrow.textContent = "You're in!";
-
-      var title = document.createElement('h2');
-      title.className = 'email-popup__title';
-      title.textContent = 'Check your inbox for your 10% discount.';
-
-      var body = document.createElement('p');
-      body.className = 'email-popup__body';
-      body.textContent = 'Welcome to the Heart of Texas Organics family. 🌿';
-
-      wrap.appendChild(eyebrow);
-      wrap.appendChild(title);
-      wrap.appendChild(body);
-      box.appendChild(wrap);
-      setTimeout(closeEmailPopup, 4000);
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeEmailPopup();
-    });
   </script>
 </body>
 </html>

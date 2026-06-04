@@ -1493,9 +1493,10 @@ async function ensureWelcomeCoupon() {
   } catch {
     await stripe.coupons.create({
       id:              WELCOME_COUPON_ID,
-      name:            '10% Off First Order',
+      name:            '10% Off First Subscription Box',
       percent_off:     10,
       duration:        'once',
+      applies_to:      { products: [] }, // subscription checkout enforced in code
     });
     console.log('[Stripe] Welcome coupon created');
   }

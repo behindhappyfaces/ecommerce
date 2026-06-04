@@ -457,6 +457,23 @@
         Pasture-raised, no shortcuts, <em>ever</em>. Our heritage turkeys
         sell out fast — once they're gone, they're gone.
       </p>
+      <div class="turkey-modal__countdown">
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-days">--</span>
+          <span class="turkey-countdown__label">Days</span>
+        </div>
+        <div class="turkey-countdown__sep">:</div>
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-hours">--</span>
+          <span class="turkey-countdown__label">Hours</span>
+        </div>
+        <div class="turkey-countdown__sep">:</div>
+        <div class="turkey-countdown__block">
+          <span class="turkey-countdown__num" id="tc-mins">--</span>
+          <span class="turkey-countdown__label">Mins</span>
+        </div>
+      </div>
+      <p class="turkey-modal__urgency">Selling fast — spots are going quickly!</p>
       <div id="turkey-step1">
         <div class="turkey-modal__actions">
           <button class="turkey-modal__cta" id="turkey-cta">Reserve Mine Now</button>
@@ -467,15 +484,15 @@
         <p style="font-family:var(--font-serif);font-size:1rem;color:var(--color-tan-light);margin-bottom:14px;text-align:center;">Complete your reservation</p>
         <div style="margin-bottom:10px;">
           <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Full Name</label>
-          <input id="tr-name" type="text" placeholder="Jane Smith" autocomplete="name" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+          <input id="tr-name" type="text" placeholder="Jane Smith" autocomplete="name" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
         </div>
         <div style="margin-bottom:10px;">
           <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Phone Number</label>
-          <input id="tr-phone" type="tel" placeholder="(512) 555-0100" autocomplete="tel" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+          <input id="tr-phone" type="tel" placeholder="(512) 555-0100" autocomplete="tel" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
         </div>
         <div style="margin-bottom:16px;">
           <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Email Address</label>
-          <input id="tr-email" type="email" placeholder="jane@email.com" autocomplete="email" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:0.9rem;box-sizing:border-box;" />
+          <input id="tr-email" type="email" placeholder="jane@email.com" autocomplete="email" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
         </div>
         <p id="tr-error" style="color:#f4a261;font-size:0.8rem;margin-bottom:10px;display:none;"></p>
         <button id="tr-submit" class="turkey-modal__cta" style="width:100%;">Proceed to Payment</button>
@@ -497,39 +514,65 @@
       border-radius: 18px; max-width: 480px; width: 100%; padding: 40px 36px 32px;
       text-align: center; position: relative;
       box-shadow: 0 24px 80px rgba(0,0,0,0.6); border: 2px solid var(--color-tan, #B89B6E);
+      animation: turkeyPop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes turkeyPop {
+      from { transform: scale(0.78) translateY(24px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
     }
     .turkey-modal__close {
       position: absolute; top: 14px; right: 16px; background: none; border: none;
-      color: rgba(255,255,255,0.5); font-size: 1.2rem; cursor: pointer;
+      color: var(--color-tan-light, #D4B896); font-size: 1.1rem; cursor: pointer; opacity: 0.7;
     }
+    .turkey-modal__close:hover { opacity: 1; }
     .turkey-modal__badge {
-      display: inline-block; background: var(--color-rust, #8B4A2F); color: #fff;
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; padding: 4px 14px; border-radius: 100px; margin-bottom: 12px;
+      display: inline-block; background: var(--color-rust, #8B4A2F); color: var(--color-cream, #F5F0E8);
+      font-family: var(--font-sans, sans-serif); font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 14px;
+      border-radius: 100px; margin-bottom: 18px;
+      animation: pulse-badge 1.6s ease-in-out infinite;
     }
-    .turkey-modal__bird { font-size: 2.8rem; margin-bottom: 8px; }
-    .turkey-modal__heading { font-size: 1.8rem; margin: 0 0 4px; }
-    .turkey-modal__sub { font-size: 1rem; font-weight: 700; margin: 0 0 12px; color: var(--color-tan, #B89B6E); }
-    .turkey-modal__body { font-size: 0.9rem; line-height: 1.7; margin: 0 0 20px; opacity: 0.85; }
-    .turkey-modal__cta {
-      display: inline-block; background: var(--color-rust, #8B4A2F); color: #fff;
-      border: none; border-radius: 8px; padding: 14px 32px; font-size: 0.95rem;
-      font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 10px;
-    }
-    .turkey-modal__skip {
-      background: none; border: none; color: rgba(255,255,255,0.4);
-      font-size: 0.8rem; cursor: pointer; text-decoration: underline;
-    }
+    @keyframes pulse-badge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+    .turkey-modal__bird { font-size: 4.5rem; line-height: 1; margin-bottom: 10px; display: block; animation: wobble 2.4s ease-in-out infinite; }
+    @keyframes wobble { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+    .turkey-modal__heading { font-family: var(--font-serif, Georgia, serif); font-size: clamp(2rem,6vw,3rem); font-weight: 700; color: var(--color-tan-light, #D4B896); margin: 0 0 4px; line-height: 1.1; }
+    .turkey-modal__sub { font-family: var(--font-serif, Georgia, serif); font-size: clamp(1.1rem,3vw,1.45rem); color: var(--color-cream, #F5F0E8); margin: 0 0 16px; font-style: italic; }
+    .turkey-modal__body { font-family: var(--font-sans, sans-serif); font-size: 0.93rem; color: var(--color-tan-light, #D4B896); line-height: 1.65; margin: 0 0 22px; }
+    .turkey-modal__countdown { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 10px; }
+    .turkey-countdown__block { display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 18px; min-width: 72px; }
+    .turkey-countdown__num { font-family: var(--font-serif, Georgia, serif); font-size: 2.2rem; font-weight: 700; color: var(--color-tan-light, #D4B896); line-height: 1; }
+    .turkey-countdown__label { font-family: var(--font-sans, sans-serif); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-cream, #F5F0E8); opacity: 0.75; margin-top: 4px; }
+    .turkey-countdown__sep { font-family: var(--font-serif, Georgia, serif); font-size: 2rem; color: var(--color-tan, #B89B6E); margin-bottom: 14px; }
+    .turkey-modal__urgency { font-family: var(--font-sans, sans-serif); font-size: 0.8rem; color: #f0a070; letter-spacing: 0.04em; margin: 0 0 22px; animation: pulse-text 1.8s ease-in-out infinite; }
+    @keyframes pulse-text { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .turkey-modal__actions { display: flex; flex-direction: column; gap: 10px; }
+    .turkey-modal__cta { background: var(--color-rust, #8B4A2F); color: var(--color-cream, #F5F0E8); border: none; border-radius: 10px; font-family: var(--font-sans, sans-serif); font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; padding: 16px; cursor: pointer; transition: background 0.2s, transform 0.15s; }
+    .turkey-modal__cta:hover { background: #a05535; transform: translateY(-2px); }
+    .turkey-modal__skip { background: none; border: none; color: var(--color-tan, #B89B6E); font-family: var(--font-sans, sans-serif); font-size: 0.8rem; cursor: pointer; text-decoration: underline; opacity: 0.7; }
+    .turkey-modal__skip:hover { opacity: 1; }
   </style>
 
   <script>
     (function() {
+      var THANKSGIVING = new Date('2026-11-26T00:00:00');
+
+      function updateCountdown() {
+        var now = new Date(), diff = THANKSGIVING - now;
+        if (diff <= 0) { document.getElementById('tc-days').textContent = '0'; document.getElementById('tc-hours').textContent = '00'; document.getElementById('tc-mins').textContent = '00'; return; }
+        document.getElementById('tc-days').textContent  = Math.floor(diff / 864e5);
+        document.getElementById('tc-hours').textContent = String(Math.floor((diff % 864e5) / 36e5)).padStart(2,'0');
+        document.getElementById('tc-mins').textContent  = String(Math.floor((diff % 36e5) / 6e4)).padStart(2,'0');
+      }
+
       var overlay = document.getElementById('turkey-overlay');
 
       function closePopup() {
         overlay.classList.remove('open');
         sessionStorage.setItem('turkeyPopupSeen', '1');
       }
+
+      updateCountdown();
+      setInterval(updateCountdown, 30000);
 
       if (!sessionStorage.getItem('turkeyPopupSeen')) {
         setTimeout(function() { overlay.classList.add('open'); }, 3000);
@@ -540,7 +583,27 @@
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closePopup(); });
 
       document.getElementById('turkey-cta').addEventListener('click', function() {
-        window.location.href = '/reserve.html';
+        document.getElementById('turkey-step1').style.display = 'none';
+        document.getElementById('turkey-step2').style.display = 'block';
+      });
+
+      document.getElementById('tr-submit').addEventListener('click', async function() {
+        var name  = document.getElementById('tr-name').value.trim();
+        var phone = document.getElementById('tr-phone').value.trim();
+        var email = document.getElementById('tr-email').value.trim();
+        var err   = document.getElementById('tr-error');
+        var btn   = document.getElementById('tr-submit');
+        if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          err.textContent = 'Please fill in your name and a valid email address.';
+          err.style.display = 'block'; return;
+        }
+        err.style.display = 'none'; btn.textContent = 'Redirecting...'; btn.disabled = true;
+        try {
+          var res  = await fetch('/reserve-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, bundle: 'bundle2', notes: 'From popup on homepage' }) });
+          var data = await res.json();
+          if (!res.ok) { err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : 'Something went wrong. Please try again.'; err.style.display = 'block'; btn.textContent = 'Proceed to Payment'; btn.disabled = false; return; }
+          window.location.href = data.url;
+        } catch { err.textContent = 'Something went wrong. Please try again.'; err.style.display = 'block'; btn.textContent = 'Proceed to Payment'; btn.disabled = false; }
       });
 
       document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });

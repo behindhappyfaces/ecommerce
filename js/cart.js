@@ -1760,9 +1760,9 @@ const SWAP_OPTIONS = {
 };
 
 const ADDON_OPTIONS = [
-  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 0 },
+  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 1600 },
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
-  { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 0 },
+  { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18' },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1899 },

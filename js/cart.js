@@ -1759,7 +1759,7 @@ const SWAP_OPTIONS = {
 };
 
 const ADDON_OPTIONS = [
-  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 1600 },
+  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 2400 },
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },

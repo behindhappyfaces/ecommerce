@@ -1023,6 +1023,25 @@ h1, h2, h3, h4 {
   color: var(--color-cream);
 }
 
+.footer__social-icons {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.footer__social-icon {
+  color: rgba(245, 240, 232, 0.55);
+  transition: color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.footer__social-icon:hover {
+  color: var(--color-cream);
+  transform: translateY(-2px);
+}
+
 .footer__bottom {
   border-top: 1px solid rgba(255,255,255,0.07);
   padding-top: 28px;

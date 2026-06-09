@@ -485,6 +485,7 @@
     <button class="tab-btn" data-tab="orders">Orders</button>
     <button class="tab-btn" data-tab="subscribers">Magazine Subscribers</button>
     <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
+    <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -959,6 +960,52 @@
     </div>
   </div>
 
+  <!-- TAB: WORKSHOP INTEREST -->
+  <div class="panel" id="panel-workshop-interest">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+      <h3 class="section-title" style="margin:0;">Workshop Interest Sign-ups</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-sm btn-ghost" id="wi-refresh-btn">&#8635; Refresh</button>
+        <button class="btn" id="wi-csv-btn" style="font-size:0.78rem;padding:7px 16px;">&#8595; Download CSV</button>
+      </div>
+    </div>
+
+    <div id="wi-stats" style="display:flex;gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px;">
+      <div style="flex:1;background:var(--card);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--terra);" id="wi-stat-total">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream-dim);margin-top:3px;">Total Sign-ups</div>
+      </div>
+      <div style="flex:1;background:var(--card);padding:14px 18px;">
+        <div style="font-size:1.4rem;font-weight:300;color:var(--terra);" id="wi-stat-month">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream-dim);margin-top:3px;">This Month</div>
+      </div>
+      <div style="flex:2;background:var(--card);padding:14px 18px;">
+        <div style="font-size:0.9rem;font-weight:400;color:var(--terra);" id="wi-stat-latest">—</div>
+        <div style="font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cream-dim);margin-top:3px;">Most Recent</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <input type="search" id="wi-search" placeholder="Search by email…"
+        style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:4px;padding:9px 14px;color:var(--cream);font-size:0.85rem;width:100%;max-width:340px;outline:none;">
+    </div>
+
+    <div class="table-wrap">
+      <p id="wi-loading" style="color:var(--cream-dim);font-size:0.85rem;padding:20px 0;">Loading…</p>
+      <p id="wi-empty" style="display:none;color:var(--cream-dim);font-size:0.85rem;padding:20px 0;">No sign-ups match your search.</p>
+      <table class="data" id="wi-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Signed Up</th>
+          </tr>
+        </thead>
+        <tbody id="wi-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- TAB: ORDERS -->
   <div class="panel" id="panel-orders">
     <div class="orders-toolbar">
@@ -1097,6 +1144,7 @@
       if (btn.dataset.tab === 'settings') loadSettings();
       if (btn.dataset.tab === 'subscribers') loadSubscribers();
       if (btn.dataset.tab === 'staples') loadStaples();
+      if (btn.dataset.tab === 'workshop-interest') loadWorkshopInterest();
     });
   });
 
@@ -3294,6 +3342,98 @@
       const a    = document.createElement('a');
       a.href = url;
       a.download = 'best-medicines-subscribers-' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }());
+
+  // ---- Workshop Interest tab ----
+  (function () {
+    var allWI   = [];
+    var wiSort  = { col: 'date', dir: 'desc' };
+    var wiLoaded = false;
+
+    function getDate(e) { return (e.createdAt || '').slice(0, 10); }
+
+    window.loadWorkshopInterest = async function () {
+      if (wiLoaded) { renderWI(document.getElementById('wi-search').value); return; }
+      document.getElementById('wi-loading').style.display = 'block';
+      document.getElementById('wi-table').style.display = 'none';
+      document.getElementById('wi-empty').style.display = 'none';
+      try {
+        const r = await fetch('/admin/workshop-interest', { headers: authHeaders() });
+        if (!r.ok) throw new Error('Failed to load');
+        allWI = await r.json();
+        wiLoaded = true;
+        updateWIStats();
+        renderWI('');
+      } catch (err) {
+        document.getElementById('wi-loading').textContent = 'Error loading sign-ups.';
+      }
+    };
+
+    function updateWIStats() {
+      document.getElementById('wi-stat-total').textContent = allWI.length;
+      const now = new Date();
+      const thisMonth = allWI.filter(e => {
+        const d = new Date(e.createdAt);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      }).length;
+      document.getElementById('wi-stat-month').textContent = thisMonth;
+      const latest = allWI.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0];
+      document.getElementById('wi-stat-latest').textContent = latest ? latest.email + ' — ' + getDate(latest) : '—';
+    }
+
+    function renderWI(query) {
+      const q = (query || '').toLowerCase().trim();
+      const filtered = q ? allWI.filter(e => e.email.toLowerCase().includes(q)) : allWI;
+      const sorted = filtered.slice().sort((a, b) => {
+        let va = wiSort.col === 'date' ? (a.createdAt || '') : a.email;
+        let vb = wiSort.col === 'date' ? (b.createdAt || '') : b.email;
+        return wiSort.dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      });
+
+      document.getElementById('wi-loading').style.display = 'none';
+      if (!sorted.length) {
+        document.getElementById('wi-table').style.display = 'none';
+        document.getElementById('wi-empty').style.display = 'block';
+        return;
+      }
+      document.getElementById('wi-empty').style.display = 'none';
+      document.getElementById('wi-table').style.display = '';
+
+      const tbody = document.getElementById('wi-tbody');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      sorted.forEach((e, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td style="color:var(--cream-dim);font-size:0.78rem;">' + (i + 1) + '</td>' +
+          '<td>' + e.email + '</td>' +
+          '<td style="color:var(--cream-dim);">' + getDate(e) + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('wi-search').addEventListener('input', function () {
+      renderWI(this.value);
+    });
+
+    document.getElementById('wi-refresh-btn').addEventListener('click', function () {
+      wiLoaded = false;
+      loadWorkshopInterest();
+    });
+
+    document.getElementById('wi-csv-btn').addEventListener('click', function () {
+      const header = ['Email','Signed Up'];
+      const dataRows = allWI.map(e => [e.email, getDate(e)]);
+      const csv = [header, ...dataRows]
+        .map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))
+        .join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = 'workshop-interest-' + new Date().toISOString().slice(0, 10) + '.csv';
       a.click();
       URL.revokeObjectURL(url);
     });

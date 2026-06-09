@@ -2500,6 +2500,43 @@ app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
 });
 
 // =========================================
+// WORKSHOP INTEREST
+// =========================================
+
+const WORKSHOP_INTEREST_FILE = path.join(__dirname, 'workshop-interest.json');
+
+function readWorkshopInterest() {
+  try { return JSON.parse(fs.readFileSync(WORKSHOP_INTEREST_FILE, 'utf8')); }
+  catch { return []; }
+}
+function saveWorkshopInterest(list) {
+  fs.writeFileSync(WORKSHOP_INTEREST_FILE, JSON.stringify(list, null, 2));
+}
+
+app.post('/api/workshop-interest', express.json(), async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email required' });
+    }
+    const list = readWorkshopInterest();
+    if (list.some(e => e.email.toLowerCase() === email.toLowerCase())) {
+      return res.json({ success: true, alreadyRegistered: true });
+    }
+    list.push({ email: email.toLowerCase(), createdAt: new Date().toISOString() });
+    saveWorkshopInterest(list);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Workshop interest error:', err.message);
+    res.status(500).json({ error: 'Could not save email' });
+  }
+});
+
+app.get('/admin/workshop-interest', requireAdmin, (req, res) => {
+  res.json(readWorkshopInterest());
+});
+
+// =========================================
 // START
 // =========================================
 

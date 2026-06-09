@@ -444,6 +444,80 @@
       .w-cal-day__label { display: none; }
       .w-cal-day__num { font-size: 0.74rem; }
     }
+
+    /* ---- Email Signup ---- */
+    .w-notify-section {
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 12px 0 0;
+    }
+
+    .w-notify-section__title {
+      font-family: Georgia, serif;
+      font-size: 1.25rem;
+      font-weight: normal;
+      color: var(--w-text);
+      margin: 0 0 10px;
+    }
+
+    .w-notify-section__sub {
+      font-size: 0.92rem;
+      color: var(--w-muted);
+      line-height: 1.65;
+      margin: 0 0 24px;
+    }
+
+    .w-notify-form {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .w-notify-form__input {
+      flex: 1;
+      min-width: 220px;
+      max-width: 320px;
+      padding: 12px 16px;
+      border: 1.5px solid var(--w-border);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-family: sans-serif;
+      color: var(--w-text);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .w-notify-form__input:focus { border-color: var(--w-olive); }
+
+    .w-notify-form__btn {
+      padding: 12px 24px;
+      background: var(--w-olive);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .w-notify-form__btn:hover { background: var(--w-olive-dark); }
+    .w-notify-form__btn:disabled { background: var(--w-border); color: var(--w-muted); cursor: default; }
+
+    .w-notify-msg {
+      margin-top: 14px;
+      font-size: 0.88rem;
+      min-height: 22px;
+    }
+    .w-notify-msg--success { color: var(--w-olive); }
+    .w-notify-msg--error   { color: #b33; }
   </style>
 </head>
 <body>
@@ -516,7 +590,31 @@
   <!-- Content -->
   <section class="w-body" aria-label="Workshop calendar">
     <div class="w-container" id="w-content">
-      <!-- injected by JS -->
+
+      <div class="w-state" style="padding-top: 40px; padding-bottom: 20px;">
+        <p class="w-state__title" style="font-size:1.6rem; margin-bottom: 10px;">No Upcoming Workshops Currently</p>
+        <p style="color: var(--w-muted); font-size: 0.96rem; line-height: 1.7; max-width: 460px; margin: 0 auto;">
+          We're planning our next series of hands-on classes and seasonal workshops. Enter your email below and you'll be the first to know when new dates are posted.
+        </p>
+      </div>
+
+      <div class="w-notify-section">
+        <h2 class="w-notify-section__title">Get Notified When Classes Open</h2>
+        <p class="w-notify-section__sub">No spam — only a heads-up when workshops or classes get scheduled.</p>
+        <form class="w-notify-form" id="workshop-notify-form" novalidate>
+          <input
+            class="w-notify-form__input"
+            id="workshop-notify-email"
+            type="email"
+            placeholder="your@email.com"
+            required
+            autocomplete="email"
+          />
+          <button class="w-notify-form__btn" id="workshop-notify-btn" type="submit">Notify Me</button>
+        </form>
+        <p class="w-notify-msg" id="workshop-notify-msg" aria-live="polite"></p>
+      </div>
+
     </div>
   </section>
 
@@ -546,482 +644,58 @@
 
   <script src="js/main.js"></script>
   <script>
-    // ─────────────────────────────────────────────────────────────────────
-    // CONFIGURATION: paste your values here, nothing else needs changing
-    // ─────────────────────────────────────────────────────────────────────
-    const CALENDAR_ID = 'YOUR_CALENDAR_ID@group.calendar.google.com';
-    const API_KEY     = 'YOUR_GOOGLE_API_KEY';
-    // ─────────────────────────────────────────────────────────────────────
-
-    const DOW_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const MONTH_NAMES = ['January','February','March','April','May','June',
-                         'July','August','September','October','November','December'];
-    const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun',
-                         'Jul','Aug','Sep','Oct','Nov','Dec'];
-
-    let allEvents     = [];
-    let currentView   = 'list';
-    let calYear       = new Date().getFullYear();
-    let calMonth      = new Date().getMonth();
-    let selectedDate  = null;
-
-    const content = document.getElementById('w-content');
-
-    function clearEl(el) {
-      while (el.firstChild) el.removeChild(el.firstChild);
-    }
-
-    // ── Fetch from Google Calendar ────────────────────────────────────────
-    async function fetchEvents() {
-      const now = new Date();
-      const future = new Date(now);
-      future.setMonth(future.getMonth() + 6);
-
-      const params = new URLSearchParams({
-        key: API_KEY,
-        timeMin: now.toISOString(),
-        timeMax: future.toISOString(),
-        orderBy: 'startTime',
-        singleEvents: 'true',
-        maxResults: '100',
-      });
-
-      const res = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?${params}`
-      );
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error?.message || `Calendar API error (${res.status})`);
-      }
-
-      const data = await res.json();
-      return (data.items || []).filter(e => e.status !== 'cancelled');
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────
-    function eventDateKey(ev) {
-      return (ev.start.dateTime || ev.start.date).slice(0, 10);
-    }
-
-    function formatTime(ev) {
-      if (ev.start.date && !ev.start.dateTime) return 'All day';
-      const start = new Date(ev.start.dateTime);
-      const end   = ev.end?.dateTime ? new Date(ev.end.dateTime) : null;
-      const fmt   = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
-      return end ? `${fmt(start)} – ${fmt(end)} CT` : fmt(start);
-    }
-
-    function extractRegistrationUrl(ev) {
-      // Look for a URL in the event description (Eventbrite or any link)
-      const text = ev.description || '';
-      const match = text.match(/https?:\/\/[^\s<>"]+/);
-      return match ? match[0] : (ev.htmlLink || null);
-    }
-
-    function stripHtml(html) {
-      const tmp = document.createElement('div');
-      tmp.textContent = html;
-      return tmp.textContent;
-    }
-
-    function plainDescription(ev) {
-      if (!ev.description) return '';
-      // Remove HTML tags safely using textContent parsing
-      const d = document.createElement('div');
-      d.textContent = ev.description.replace(/<[^>]*>/g, ' ');
-      return d.textContent.slice(0, 220).trim() + (ev.description.length > 220 ? '...' : '');
-    }
-
-    // ── Loading state ─────────────────────────────────────────────────────
-    function showLoading() {
-      clearEl(content);
-      const state = document.createElement('div');
-      state.className = 'w-state';
-      const spinner = document.createElement('div');
-      spinner.className = 'w-state__spinner';
-      spinner.setAttribute('aria-label', 'Loading workshops');
-      const label = document.createElement('p');
-      label.textContent = 'Loading upcoming workshops...';
-      state.appendChild(spinner);
-      state.appendChild(label);
-      content.appendChild(state);
-    }
-
-    function showError(msg) {
-      clearEl(content);
-      const state = document.createElement('div');
-      state.className = 'w-state';
-      const title = document.createElement('p');
-      title.className = 'w-state__title';
-      title.textContent = 'Could not load workshops';
-      const sub = document.createElement('p');
-      sub.textContent = msg;
-      const contact = document.createElement('p');
-      contact.style.marginTop = '16px';
-      const link = document.createElement('a');
-      link.href = 'contact.html';
-      link.textContent = 'Contact us directly';
-      link.style.color = '#556B2F';
-      contact.appendChild(link);
-      contact.appendChild(document.createTextNode(' to ask about upcoming events.'));
-      state.appendChild(title);
-      state.appendChild(sub);
-      state.appendChild(contact);
-      content.appendChild(state);
-    }
-
-    // ── Register button factory ────────────────────────────────────────────
-    function makeRegisterBtn(ev) {
-      const url = extractRegistrationUrl(ev);
-      const btn = document.createElement('a');
-      btn.textContent = 'Register Now';
-
-      if (url) {
-        btn.href = url;
-        btn.target = '_blank';
-        btn.rel = 'noopener noreferrer';
-        btn.className = 'w-register-btn';
-      } else {
-        btn.href = 'contact.html';
-        btn.className = 'w-register-btn';
-        btn.title = 'Contact us to register';
-      }
-      return btn;
-    }
-
-    // ── LIST VIEW ─────────────────────────────────────────────────────────
-    function renderList(events) {
-      clearEl(content);
-
-      if (!events.length) {
-        const empty = document.createElement('div');
-        empty.className = 'w-no-events';
-        const p = document.createElement('p');
-        p.textContent = 'No upcoming workshops are scheduled right now. Check back soon or contact us to request one.';
-        const link = document.createElement('a');
-        link.href = 'contact.html';
-        link.textContent = 'Get in touch';
-        link.style.cssText = 'color:#556B2F;display:block;margin-top:12px;font-weight:600;';
-        empty.appendChild(p);
-        empty.appendChild(link);
-        content.appendChild(empty);
-        return;
-      }
-
-      const list = document.createElement('div');
-      list.className = 'w-list';
-      list.setAttribute('aria-label', 'Upcoming workshops');
-
-      events.forEach(ev => {
-        const rawDate = ev.start.dateTime || ev.start.date;
-        const d = new Date(rawDate.includes('T') ? rawDate : rawDate + 'T00:00:00');
-
-        const card = document.createElement('article');
-        card.className = 'w-event-card';
-
-        // Date block
-        const dateBlock = document.createElement('div');
-        dateBlock.className = 'w-event-card__date-block';
-
-        const monthEl = document.createElement('div');
-        monthEl.className = 'w-event-card__month';
-        monthEl.textContent = MONTH_SHORT[d.getMonth()];
-
-        const dayEl = document.createElement('div');
-        dayEl.className = 'w-event-card__day';
-        dayEl.textContent = d.getDate();
-
-        const dowEl = document.createElement('div');
-        dowEl.className = 'w-event-card__dow';
-        dowEl.textContent = DOW_SHORT[d.getDay()];
-
-        dateBlock.appendChild(monthEl);
-        dateBlock.appendChild(dayEl);
-        dateBlock.appendChild(dowEl);
-
-        // Info block
-        const info = document.createElement('div');
-        info.className = 'w-event-card__info';
-
-        const title = document.createElement('h2');
-        title.className = 'w-event-card__title';
-        title.textContent = ev.summary || 'Workshop';
-
-        const time = document.createElement('div');
-        time.className = 'w-event-card__time';
-        time.textContent = formatTime(ev);
-
-        const desc = document.createElement('p');
-        desc.className = 'w-event-card__desc';
-        desc.textContent = plainDescription(ev);
-
-        info.appendChild(title);
-        info.appendChild(time);
-        if (ev.description) info.appendChild(desc);
-
-        // Actions block
-        const actions = document.createElement('div');
-        actions.className = 'w-event-card__actions';
-        actions.appendChild(makeRegisterBtn(ev));
-
-        card.appendChild(dateBlock);
-        card.appendChild(info);
-        card.appendChild(actions);
-        list.appendChild(card);
-      });
-
-      content.appendChild(list);
-    }
-
-    // ── MONTH VIEW ────────────────────────────────────────────────────────
-    function buildEventMap(events) {
-      const map = {};
-      events.forEach(ev => {
-        const key = eventDateKey(ev);
-        if (!map[key]) map[key] = [];
-        map[key].push(ev);
-      });
-      return map;
-    }
-
-    function renderDayDetail(dateKey, eventsForDay) {
-      const existing = document.getElementById('w-day-detail');
-      if (existing) existing.remove();
-
-      const panel = document.createElement('div');
-      panel.className = 'w-day-detail';
-      panel.id = 'w-day-detail';
-      panel.setAttribute('aria-live', 'polite');
-
-      const d = new Date(dateKey + 'T00:00:00');
-      const heading = document.createElement('h2');
-      heading.className = 'w-day-detail__heading';
-      heading.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-      panel.appendChild(heading);
-
-      eventsForDay.forEach(ev => {
-        const row = document.createElement('div');
-        row.className = 'w-day-detail__event';
-
-        const left = document.createElement('div');
-
-        const title = document.createElement('h3');
-        title.className = 'w-day-detail__event-title';
-        title.textContent = ev.summary || 'Workshop';
-
-        const time = document.createElement('div');
-        time.className = 'w-day-detail__event-time';
-        time.textContent = formatTime(ev);
-
-        const desc = document.createElement('p');
-        desc.className = 'w-day-detail__event-desc';
-        desc.textContent = plainDescription(ev);
-
-        left.appendChild(title);
-        left.appendChild(time);
-        if (ev.description) left.appendChild(desc);
-
-        row.appendChild(left);
-        row.appendChild(makeRegisterBtn(ev));
-        panel.appendChild(row);
-      });
-
-      content.appendChild(panel);
-      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function renderMonth(events) {
-      clearEl(content);
-
-      const eventMap = buildEventMap(events);
-      const today    = new Date();
-      const todayKey = today.toISOString().slice(0, 10);
-
-      // Month nav bar
-      const nav = document.createElement('div');
-      nav.className = 'w-month-nav';
-
-      const prevBtn = document.createElement('button');
-      prevBtn.className = 'w-month-nav__arrow';
-      prevBtn.setAttribute('aria-label', 'Previous month');
-      prevBtn.textContent = '←';
-      prevBtn.addEventListener('click', () => {
-        calMonth--;
-        if (calMonth < 0) { calMonth = 11; calYear--; }
-        selectedDate = null;
-        renderMonth(allEvents);
-      });
-
-      const monthLabel = document.createElement('span');
-      monthLabel.className = 'w-month-nav__label';
-      monthLabel.textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
-
-      const nextBtn = document.createElement('button');
-      nextBtn.className = 'w-month-nav__arrow';
-      nextBtn.setAttribute('aria-label', 'Next month');
-      nextBtn.textContent = '→';
-      nextBtn.addEventListener('click', () => {
-        calMonth++;
-        if (calMonth > 11) { calMonth = 0; calYear++; }
-        selectedDate = null;
-        renderMonth(allEvents);
-      });
-
-      nav.appendChild(prevBtn);
-      nav.appendChild(monthLabel);
-      nav.appendChild(nextBtn);
-      content.appendChild(nav);
-
-      // Calendar grid
-      const grid = document.createElement('div');
-      grid.className = 'w-cal-grid';
-      grid.setAttribute('role', 'grid');
-      grid.setAttribute('aria-label', `${MONTH_NAMES[calMonth]} ${calYear} calendar`);
-
-      // Day-of-week headers
-      const header = document.createElement('div');
-      header.className = 'w-cal-grid__header';
-      header.setAttribute('role', 'row');
-      DOW_SHORT.forEach(name => {
-        const cell = document.createElement('div');
-        cell.className = 'w-cal-grid__dow';
-        cell.setAttribute('role', 'columnheader');
-        cell.textContent = name;
-        header.appendChild(cell);
-      });
-      grid.appendChild(header);
-
-      // Day cells
-      const daysRow = document.createElement('div');
-      daysRow.className = 'w-cal-grid__days';
-      daysRow.setAttribute('role', 'rowgroup');
-
-      const firstDay = new Date(calYear, calMonth, 1);
-      const lastDay  = new Date(calYear, calMonth + 1, 0);
-      const startDow = firstDay.getDay();
-
-      // Fill leading cells from previous month
-      for (let i = 0; i < startDow; i++) {
-        const prevDate = new Date(calYear, calMonth, 1 - (startDow - i));
-        const cell = makeDayCell(prevDate, true, eventMap, todayKey);
-        daysRow.appendChild(cell);
-      }
-
-      // Current month days
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        const date = new Date(calYear, calMonth, d);
-        const cell = makeDayCell(date, false, eventMap, todayKey);
-        daysRow.appendChild(cell);
-      }
-
-      // Fill trailing cells
-      const totalCells = daysRow.children.length;
-      const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-      for (let i = 1; i <= remaining; i++) {
-        const nextDate = new Date(calYear, calMonth + 1, i);
-        const cell = makeDayCell(nextDate, true, eventMap, todayKey);
-        daysRow.appendChild(cell);
-      }
-
-      grid.appendChild(daysRow);
-      content.appendChild(grid);
-
-      // Show detail if a date was selected
-      if (selectedDate && eventMap[selectedDate]) {
-        renderDayDetail(selectedDate, eventMap[selectedDate]);
-      }
-    }
-
-    function makeDayCell(date, otherMonth, eventMap, todayKey) {
-      const key    = date.toISOString().slice(0, 10);
-      const events = eventMap[key] || [];
-      const isToday = key === todayKey;
-      const isSelected = key === selectedDate;
-
-      const cell = document.createElement('div');
-      cell.className = 'w-cal-day';
-      cell.setAttribute('role', 'gridcell');
-      if (otherMonth) cell.classList.add('w-cal-day--other-month');
-      if (isToday)    cell.classList.add('w-cal-day--today');
-      if (events.length) cell.classList.add('w-cal-day--has-event');
-      if (isSelected)    cell.classList.add('w-cal-day--selected');
-
-      const num = document.createElement('div');
-      num.className = 'w-cal-day__num';
-      num.textContent = date.getDate();
-      cell.appendChild(num);
-
-      events.slice(0, 2).forEach(ev => {
-        const dot = document.createElement('div');
-        dot.className = 'w-cal-day__dot';
-        cell.appendChild(dot);
-        const label = document.createElement('div');
-        label.className = 'w-cal-day__label';
-        label.textContent = ev.summary || 'Event';
-        cell.appendChild(label);
-      });
-
-      if (events.length > 2) {
-        const more = document.createElement('div');
-        more.className = 'w-cal-day__label';
-        more.textContent = `+${events.length - 2} more`;
-        cell.appendChild(more);
-      }
-
-      if (events.length) {
-        cell.setAttribute('tabindex', '0');
-        cell.setAttribute('aria-label', `${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}: ${events.length} event${events.length > 1 ? 's' : ''}`);
-
-        const activate = () => {
-          selectedDate = key;
-          renderMonth(allEvents);
-        };
-        cell.addEventListener('click', activate);
-        cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
-      }
-
-      return cell;
-    }
-
-    // ── View switching ────────────────────────────────────────────────────
-    function setView(view) {
-      currentView = view;
-      const listBtn  = document.getElementById('btn-list');
-      const monthBtn = document.getElementById('btn-month');
-
-      listBtn.classList.toggle('w-view-btn--active', view === 'list');
-      listBtn.setAttribute('aria-pressed', view === 'list');
-      monthBtn.classList.toggle('w-view-btn--active', view === 'month');
-      monthBtn.setAttribute('aria-pressed', view === 'month');
-
-      if (view === 'list') {
-        renderList(allEvents);
-      } else {
-        calYear  = new Date().getFullYear();
-        calMonth = new Date().getMonth();
-        selectedDate = null;
-        renderMonth(allEvents);
-      }
-    }
-
-    document.getElementById('btn-list').addEventListener('click', () => setView('list'));
-    document.getElementById('btn-month').addEventListener('click', () => setView('month'));
-
-    // ── Bootstrap ─────────────────────────────────────────────────────────
-    (async function init() {
-      showLoading();
+    // View toggle (kept for UI, but both views show same static content)
+    document.getElementById('btn-list').addEventListener('click', () => {
+      document.getElementById('btn-list').classList.add('w-view-btn--active');
+      document.getElementById('btn-list').setAttribute('aria-pressed', 'true');
+      document.getElementById('btn-month').classList.remove('w-view-btn--active');
+      document.getElementById('btn-month').setAttribute('aria-pressed', 'false');
+    });
+    document.getElementById('btn-month').addEventListener('click', () => {
+      document.getElementById('btn-month').classList.add('w-view-btn--active');
+      document.getElementById('btn-month').setAttribute('aria-pressed', 'true');
+      document.getElementById('btn-list').classList.remove('w-view-btn--active');
+      document.getElementById('btn-list').setAttribute('aria-pressed', 'false');
+    });
+
+    // Workshop interest email signup
+    const form    = document.getElementById('workshop-notify-form');
+    const emailIn = document.getElementById('workshop-notify-email');
+    const btn     = document.getElementById('workshop-notify-btn');
+    const msg     = document.getElementById('workshop-notify-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = emailIn.value.trim();
+      if (!email) return;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      msg.textContent = '';
+      msg.className = 'w-notify-msg';
       try {
-        allEvents = await fetchEvents();
-        const params = new URLSearchParams(window.location.search);
-        setView(params.get('view') === 'month' ? 'month' : 'list');
-      } catch (err) {
-        console.error('Workshop calendar error:', err);
-        showError(err.message.includes('400') || err.message.includes('403')
-          ? 'Calendar configuration error. Please check the setup guide.'
-          : 'Unable to load workshops right now. Please try again shortly.');
+        const r = await fetch('/api/workshop-interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await r.json();
+        if (r.ok) {
+          msg.textContent = data.alreadyRegistered
+            ? 'You\'re already on the list — we\'ll be in touch!'
+            : 'You\'re on the list! We\'ll notify you when workshops are scheduled.';
+          msg.className = 'w-notify-msg w-notify-msg--success';
+          emailIn.value = '';
+        } else {
+          msg.textContent = data.error || 'Something went wrong. Please try again.';
+          msg.className = 'w-notify-msg w-notify-msg--error';
+        }
+      } catch {
+        msg.textContent = 'Connection error. Please try again.';
+        msg.className = 'w-notify-msg w-notify-msg--error';
       }
-    })();
+      btn.disabled = false;
+      btn.textContent = 'Notify Me';
+    });
   </script>
 </body>
 </html>

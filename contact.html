@@ -329,6 +329,10 @@
                   <option value="other">Something else</option>
                 </select>
               </div>
+              <div class="form-group" id="cf-other-group" style="display:none;">
+                <label for="cf-other-subject">Please describe your subject</label>
+                <input id="cf-other-subject" name="other_subject" type="text" placeholder="What is your message about?" />
+              </div>
               <div class="form-group">
                 <label for="cf-message">Message</label>
                 <textarea id="cf-message" name="message" rows="5" placeholder="Tell us what's on your mind..." required></textarea>
@@ -374,13 +378,28 @@
 
   <script src="js/main.js"></script>
   <script>
+    document.getElementById('cf-subject').addEventListener('change', function () {
+      const otherGroup = document.getElementById('cf-other-group');
+      const otherInput = document.getElementById('cf-other-subject');
+      if (this.value === 'other') {
+        otherGroup.style.display = '';
+        otherInput.required = true;
+      } else {
+        otherGroup.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+      }
+    });
+
     document.getElementById('contact-form').addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      const name    = document.getElementById('cf-name').value.trim();
-      const email   = document.getElementById('cf-email').value.trim();
-      const subject = document.getElementById('cf-subject').value;
-      const message = document.getElementById('cf-message').value.trim();
+      const name        = document.getElementById('cf-name').value.trim();
+      const email       = document.getElementById('cf-email').value.trim();
+      const subjectSel  = document.getElementById('cf-subject').value;
+      const otherDetail = document.getElementById('cf-other-subject').value.trim();
+      const subject     = subjectSel === 'other' && otherDetail ? 'Something else: ' + otherDetail : subjectSel;
+      const message     = document.getElementById('cf-message').value.trim();
       const btn     = document.getElementById('cf-submit');
       const status  = document.getElementById('cf-message-status');
 

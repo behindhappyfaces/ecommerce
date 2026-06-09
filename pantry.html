@@ -187,11 +187,21 @@
       margin: 0;
       line-height: 1.5;
     }
+    .pantry-item__short::after {
+      content: 'Tap to see nutrition facts, ingredients & allergens ↓';
+      display: block;
+      margin-top: 7px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--color-rust, #8B4A2F);
+    }
+    .pantry-item.open .pantry-item__short::after { display: none; }
     .pantry-item__chevron {
-      width: 20px;
-      height: 20px;
+      width: 26px;
+      height: 26px;
       flex-shrink: 0;
-      color: rgba(44,62,45,0.35);
+      color: var(--color-rust, #8B4A2F);
       transition: transform 0.3s ease;
     }
     .pantry-item.open .pantry-item__chevron { transform: rotate(180deg); }

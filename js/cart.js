@@ -118,7 +118,7 @@ function getDiscountedTotal() {
   return getCart().items.reduce((sum, item) => {
     const p = PRODUCTS[item.id];
     const price = item.price ?? (p ? p.price : 0);
-    return sum + Math.round(price * 0.85) * item.qty;
+    return sum + Math.round(price * 0.90) * item.qty;
   }, 0);
 }
 
@@ -352,7 +352,7 @@ function renderCart() {
 
   const subText = document.createElement('span');
   subText.className = 'cart-subscribe__text';
-  subText.innerHTML = '<strong>Subscribe &amp; Save 15%</strong><em>Billed monthly · cancel anytime</em>';
+  subText.innerHTML = '<strong>Subscribe &amp; Save 10%</strong><em>Billed monthly · cancel anytime</em>';
 
   subToggle.appendChild(subCheck);
   subToggle.appendChild(subCheckbox);

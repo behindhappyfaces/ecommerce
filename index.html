@@ -286,52 +286,19 @@
     </div>
   </section>
 
-  <!-- ===================== TESTIMONIALS ===================== -->
-  <section class="testimonials" aria-labelledby="testimonials-title">
-    <div class="container">
-      <header class="testimonials__header" data-fade>
-        <p class="eyebrow">What People Are Saying</p>
-        <h2 class="testimonials__title" id="testimonials-title">Real families. Real food. Real results.</h2>
-      </header>
-
-      <div class="testimonials__grid">
-
-        <blockquote class="testimonial__card" data-fade>
-          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
-          <p class="testimonial__quote">"I never thought I'd say this, but we've completely replaced store-bought eggs and bread. The pasture-raised eggs are a different color, a different taste — my kids notice. This is the real thing."</p>
-          <footer class="testimonial__author">
-            <strong>— Keisha M.</strong>
-            <span>Austin, TX</span>
-          </footer>
-        </blockquote>
-
-        <blockquote class="testimonial__card" data-fade>
-          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
-          <p class="testimonial__quote">"The Japanese Milk Loaf is unreal. Soft, rich, and nothing like what you get at the grocery store. I've ordered three times now and every loaf has been perfect. You can taste the care in it."</p>
-          <footer class="testimonial__author">
-            <strong>— Marcus T.</strong>
-            <span>Waco, TX</span>
-          </footer>
-        </blockquote>
-
-        <blockquote class="testimonial__card" data-fade>
-          <div class="testimonial__stars" aria-label="5 stars">★★★★★</div>
-          <p class="testimonial__quote">"Deborah doesn't cut corners — and you feel it. The butter alone converted my whole family. Knowing where our food comes from and who grows it matters. Heart of Texas Organics is the answer to that."</p>
-          <footer class="testimonial__author">
-            <strong>— Angela R.</strong>
-            <span>Round Rock, TX</span>
-          </footer>
-        </blockquote>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== CUSTOMER PHOTOS STRIP ===================== -->
+  <!-- ===================== FARM FAMILY (testimonials + photos) ===================== -->
   <section class="farm-family" aria-label="From our farm family">
     <div class="farm-family__header">
       <p class="farm-family__eyebrow">Real Kitchens. Real People.</p>
       <h2 class="farm-family__title">From Our Farm Family</h2>
+
+      <!-- Rotating testimonial -->
+      <div class="farm-family__testimonial" id="ffTestimonial" aria-live="polite">
+        <div class="farm-family__stars">★★★★★</div>
+        <p class="farm-family__quote" id="ffQuote">"I never thought I'd say this, but we've completely replaced store-bought eggs and bread. The pasture-raised eggs are a different color, a different taste — my kids notice. This is the real thing."</p>
+        <p class="farm-family__author" id="ffAuthor">— Keisha M. &nbsp;·&nbsp; Austin, TX</p>
+      </div>
+
       <a class="farm-family__cta" href="https://g.page/r/CUUfyz-9bw9BEAE/review" target="_blank" rel="noopener">
         ★★★★★ Leave a Review
       </a>
@@ -432,6 +399,34 @@
         margin-bottom: 36px;
         padding: 0 20px;
       }
+      .farm-family__testimonial {
+        max-width: 640px;
+        margin: 24px auto 28px;
+        transition: opacity 0.5s ease;
+      }
+      .farm-family__testimonial.fade-out { opacity: 0; }
+      .farm-family__stars {
+        color: #D4A96A;
+        font-size: 1.1rem;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+      }
+      .farm-family__quote {
+        font-family: var(--font-serif);
+        font-style: italic;
+        font-size: clamp(1rem, 2vw, 1.15rem);
+        color: rgba(245,240,232,0.88);
+        line-height: 1.7;
+        margin: 0 0 12px;
+      }
+      .farm-family__author {
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: rgba(245,240,232,0.5);
+        margin: 0;
+      }
       .farm-family__eyebrow {
         font-family: var(--font-sans);
         font-size: 0.72rem;
@@ -521,6 +516,29 @@
         }
       }
     </style>
+
+    <script>
+      (function () {
+        var quotes = [
+          { q: '"I never thought I\'d say this, but we\'ve completely replaced store-bought eggs and bread. The pasture-raised eggs are a different color, a different taste — my kids notice. This is the real thing."', a: '— Keisha M. &nbsp;·&nbsp; Austin, TX' },
+          { q: '"The Japanese Milk Loaf is unreal. Soft, rich, and nothing like what you get at the grocery store. I\'ve ordered three times now and every loaf has been perfect. You can taste the care in it."', a: '— Marcus T. &nbsp;·&nbsp; Waco, TX' },
+          { q: '"Deborah doesn\'t cut corners — and you feel it. The butter alone converted my whole family. Knowing where our food comes from and who grows it matters. Heart of Texas Organics is the answer to that."', a: '— Angela R. &nbsp;·&nbsp; Round Rock, TX' }
+        ];
+        var idx = 0;
+        var box = document.getElementById('ffTestimonial');
+        var qEl = document.getElementById('ffQuote');
+        var aEl = document.getElementById('ffAuthor');
+        setInterval(function () {
+          box.classList.add('fade-out');
+          setTimeout(function () {
+            idx = (idx + 1) % quotes.length;
+            qEl.textContent = quotes[idx].q;
+            aEl.innerHTML = quotes[idx].a;
+            box.classList.remove('fade-out');
+          }, 500);
+        }, 5000);
+      })();
+    </script>
   </section>
 
   <!-- ===================== FOOTER ===================== -->

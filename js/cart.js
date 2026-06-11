@@ -1962,6 +1962,25 @@ function openBoxCustomizer(subId, name, price) {
       flavorWrap.appendChild(flavorLabel);
       flavorWrap.appendChild(flavorSel);
       row.appendChild(flavorWrap);
+    } else if (item.id === 'cultured-butter') {
+      // Salted / Unsalted picker for included butter
+      const butterWrap = document.createElement('div');
+      butterWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
+      const butterLabel = document.createElement('span');
+      butterLabel.style.cssText = 'font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);';
+      butterLabel.textContent = 'Type';
+      const butterSel = document.createElement('select');
+      butterSel.dataset.butterType = 'included';
+      butterSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
+      ['Salted', 'Unsalted'].forEach(type => {
+        const o = document.createElement('option');
+        o.value = type;
+        o.textContent = type;
+        butterSel.appendChild(o);
+      });
+      butterWrap.appendChild(butterLabel);
+      butterWrap.appendChild(butterSel);
+      row.appendChild(butterWrap);
     } else {
       const fixed = document.createElement('span');
       fixed.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:rgba(44,62,45,0.35);letter-spacing:0.06em;';
@@ -2045,6 +2064,11 @@ function openBoxCustomizer(subId, name, price) {
     const includedFlavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
     if (includedFlavorSel) {
       addons.unshift({ id: 'preserves-flavor', name: 'Seasonal Preserves flavor: ' + includedFlavorSel.value, price: 0 });
+    }
+    // Capture butter type preference
+    const butterSel = document.querySelector('#bc-items select[data-butter-type="included"]');
+    if (butterSel) {
+      addons.unshift({ id: 'butter-type', name: 'Butter: ' + butterSel.value, price: 0 });
     }
     // Capture args BEFORE closeBoxCustomizer() nulls _bcPendingArgs
     const { subId, name, price } = _bcPendingArgs;

@@ -102,13 +102,14 @@ async function sendEmail(subject, html) {
   console.log('Admin email sent:', subject);
 }
 
-async function sendEmailTo(to, subject, html, attachments = []) {
+async function sendEmailTo(to, subject, html, attachments = [], text = '') {
   if (resendClient) {
     const payload = {
       from: `Heart of Texas Organics <${FROM_EMAIL}>`,
       to,
       subject,
       html,
+      ...(text && { text }),
     };
     if (attachments.length) {
       payload.attachments = attachments.map(a => ({ filename: a.filename, content: a.content }));
@@ -116,7 +117,17 @@ async function sendEmailTo(to, subject, html, attachments = []) {
     const { error } = await resendClient.emails.send(payload);
     if (error) throw new Error(error.message);
   } else if (smtpTransporter) {
-    await sendEmailViaSmtp(to, subject, html, attachments);
+    const msg = {
+      from: `Heart of Texas Organics <${process.env.OUTLOOK_USER}>`,
+      to,
+      subject,
+      html,
+      ...(text && { text }),
+    };
+    if (attachments.length) {
+      msg.attachments = attachments.map(a => ({ filename: a.filename, content: a.content }));
+    }
+    await smtpTransporter.sendMail(msg);
   } else {
     console.log('[Customer email skipped — no transport configured]\nTo:', to, '\nSubject:', subject);
     return;
@@ -1620,38 +1631,57 @@ app.post('/subscribe', express.json(), async (req, res) => {
         </div>`
       );
     } else if (promoCode) {
-      await sendEmailTo(normalizedEmail,
-        'Your 10% Off Code from Heart of Texas Organics 🌾',
+      await sendEmailTo(
+        normalizedEmail,
+        'Welcome — here is something from us',
         `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
           <img src="${siteUrl}/images/logo.png" alt="Heart of Texas Organics" style="height:52px;margin-bottom:28px;filter:brightness(0.3);" />
           <h2 style="color:#2C3E2D;font-size:1.6rem;margin:0 0 12px;">Welcome to the farm family.</h2>
           <p style="color:#3d3d3d;line-height:1.9;margin:0 0 24px;">
             We're so glad you're here. Real food, raised with intention — that's the only way we know how to do it.
-            As a thank you for joining us, here's 10% off your first order:
+            As a thank you for joining us, here's a little something for your first order:
           </p>
           <div style="background:#2C3E2D;padding:28px;text-align:center;border-radius:4px;margin-bottom:28px;">
-            <p style="color:#B89B6E;font-family:sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 10px;">Your Personal Discount Code</p>
+            <p style="color:#B89B6E;font-family:sans-serif;font-size:0.75rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 10px;">Your Personal Code</p>
             <p style="color:#F5F0E8;font-family:sans-serif;font-size:2rem;font-weight:700;letter-spacing:0.12em;margin:0;">${promoCode}</p>
             <p style="color:#B89B6E;font-family:sans-serif;font-size:0.7rem;margin:10px 0 0;">One-time use · Your account only</p>
           </div>
           <p style="color:#3d3d3d;line-height:1.9;margin:0 0 8px;">
-            Enter this code at checkout to take 10% off your first order.
+            Enter this code at checkout on your first order.
             No shortcuts, no fillers — just real food made by real people right here in the heart of Texas.
           </p>
           <a href="${siteUrl}/offerings.html"
              style="display:inline-block;margin-top:20px;background:#8B4A2F;color:#F5F0E8;padding:14px 32px;text-decoration:none;font-family:sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:3px;">
-            Shop Now →
+            See What's Available →
           </a>
           <div style="border-top:2px solid #2C3E2D;margin-top:32px;padding-top:24px;">
             <p style="color:#2C3E2D;font-weight:700;margin:0 0 2px;">Deborah</p>
             <p style="color:#555;font-size:0.85rem;margin:0 0 2px;">Head Hen in Charge</p>
-            <p style="color:#8B4A2F;font-size:0.85rem;margin:0;">❤️ of Texas Organics</p>
+            <p style="color:#8B4A2F;font-size:0.85rem;margin:0;">Heart of Texas Organics</p>
           </div>
           <p style="color:#aaa;font-size:0.75rem;line-height:1.7;margin-top:24px;">
             You're receiving this because you signed up at heartoftexasorganics.com.
             Reply anytime — we actually read these.
           </p>
-        </div>`
+        </div>`,
+        [],
+        `Hi,
+
+Welcome to the Heart of Texas Organics family. We're glad you're here.
+
+Here is your personal code for your first order:
+
+  ${promoCode}
+
+Enter it at checkout at ${siteUrl}/offerings.html
+
+Real food, raised with intention — that's the only way we know how to do it.
+
+— Deborah
+Head Hen in Charge
+Heart of Texas Organics
+
+You're receiving this because you signed up at heartoftexasorganics.com. Reply anytime — we actually read these.`
       );
     }
   } catch(e) {

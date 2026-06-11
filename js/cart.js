@@ -1850,20 +1850,22 @@ const SWAP_OPTIONS = {
   ],
 };
 
+const PRESERVES_FLAVORS = [
+  { name: 'Strawberry',       price: 1500 },
+  { name: 'Grape',            price: 1500 },
+  { name: 'Blackberry',       price: 1800 },
+  { name: 'Peach',            price: 1800 },
+  { name: 'Fig',              price: 1800 },
+  { name: 'Orange Marmalade', price: 1800 },
+];
+
 const ADDON_OPTIONS = [
   { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 2400 },
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18',
-    flavors: [
-      { name: 'Strawberry',       price: 1500 },
-      { name: 'Grape',            price: 1500 },
-      { name: 'Blackberry',       price: 1800 },
-      { name: 'Peach',            price: 1800 },
-      { name: 'Fig',              price: 1800 },
-      { name: 'Orange Marmalade', price: 1800 },
-    ]
+    flavors: PRESERVES_FLAVORS,
   },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1800 },
   { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1800 },
@@ -1941,6 +1943,25 @@ function openBoxCustomizer(subId, name, price) {
       swapWrap.appendChild(swapLabel);
       swapWrap.appendChild(sel);
       row.appendChild(swapWrap);
+    } else if (item.id === 'seasonal-preserves') {
+      // Flavor picker for included preserves — no extra charge, just preference
+      const flavorWrap = document.createElement('div');
+      flavorWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
+      const flavorLabel = document.createElement('span');
+      flavorLabel.style.cssText = 'font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);';
+      flavorLabel.textContent = 'Flavor';
+      const flavorSel = document.createElement('select');
+      flavorSel.dataset.preservesFlavor = 'included';
+      flavorSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
+      PRESERVES_FLAVORS.forEach(f => {
+        const o = document.createElement('option');
+        o.value = f.name;
+        o.textContent = f.name;
+        flavorSel.appendChild(o);
+      });
+      flavorWrap.appendChild(flavorLabel);
+      flavorWrap.appendChild(flavorSel);
+      row.appendChild(flavorWrap);
     } else {
       const fixed = document.createElement('span');
       fixed.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:rgba(44,62,45,0.35);letter-spacing:0.06em;';
@@ -2014,12 +2035,17 @@ function openBoxCustomizer(subId, name, price) {
 
   // Continue → delivery modal
   document.getElementById('bc-continue').onclick = () => {
-    const swaps = [...document.querySelectorAll('#bc-items select')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
+    const swaps = [...document.querySelectorAll('#bc-items select[data-original-id]')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
     const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => ({
       id: c.value,
       name: c.dataset.addonName,
       price: parseFloat(c.dataset.addonPrice) || 0,
     }));
+    // Capture included preserves flavor as a zero-cost note addon
+    const includedFlavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
+    if (includedFlavorSel) {
+      addons.unshift({ id: 'preserves-flavor', name: 'Seasonal Preserves flavor: ' + includedFlavorSel.value, price: 0 });
+    }
     closeBoxCustomizer();
     openDeliveryModal(_bcPendingArgs.subId, _bcPendingArgs.name, _bcPendingArgs.price, swaps, addons);
   };

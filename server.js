@@ -1049,11 +1049,34 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+const TURKEY_ITEM_IDS = new Set(['thanksgiving-turkey']);
+
+// Validate a promo code without redeeming it
+app.post('/api/validate-promo', express.json(), async (req, res) => {
+  const { code } = req.body || {};
+  if (!code) return res.status(400).json({ valid: false, error: 'No code provided' });
+  try {
+    const results = await stripe.promotionCodes.list({ code: code.trim().toUpperCase(), limit: 1, active: true });
+    const promo = results.data[0];
+    if (!promo) return res.json({ valid: false, error: 'Code not found or expired' });
+    const coupon = promo.coupon;
+    if (!coupon.valid) return res.json({ valid: false, error: 'Coupon is no longer valid' });
+    if (!coupon.percent_off) return res.json({ valid: false, error: 'Only percent-off codes are supported' });
+    res.json({ valid: true, percent_off: coupon.percent_off, promo_id: promo.id });
+  } catch (e) {
+    console.error('[validate-promo]', e.message);
+    res.status(500).json({ valid: false, error: 'Validation error' });
+  }
+});
+
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact } = req.body;
+    const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
+            promo_code, promo_discount_cents } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
+
+    const hasTurkey = items.some(i => TURKEY_ITEM_IDS.has(i.id));
 
     const lineItems = items.map(item => ({
       price_data: {
@@ -1063,6 +1086,20 @@ app.post('/create-checkout-session', async (req, res) => {
       },
       quantity: item.quantity,
     }));
+
+    // When a pre-validated promo code was applied client-side, bake the discount
+    // into the order as a negative line item so it shows clearly on the Stripe receipt.
+    // Turkey items are excluded from the discount amount by the client.
+    if (promo_code && promo_discount_cents && promo_discount_cents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `Discount (${promo_code})` },
+          unit_amount: -Math.abs(Math.round(promo_discount_cents)),
+        },
+        quantity: 1,
+      });
+    }
 
     // Add shipping as a line item when a rate was selected
     if (isShip && shipping?.rate) {
@@ -1102,11 +1139,14 @@ app.post('/create-checkout-session', async (req, res) => {
       metadata.gift_msg       = (gift.message || '').slice(0, 500);
     }
 
+    // Allow Stripe's promo code box only when no turkey in cart and no discount already applied
+    const allowPromoCodes = !hasTurkey && !(promo_code && promo_discount_cents);
+
     const sessionParams = {
       mode: 'payment',
       payment_method_types: ['card', 'us_bank_account'],
       line_items: lineItems,
-      allow_promotion_codes: true,
+      allow_promotion_codes: allowPromoCodes,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/offerings.html`,
       metadata,

@@ -333,7 +333,7 @@ function renderCart() {
   footer.className = 'cart-footer';
 
   // Subscribe & Save toggle — hidden when non-subscribable items are in cart
-  const NON_SUBSCRIBABLE = ['sampler-box'];
+  const NON_SUBSCRIBABLE = ['sampler-box', 'thanksgiving-turkey'];
   const cartHasNonSubscribable = getCart().items.some(i => NON_SUBSCRIBABLE.includes(i.id));
   if (cartHasNonSubscribable && subscribing) {
     setSubscribing(false);
@@ -366,15 +366,86 @@ function renderCart() {
   subToggle.appendChild(subCheckbox);
   subToggle.appendChild(subText);
 
+  // Promo code row — only shown for one-time (non-subscription) carts
+  const hasTurkey = getCart().items.some(i => i.id === 'thanksgiving-turkey');
+  const savedPromo = !subscribing ? (localStorage.getItem('hoto-promo-code') || '') : '';
+  const savedPromoAmt = !subscribing ? parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10) : 0;
+
+  const promoRow = document.createElement('div');
+  promoRow.style.cssText = 'display:' + (subscribing ? 'none' : 'flex') + ';align-items:center;gap:8px;margin-bottom:8px;';
+
+  const promoInput = document.createElement('input');
+  promoInput.type = 'text';
+  promoInput.placeholder = 'Promo code';
+  promoInput.value = savedPromo;
+  promoInput.style.cssText = 'flex:1;padding:8px 10px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;color:var(--color-green);text-transform:uppercase;';
+
+  const promoBtn = document.createElement('button');
+  promoBtn.textContent = savedPromo ? 'Remove' : 'Apply';
+  promoBtn.style.cssText = 'padding:8px 14px;background:var(--color-green);color:#fff;border:none;border-radius:8px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+
+  const promoMsg = document.createElement('p');
+  promoMsg.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;margin:0 0 6px;padding:0;';
+  if (savedPromo && savedPromoAmt) {
+    promoMsg.style.color = '#2a7a2a';
+    promoMsg.textContent = savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off eligible items';
+  }
+
+  promoBtn.addEventListener('click', async () => {
+    if (savedPromo) {
+      localStorage.removeItem('hoto-promo-code');
+      localStorage.removeItem('hoto-promo-amt');
+      renderCart();
+      return;
+    }
+    const code = promoInput.value.trim().toUpperCase();
+    if (!code) return;
+    promoBtn.textContent = '…';
+    promoBtn.disabled = true;
+    try {
+      const r = await fetch('/api/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const d = await r.json();
+      if (d.valid) {
+        localStorage.setItem('hoto-promo-code', code);
+        const nonTurkeyTotal = getCart().items
+          .filter(i => i.id !== 'thanksgiving-turkey' && PRODUCTS[i.id])
+          .reduce((s, i) => s + (i.price ?? PRODUCTS[i.id].price) * i.qty, 0);
+        const discountAmt = Math.round(nonTurkeyTotal * (d.percent_off / 100));
+        localStorage.setItem('hoto-promo-amt', discountAmt);
+        renderCart();
+      } else {
+        promoMsg.style.color = '#c0392b';
+        promoMsg.textContent = d.error || 'Invalid code';
+        promoBtn.textContent = 'Apply';
+        promoBtn.disabled = false;
+      }
+    } catch {
+      promoMsg.style.color = '#c0392b';
+      promoMsg.textContent = 'Could not validate code';
+      promoBtn.textContent = 'Apply';
+      promoBtn.disabled = false;
+    }
+  });
+
+  promoRow.appendChild(promoInput);
+  promoRow.appendChild(promoBtn);
+
   const totalRow = document.createElement('div');
   totalRow.className = 'cart-footer__total';
 
   const totalLabel = document.createElement('span');
   totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
 
+  const baseTotal = subscribing ? getMonthlyTotal() : getTotal();
+  const displayTotal = (savedPromoAmt && !subscribing) ? baseTotal - savedPromoAmt : baseTotal;
+
   const totalAmount = document.createElement('span');
   totalAmount.id = 'cart-total';
-  totalAmount.textContent = subscribing ? fmt(getMonthlyTotal()) + '/mo' : fmt(getTotal());
+  totalAmount.textContent = subscribing ? fmt(getMonthlyTotal()) + '/mo' : fmt(displayTotal);
 
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
@@ -402,6 +473,8 @@ function renderCart() {
   cryptoBtn.addEventListener('click', checkoutCrypto);
 
   footer.appendChild(subToggle);
+  footer.appendChild(promoRow);
+  footer.appendChild(promoMsg);
   footer.appendChild(totalRow);
   footer.appendChild(note);
   footer.appendChild(checkoutBtn);
@@ -1053,13 +1126,18 @@ async function submitOrderWithDetails() {
 
   const items = cart.items
     .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+    .map(({ id, qty, price }) => ({ id, name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+
+  const promoCode = localStorage.getItem('hoto-promo-code') || null;
+  const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
+  const shipBody  = { items, shipping: _shipCalcRate, delivery_method: 'ship', billing, gift };
+  if (promoCode && promoAmt) { shipBody.promo_code = promoCode; shipBody.promo_discount_cents = promoAmt; }
 
   try {
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, shipping: _shipCalcRate, delivery_method: 'ship', billing, gift }),
+      body: JSON.stringify(shipBody),
     });
     const data = await res.json();
     if (data.url) {
@@ -1087,12 +1165,16 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
   const items = cart.items
     .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+    .map(({ id, qty, price }) => ({ id, name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+
+  const promoCode = localStorage.getItem('hoto-promo-code') || null;
+  const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
     if (pickupLocation) body.pickup_location = pickupLocation;
     if (pickupContact)  body.pickup_contact  = pickupContact;
+    if (promoCode && promoAmt) { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1102,6 +1184,8 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (data.url) {
       localStorage.setItem('hoto-checkout-delivery', deliveryMethod || 'pickup');
       localStorage.setItem('hoto-checkout-location', pickupLocation || '');
+      localStorage.removeItem('hoto-promo-code');
+      localStorage.removeItem('hoto-promo-amt');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {

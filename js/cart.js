@@ -1771,7 +1771,16 @@ const ADDON_OPTIONS = [
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
-  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18' },
+  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18',
+    flavors: [
+      { name: 'Strawberry',       price: 1500 },
+      { name: 'Grape',            price: 1500 },
+      { name: 'Blackberry',       price: 1800 },
+      { name: 'Peach',            price: 1800 },
+      { name: 'Fig',              price: 1800 },
+      { name: 'Orange Marmalade', price: 1800 },
+    ]
+  },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1800 },
   { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1800 },
   { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0, priceLabel: '$7/lb' },
@@ -1862,6 +1871,8 @@ function openBoxCustomizer(subId, name, price) {
   const addonsEl = document.getElementById('bc-addons');
   addonsEl.innerHTML = '';
   ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-',''))).forEach(addon => {
+    const wrapper = document.createElement('div');
+
     const label = document.createElement('label');
     label.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;';
     const cb = document.createElement('input');
@@ -1879,7 +1890,42 @@ function openBoxCustomizer(subId, name, price) {
     label.appendChild(cb);
     label.appendChild(nameSpan);
     label.appendChild(priceSpan);
-    addonsEl.appendChild(label);
+    wrapper.appendChild(label);
+
+    // Flavor dropdown for preserves
+    if (addon.flavors) {
+      const flavorWrap = document.createElement('div');
+      flavorWrap.style.cssText = 'display:none;padding:8px 16px 4px;';
+      const flavorSelect = document.createElement('select');
+      flavorSelect.dataset.flavorFor = addon.id;
+      flavorSelect.style.cssText = 'width:100%;padding:8px 10px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);background:#fff;cursor:pointer;';
+      addon.flavors.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.price;
+        opt.dataset.flavorName = f.name;
+        opt.textContent = f.name + ' — $' + (f.price / 100).toFixed(2).replace(/\.00$/, '');
+        flavorSelect.appendChild(opt);
+      });
+      flavorSelect.addEventListener('change', () => {
+        cb.dataset.addonPrice = flavorSelect.value;
+        cb.dataset.addonName = addon.name + ' (' + flavorSelect.options[flavorSelect.selectedIndex].dataset.flavorName + ')';
+      });
+      flavorWrap.appendChild(flavorSelect);
+      wrapper.appendChild(flavorWrap);
+
+      cb.addEventListener('change', () => {
+        flavorWrap.style.display = cb.checked ? 'block' : 'none';
+        if (cb.checked) {
+          cb.dataset.addonPrice = flavorSelect.value;
+          cb.dataset.addonName = addon.name + ' (' + flavorSelect.options[flavorSelect.selectedIndex].dataset.flavorName + ')';
+        } else {
+          cb.dataset.addonPrice = addon.price;
+          cb.dataset.addonName = addon.name;
+        }
+      });
+    }
+
+    addonsEl.appendChild(wrapper);
   });
 
   // Continue → delivery modal

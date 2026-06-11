@@ -2046,8 +2046,10 @@ function openBoxCustomizer(subId, name, price) {
     if (includedFlavorSel) {
       addons.unshift({ id: 'preserves-flavor', name: 'Seasonal Preserves flavor: ' + includedFlavorSel.value, price: 0 });
     }
+    // Capture args BEFORE closeBoxCustomizer() nulls _bcPendingArgs
+    const { subId, name, price } = _bcPendingArgs;
     closeBoxCustomizer();
-    openDeliveryModal(_bcPendingArgs.subId, _bcPendingArgs.name, _bcPendingArgs.price, swaps, addons);
+    openDeliveryModal(subId, name, price, swaps, addons);
   };
 
   overlay.style.opacity = '0';

@@ -53,40 +53,74 @@ const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_
 const FROM_EMAIL = process.env.FROM_EMAIL || 'operations@heartoftexasorganics.com';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || FROM_EMAIL;
 
-async function sendEmail(subject, html) {
-  if (!resendClient) {
-    console.log('[Email skipped — RESEND_API_KEY not set]\nSubject:', subject);
-    return;
-  }
-  const { error } = await resendClient.emails.send({
-    from: `Heart of Texas Organics <${FROM_EMAIL}>`,
-    to: ADMIN_EMAIL,
-    subject,
-    html,
+// Nodemailer SMTP transporter — used when RESEND_API_KEY is not set
+let smtpTransporter = null;
+if (!resendClient && process.env.OUTLOOK_USER && process.env.OUTLOOK_PASSWORD &&
+    !process.env.OUTLOOK_PASSWORD.includes('your_')) {
+  smtpTransporter = nodemailer.createTransport({
+    host: 'smtp-mail.outlook.com',
+    port: 587,
+    secure: false,
+    auth: { user: process.env.OUTLOOK_USER, pass: process.env.OUTLOOK_PASSWORD },
+    tls: { ciphers: 'SSLv3' },
   });
-  if (error) throw new Error(error.message);
-  console.log('Admin email sent:', subject);
+  console.log('[Email] Using SMTP via Outlook');
+} else if (resendClient) {
+  console.log('[Email] Using Resend');
+} else {
+  console.warn('[Email] No email transport configured — set RESEND_API_KEY or OUTLOOK_PASSWORD in .env');
 }
 
-async function sendEmailTo(to, subject, html, attachments = []) {
-  if (!resendClient) {
-    console.log('[Customer email skipped — RESEND_API_KEY not set]\nTo:', to, '\nSubject:', subject);
-    return;
-  }
-  const payload = {
-    from: `Heart of Texas Organics <${FROM_EMAIL}>`,
+async function sendEmailViaSmtp(to, subject, html, attachments = []) {
+  const msg = {
+    from: `Heart of Texas Organics <${process.env.OUTLOOK_USER}>`,
     to,
     subject,
     html,
   };
   if (attachments.length) {
-    payload.attachments = attachments.map(a => ({
-      filename: a.filename,
-      content:  a.content,
-    }));
+    msg.attachments = attachments.map(a => ({ filename: a.filename, content: a.content }));
   }
-  const { error } = await resendClient.emails.send(payload);
-  if (error) throw new Error(error.message);
+  await smtpTransporter.sendMail(msg);
+}
+
+async function sendEmail(subject, html) {
+  if (resendClient) {
+    const { error } = await resendClient.emails.send({
+      from: `Heart of Texas Organics <${FROM_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
+    if (error) throw new Error(error.message);
+  } else if (smtpTransporter) {
+    await sendEmailViaSmtp(ADMIN_EMAIL, subject, html);
+  } else {
+    console.log('[Email skipped — no transport configured]\nSubject:', subject);
+    return;
+  }
+  console.log('Admin email sent:', subject);
+}
+
+async function sendEmailTo(to, subject, html, attachments = []) {
+  if (resendClient) {
+    const payload = {
+      from: `Heart of Texas Organics <${FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    };
+    if (attachments.length) {
+      payload.attachments = attachments.map(a => ({ filename: a.filename, content: a.content }));
+    }
+    const { error } = await resendClient.emails.send(payload);
+    if (error) throw new Error(error.message);
+  } else if (smtpTransporter) {
+    await sendEmailViaSmtp(to, subject, html, attachments);
+  } else {
+    console.log('[Customer email skipped — no transport configured]\nTo:', to, '\nSubject:', subject);
+    return;
+  }
   console.log('Customer email sent:', to, subject);
 }
 

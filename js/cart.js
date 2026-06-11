@@ -332,10 +332,18 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
-  // Subscribe & Save toggle
+  // Subscribe & Save toggle — hidden when non-subscribable items are in cart
+  const NON_SUBSCRIBABLE = ['sampler-box'];
+  const cartHasNonSubscribable = getCart().items.some(i => NON_SUBSCRIBABLE.includes(i.id));
+  if (cartHasNonSubscribable && subscribing) {
+    setSubscribing(false);
+    subscribing = false;
+  }
+
   const subToggle = document.createElement('label');
   subToggle.className = 'cart-subscribe' + (subscribing ? ' cart-subscribe--active' : '');
   subToggle.htmlFor = 'cart-sub-check';
+  if (cartHasNonSubscribable) subToggle.style.display = 'none';
 
   const subCheck = document.createElement('input');
   subCheck.type = 'checkbox';

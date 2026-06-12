@@ -2172,7 +2172,7 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
 
 // --- Init ---
 
-// Restore cart from SMS abandon-link (?rc=TOKEN)
+// Restore cart from SMS abandon-link or admin cart link (?rc=TOKEN)
 (function() {
   var params = new URLSearchParams(window.location.search);
   var rc = params.get('rc');
@@ -2181,6 +2181,23 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
     .then(function(r) { return r.ok ? r.json() : null; })
     .then(function(d) {
       if (!d || !d.items || !d.items.length) return;
+
+      // Subscription link — open delivery modal once DOM is ready
+      if (d.subscription && d.subPrice && d.subName) {
+        var url = new URL(window.location.href);
+        url.searchParams.delete('rc');
+        window.history.replaceState({}, '', url.toString());
+        function launchSubModal() {
+          openDeliveryModal(rc, d.subName, d.subPrice, [], []);
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', launchSubModal);
+        } else {
+          launchSubModal();
+        }
+        return;
+      }
+
       var cart = { items: [] };
       d.items.forEach(function(item) {
         var pid = Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });

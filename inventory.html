@@ -1012,6 +1012,21 @@
     <p class="section-title">Build a Cart Link</p>
     <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;">Pick items and quantities, then generate a link. Send it to a customer — when they open it their cart fills automatically.</p>
 
+    <div style="display:flex;gap:10px;margin-bottom:18px;">
+      <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid #444;border-radius:8px;cursor:pointer;font-size:0.84rem;color:#f0ebe4;background:#1a1a1a;">
+        <input type="radio" name="cl-type" value="onetime" checked style="accent-color:var(--terra);"> One-time purchase
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid #444;border-radius:8px;cursor:pointer;font-size:0.84rem;color:#f0ebe4;background:#1a1a1a;">
+        <input type="radio" name="cl-type" value="subscription" style="accent-color:var(--terra);"> Monthly subscription
+      </label>
+    </div>
+
+    <div id="cl-sub-price-row" style="display:none;margin-bottom:16px;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Monthly charge amount ($)</label>
+      <input id="cl-sub-price" type="number" min="1" step="0.01" placeholder="e.g. 75.00" style="width:160px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      <span style="font-size:0.75rem;color:#888;margin-left:8px;">billed every month</span>
+    </div>
+
     <div style="margin-bottom:16px;">
       <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer note (optional — for your reference only)</label>
       <input id="cl-note" type="text" placeholder="e.g. Jane Smith — bread box order" style="width:100%;max-width:420px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
@@ -3499,9 +3514,25 @@
       tbody.appendChild(tr);
     });
 
+    // Show/hide monthly price field based on type selection
+    document.querySelectorAll('input[name="cl-type"]').forEach(r => {
+      r.addEventListener('change', () => {
+        const isSub = document.querySelector('input[name="cl-type"]:checked').value === 'subscription';
+        document.getElementById('cl-sub-price-row').style.display = isSub ? 'block' : 'none';
+        document.getElementById('cl-generate').textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link';
+      });
+    });
+
     document.getElementById('cl-generate').addEventListener('click', async () => {
       const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox]:checked')];
       if (!checked.length) { alert('Select at least one item.'); return; }
+
+      const isSub = document.querySelector('input[name="cl-type"]:checked').value === 'subscription';
+      let subPrice = null;
+      if (isSub) {
+        subPrice = Math.round(parseFloat(document.getElementById('cl-sub-price').value) * 100);
+        if (!subPrice || subPrice <= 0) { alert('Enter a monthly price for the subscription.'); return; }
+      }
 
       const items = checked.map(cb => {
         const id  = cb.dataset.id;
@@ -3515,16 +3546,19 @@
       btn.textContent = 'Generating…'; btn.disabled = true;
 
       try {
-        const res  = await apiFetch('/admin/create-cart-link', { method: 'POST', body: JSON.stringify({ items, note }) });
+        const body = { items, note, subscription: isSub, subPrice };
+        const res  = await apiFetch('/admin/create-cart-link', { method: 'POST', body: JSON.stringify(body) });
         const data = await res.json();
         if (!data.url) throw new Error(data.error || 'Failed');
         document.getElementById('cl-link').value = data.url;
         document.getElementById('cl-result').style.display = 'block';
         document.getElementById('cl-copy-msg').style.display = 'none';
+        document.getElementById('cl-result').querySelector('p').textContent =
+          isSub ? 'Share this subscription link with the customer:' : 'Share this link with the customer:';
       } catch(e) {
         alert('Error: ' + e.message);
       } finally {
-        btn.textContent = 'Generate Cart Link'; btn.disabled = false;
+        btn.textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link'; btn.disabled = false;
       }
     });
 

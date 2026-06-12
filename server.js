@@ -1792,26 +1792,31 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 // --- Cart link builder ---
 app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => {
   try {
-    const { items, note } = req.body || {};
+    const { items, note, subscription, subPrice } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
+    if (subscription && (!subPrice || subPrice <= 0)) return res.status(400).json({ error: 'Monthly price required for subscription links' });
 
     const token       = crypto.randomBytes(20).toString('hex');
     const itemSummary = items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : '');
+    const subName     = subscription ? `Monthly Box — ${itemSummary}` : null;
     const carts       = readPendingCarts();
 
     carts[token] = {
       token,
-      phone:         null,
-      email:         null,
+      phone:          null,
+      email:          null,
       items,
       itemSummary,
-      note:          note || '',
-      location:      '',
-      createdAt:     new Date().toISOString(),
-      remindersSent: 0,
+      subName,
+      note:           note || '',
+      location:       '',
+      createdAt:      new Date().toISOString(),
+      remindersSent:  0,
       lastReminderAt: null,
-      completed:     false,
-      adminCreated:  true,
+      completed:      false,
+      adminCreated:   true,
+      subscription:   subscription || false,
+      subPrice:       subscription ? Math.round(subPrice) : null,
     };
     writePendingCarts(carts);
 
@@ -2103,7 +2108,14 @@ app.get('/api/restore-cart', (req, res) => {
     const carts = readPendingCarts();
     const cart = carts[token];
     if (!cart) return res.status(404).json({ error: 'Cart not found or expired' });
-    res.json({ ok: true, items: cart.items, location: cart.location });
+    res.json({
+      ok:           true,
+      items:        cart.items,
+      location:     cart.location,
+      subscription: cart.subscription  || false,
+      subPrice:     cart.subPrice      || null,
+      subName:      cart.subName       || null,
+    });
   } catch(e) {
     res.status(500).json({ error: 'Could not restore cart' });
   }

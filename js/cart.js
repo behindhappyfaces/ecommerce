@@ -2200,15 +2200,26 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
 
       var cart = { items: [] };
       d.items.forEach(function(item) {
-        var pid = Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
+        // Prefer id-based lookup; fall back to name match
+        var pid = (item.id && PRODUCTS[item.id]) ? item.id :
+          Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
         if (pid) cart.items.push({ id: pid, qty: item.quantity || item.qty || 1, price: item.price ?? PRODUCTS[pid].price });
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));
-        // Clean URL without reload
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
+        // Show the cart drawer so the customer sees their pre-filled order
+        function showRestoredCart() {
+          renderCart();
+          openCart();
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', showRestoredCart);
+        } else {
+          showRestoredCart();
+        }
       }
     })
     .catch(function() {});

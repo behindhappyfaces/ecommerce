@@ -1249,7 +1249,7 @@ app.post('/create-cart-subscription', async (req, res) => {
         quantity: 1,
       }],
       subscription_data: { metadata: cartSubMeta },
-      allow_promotion_codes: true,
+      allow_promotion_codes: false, // 15% Subscribe & Save already applied — no stacking
       success_url: `${origin}/subscription-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/offerings.html`,
     };

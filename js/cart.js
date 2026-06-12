@@ -394,8 +394,11 @@ function renderCart() {
   promoMsg.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;margin:0 0 6px;padding:0;';
   if (savedPromo && savedPromoAmt) {
     promoMsg.style.color = '#2a7a2a';
-    promoMsg.textContent = savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off eligible items';
+    promoMsg.textContent = savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off box order';
   }
+
+  // Items the welcome coupon is allowed to discount — box orders only
+  const BOX_ITEM_IDS = new Set(['sampler-box', 'harvest-basket']);
 
   promoBtn.addEventListener('click', async () => {
     if (savedPromo) {
@@ -406,6 +409,15 @@ function renderCart() {
     }
     const code = promoInput.value.trim().toUpperCase();
     if (!code) return;
+
+    // Coupon only applies to box items — reject early if none in cart
+    const boxItems = getCart().items.filter(i => BOX_ITEM_IDS.has(i.id) && PRODUCTS[i.id]);
+    if (!boxItems.length) {
+      promoMsg.style.color = '#c0392b';
+      promoMsg.textContent = 'This code applies to box orders only';
+      return;
+    }
+
     promoBtn.textContent = '…';
     promoBtn.disabled = true;
     try {
@@ -417,10 +429,9 @@ function renderCart() {
       const d = await r.json();
       if (d.valid) {
         localStorage.setItem('hoto-promo-code', code);
-        const nonTurkeyTotal = getCart().items
-          .filter(i => i.id !== 'thanksgiving-turkey' && PRODUCTS[i.id])
-          .reduce((s, i) => s + (i.price ?? PRODUCTS[i.id].price) * i.qty, 0);
-        const discountAmt = Math.round(nonTurkeyTotal * (d.percent_off / 100));
+        // Discount calculated on box items only — no stacking with individual add-ons
+        const boxTotal = boxItems.reduce((s, i) => s + (i.price ?? PRODUCTS[i.id].price) * i.qty, 0);
+        const discountAmt = Math.round(boxTotal * (d.percent_off / 100));
         localStorage.setItem('hoto-promo-amt', discountAmt);
         renderCart();
       } else {

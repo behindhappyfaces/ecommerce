@@ -114,6 +114,11 @@ function setSubscribing(v) {
   localStorage.setItem('hoto-subscribe', v ? '1' : '0');
 }
 
+function getAdminSub() {
+  try { return JSON.parse(localStorage.getItem('hoto-admin-sub') || 'null'); } catch { return null; }
+}
+function clearAdminSub() { localStorage.removeItem('hoto-admin-sub'); }
+
 function getDiscountedTotal() {
   return getCart().items.reduce((sum, item) => {
     const p = PRODUCTS[item.id];
@@ -247,7 +252,8 @@ function renderCart() {
   itemsWrap.className = 'cart-items';
 
   // Only render items whose product id exists in PRODUCTS (extra safety)
-  const subscribing = isSubscribing();
+  const adminSub   = getAdminSub();
+  const subscribing = adminSub ? true : isSubscribing();
 
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
@@ -440,25 +446,29 @@ function renderCart() {
   const totalLabel = document.createElement('span');
   totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
 
-  const baseTotal = subscribing ? getMonthlyTotal() : getTotal();
+  const monthlyPrice = adminSub ? adminSub.subPrice : getMonthlyTotal();
+  const baseTotal    = subscribing ? monthlyPrice : getTotal();
   const displayTotal = (savedPromoAmt && !subscribing) ? baseTotal - savedPromoAmt : baseTotal;
 
   const totalAmount = document.createElement('span');
   totalAmount.id = 'cart-total';
-  totalAmount.textContent = subscribing ? fmt(getMonthlyTotal()) + '/mo' : fmt(displayTotal);
+  totalAmount.textContent = subscribing ? fmt(monthlyPrice) + '/mo' : fmt(displayTotal);
 
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
 
   const note = document.createElement('p');
   note.className = 'cart-footer__note';
-  note.textContent = subscribing ? 'Charged monthly · 4 weeks × discounted total' : 'Shipping calculated at checkout';
+  note.textContent = subscribing ? 'Charged monthly · cancel anytime' : 'Shipping calculated at checkout';
 
   const checkoutBtn = document.createElement('button');
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
   checkoutBtn.id = 'cart-checkout';
-  checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(getMonthlyTotal())}/mo` : 'Proceed to Checkout';
-  checkoutBtn.addEventListener('click', subscribing ? openCartDeliveryModal : openOneTimeDeliveryChoice);
+  checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(monthlyPrice)}/mo` : 'Proceed to Checkout';
+  const checkoutHandler = adminSub ? openAdminSubDeliveryModal
+                        : subscribing ? openCartDeliveryModal
+                        : openOneTimeDeliveryChoice;
+  checkoutBtn.addEventListener('click', checkoutHandler);
 
   const divider = document.createElement('div');
   divider.className = 'cart-footer__divider';
@@ -1243,6 +1253,24 @@ function openCartDeliveryModal() {
   applyShipMinimum(getTotal());
   document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
+  document.getElementById('dm-cancel').onclick = closeDeliveryModal;
+}
+
+function openAdminSubDeliveryModal() {
+  const meta = getAdminSub();
+  if (!meta) return openCartDeliveryModal();
+  const overlay = document.getElementById('delivery-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  applyShipMinimum(meta.subPrice);
+  document.getElementById('dm-ship').onclick = () => {
+    closeDeliveryModal();
+    subscribe(meta.token, meta.subName, meta.subPrice, 'ship', null, [], []);
+  };
+  document.getElementById('dm-pickup').onclick = () => {
+    closeDeliveryModal();
+    openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, [], []));
+  };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -2160,6 +2188,7 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
     });
     const data = await res.json();
     if (data.url) {
+      clearAdminSub();
       window.location.href = data.url;
     } else {
       throw new Error(data.error || 'Unknown error');
@@ -2182,19 +2211,23 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
     .then(function(d) {
       if (!d || !d.items || !d.items.length) return;
 
-      // Subscription link — open delivery modal once DOM is ready
+      // Subscription link — load items into cart, store metadata, open cart drawer
       if (d.subscription && d.subPrice && d.subName) {
+        var subCart = { items: [] };
+        d.items.forEach(function(item) {
+          var pid = (item.id && PRODUCTS[item.id]) ? item.id :
+            Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
+          if (pid) subCart.items.push({ id: pid, qty: item.quantity || item.qty || 1, price: item.price ?? PRODUCTS[pid].price });
+        });
+        if (subCart.items.length) localStorage.setItem('hoto-cart', JSON.stringify(subCart));
+        localStorage.setItem('hoto-admin-sub', JSON.stringify({ token: rc, subName: d.subName, subPrice: d.subPrice }));
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        function launchSubModal() {
-          openDeliveryModal(rc, d.subName, d.subPrice, [], []);
-        }
+        function launchSubCart() { renderCart(); openCart(); }
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', launchSubModal);
-        } else {
-          launchSubModal();
-        }
+          document.addEventListener('DOMContentLoaded', launchSubCart);
+        } else { launchSubCart(); }
         return;
       }
 

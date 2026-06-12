@@ -486,6 +486,7 @@
     <button class="tab-btn" data-tab="subscribers">Magazine Subscribers</button>
     <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
     <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
+    <button class="tab-btn" data-tab="cart-links">Cart Links</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -1003,6 +1004,33 @@
         </thead>
         <tbody id="wi-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- TAB: CART LINKS -->
+  <div class="panel" id="panel-cart-links">
+    <p class="section-title">Build a Cart Link</p>
+    <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;">Pick items and quantities, then generate a link. Send it to a customer — when they open it their cart fills automatically.</p>
+
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer note (optional — for your reference only)</label>
+      <input id="cl-note" type="text" placeholder="e.g. Jane Smith — bread box order" style="width:100%;max-width:420px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+    </div>
+
+    <table class="data" style="max-width:560px;margin-bottom:20px;">
+      <thead><tr><th>Item</th><th style="width:90px;">Qty</th><th style="width:120px;">Unit Price</th></tr></thead>
+      <tbody id="cl-product-rows"></tbody>
+    </table>
+
+    <button id="cl-generate" class="btn-action" style="margin-bottom:16px;">Generate Cart Link</button>
+
+    <div id="cl-result" style="display:none;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;max-width:560px;">
+      <p style="font-size:0.75rem;color:#aaa;margin:0 0 6px;">Share this link with the customer:</p>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="cl-link" readonly style="flex:1;padding:8px 10px;background:#111;border:1px solid #444;border-radius:6px;color:#f0ebe4;font-size:0.8rem;font-family:monospace;">
+        <button id="cl-copy" class="btn-action" style="white-space:nowrap;">Copy Link</button>
+      </div>
+      <p id="cl-copy-msg" style="font-size:0.75rem;color:#6fcf97;margin:6px 0 0;display:none;">Copied to clipboard!</p>
     </div>
   </div>
 
@@ -3436,6 +3464,78 @@
       a.download = 'workshop-interest-' + new Date().toISOString().slice(0, 10) + '.csv';
       a.click();
       URL.revokeObjectURL(url);
+    });
+  }());
+
+  // ── CART LINK BUILDER ──────────────────────────────────────────
+  (function() {
+    const CART_PRODUCTS = [
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',        price: 0 },
+      { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf',          price: 0 },
+      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            price: 0 },
+      { id: 'yeast-rolls',        name: 'Yeast Rolls',               price: 0 },
+      { id: 'focaccia-loaf',      name: 'Focaccia Loaf',             price: 0 },
+      { id: 'whole-chicken',      name: 'Whole Chicken',             price: 0 },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',         price: 0 },
+      { id: 'farm-eggs',          name: 'Farm Eggs (1 doz)',         price: 0 },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',      price: 1800 },
+      { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', price: 1800 },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',        price: 1500 },
+      { id: 'sampler-box',        name: 'The Farm Sampler Box',      price: 9900 },
+      { id: 'thanksgiving-turkey',name: 'Thanksgiving Turkey',       price: 10000 },
+    ];
+
+    const tbody = document.getElementById('cl-product-rows');
+    CART_PRODUCTS.forEach(p => {
+      const tr = document.createElement('tr');
+      const priceDisplay = p.price ? '$' + (p.price / 100).toFixed(2).replace(/\.00$/, '') : 'market';
+      tr.innerHTML = `
+        <td style="display:flex;align-items:center;gap:10px;">
+          <input type="checkbox" data-id="${p.id}" data-price="${p.price}" style="width:16px;height:16px;accent-color:var(--terra);flex-shrink:0;">
+          <span>${p.name}</span>
+        </td>
+        <td><input type="number" min="1" max="20" value="1" data-qty-for="${p.id}" style="width:60px;padding:4px 6px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#f0ebe4;font-size:0.82rem;"></td>
+        <td style="color:#aaa;font-size:0.82rem;">${priceDisplay}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('cl-generate').addEventListener('click', async () => {
+      const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox]:checked')];
+      if (!checked.length) { alert('Select at least one item.'); return; }
+
+      const items = checked.map(cb => {
+        const id  = cb.dataset.id;
+        const qty = parseInt(document.querySelector(`[data-qty-for="${id}"]`).value, 10) || 1;
+        const p   = CART_PRODUCTS.find(x => x.id === id);
+        return { id, name: p.name, price: p.price, quantity: qty };
+      });
+
+      const note = document.getElementById('cl-note').value.trim();
+      const btn  = document.getElementById('cl-generate');
+      btn.textContent = 'Generating…'; btn.disabled = true;
+
+      try {
+        const res  = await apiFetch('/admin/create-cart-link', { method: 'POST', body: JSON.stringify({ items, note }) });
+        const data = await res.json();
+        if (!data.url) throw new Error(data.error || 'Failed');
+        document.getElementById('cl-link').value = data.url;
+        document.getElementById('cl-result').style.display = 'block';
+        document.getElementById('cl-copy-msg').style.display = 'none';
+      } catch(e) {
+        alert('Error: ' + e.message);
+      } finally {
+        btn.textContent = 'Generate Cart Link'; btn.disabled = false;
+      }
+    });
+
+    document.getElementById('cl-copy').addEventListener('click', () => {
+      const link = document.getElementById('cl-link');
+      link.select();
+      navigator.clipboard.writeText(link.value).then(() => {
+        const msg = document.getElementById('cl-copy-msg');
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 2500);
+      });
     });
   }());
 

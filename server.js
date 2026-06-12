@@ -1789,6 +1789,40 @@ app.get('/admin/check', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// --- Cart link builder ---
+app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => {
+  try {
+    const { items, note } = req.body || {};
+    if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
+
+    const token       = crypto.randomBytes(20).toString('hex');
+    const itemSummary = items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : '');
+    const carts       = readPendingCarts();
+
+    carts[token] = {
+      token,
+      phone:         null,
+      email:         null,
+      items,
+      itemSummary,
+      note:          note || '',
+      location:      '',
+      createdAt:     new Date().toISOString(),
+      remindersSent: 0,
+      lastReminderAt: null,
+      completed:     false,
+      adminCreated:  true,
+    };
+    writePendingCarts(carts);
+
+    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+    res.json({ ok: true, token, url: `${siteUrl}/offerings.html?rc=${token}` });
+  } catch(e) {
+    console.error('[CartLink] error:', e.message);
+    res.status(500).json({ error: 'Could not create cart link' });
+  }
+});
+
 // --- Public stock endpoint (for website sold-out indicators) ---
 app.get('/api/stock', async (req, res) => {
   const rows = (await db.getAll()).map(p => ({ id: p.id, name: p.name, stock: p.stock, reorder_level: p.reorder_level, allow_preorder: p.allow_preorder }));

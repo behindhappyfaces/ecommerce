@@ -3549,7 +3549,7 @@
         const body = { items, note, subscription: isSub, subPrice };
         const res  = await fetch('/admin/create-cart-link', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('admin_token') || '') },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
           body: JSON.stringify(body),
         });
         const data = await res.json();

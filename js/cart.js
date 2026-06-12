@@ -1276,11 +1276,11 @@ function openAdminSubDeliveryModal() {
   applyShipMinimum(meta.subPrice);
   document.getElementById('dm-ship').onclick = () => {
     closeDeliveryModal();
-    subscribe(meta.token, meta.subName, meta.subPrice, 'ship', null, [], []);
+    subscribe(meta.token, meta.subName, meta.subPrice, 'ship', null, meta.swaps || [], meta.addons || []);
   };
   document.getElementById('dm-pickup').onclick = () => {
     closeDeliveryModal();
-    openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, [], []));
+    openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, meta.swaps || [], meta.addons || []));
   };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
@@ -2091,7 +2091,7 @@ function openBoxCustomizer(subId, name, price) {
     addonsEl.appendChild(wrapper);
   });
 
-  // Continue → delivery modal
+  // Continue → populate cart with box items, open cart drawer
   document.getElementById('bc-continue').onclick = () => {
     const swaps = [...document.querySelectorAll('#bc-items select[data-original-id]')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
     const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => ({
@@ -2099,7 +2099,7 @@ function openBoxCustomizer(subId, name, price) {
       name: c.dataset.addonName,
       price: parseFloat(c.dataset.addonPrice) || 0,
     }));
-    // Capture included preserves flavor as a zero-cost note addon
+    // Capture included preserves flavor
     const includedFlavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
     if (includedFlavorSel) {
       addons.unshift({ id: 'preserves-flavor', name: 'Seasonal Preserves flavor: ' + includedFlavorSel.value, price: 0 });
@@ -2109,10 +2109,33 @@ function openBoxCustomizer(subId, name, price) {
     if (butterSel) {
       addons.unshift({ id: 'butter-type', name: 'Butter: ' + butterSel.value, price: 0 });
     }
-    // Capture args BEFORE closeBoxCustomizer() nulls _bcPendingArgs
+
     const { subId, name, price } = _bcPendingArgs;
+    const box = BOX_CONTENTS[subId];
+
+    // Build cart from included items, respecting any bread/larder swaps
+    const cartItems = [];
+    (box ? box.items : []).forEach(item => {
+      const swap  = swaps.find(s => s.from === item.id);
+      const finalId = swap ? swap.to : item.id;
+      if (PRODUCTS[finalId]) {
+        cartItems.push({ id: finalId, qty: 1, price: PRODUCTS[finalId].price });
+      }
+    });
+
+    if (cartItems.length) {
+      localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
+    }
+
+    // Persist subscription metadata (swaps + addons carried through to checkout)
+    const subName = box ? box.label : name;
+    localStorage.setItem('hoto-admin-sub', JSON.stringify({
+      token: subId, subName, subPrice: price, swaps, addons,
+    }));
+
     closeBoxCustomizer();
-    openDeliveryModal(subId, name, price, swaps, addons);
+    renderCart();
+    openCart();
   };
 
   overlay.style.opacity = '0';

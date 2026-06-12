@@ -397,8 +397,8 @@ function renderCart() {
     promoMsg.textContent = savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off box order';
   }
 
-  // Items the welcome coupon is allowed to discount — box orders only
-  const BOX_ITEM_IDS = new Set(['sampler-box', 'harvest-basket']);
+  // Welcome coupon is only valid on the three subscription boxes
+  const BOX_ITEM_IDS = new Set(['bread-box', 'harvest-subscription', 'farm-box']);
 
   promoBtn.addEventListener('click', async () => {
     if (savedPromo) {
@@ -414,7 +414,7 @@ function renderCart() {
     const boxItems = getCart().items.filter(i => BOX_ITEM_IDS.has(i.id) && PRODUCTS[i.id]);
     if (!boxItems.length) {
       promoMsg.style.color = '#c0392b';
-      promoMsg.textContent = 'This code applies to box orders only';
+      promoMsg.textContent = 'This code is only valid on subscription box orders';
       return;
     }
 

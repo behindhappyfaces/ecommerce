@@ -3,11 +3,11 @@
    ========================================= */
 
 const PRODUCTS = {
-  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 0,    subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
-  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 0,    subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
+  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 1600, subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
+  'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 1800, subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
   'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
-  'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 0,    subPrice: null, image: 'images/focaccia-loaf.jpg' },
+  'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 3200, subPrice: null, image: 'images/focaccia-loaf.jpg' },
   'whole-chicken':      { name: 'Whole Chicken',       price: 0, subPrice: null, image: 'images/chicken.jpg' },
   'cultured-butter':    { name: 'Real Cream Butter',   price: 0, subPrice: null, image: 'images/butter.jpg' },
   'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
@@ -17,6 +17,19 @@ const PRODUCTS = {
   'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 0,     subPrice: null, image: 'images/chili-crunch.jpg' },
   'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 0,  subPrice: null, image: 'images/herb-dipping-oil.jpg' },
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
+  // Subscription boxes — shown as a single line item in the cart
+  'bread-box':            { name: 'The Bread & Butter Board Box', price: 0, subPrice: null, image: null },
+  'harvest-subscription': { name: 'The Supper Starter Box',       price: 0, subPrice: null, image: null },
+  'farm-box':             { name: "Monthly Farm Butcher's Box",   price: 0, subPrice: null, image: null },
+  // Add-on items selectable from the box customizer
+  'addon-yeast-rolls':    { name: 'Extra Yeast Rolls (½ doz)',       price: 2400, subPrice: null, image: null },
+  'addon-cinnamon-rolls': { name: 'Extra Cinnamon Rolls (½ doz)',    price: 3500, subPrice: null, image: null },
+  'addon-butter':         { name: 'Extra Real Cream Butter (½ lb)',  price: 1700, subPrice: null, image: null },
+  'addon-eggs':           { name: 'Farm Eggs — add-on (1 doz)',      price: 1300, subPrice: null, image: null },
+  'addon-preserves':      { name: 'Seasonal Preserves — add-on',     price: 1500, subPrice: null, image: null },
+  'addon-chili-crunch':   { name: 'Garlic Chili Crunch — add-on',    price: 1800, subPrice: null, image: null },
+  'addon-herb-oil':       { name: 'Tuscany Herb Dipping Oil — add-on', price: 1800, subPrice: null, image: null },
+  'addon-whole-chicken':  { name: 'Whole Chicken — add-on',          price: 0,    subPrice: null, image: null },
 };
 
 const STORAGE_KEY   = 'hoto-cart';
@@ -2112,23 +2125,17 @@ function openBoxCustomizer(subId, name, price) {
 
     const { subId, name, price } = _bcPendingArgs;
     const box = BOX_CONTENTS[subId];
-
-    // Build cart from included items, respecting any bread/larder swaps
-    const cartItems = [];
-    (box ? box.items : []).forEach(item => {
-      const swap  = swaps.find(s => s.from === item.id);
-      const finalId = swap ? swap.to : item.id;
-      if (PRODUCTS[finalId]) {
-        cartItems.push({ id: finalId, qty: 1, price: PRODUCTS[finalId].price });
-      }
-    });
-
-    if (cartItems.length) {
-      localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
-    }
-
-    // Persist subscription metadata (swaps + addons carried through to checkout)
     const subName = box ? box.label : name;
+
+    // One line item for the whole box, then separate lines for any add-ons
+    const cartItems = [{ id: subId, qty: 1, price: 0 }];
+    addons
+      .filter(a => PRODUCTS[a.id]) // only real product add-ons, skip flavor/type notes
+      .forEach(a => cartItems.push({ id: a.id, qty: 1, price: a.price || PRODUCTS[a.id].price }));
+
+    localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
+
+    // Persist subscription metadata (swaps + flavor/type notes carried through to checkout)
     localStorage.setItem('hoto-admin-sub', JSON.stringify({
       token: subId, subName, subPrice: price, swaps, addons,
     }));

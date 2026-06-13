@@ -22,7 +22,7 @@ const PRODUCTS = {
   'harvest-subscription': { name: 'The Supper Starter Box',       price: 0, subPrice: null, image: null },
   'farm-box':             { name: "Monthly Farm Butcher's Box",   price: 0, subPrice: null, image: null },
   // Add-on items selectable from the box customizer
-  'addon-yeast-rolls':    { name: 'Extra Yeast Rolls (½ doz)',       price: 2400, subPrice: null, image: null },
+  'addon-yeast-rolls':    { name: 'Extra Yeast Rolls (1 doz)',        price: 2400, subPrice: null, image: null },
   'addon-cinnamon-rolls': { name: 'Extra Cinnamon Rolls (½ doz)',    price: 3500, subPrice: null, image: null },
   'addon-butter':         { name: 'Extra Real Cream Butter (½ lb)',  price: 1700, subPrice: null, image: null },
   'addon-eggs':           { name: 'Farm Eggs — add-on (1 doz)',      price: 1300, subPrice: null, image: null },
@@ -1831,7 +1831,7 @@ const PRESERVES_FLAVORS = [
 ];
 
 const ADDON_OPTIONS = [
-  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (½ doz)',  price: 2400 },
+  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (1 doz)',  price: 2400 },
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },

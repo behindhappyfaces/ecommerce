@@ -271,7 +271,7 @@ function renderCart() {
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
     const basePrice = itemPrice ?? p.price;
-    const displayPrice = subscribing && basePrice > 0 ? Math.round(basePrice * 0.85) : basePrice;
+    const displayPrice = basePrice;
     const item = document.createElement('div');
     item.className = 'cart-item';
     item.dataset.id = id;
@@ -290,24 +290,7 @@ function renderCart() {
 
     const price = document.createElement('p');
     price.className = 'cart-item__price';
-    if (subscribing && basePrice > 0) {
-      const orig = document.createElement('span');
-      orig.className = 'cart-item__price-orig';
-      orig.textContent = fmt(basePrice);
-      const disc = document.createElement('span');
-      disc.className = 'cart-item__price-disc';
-      disc.textContent = fmt(displayPrice);
-      price.appendChild(orig);
-      price.appendChild(disc);
-    } else {
-      price.textContent = fmt(displayPrice);
-      if (itemPrice !== null && itemPrice !== undefined && p.subPrice && itemPrice === p.subPrice) {
-        const badge = document.createElement('span');
-        badge.className = 'cart-item__sub-badge';
-        badge.textContent = 'Subscriber price';
-        price.appendChild(badge);
-      }
-    }
+    price.textContent = fmt(displayPrice);
 
     const qtyRow = document.createElement('div');
     qtyRow.className = 'cart-item__qty';

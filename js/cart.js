@@ -1769,10 +1769,11 @@ const BOX_CONTENTS = {
   'bread-box': {
     label: 'The Bread & Butter Board Box',
     items: [
-      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',      swapGroup: 'bread' },
-      { id: 'cultured-butter',    name: 'Real Cream Butter',        swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',       swapGroup: null },
-      { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', swapGroup: null },
+      { id: 'yeast-rolls',        name: 'Dinner Rolls (1 doz)',      swapGroup: null },
+      { id: 'whole-chicken',      name: 'Whole Chicken',             swapGroup: null },
+      { id: 'herb-dipping-oil',   name: 'Tuscany Bread Dipping Oil', swapGroup: null },
+      { id: 'cultured-butter',    name: 'Real Cream Butter',         swapGroup: null },
+      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            swapGroup: null },
     ],
   },
   'harvest-subscription': {

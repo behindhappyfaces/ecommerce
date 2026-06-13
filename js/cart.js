@@ -1196,34 +1196,12 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
 // --- Subscription Checkout ---
 
-function applyShipMinimum(totalCents) {
-  const shortfall = SHIP_MINIMUM - totalCents;
-  const shipBtn   = document.getElementById('dm-ship');
-  const existing  = document.getElementById('dm-ship-min-note');
-  if (existing) existing.remove();
-
-  if (shortfall > 0) {
-    shipBtn.disabled      = true;
-    shipBtn.style.opacity = '0.4';
-    shipBtn.style.cursor  = 'not-allowed';
-    const note = document.createElement('p');
-    note.id = 'dm-ship-min-note';
-    note.style.cssText = 'font-size:0.8rem;color:#8B4A2F;margin:6px 0 4px;text-align:center;line-height:1.5;padding:0 16px;';
-    note.textContent = `Add $${(shortfall / 100).toFixed(2)} more to your order to qualify for shipping. Orders under $75 are pick-up only.`;
-    shipBtn.after(note);
-  } else {
-    shipBtn.disabled      = false;
-    shipBtn.style.opacity = '';
-    shipBtn.style.cursor  = '';
-  }
-}
+function applyShipMinimum() {} // shipping disabled — no-op
 
 function openCartDeliveryModal() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
-  applyShipMinimum(getTotal());
-  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); checkoutSubscription('ship'); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
@@ -1234,11 +1212,6 @@ function openAdminSubDeliveryModal() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
-  applyShipMinimum(meta.subPrice);
-  document.getElementById('dm-ship').onclick = () => {
-    closeDeliveryModal();
-    subscribe(meta.token, meta.subName, meta.subPrice, 'ship', null, meta.swaps || [], meta.addons || []);
-  };
   document.getElementById('dm-pickup').onclick = () => {
     closeDeliveryModal();
     openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, meta.swaps || [], meta.addons || []));
@@ -1250,8 +1223,6 @@ function openOneTimeDeliveryChoice() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
-  applyShipMinimum(getTotal());
-  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); openShipCalcModal(); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
@@ -2125,7 +2096,6 @@ function injectDeliveryModal() {
 
   const opts = document.createElement('div');
   opts.className = 'delivery-modal__options';
-  opts.appendChild(makeDeliveryOpt('dm-ship',   '🚚', 'Ship to my address',     'Shipping rates confirmed at checkout'));
   opts.appendChild(makeDeliveryOpt('dm-pickup', '📍', 'Local pick-up (free)',    'Pick-up details sent after signup'));
 
   const cancelBtn = document.createElement('button');
@@ -2147,8 +2117,6 @@ function openDeliveryModal(subId, name, price, swaps = [], addons = []) {
   _pendingSubArgs = { subId, name, price, swaps, addons };
   const overlay = document.getElementById('delivery-modal-overlay');
   overlay.classList.add('open');
-  applyShipMinimum(price);
-  document.getElementById('dm-ship').onclick   = () => { closeDeliveryModal(); subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'ship',   null, _pendingSubArgs.swaps, _pendingSubArgs.addons); };
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal(loc => subscribe(_pendingSubArgs.subId, _pendingSubArgs.name, _pendingSubArgs.price, 'pickup', loc, _pendingSubArgs.swaps, _pendingSubArgs.addons)); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }

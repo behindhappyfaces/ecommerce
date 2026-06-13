@@ -2292,28 +2292,31 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
     .catch(function() {});
 })();
 
+// Event delegation for subscribe buttons — runs immediately, not gated on DOMContentLoaded
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-sub-id]');
+  if (!btn) return;
+  // Ensure the box customizer overlay exists before trying to open it
+  if (!document.getElementById('box-customizer-overlay')) injectBoxCustomizer();
+  openBoxCustomizer(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice || '0', 10));
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-  injectCartDrawer();
-  injectCartIcon();
-  injectSubscriberModal();
-  injectDeliveryModal();
-  injectPickupLocationModal();
-  injectShipCalcModal();
-  injectAddressConfirmModal();
-  injectOrderDetailsModal();
-  injectBoxCustomizer();
-  renderCart();
+  try { injectCartDrawer(); } catch(e) { console.error('injectCartDrawer', e); }
+  try { injectCartIcon(); } catch(e) { console.error('injectCartIcon', e); }
+  try { injectSubscriberModal(); } catch(e) { console.error('injectSubscriberModal', e); }
+  try { injectDeliveryModal(); } catch(e) { console.error('injectDeliveryModal', e); }
+  try { injectPickupLocationModal(); } catch(e) { console.error('injectPickupLocationModal', e); }
+  try { injectShipCalcModal(); } catch(e) { console.error('injectShipCalcModal', e); }
+  try { injectAddressConfirmModal(); } catch(e) { console.error('injectAddressConfirmModal', e); }
+  try { injectOrderDetailsModal(); } catch(e) { console.error('injectOrderDetailsModal', e); }
+  try { injectBoxCustomizer(); } catch(e) { console.error('injectBoxCustomizer', e); }
+  try { renderCart(); } catch(e) { console.error('renderCart', e); }
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.addToCart;
       if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); } else { addItem(id); }
     });
-  });
-
-  document.querySelectorAll('[data-sub-id]').forEach(btn => {
-    btn.addEventListener('click', () =>
-      openBoxCustomizer(btn.dataset.subId, btn.dataset.subName, parseInt(btn.dataset.subPrice, 10))
-    );
   });
 });

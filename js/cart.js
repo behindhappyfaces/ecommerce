@@ -266,7 +266,7 @@ function renderCart() {
 
   // Only render items whose product id exists in PRODUCTS (extra safety)
   const adminSub   = getAdminSub();
-  const subscribing = adminSub ? true : isSubscribing();
+  const subscribing = !!adminSub;
 
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
@@ -351,44 +351,10 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
-  // Subscribe & Save toggle — hidden when non-subscribable items are in cart
-  const NON_SUBSCRIBABLE = ['sampler-box', 'thanksgiving-turkey'];
-  const cartHasNonSubscribable = getCart().items.some(i => NON_SUBSCRIBABLE.includes(i.id));
-  if (cartHasNonSubscribable && subscribing) {
-    setSubscribing(false);
-    subscribing = false;
-  }
-
-  const subToggle = document.createElement('label');
-  subToggle.className = 'cart-subscribe' + (subscribing ? ' cart-subscribe--active' : '');
-  subToggle.htmlFor = 'cart-sub-check';
-  if (cartHasNonSubscribable) subToggle.style.display = 'none';
-
-  const subCheck = document.createElement('input');
-  subCheck.type = 'checkbox';
-  subCheck.id = 'cart-sub-check';
-  subCheck.className = 'cart-subscribe__input';
-  subCheck.checked = subscribing;
-  subCheck.addEventListener('change', () => {
-    setSubscribing(subCheck.checked);
-    renderCart();
-  });
-
-  const subCheckbox = document.createElement('span');
-  subCheckbox.className = 'cart-subscribe__box';
-
-  const subText = document.createElement('span');
-  subText.className = 'cart-subscribe__text';
-  subText.innerHTML = '<strong>Subscribe &amp; Save 10%</strong><em>Billed monthly · cancel anytime</em>';
-
-  subToggle.appendChild(subCheck);
-  subToggle.appendChild(subCheckbox);
-  subToggle.appendChild(subText);
-
-  // Promo code row — only shown for one-time (non-subscription) carts
+  // Promo code row
   const hasTurkey = getCart().items.some(i => i.id === 'thanksgiving-turkey');
-  const savedPromo = !subscribing ? (localStorage.getItem('hoto-promo-code') || '') : '';
-  const savedPromoAmt = !subscribing ? parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10) : 0;
+  const savedPromo = subscribing ? '' : (localStorage.getItem('hoto-promo-code') || '');
+  const savedPromoAmt = subscribing ? 0 : parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
 
   const promoRow = document.createElement('div');
   promoRow.style.cssText = 'display:' + (subscribing ? 'none' : 'flex') + ';align-items:center;gap:8px;margin-bottom:8px;';
@@ -506,7 +472,6 @@ function renderCart() {
   cryptoBtn.textContent = '₿  Pay with Bitcoin';
   cryptoBtn.addEventListener('click', checkoutCrypto);
 
-  footer.appendChild(subToggle);
   footer.appendChild(promoRow);
   footer.appendChild(promoMsg);
   footer.appendChild(totalRow);

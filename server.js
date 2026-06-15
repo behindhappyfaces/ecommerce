@@ -2712,7 +2712,13 @@ function getBundleSales() {
 }
 
 function saveBundleSales(data) {
-  fs.writeFileSync(bundleSalesFile, JSON.stringify(data, null, 2));
+  try {
+    const dir = path.dirname(bundleSalesFile);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(bundleSalesFile, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error('[Bundle] Could not save sales file:', e.message);
+  }
 }
 
 // GET /bundle-availability

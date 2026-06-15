@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4th of July Homestead Table Bundle | Heart of Texas Organics</title>
+  <meta name="description" content="The 4th of July Homestead Table Bundle — $199. Whole pasture chicken, artisan breads, farm butter, garlic chili crunch, beeswax candle + Farm to Table Recipe Guide. Only 25 available." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    .bundle-hero {
+      min-height: 100vh;
+      background: var(--color-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .bundle-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('images/harvest.jpg') center/cover no-repeat;
+      opacity: 0.15;
+    }
+    .bundle-card {
+      position: relative;
+      background: var(--color-cream);
+      max-width: 680px;
+      width: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    }
+    .bundle-header {
+      background: var(--color-green);
+      padding: 40px 40px 32px;
+      text-align: center;
+    }
+    .bundle-header .eyebrow {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-tan-light);
+      margin-bottom: 12px;
+    }
+    .bundle-header h1 {
+      font-family: var(--font-serif);
+      color: var(--color-cream);
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .bundle-header .tagline {
+      font-family: var(--font-sans);
+      color: var(--color-tan-light);
+      font-size: 14px;
+      opacity: 0.85;
+    }
+    .bundle-body { padding: 36px 40px; }
+
+    /* countdown */
+    .countdown-bar {
+      background: var(--color-rust);
+      color: white;
+      text-align: center;
+      padding: 10px 20px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .countdown-bar strong { font-size: 15px; }
+
+    /* availability */
+    .availability {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f0ede4;
+      border-radius: 4px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--color-rust);
+    }
+    .avail-dot {
+      width: 10px; height: 10px;
+      background: var(--color-rust);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+
+    /* items list */
+    .bundle-items { margin-bottom: 28px; }
+    .bundle-items h3 {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-cream-dark);
+      font-family: var(--font-sans);
+      font-size: 14px;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-name { color: var(--color-text); }
+    .item-price { color: var(--color-text-muted); }
+    .item-bonus {
+      background: var(--color-green);
+      color: white;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 8px;
+      letter-spacing: 0.5px;
+    }
+    .value-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0 0;
+      margin-top: 4px;
+      border-top: 2px solid var(--color-tan-light);
+    }
+    .value-row .label {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .value-row .amount {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      color: var(--color-text-muted);
+      text-decoration: line-through;
+    }
+
+    /* price + CTA */
+    .price-section {
+      text-align: center;
+      padding: 28px 0 24px;
+      border-top: 1px solid var(--color-cream-dark);
+      margin-top: 8px;
+    }
+    .price-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+    .price-amount {
+      font-family: var(--font-serif);
+      font-size: 56px;
+      color: var(--color-green);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .price-sub {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+    }
+    .btn-bundle {
+      display: block;
+      width: 100%;
+      background: var(--color-green);
+      color: var(--color-cream);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 18px 24px;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-bundle:hover { background: var(--color-green-mid); }
+    .btn-bundle:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    .btn-sub {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* pickup info */
+    .pickup-info {
+      background: #f0ede4;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--color-text);
+      line-height: 1.7;
+    }
+    .pickup-info strong {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* qr */
+    .qr-section {
+      text-align: center;
+      padding: 28px 40px 36px;
+      border-top: 1px solid var(--color-cream-dark);
+    }
+    .qr-section p {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+    }
+    .qr-section img { margin: 0 auto; border-radius: 4px; }
+
+    /* footer */
+    .bundle-footer {
+      background: var(--color-green);
+      color: var(--color-tan-light);
+      text-align: center;
+      padding: 16px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    /* sold out state */
+    .sold-out-banner {
+      display: none;
+      background: var(--color-rust);
+      color: white;
+      text-align: center;
+      padding: 14px;
+      font-family: var(--font-serif);
+      font-size: 18px;
+    }
+
+    @media (max-width: 500px) {
+      .bundle-body { padding: 24px 20px; }
+      .bundle-header { padding: 28px 20px 24px; }
+      .qr-section { padding: 20px 20px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bundle-hero">
+  <div class="bundle-card">
+
+    <!-- Countdown bar -->
+    <div class="countdown-bar">
+      Presale closes <strong>June 28th</strong> &nbsp;·&nbsp; Pickup <strong>Friday, July 3rd</strong> &nbsp;·&nbsp; <span id="countdown"></span>
+    </div>
+
+    <!-- Header -->
+    <div class="bundle-header">
+      <p class="eyebrow">Heart of Texas Organics · Limited Release</p>
+      <h1>The 4th of July<br>Homestead Table</h1>
+      <p class="tagline">Everything you need for a real food celebration — straight from the farm.</p>
+    </div>
+
+    <!-- Sold out banner (shown when qty hits 0) -->
+    <div class="sold-out-banner" id="soldOutBanner">
+      Sold Out — Thank You! 🌿
+    </div>
+
+    <!-- Body -->
+    <div class="bundle-body">
+
+      <!-- Availability indicator -->
+      <div class="availability">
+        <div class="avail-dot"></div>
+        <span id="availText">Only 25 bundles available — first come, first served</span>
+      </div>
+
+      <!-- Items -->
+      <div class="bundle-items">
+        <h3>What's Inside</h3>
+        <div class="item-row">
+          <span class="item-name">Whole Pasture-Raised Chicken</span>
+          <span class="item-price">$56</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Fresh Baked Challah Loaf</span>
+          <span class="item-price">$15</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Cinnamon Rolls</span>
+          <span class="item-price">$35</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Garlic Chili Crunch</span>
+          <span class="item-price">$18</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Real Cream Butter (½ lb)</span>
+          <span class="item-price">$17</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Artisan Beeswax Candle <span class="item-bonus">BONUS</span></span>
+          <span class="item-price">$20</span>
+        </div>
+        <div class="item-row">
+          <span class="item-name">Farm to Table Recipe Guide <span class="item-bonus">BONUS</span></span>
+          <span class="item-price">$25</span>
+        </div>
+        <div class="value-row">
+          <span class="label">Total Value</span>
+          <span class="amount">$186</span>
+        </div>
+      </div>
+
+      <!-- Price + CTA -->
+      <div class="price-section">
+        <p class="price-label">Your Price</p>
+        <div class="price-amount">$199</div>
+        <p class="price-sub">Secure checkout · Stripe encrypted payment</p>
+        <button class="btn-bundle" id="buyBtn" onclick="checkout()">
+          Reserve My Bundle — $199
+        </button>
+        <p class="btn-sub">You will be redirected to a secure Stripe checkout page.</p>
+      </div>
+
+      <!-- Pickup info -->
+      <div class="pickup-info">
+        <strong>Pickup Details</strong>
+        Local pickup <strong>Friday, July 3rd</strong> in the Wimberley / Dripping Springs area.<br>
+        Exact location and time confirmed after purchase.<br>
+        Questions? <a href="mailto:operations@heartoftexasorganics.com" style="color:var(--color-green);text-decoration:underline;">operations@heartoftexasorganics.com</a>
+      </div>
+
+    </div>
+
+    <!-- QR Code -->
+    <div class="qr-section">
+      <p>Share this page</p>
+      <img src="/bundle-qr" alt="QR code to this bundle page" width="140" height="140" />
+    </div>
+
+    <!-- Footer -->
+    <div class="bundle-footer">
+      Heart of Texas Organics &nbsp;·&nbsp; heartoftexasorganics.com &nbsp;·&nbsp; Wimberley, Texas
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Countdown to June 28
+  function updateCountdown() {
+    const deadline = new Date('2026-06-28T23:59:59');
+    const now = new Date();
+    const diff = deadline - now;
+    if (diff <= 0) {
+      document.getElementById('countdown').textContent = 'Presale closed';
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('countdown').textContent = `${d}d ${h}h ${m}m left`;
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+
+  // Check availability
+  fetch('/bundle-availability')
+    .then(r => r.json())
+    .then(data => {
+      const remaining = data.remaining;
+      const btn = document.getElementById('buyBtn');
+      const availText = document.getElementById('availText');
+
+      if (remaining <= 0) {
+        btn.disabled = true;
+        btn.textContent = 'Sold Out';
+        document.getElementById('soldOutBanner').style.display = 'block';
+        availText.textContent = 'All 25 bundles have been claimed — thank you!';
+      } else if (remaining <= 5) {
+        availText.textContent = `Only ${remaining} bundle${remaining === 1 ? '' : 's'} left!`;
+      } else {
+        availText.textContent = `${remaining} of 25 bundles remaining`;
+      }
+    })
+    .catch(() => {});
+
+  // Checkout
+  async function checkout() {
+    const btn = document.getElementById('buyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to checkout…';
+    try {
+      const res = await fetch('/bundle-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert(data.error);
+        btn.disabled = false;
+        btn.textContent = 'Reserve My Bundle — $199';
+      }
+    } catch (e) {
+      alert('Something went wrong. Please try again or email us.');
+      btn.disabled = false;
+      btn.textContent = 'Reserve My Bundle — $199';
+    }
+  }
+</script>
+</body>
+</html>

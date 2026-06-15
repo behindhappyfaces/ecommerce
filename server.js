@@ -383,6 +383,15 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const shippingAddr   = session.shipping_details?.address;
         const siteUrl        = process.env.SITE_URL || 'https://heartoftexasorganics.com';
 
+        // Track bundle sales
+        if (session.metadata?.type === 'bundle' && isPaid) {
+          const sales = getBundleSales();
+          sales.sold = Math.min(BUNDLE_TOTAL, sales.sold + 1);
+          sales.orders.push({ name: customerName, email: customerEmail, date, sessionId: session.id });
+          saveBundleSales(sales);
+          console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail})`);
+        }
+
         // Product items only (exclude the shipping line item for display)
         const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
         const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
@@ -2687,6 +2696,78 @@ app.get('/admin/workshop-interest', requireAdmin, (req, res) => {
 });
 
 // =========================================
+// =========================================
+// BUNDLE — 4th of July Homestead Table
+// =========================================
+
+const BUNDLE_TOTAL = 25;
+const BUNDLE_PRICE_CENTS = 19900;
+const bundleSalesFile = path.join(__dirname, 'data', 'bundle-sales.json');
+
+function getBundleSales() {
+  try {
+    if (fs.existsSync(bundleSalesFile)) return JSON.parse(fs.readFileSync(bundleSalesFile, 'utf8'));
+  } catch {}
+  return { sold: 0, orders: [] };
+}
+
+function saveBundleSales(data) {
+  fs.writeFileSync(bundleSalesFile, JSON.stringify(data, null, 2));
+}
+
+// GET /bundle-availability
+app.get('/bundle-availability', (req, res) => {
+  const sales = getBundleSales();
+  res.json({ sold: sales.sold, total: BUNDLE_TOTAL, remaining: Math.max(0, BUNDLE_TOTAL - sales.sold) });
+});
+
+// GET /bundle-qr — serves QR code image
+app.get('/bundle-qr', async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const url = `${req.protocol}://${req.get('host')}/bundle.html`;
+    const qr = await QRCode.toBuffer(url, { width: 280, margin: 2, color: { dark: '#2C3E2D', light: '#F5F0E8' } });
+    res.set('Content-Type', 'image/png');
+    res.send(qr);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /bundle-checkout — creates Stripe checkout session
+app.post('/bundle-checkout', async (req, res) => {
+  try {
+    const sales = getBundleSales();
+    if (sales.sold >= BUNDLE_TOTAL) {
+      return res.json({ error: 'Sorry — all 25 bundles have been claimed. Thank you for your interest!' });
+    }
+    const origin = `${req.protocol}://${req.get('host')}`;
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: '4th of July Homestead Table Bundle',
+            description: 'Whole pasture chicken, challah, cinnamon rolls, garlic chili crunch, butter, beeswax candle + Farm to Table Recipe Guide. Local pickup before July 4th.',
+            images: [`${origin}/images/harvest.jpg`],
+          },
+          unit_amount: BUNDLE_PRICE_CENTS,
+        },
+        quantity: 1,
+      }],
+      metadata: { type: 'bundle', bundle: '4th-july-homestead-table' },
+      success_url: `${origin}/bundle-success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/bundle.html`,
+    });
+    res.json({ url: session.url });
+  } catch (e) {
+    console.error('[Bundle checkout]', e.message);
+    res.status(500).json({ error: 'Checkout error. Please try again.' });
+  }
+});
+
 // START
 // =========================================
 

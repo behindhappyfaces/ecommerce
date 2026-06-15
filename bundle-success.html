@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bundle Reserved! | Heart of Texas Organics</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="images/logo.png" />
+  <style>
+    body { background: var(--color-green); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .card {
+      background: var(--color-cream);
+      max-width: 520px;
+      width: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    .card-top {
+      background: var(--color-green);
+      padding: 40px 32px 32px;
+    }
+    .checkmark {
+      width: 64px; height: 64px;
+      background: var(--color-tan-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+    .card-top h1 {
+      font-family: var(--font-serif);
+      color: var(--color-cream);
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    .card-top p {
+      font-family: var(--font-sans);
+      color: var(--color-tan-light);
+      font-size: 14px;
+    }
+    .card-body { padding: 32px; }
+    .detail-block {
+      background: #f0ede4;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .detail-block h3 {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: 10px;
+    }
+    .detail-block p {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--color-text);
+      line-height: 1.7;
+    }
+    .share-btn {
+      display: inline-block;
+      background: var(--color-green);
+      color: var(--color-cream);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      border-radius: 2px;
+      margin-top: 8px;
+      cursor: pointer;
+      border: none;
+    }
+    .footer-note {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--color-text-muted);
+      padding: 0 32px 28px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="card-top">
+    <div class="checkmark">✓</div>
+    <h1>You're on the list!</h1>
+    <p>Your 4th of July Homestead Table bundle is reserved.</p>
+  </div>
+  <div class="card-body">
+    <div class="detail-block">
+      <h3>What happens next</h3>
+      <p>
+        You'll receive a confirmation email shortly.<br><br>
+        We'll reach out closer to July 4th with your exact pickup location, time, and any final details.<br><br>
+        Questions? Email us at <a href="mailto:operations@heartoftexasorganics.com" style="color:var(--color-green);">operations@heartoftexasorganics.com</a>
+      </p>
+    </div>
+    <div class="detail-block">
+      <h3>Your bundle includes</h3>
+      <p>
+        Whole pasture-raised chicken · Challah loaf · Cinnamon rolls<br>
+        Garlic chili crunch · Real cream butter · Beeswax candle<br>
+        Farm to Table Recipe Guide
+      </p>
+    </div>
+    <p style="font-family:var(--font-sans);font-size:13px;color:var(--color-text-muted);margin-bottom:12px;">Know someone who'd love this?</p>
+    <button class="share-btn" onclick="share()">Share the Bundle</button>
+  </div>
+  <p class="footer-note">Heart of Texas Organics · Wimberley, Texas · heartoftexasorganics.com</p>
+</div>
+<script>
+  function share() {
+    if (navigator.share) {
+      navigator.share({ title: '4th of July Homestead Table Bundle', text: 'Real food for a real celebration — $199 bundle from Heart of Texas Organics. Only 25 available!', url: window.location.origin + '/bundle.html' });
+    } else {
+      navigator.clipboard.writeText(window.location.origin + '/bundle.html');
+      alert('Link copied! Share it with friends.');
+    }
+  }
+</script>
+</body>
+</html>

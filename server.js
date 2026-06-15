@@ -2747,23 +2747,38 @@ app.post('/bundle-checkout', async (req, res) => {
     if (sales.sold >= BUNDLE_TOTAL) {
       return res.json({ error: 'Sorry — all 25 bundles have been claimed. Thank you for your interest!' });
     }
+    const { addProcessing, breadChoice } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
+
+    const lineItems = [{
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: '4th of July Homestead Table Bundle',
+          description: `Whole pasture chicken (8–10 lbs), ${breadChoice === 'yeast-rolls' ? 'dozen yeast rolls' : 'ready to bake challah loaf'}, cinnamon rolls (6-pack), garlic chili crunch, real cream butter, lavender beeswax candle + Farm to Table Recipe Guide (digital download). Local pick-up Dripping Springs, TX — Friday July 3rd.`,
+          images: [`${origin}/images/hero-ingredients.jpg`],
+        },
+        unit_amount: BUNDLE_PRICE_CENTS,
+      },
+      quantity: 1,
+    }];
+
+    if (addProcessing) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Chicken Processing — Meat Off Bone', description: 'Whole chicken broken down into individual cuts.' },
+          unit_amount: 1000,
+        },
+        quantity: 1,
+      });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: '4th of July Homestead Table Bundle',
-            description: 'Whole pasture chicken (8–10 lbs), challah loaf, cinnamon rolls (6-pack), garlic chili crunch, real cream butter, lavender beeswax candle + Farm to Table Recipe Guide (digital download). Local pick-up Dripping Springs, TX — Friday July 3rd.',
-            images: [`${origin}/images/hero-ingredients.jpg`],
-          },
-          unit_amount: BUNDLE_PRICE_CENTS,
-        },
-        quantity: 1,
-      }],
-      metadata: { type: 'bundle', bundle: '4th-july-homestead-table' },
+      line_items: lineItems,
+      metadata: { type: 'bundle', bundle: '4th-july-homestead-table', processing: addProcessing ? 'yes' : 'no', bread: breadChoice || 'challah' },
       success_url: `${origin}/bundle-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/bundle.html`,
     });

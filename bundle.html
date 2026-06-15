@@ -313,8 +313,16 @@
           <span class="item-name">↳ Processing (meat off bone) <span class="item-bonus">ADD-ON +$10</span></span>
           <span style="font-size:11px;color:var(--color-text-muted);padding-left:2px;">Select at checkout if desired</span>
         </div>
-        <div class="item-row">
-          <span class="item-name">Fresh Baked Challah Loaf</span>
+        <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <span class="item-name">Ready to Bake Challah Loaf <em style="font-size:11px;color:var(--color-text-muted);font-style:normal;">— or swap for a Dozen Yeast Rolls</em></span>
+          <div style="display:flex;gap:16px;padding-left:2px;">
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
+              <input type="radio" name="breadChoice" value="challah" checked style="accent-color:var(--color-green);" /> Challah Loaf
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
+              <input type="radio" name="breadChoice" value="yeast-rolls" style="accent-color:var(--color-green);" /> Dozen Yeast Rolls
+            </label>
+          </div>
         </div>
         <div class="item-row">
           <span class="item-name">Cinnamon Rolls <span style="color:var(--color-text-muted);font-size:12px;">· 6-pack</span></span>
@@ -338,6 +346,15 @@
         <p class="price-label">Your Price</p>
         <div class="price-amount">$199</div>
         <p class="price-sub">Secure checkout · Stripe encrypted payment</p>
+
+        <!-- Processing add-on -->
+        <label style="display:flex;align-items:center;gap:10px;background:#f0ede4;border-radius:4px;padding:14px 16px;margin-bottom:20px;cursor:pointer;text-align:left;">
+          <input type="checkbox" id="addProcessing" style="width:18px;height:18px;accent-color:var(--color-green);flex-shrink:0;" />
+          <span style="font-family:var(--font-sans);font-size:13px;color:var(--color-text);">
+            Add chicken processing — meat off bone <strong style="color:var(--color-green);">+$10</strong>
+          </span>
+        </label>
+
         <button class="btn-bundle" id="buyBtn" onclick="checkout()">
           Reserve My Bundle — $199
         </button>
@@ -363,7 +380,7 @@
 
     <!-- Footer -->
     <div class="bundle-footer">
-      Heart of Texas Organics &nbsp;·&nbsp; heartoftexasorganics.com &nbsp;·&nbsp; Wimberley, Texas
+      Heart of Texas Organics &nbsp;·&nbsp; heartoftexasorganics.com
     </div>
 
   </div>
@@ -411,10 +428,16 @@
   // Checkout
   async function checkout() {
     const btn = document.getElementById('buyBtn');
+    const addProcessing = document.getElementById('addProcessing').checked;
+    const breadChoice = document.querySelector('input[name="breadChoice"]:checked')?.value || 'challah';
     btn.disabled = true;
     btn.textContent = 'Redirecting to checkout…';
     try {
-      const res = await fetch('/bundle-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch('/bundle-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addProcessing, breadChoice }),
+      });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;

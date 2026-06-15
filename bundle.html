@@ -22,8 +22,19 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: url('images/harvest.jpg') center/cover no-repeat;
-      opacity: 0.15;
+      background: url('images/july4th-bg.jpg') center/cover no-repeat;
+      opacity: 0.22;
+    }
+    .bundle-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(139,35,35,0.18) 0px, rgba(139,35,35,0.18) 18px,
+        transparent 18px, transparent 36px
+      );
+      pointer-events: none;
     }
     .bundle-card {
       position: relative;
@@ -307,36 +318,29 @@
       <div class="bundle-items">
         <h3>What's Inside</h3>
         <div class="item-row">
-          <span class="item-name">Whole Pasture-Raised Chicken</span>
-          <span class="item-price">$56</span>
+          <span class="item-name">Whole Pasture-Raised Chicken <span style="color:var(--color-text-muted);font-size:12px;">· 8–10 lbs</span></span>
+        </div>
+        <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
+          <span class="item-name">↳ Processing (meat off bone) <span class="item-bonus">ADD-ON +$10</span></span>
+          <span style="font-size:11px;color:var(--color-text-muted);padding-left:2px;">Select at checkout if desired</span>
         </div>
         <div class="item-row">
           <span class="item-name">Fresh Baked Challah Loaf</span>
-          <span class="item-price">$15</span>
         </div>
         <div class="item-row">
-          <span class="item-name">Cinnamon Rolls</span>
-          <span class="item-price">$35</span>
+          <span class="item-name">Cinnamon Rolls <span style="color:var(--color-text-muted);font-size:12px;">· 6-pack</span></span>
         </div>
         <div class="item-row">
           <span class="item-name">Garlic Chili Crunch</span>
-          <span class="item-price">$18</span>
         </div>
         <div class="item-row">
           <span class="item-name">Real Cream Butter (½ lb)</span>
-          <span class="item-price">$17</span>
         </div>
         <div class="item-row">
-          <span class="item-name">Artisan Beeswax Candle <span class="item-bonus">BONUS</span></span>
-          <span class="item-price">$20</span>
+          <span class="item-name">Lavender Beeswax Candle <span class="item-bonus">BONUS</span></span>
         </div>
         <div class="item-row">
-          <span class="item-name">Farm to Table Recipe Guide <span class="item-bonus">BONUS</span></span>
-          <span class="item-price">$25</span>
-        </div>
-        <div class="value-row">
-          <span class="label">Total Value</span>
-          <span class="amount">$186</span>
+          <span class="item-name">Farm to Table Recipe Guide <span class="item-bonus">DIGITAL DOWNLOAD</span></span>
         </div>
       </div>
 
@@ -354,8 +358,9 @@
       <!-- Pickup info -->
       <div class="pickup-info">
         <strong>Pickup Details</strong>
-        Local pickup <strong>Friday, July 3rd</strong> in the Wimberley / Dripping Springs area.<br>
-        Exact location and time confirmed after purchase.<br>
+        Local Pick-up ✦ <strong>Dripping Springs, TX</strong><br>
+        Pick-up date: <strong>Friday, July 3rd</strong><br>
+        Exact address and time confirmed after purchase.<br>
         Questions? <a href="mailto:operations@heartoftexasorganics.com" style="color:var(--color-green);text-decoration:underline;">operations@heartoftexasorganics.com</a>
       </div>
 

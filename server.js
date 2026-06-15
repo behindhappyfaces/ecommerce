@@ -2767,7 +2767,7 @@ app.post('/bundle-checkout', async (req, res) => {
       lineItems.push({
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Chicken Processing — Meat Off Bone', description: 'Whole chicken broken down into individual cuts.' },
+          product_data: { name: 'Chicken Processing Add-On', description: 'Whole chicken broken down into 2 Breasts, 2 Leg Quarters, 2 Tenders, 2 Drumettes, 2 Wings.' },
           unit_amount: 1000,
         },
         quantity: 1,

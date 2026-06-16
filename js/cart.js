@@ -270,7 +270,7 @@ function renderCart() {
 
   cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
     const p = PRODUCTS[id];
-    const basePrice = itemPrice ?? p.price;
+    const basePrice = itemPrice || p.price;
     const displayPrice = basePrice;
     const item = document.createElement('div');
     item.className = 'cart-item';
@@ -419,7 +419,7 @@ function renderCart() {
   const totalLabel = document.createElement('span');
   totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
 
-  const monthlyPrice = adminSub ? adminSub.subPrice : getMonthlyTotal();
+  const monthlyPrice = getMonthlyTotal();
   const baseTotal    = subscribing ? monthlyPrice : getTotal();
   const displayTotal = (savedPromoAmt && !subscribing) ? baseTotal - savedPromoAmt : baseTotal;
 
@@ -2115,7 +2115,10 @@ function openBoxCustomizer(subId, name, price) {
   document.getElementById('bc-continue').onclick = () => {
     const calculatedTotal = recalcBoxTotal();
     const swaps = [...document.querySelectorAll('#bc-items select[data-original-id]')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
-    const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => ({
+
+    // Collect checked add-on inputs for both metadata and cart items
+    const addonInputs = [...document.querySelectorAll('#bc-addons input:checked')];
+    const addons = addonInputs.map(c => ({
       id: c.value,
       name: c.dataset.addonName,
       price: parseFloat(c.dataset.addonPrice) || 0,
@@ -2131,18 +2134,28 @@ function openBoxCustomizer(subId, name, price) {
       addons.unshift({ id: 'butter-type', name: 'Butter: ' + butterSel.value, price: 0 });
     }
 
-    const { subId, name, price } = _bcPendingArgs;
+    const { subId, name } = _bcPendingArgs;
     const box = BOX_CONTENTS[subId];
     const subName = box ? box.label : name;
 
-    // One line item for the whole box at the calculated total (includes all upcharges + add-ons)
-    const cartItems = [{ id: subId, qty: 1, price: calculatedTotal }];
+    // Box price = full calculated total minus add-on prices (upcharges stay with the box)
+    let boxOnlyPrice = calculatedTotal;
+    addonInputs.forEach(c => {
+      if (PRODUCTS[c.value]) boxOnlyPrice -= (parseFloat(c.dataset.addonPrice) || 0);
+    });
+
+    // Box as one line item + each checked add-on as its own line item so cart shows itemized pricing
+    const cartItems = [{ id: subId, qty: 1, price: boxOnlyPrice }];
+    addonInputs.forEach(c => {
+      const ap = parseFloat(c.dataset.addonPrice) || 0;
+      if (PRODUCTS[c.value] && ap > 0) cartItems.push({ id: c.value, qty: 1, price: ap });
+    });
 
     localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
 
     // Persist subscription metadata (swaps + flavor/type notes carried through to checkout)
     localStorage.setItem('hoto-admin-sub', JSON.stringify({
-      token: subId, subName, subPrice: price, swaps, addons,
+      token: subId, subName, subPrice: calculatedTotal, swaps, addons,
     }));
 
     closeBoxCustomizer();

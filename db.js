@@ -21,6 +21,7 @@ const SEED = [
   { id:'bundle-farm',         name:'Farm Bundle',                  category:'Reservations', stock:15, reorder_level:3,  unit:'bundle', price_cents:12500, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'bundle-turkey',       name:'Thanksgiving Turkey Bundle',   category:'Reservations', stock:10, reorder_level:2,  unit:'bundle', price_cents:10000, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'sampler-box',         name:'Farm Sampler Box',             category:'Sampler',      stock:99, reorder_level:5,  unit:'box',    price_cents:0,     cost_cents:0,    allow_preorder:1, active:1 },
+  { id:'bundle-4th-july',    name:'4th of July Homestead Table',  category:'Bundles',      stock:25, reorder_level:0,  unit:'bundle', price_cents:19900, cost_cents:8600, allow_preorder:0, active:1 },
 ];
 
 // ─── PostgreSQL store ────────────────────────────────────────────────────────

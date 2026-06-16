@@ -387,9 +387,27 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         if (session.metadata?.type === 'bundle' && isPaid) {
           const sales = getBundleSales();
           sales.sold = Math.min(BUNDLE_TOTAL, sales.sold + 1);
-          sales.orders.push({ name: customerName, email: customerEmail, date, sessionId: session.id });
+          const processing = session.metadata?.processing || 'no';
+          const bread = session.metadata?.bread || 'challah';
+          sales.orders.push({ name: customerName, email: customerEmail, date, sessionId: session.id, channel: 'online', processing, bread });
           saveBundleSales(sales);
-          console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail})`);
+          console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail}) via online`);
+
+          // Log to inventory system for dashboard reporting
+          try {
+            const inv = await db.getProduct('bundle-4th-july');
+            const stockBefore = inv ? inv.stock : 25;
+            const stockAfter  = Math.max(0, stockBefore - 1);
+            await db.adjustStock('bundle-4th-july', -1);
+            await db.addTransaction(
+              'bundle-4th-july', 'sale', -1,
+              null, session.id,
+              `${processing === 'yes' ? 'Processing add-on · ' : ''}Bread: ${bread} · ${customerName} <${customerEmail}>`,
+              'online', stockBefore, stockAfter
+            );
+          } catch (e) {
+            console.error('[Bundle] Inventory log error:', e.message);
+          }
         }
 
         // Product items only (exclude the shipping line item for display)
@@ -2738,6 +2756,69 @@ app.get('/bundle-qr', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// POST /admin/bundle-order — manually record an email/phone bundle order
+app.post('/admin/bundle-order', requireAdmin, async (req, res) => {
+  try {
+    const { name, email, channel, processing, bread, notes } = req.body;
+    if (!name) return res.status(400).json({ error: 'Customer name is required.' });
+
+    const sales = getBundleSales();
+    if (sales.sold >= BUNDLE_TOTAL) {
+      return res.status(400).json({ error: 'All 25 bundles have been claimed.' });
+    }
+
+    const safeChannel = ['email', 'phone', 'text', 'in-person'].includes(channel) ? channel : 'email';
+    sales.sold = Math.min(BUNDLE_TOTAL, sales.sold + 1);
+    sales.orders.push({
+      name,
+      email: email || '',
+      date: new Date().toISOString(),
+      sessionId: null,
+      channel: safeChannel,
+      processing: processing === 'yes' ? 'yes' : 'no',
+      bread: bread || 'challah',
+      notes: notes || '',
+    });
+    saveBundleSales(sales);
+
+    // Log to inventory system
+    const inv = await db.getProduct('bundle-4th-july');
+    const stockBefore = inv ? inv.stock : 25;
+    const stockAfter  = Math.max(0, stockBefore - 1);
+    await db.adjustStock('bundle-4th-july', -1);
+    await db.addTransaction(
+      'bundle-4th-july', 'sale', -1,
+      null, null,
+      `${processing === 'yes' ? 'Processing add-on · ' : ''}Bread: ${bread || 'challah'} · ${name}${email ? ' <' + email + '>' : ''}${notes ? ' · ' + notes : ''}`,
+      safeChannel, stockBefore, stockAfter
+    );
+
+    console.log(`[Bundle] Manual order #${sales.sold} — ${name} via ${safeChannel}`);
+    res.json({ ok: true, sold: sales.sold, remaining: BUNDLE_TOTAL - sales.sold });
+  } catch (e) {
+    console.error('[Bundle manual order]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /admin/bundle-orders — list all bundle orders with channel breakdown
+app.get('/admin/bundle-orders', requireAdmin, (req, res) => {
+  const sales = getBundleSales();
+  const byChannel = sales.orders.reduce((acc, o) => {
+    const ch = o.channel || 'online';
+    if (!acc[ch]) acc[ch] = [];
+    acc[ch].push(o);
+    return acc;
+  }, {});
+  res.json({
+    total: BUNDLE_TOTAL,
+    sold: sales.sold,
+    remaining: BUNDLE_TOTAL - sales.sold,
+    byChannel,
+    orders: sales.orders,
+  });
 });
 
 // POST /bundle-checkout — creates Stripe checkout session

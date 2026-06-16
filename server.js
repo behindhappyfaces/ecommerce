@@ -2853,7 +2853,7 @@ app.post('/bundle-checkout', async (req, res) => {
       lineItems.push({
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Chicken Processing Add-On', description: 'Whole chicken broken down into 2 Breasts, 2 Leg Quarters, 2 Tenders, 2 Drumettes, 2 Wings.' },
+          product_data: { name: 'Cut-Up Processing Add-On', description: 'Skip the butchering at home. Chicken arrives divided into 2 Breasts, 2 Leg Quarters, 2 Tenders, 2 Drumsticks, 2 Wings.' },
           unit_amount: 1000,
         },
         quantity: 1,

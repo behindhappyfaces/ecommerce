@@ -18,11 +18,11 @@ const PRODUCTS = {
   'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 0,  subPrice: null, image: 'images/herb-dipping-oil.jpg' },
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
   // Subscription boxes — shown as a single line item in the cart
-  'bread-box':            { name: 'The Bread & Butter Board Box', price: 0, subPrice: null, image: null },
+  'bread-box':            { name: 'The Bread & Butter Board Box', price: 5500, subPrice: null, image: null },
   'harvest-subscription': { name: 'The Supper Starter Box',       price: 0, subPrice: null, image: null },
   'farm-box':             { name: "Monthly Farm Butcher's Box",   price: 0, subPrice: null, image: null },
   // Add-on items selectable from the box customizer
-  'addon-yeast-rolls':    { name: 'Extra Yeast Rolls (1 doz)',        price: 28500, subPrice: null, image: null },
+  'addon-yeast-rolls':    { name: 'Yeast Rolls (1 doz)',              price: 2400,  subPrice: null, image: null },
   'addon-cinnamon-rolls': { name: 'Extra Cinnamon Rolls (½ doz)',    price: 3500, subPrice: null, image: null },
   'addon-butter':         { name: 'Extra Real Cream Butter (½ lb)',  price: 1700, subPrice: null, image: null },
   'addon-eggs':           { name: 'Farm Eggs — add-on (1 doz)',      price: 1300, subPrice: null, image: null },
@@ -1873,6 +1873,14 @@ function injectBoxCustomizer() {
         <div id="bc-items" style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;"></div>
         <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 16px;">Add-Ons <span style="font-weight:400;color:rgba(44,62,45,0.4);font-size:0.7rem;text-transform:none;letter-spacing:0;">(optional — we'll confirm availability)</span></p>
         <div id="bc-addons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;"></div>
+        <!-- Live price summary -->
+        <div id="bc-price-summary" style="background:var(--color-cream,#F5F0E8);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+          <div id="bc-price-lines" style="font-family:var(--font-sans);font-size:0.78rem;color:rgba(44,62,45,0.6);display:flex;flex-direction:column;gap:4px;margin-bottom:10px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(44,62,45,0.15);padding-top:10px;">
+            <span style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-green);">Your Total</span>
+            <span id="bc-price-total" style="font-family:var(--font-serif);font-size:1.3rem;color:var(--color-green);font-weight:400;"></span>
+          </div>
+        </div>
         <div style="display:flex;gap:12px;">
           <button id="bc-cancel" style="flex:1;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:1.5px solid rgba(44,62,45,0.2);background:transparent;color:rgba(44,62,45,0.6);border-radius:8px;cursor:pointer;">Cancel</button>
           <button id="bc-continue" style="flex:2;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;background:var(--color-green);color:var(--color-cream,#F5F0E8);border-radius:8px;cursor:pointer;">Continue →</button>
@@ -2033,8 +2041,79 @@ function openBoxCustomizer(subId, name, price) {
     addonsEl.appendChild(wrapper);
   });
 
+  // ── Live price calculator ──────────────────────────────────────────────────
+  const BASE_PRICE = PRODUCTS[subId] ? PRODUCTS[subId].price : 5500; // cents
+
+  function recalcBoxTotal() {
+    const lines = [];
+    let total = BASE_PRICE;
+
+    lines.push({ label: 'Box base', amount: BASE_PRICE });
+
+    // Bread swap upcharge
+    const breadSel = document.querySelector('#bc-items select[data-original-id="japanese-milk-loaf"]');
+    if (breadSel && breadSel.value === 'whole-wheat-loaf') {
+      lines.push({ label: 'Whole Wheat upgrade', amount: 200 });
+      total += 200;
+    }
+
+    // Butter type upcharge
+    const butterSel = document.querySelector('#bc-items select[data-butter-type="included"]');
+    if (butterSel && butterSel.value === 'Rosemary (+$4)') {
+      lines.push({ label: 'Rosemary butter upgrade', amount: 400 });
+      total += 400;
+    }
+
+    // Preserves flavor upcharge
+    const flavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
+    if (flavorSel) {
+      const val = flavorSel.value;
+      if (val.includes('+$4')) {
+        lines.push({ label: 'Herb dipping oil swap', amount: 400 });
+        total += 400;
+      } else if (val.includes('+$3')) {
+        lines.push({ label: 'Premium preserves flavor', amount: 300 });
+        total += 300;
+      }
+    }
+
+    // Add-ons
+    document.querySelectorAll('#bc-addons input:checked').forEach(cb => {
+      const price = parseFloat(cb.dataset.addonPrice) || 0;
+      if (price > 0) {
+        lines.push({ label: cb.dataset.addonName, amount: price });
+        total += price;
+      }
+    });
+
+    // Render lines (safe DOM — no innerHTML with user data)
+    const linesEl = document.getElementById('bc-price-lines');
+    while (linesEl.firstChild) linesEl.removeChild(linesEl.firstChild);
+    lines.forEach(l => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;';
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = l.label;
+      const amountSpan = document.createElement('span');
+      amountSpan.textContent = '$' + (l.amount / 100).toFixed(2).replace(/\.00$/, '');
+      row.appendChild(labelSpan);
+      row.appendChild(amountSpan);
+      linesEl.appendChild(row);
+    });
+
+    document.getElementById('bc-price-total').textContent = '$' + (total / 100).toFixed(2).replace(/\.00$/, '') + '/wk';
+    return total;
+  }
+
+  // Wire to all interactive elements
+  document.querySelectorAll('#bc-items select, #bc-addons input').forEach(el => {
+    el.addEventListener('change', recalcBoxTotal);
+  });
+  recalcBoxTotal(); // initial render
+
   // Continue → populate cart with box items, open cart drawer
   document.getElementById('bc-continue').onclick = () => {
+    const calculatedTotal = recalcBoxTotal();
     const swaps = [...document.querySelectorAll('#bc-items select[data-original-id]')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
     const addons = [...document.querySelectorAll('#bc-addons input:checked')].map(c => ({
       id: c.value,
@@ -2056,11 +2135,8 @@ function openBoxCustomizer(subId, name, price) {
     const box = BOX_CONTENTS[subId];
     const subName = box ? box.label : name;
 
-    // One line item for the whole box, then separate lines for any add-ons
-    const cartItems = [{ id: subId, qty: 1, price: 0 }];
-    addons
-      .filter(a => PRODUCTS[a.id]) // only real product add-ons, skip flavor/type notes
-      .forEach(a => cartItems.push({ id: a.id, qty: 1, price: a.price || PRODUCTS[a.id].price }));
+    // One line item for the whole box at the calculated total (includes all upcharges + add-ons)
+    const cartItems = [{ id: subId, qty: 1, price: calculatedTotal }];
 
     localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
 

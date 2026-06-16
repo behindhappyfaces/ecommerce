@@ -1769,10 +1769,9 @@ const BOX_CONTENTS = {
   'bread-box': {
     label: 'The Bread & Butter Board Box',
     items: [
-      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',      swapGroup: 'bread' },
-      { id: 'cultured-butter',    name: 'Real Cream Butter',        swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',       swapGroup: null },
-      { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', swapGroup: null },
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',       swapGroup: 'bread' },
+      { id: 'cultured-butter',    name: 'Real Cream Butter (½ lb)', swapGroup: null },
+      { id: 'seasonal-preserves', name: 'Seasonal Preserves',        swapGroup: null },
     ],
   },
   'harvest-subscription': {
@@ -1811,8 +1810,7 @@ const BOX_CONTENTS = {
 const SWAP_OPTIONS = {
   bread: [
     { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf' },
-    { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf' },
-    { id: 'focaccia-loaf',      name: 'Focaccia Loaf' },
+    { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf (+$2)' },
   ],
   larder: [
     { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },
@@ -1821,6 +1819,18 @@ const SWAP_OPTIONS = {
   ],
 };
 
+// Flavors shown in the included preserves picker (upcharge = extra above base box price)
+const INCLUDED_PRESERVES_FLAVORS = [
+  { name: 'Strawberry',                           upcharge: 0 },
+  { name: 'Grape',                                upcharge: 0 },
+  { name: 'Blackberry (+$3)',                     upcharge: 300 },
+  { name: 'Peach (+$3)',                          upcharge: 300 },
+  { name: 'Fig (+$3)',                            upcharge: 300 },
+  { name: 'Orange Marmalade (+$3)',               upcharge: 300 },
+  { name: 'Swap: Tuscany Herb Dipping Oil (+$4)', upcharge: 400 },
+];
+
+// Flavors for the add-on preserves (standalone purchase)
 const PRESERVES_FLAVORS = [
   { name: 'Strawberry',       price: 1500 },
   { name: 'Grape',            price: 1500 },
@@ -1831,8 +1841,8 @@ const PRESERVES_FLAVORS = [
 ];
 
 const ADDON_OPTIONS = [
-  { id: 'addon-yeast-rolls',    name: 'Extra Yeast Rolls (1 doz)',  price: 28500 },
-  { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
+  { id: 'addon-yeast-rolls',    name: 'Yeast Rolls (1 doz)',      price: 2400 },
+  { id: 'addon-cinnamon-rolls', name: 'Cinnamon Rolls (½ doz)',   price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
   { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18',
@@ -1924,7 +1934,7 @@ function openBoxCustomizer(subId, name, price) {
       const flavorSel = document.createElement('select');
       flavorSel.dataset.preservesFlavor = 'included';
       flavorSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
-      PRESERVES_FLAVORS.forEach(f => {
+      INCLUDED_PRESERVES_FLAVORS.forEach(f => {
         const o = document.createElement('option');
         o.value = f.name;
         o.textContent = f.name;
@@ -1943,7 +1953,7 @@ function openBoxCustomizer(subId, name, price) {
       const butterSel = document.createElement('select');
       butterSel.dataset.butterType = 'included';
       butterSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
-      ['Salted', 'Unsalted'].forEach(type => {
+      ['Sea Salt', 'Unsalted', 'Rosemary (+$4)'].forEach(type => {
         const o = document.createElement('option');
         o.value = type;
         o.textContent = type;

@@ -1574,15 +1574,18 @@ const PRODUCT_MAP = {
   'Farm Sampler Box':               'sampler-box',
 };
 
-async function deductStockForOrder(lineItems, orderId) {
+async function deductStockForOrder(lineItems, orderId, orderDate = null) {
   for (const item of lineItems) {
     const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
     if (!pid) continue;
+    // Skip if this order+product was already logged (prevents double-deduction on re-sync)
+    if (await db.hasTransaction(orderId, pid)) continue;
     const qty = item.quantity || 1;
     const result = await db.adjustStock(pid, -qty);
     const before = result ? result.before : null;
     const after  = result ? result.after  : null;
-    await db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout', 'online', before, after);
+    const extra  = orderDate ? { created_at: orderDate } : {};
+    await db.addTransaction(pid, 'sale', -qty, null, orderId, 'Stripe checkout', 'online', before, after, extra);
   }
 }
 
@@ -2050,8 +2053,9 @@ async function performStripeSync(limit = 50) {
       const productItems = items.filter(li =>
         li.description && !li.description.startsWith('Shipping')
       );
+      const orderDate = new Date(session.created * 1000).toISOString();
       try {
-        await deductStockForOrder(productItems, session.id);
+        await deductStockForOrder(productItems, session.id, orderDate);
       } catch(e) {
         console.warn('[Sync] Stock deduction failed for', session.id, ':', e.message);
       }
@@ -2070,6 +2074,25 @@ async function performStripeSync(limit = 50) {
 
   return { synced, skipped, orders: syncedDetails };
 }
+
+// --- Clean phantom sync transactions and re-sync with correct dates ---
+app.post('/admin/transactions/resync', requireAdmin, async (req, res) => {
+  try {
+    // Step 1: delete all 'Stripe checkout' transactions and restore stock
+    const cleanup = await db.deleteTransactionsByNotes('Stripe checkout');
+    console.log(`[Resync] Cleared ${cleanup.deleted} phantom transactions, restored ${cleanup.products} products`);
+
+    // Step 2: re-sync from Stripe with real order dates (dedup now prevents re-importing duplicates from webhooks)
+    const limit = Math.min(parseInt(req.body?.limit) || 100, 100);
+    const result = await performStripeSync(limit);
+    console.log(`[Resync] Re-synced ${result.synced} orders with correct dates`);
+
+    res.json({ ok: true, cleaned: cleanup.deleted, synced: result.synced, skipped: result.skipped });
+  } catch (e) {
+    console.error('[Resync]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // --- Stripe Order Sync endpoint (manual trigger from dashboard) ---
 app.post('/admin/sync-from-stripe', requireAdmin, async (req, res) => {

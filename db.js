@@ -125,19 +125,48 @@ const pgStore = {
     return { before, after };
   },
 
+  async hasTransaction(orderId, productId) {
+    const { rows } = await pool.query(
+      `SELECT 1 FROM transactions WHERE order_id = $1 AND product_id = $2 LIMIT 1`,
+      [orderId, productId]
+    );
+    return rows.length > 0;
+  },
+
   async addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null, channel = null, stockBefore = null, stockAfter = null, extra = {}) {
+    const overrideDate = extra.created_at ? new Date(extra.created_at) : null;
     const { rows } = await pool.query(`
       INSERT INTO transactions
-        (product_id, type, quantity, batch_number, order_id, notes, channel, stock_before, stock_after, prod_date, expiry_date, batch_cost_cents)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        (product_id, type, quantity, batch_number, order_id, notes, channel, stock_before, stock_after, prod_date, expiry_date, batch_cost_cents, created_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, COALESCE($13, NOW()))
       RETURNING *
     `, [
       productId, type, quantity,
       batchNumber || null, orderId || null, notes || null, channel || null,
       stockBefore ?? null, stockAfter ?? null,
       extra.prod_date || null, extra.expiry_date || null, extra.batch_cost_cents || null,
+      overrideDate,
     ]);
     return rows[0];
+  },
+
+  async deleteTransactionsByNotes(notesValue) {
+    // Find net stock impact per product before deleting
+    const { rows: impacts } = await pool.query(
+      `SELECT product_id, SUM(quantity) AS net FROM transactions WHERE notes = $1 GROUP BY product_id`,
+      [notesValue]
+    );
+    // Reverse the stock changes
+    for (const row of impacts) {
+      await pool.query(
+        `UPDATE products SET stock = GREATEST(0, stock - $1) WHERE id = $2`,
+        [parseInt(row.net), row.product_id]
+      );
+    }
+    const { rowCount } = await pool.query(
+      `DELETE FROM transactions WHERE notes = $1`, [notesValue]
+    );
+    return { deleted: rowCount, products: impacts.length };
   },
 
   async getTransactions(productId = null, limit = 150, dateFrom = null, dateTo = null) {
@@ -278,12 +307,39 @@ const jsonStore = {
     persistJson(_json);
     return { before, after: p.stock };
   },
+  hasTransaction(orderId, productId) {
+    return _json.transactions.some(t => t.order_id === orderId && t.product_id === productId);
+  },
+
   addTransaction(productId, type, quantity, batchNumber = null, orderId = null, notes = null, channel = null, stockBefore = null, stockAfter = null, extra = {}) {
-    const tx = { id: _json.nextTxId++, product_id: productId, type, quantity, batch_number: batchNumber, order_id: orderId, notes, channel, stock_before: stockBefore, stock_after: stockAfter, created_at: new Date().toISOString(), ...extra };
+    const { created_at: overrideDate, ...restExtra } = extra;
+    const tx = {
+      id: _json.nextTxId++, product_id: productId, type, quantity,
+      batch_number: batchNumber, order_id: orderId, notes, channel,
+      stock_before: stockBefore, stock_after: stockAfter,
+      created_at: overrideDate || new Date().toISOString(),
+      ...restExtra,
+    };
     _json.transactions.push(tx);
     if (_json.transactions.length > 500) _json.transactions = _json.transactions.slice(-500);
     persistJson(_json);
     return tx;
+  },
+
+  deleteTransactionsByNotes(notesValue) {
+    const toDelete = _json.transactions.filter(t => t.notes === notesValue);
+    // Reverse stock changes
+    const netByProduct = {};
+    for (const t of toDelete) {
+      netByProduct[t.product_id] = (netByProduct[t.product_id] || 0) + t.quantity;
+    }
+    for (const [pid, net] of Object.entries(netByProduct)) {
+      const p = _json.products.find(p => p.id === pid);
+      if (p) p.stock = Math.max(0, p.stock - net);
+    }
+    _json.transactions = _json.transactions.filter(t => t.notes !== notesValue);
+    persistJson(_json);
+    return { deleted: toDelete.length, products: Object.keys(netByProduct).length };
   },
   getTransactions(productId = null, limit = 150, dateFrom = null, dateTo = null) {
     const nameMap = Object.fromEntries(_json.products.map(p => [p.id, p.name]));
@@ -324,14 +380,16 @@ const jsonStore = {
 // promises — server.js just awaits everything.
 
 const store = USE_PG ? pgStore : {
-  getAll:          (...a) => Promise.resolve(jsonStore.getAll(...a)),
-  getProduct:      (...a) => Promise.resolve(jsonStore.getProduct(...a)),
-  updateProduct:   (...a) => Promise.resolve(jsonStore.updateProduct(...a)),
-  adjustStock:     (...a) => Promise.resolve(jsonStore.adjustStock(...a)),
-  addTransaction:  (...a) => Promise.resolve(jsonStore.addTransaction(...a)),
-  getTransactions: (...a) => Promise.resolve(jsonStore.getTransactions(...a)),
-  getSales:        (...a) => Promise.resolve(jsonStore.getSales(...a)),
-  getAllForCSV:     (...a) => Promise.resolve(jsonStore.getAllForCSV(...a)),
+  getAll:                     (...a) => Promise.resolve(jsonStore.getAll(...a)),
+  getProduct:                 (...a) => Promise.resolve(jsonStore.getProduct(...a)),
+  updateProduct:              (...a) => Promise.resolve(jsonStore.updateProduct(...a)),
+  adjustStock:                (...a) => Promise.resolve(jsonStore.adjustStock(...a)),
+  hasTransaction:             (...a) => Promise.resolve(jsonStore.hasTransaction(...a)),
+  addTransaction:             (...a) => Promise.resolve(jsonStore.addTransaction(...a)),
+  deleteTransactionsByNotes:  (...a) => Promise.resolve(jsonStore.deleteTransactionsByNotes(...a)),
+  getTransactions:            (...a) => Promise.resolve(jsonStore.getTransactions(...a)),
+  getSales:                   (...a) => Promise.resolve(jsonStore.getSales(...a)),
+  getAllForCSV:                (...a) => Promise.resolve(jsonStore.getAllForCSV(...a)),
 };
 
 store.init = init;

@@ -141,7 +141,7 @@ function getDiscountedTotal() {
 }
 
 function getMonthlyTotal() {
-  return getDiscountedTotal() * 4;
+  return getTotal() * 4;
 }
 
 // --- DOM Setup ---
@@ -1239,7 +1239,7 @@ async function checkoutSubscription(deliveryMethod, pickupLocation, pickupContac
     .filter(({ id }) => PRODUCTS[id])
     .map(({ id, qty, price }) => ({
       name: PRODUCTS[id].name,
-      price: Math.round((price ?? PRODUCTS[id].price) * 0.85),
+      price: price || PRODUCTS[id].price,
       quantity: qty,
     }));
 

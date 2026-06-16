@@ -2005,6 +2005,81 @@ function openBoxCustomizer(subId, name, price) {
     label.appendChild(priceSpan);
     wrapper.appendChild(label);
 
+    // Weight + processing selector for whole chicken add-on
+    if (addon.id === 'addon-whole-chicken') {
+      const chickenPanel = document.createElement('div');
+      chickenPanel.style.cssText = 'display:none;padding:10px 14px 12px;border:1px solid rgba(44,62,45,0.08);border-top:none;border-radius:0 0 10px 10px;background:var(--color-cream,#F5F0E8);';
+
+      // Weight dropdown
+      const weightRow = document.createElement('div');
+      weightRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px;';
+      const weightLbl = document.createElement('span');
+      weightLbl.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;color:var(--color-green);flex:1;';
+      weightLbl.textContent = 'Estimated weight:';
+      const weightSel = document.createElement('select');
+      weightSel.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:6px 10px;background:#fff;color:var(--color-green);cursor:pointer;';
+      [8, 9, 10].forEach(lbs => {
+        const o = document.createElement('option');
+        o.value = String(lbs * 700);
+        o.textContent = `~${lbs} lbs  ·  $${lbs * 7}`;
+        weightSel.appendChild(o);
+      });
+      weightRow.appendChild(weightLbl);
+      weightRow.appendChild(weightSel);
+      chickenPanel.appendChild(weightRow);
+
+      // Processing sub-option
+      const procLbl = document.createElement('label');
+      procLbl.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#fff;border:1px solid rgba(44,62,45,0.12);border-radius:8px;cursor:pointer;';
+      const procCb = document.createElement('input');
+      procCb.type = 'checkbox';
+      procCb.style.cssText = 'accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;margin-top:2px;';
+      const procText = document.createElement('div');
+      const procLine = document.createElement('span');
+      procLine.style.cssText = 'font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);display:block;';
+      procLine.textContent = 'Skip the butchering at home ';
+      const procTag = document.createElement('strong');
+      procTag.style.color = 'var(--color-rust,#8B4A2F)';
+      procTag.textContent = '+$10';
+      procLine.appendChild(procTag);
+      const procCuts = document.createElement('span');
+      procCuts.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);display:block;margin-top:3px;';
+      procCuts.textContent = '2 Breasts · 2 Leg Quarters · 2 Tenders · 2 Drumsticks · 2 Wings';
+      procText.appendChild(procLine);
+      procText.appendChild(procCuts);
+      procLbl.appendChild(procCb);
+      procLbl.appendChild(procText);
+      chickenPanel.appendChild(procLbl);
+
+      wrapper.appendChild(chickenPanel);
+
+      function updateChickenAddon() {
+        const baseCents = parseInt(weightSel.value, 10);
+        const procExtra = procCb.checked ? 1000 : 0;
+        const totalCents = baseCents + procExtra;
+        cb.dataset.addonPrice = String(totalCents);
+        const lbs = Math.round(baseCents / 700);
+        cb.dataset.addonName = `Whole Chicken (~${lbs} lbs)${procCb.checked ? ' + Cut-Up Processing' : ''}`;
+        priceSpan.textContent = '$' + (totalCents / 100).toFixed(0);
+        recalcBoxTotal();
+      }
+
+      weightSel.addEventListener('change', updateChickenAddon);
+      procCb.addEventListener('change', updateChickenAddon);
+
+      cb.addEventListener('change', () => {
+        chickenPanel.style.display = cb.checked ? 'block' : 'none';
+        label.style.borderRadius = cb.checked ? '10px 10px 0 0' : '10px';
+        if (cb.checked) {
+          updateChickenAddon();
+        } else {
+          cb.dataset.addonPrice = '0';
+          cb.dataset.addonName = addon.name;
+          priceSpan.textContent = addon.priceLabel || '$7/lb';
+        }
+      });
+    }
+
     // Flavor dropdown for preserves
     if (addon.flavors) {
       const flavorWrap = document.createElement('div');

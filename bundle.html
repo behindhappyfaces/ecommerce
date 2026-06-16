@@ -274,8 +274,8 @@
 </head>
 <body>
 
-<div class="bundle-hero">
-  <div class="bundle-card">
+<div class="bundle-hero" id="bundleHero" style="cursor:pointer;" onclick="window.location.href='/'">
+  <div class="bundle-card" onclick="event.stopPropagation()">
 
     <!-- Countdown bar -->
     <div class="countdown-bar">
@@ -284,7 +284,7 @@
 
     <!-- Header -->
     <div class="bundle-header">
-      <p class="eyebrow">Heart of Texas Organics · Limited Release</p>
+      <p class="eyebrow"><a href="/" style="color:inherit;text-decoration:none;">Heart of Texas Organics</a> · Limited Release</p>
       <h1>The 4th of July<br>Homestead Table</h1>
       <p class="tagline">Everything you need for a real food celebration — straight from the farm.</p>
     </div>
@@ -380,7 +380,7 @@
 
     <!-- Footer -->
     <div class="bundle-footer">
-      Heart of Texas Organics &nbsp;·&nbsp; heartoftexasorganics.com
+      <a href="/" style="color:inherit;text-decoration:none;">Heart of Texas Organics</a> &nbsp;·&nbsp; <a href="/" style="color:inherit;text-decoration:none;">heartoftexasorganics.com</a>
     </div>
 
   </div>

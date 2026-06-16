@@ -1440,11 +1440,60 @@ app.get('/substack-feed', async (req, res) => {
 // CONTACT FORM
 // =========================================
 
+// In-memory rate limiter for contact form: max 5 per IP per hour
+const contactRateLimits = new Map();
+function contactAllowed(ip) {
+  const now = Date.now();
+  const entry = contactRateLimits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    contactRateLimits.set(ip, { count: 1, resetAt: now + 3_600_000 });
+    return true;
+  }
+  if (entry.count >= 5) return false;
+  entry.count++;
+  return true;
+}
+
+// Returns true if a string looks like random characters (no spaces, high consonant ratio, no common words)
+function looksLikeRandom(str) {
+  if (!str || str.length < 10) return false;
+  if (/\s/.test(str.trim())) return false; // has spaces → probably a real sentence
+  const vowels = (str.match(/[aeiouAEIOU]/g) || []).length;
+  const ratio = vowels / str.length;
+  return ratio < 0.15 || ratio > 0.75; // natural English is 0.25-0.55
+}
+
 app.post('/contact', async (req, res) => {
-  const { name, email, subject, message } = req.body;
+  const { name, email, subject, message, website, form_ts } = req.body;
 
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // 1. Honeypot — bots fill the hidden website field, humans never see it
+  if (website && website.trim().length > 0) {
+    console.log('[Spam] Honeypot triggered:', email);
+    return res.json({ ok: true }); // silent drop
+  }
+
+  // 2. Timing check — real users take at least 4 seconds to fill a form
+  const elapsed = form_ts ? Date.now() - parseInt(form_ts, 10) : 99999;
+  if (elapsed < 4000) {
+    console.log('[Spam] Submitted too fast (' + elapsed + 'ms):', email);
+    return res.json({ ok: true }); // silent drop
+  }
+
+  // 3. Rate limiting — max 5 per IP per hour
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+  if (!contactAllowed(ip)) {
+    console.log('[Spam] Rate limit hit from', ip);
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  // 4. Content check — reject random-character names or messages
+  if (looksLikeRandom(name) || looksLikeRandom(message)) {
+    console.log('[Spam] Random content detected from:', email);
+    return res.json({ ok: true }); // silent drop
   }
 
   const subjectLabel = {

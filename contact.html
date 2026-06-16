@@ -309,6 +309,13 @@
             <p class="contact-form-card__sub">Fill out the form and we will follow up by email.</p>
 
             <form id="contact-form" novalidate>
+              <!-- Honeypot — invisible to humans, bots fill it and get silently dropped -->
+              <div style="position:absolute;left:-9999px;top:-9999px;opacity:0;height:0;overflow:hidden;" aria-hidden="true">
+                <label for="cf-website">Website</label>
+                <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+              </div>
+              <!-- Timing token — set when page loads, checked server-side -->
+              <input type="hidden" name="form_ts" id="cf-form-ts" />
               <div class="form-group">
                 <label for="cf-name">Your Name</label>
                 <input id="cf-name" name="name" type="text" placeholder="Jane Smith" autocomplete="name" required />
@@ -399,6 +406,8 @@
       const otherDetail = document.getElementById('cf-other-subject').value.trim();
       const subject     = subjectSel === 'other' && otherDetail ? 'Something else: ' + otherDetail : subjectSel;
       const message     = document.getElementById('cf-message').value.trim();
+      const website     = document.getElementById('cf-website').value;
+      const formTs      = document.getElementById('cf-form-ts').value;
       const btn     = document.getElementById('cf-submit');
       const status  = document.getElementById('cf-message-status');
 
@@ -417,7 +426,7 @@
         const res = await fetch('/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, subject, message }),
+          body: JSON.stringify({ name, email, subject, message, website, form_ts: formTs }),
         });
 
         if (!res.ok) throw new Error('Server error');
@@ -433,6 +442,9 @@
         status.className = 'form-message form-message--error';
       }
     });
+
+    // Set timing token when page finishes loading
+    document.getElementById('cf-form-ts').value = Date.now().toString();
   </script>
 </body>
 </html>

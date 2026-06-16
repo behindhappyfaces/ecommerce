@@ -2761,7 +2761,12 @@ app.get('/bundle-qr', async (req, res) => {
 // POST /admin/bundle-order — manually record an email/phone bundle order
 app.post('/admin/bundle-order', requireAdmin, async (req, res) => {
   try {
-    const { name, email, channel, processing, bread, notes } = req.body;
+    const name     = String(req.body.name     || '').slice(0, 120).trim();
+    const email    = String(req.body.email    || '').slice(0, 200).trim();
+    const channel  = String(req.body.channel  || '').slice(0, 20).trim();
+    const processing = String(req.body.processing || '').slice(0, 5).trim();
+    const bread    = String(req.body.bread    || '').slice(0, 30).trim();
+    const notes    = String(req.body.notes    || '').slice(0, 300).trim();
     if (!name) return res.status(400).json({ error: 'Customer name is required.' });
 
     const sales = getBundleSales();

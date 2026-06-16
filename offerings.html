@@ -1047,5 +1047,40 @@
       }).catch(function() {});
     })();
   </script>
+
+  <!-- TEMP: only turkey + bundle available — remove this block when site is fully open -->
+  <style>
+    .offering-card__add[data-add-to-cart]:not([data-add-to-cart="thanksgiving-turkey"]) {
+      background: transparent !important;
+      color: #a09080 !important;
+      border: 1px solid #d0c8b8 !important;
+      cursor: default !important;
+      pointer-events: none;
+      font-size: 11px !important;
+      letter-spacing: 1.5px !important;
+    }
+    .sub-card__btn[data-add-to-cart] {
+      background: transparent !important;
+      color: #a09080 !important;
+      border: 1px solid #d0c8b8 !important;
+      cursor: default !important;
+      pointer-events: none;
+      font-size: 11px !important;
+    }
+  </style>
+  <script>
+    (function () {
+      document.querySelectorAll('.offering-card__add[data-add-to-cart]').forEach(function (btn) {
+        if (btn.dataset.addToCart === 'thanksgiving-turkey') return;
+        btn.textContent = 'Available Soon';
+        btn.disabled = true;
+      });
+      document.querySelectorAll('.sub-card__btn[data-add-to-cart]').forEach(function (btn) {
+        btn.textContent = 'Available Soon';
+        btn.disabled = true;
+      });
+    })();
+  </script>
+  <!-- END TEMP -->
 </body>
 </html>

@@ -995,20 +995,19 @@
       <p class="refresh-eyebrow">Heart of Texas Organics</p>
       <h2 class="refresh-heading">We're Tending<br>to Our Space</h2>
       <p class="refresh-body">
-        Our site is getting a refresh — thank you for your patience.<br>
-        You can still place an order directly. As our appreciation,<br>
-        enjoy <strong>10% off</strong> your first order.
+        Our site is getting a refresh and will be back to full service soon.<br>
+        In the meantime, two things are open for reservation:
       </p>
-      <div class="refresh-code-wrap">
-        <p class="refresh-code-label">Your Discount Code</p>
-        <p class="refresh-code">HOTO10</p>
+      <div class="refresh-actions" style="flex-direction:column;gap:10px;margin-bottom:20px;">
+        <a href="bundle.html" class="refresh-btn-primary" onclick="sessionStorage.setItem('hoto_refresh_seen','1')">
+          🇺🇸 &nbsp;4th of July Homestead Table Bundle →
+        </a>
+        <a href="offerings.html#thanksgiving" class="refresh-btn-primary" style="background:#8B4513;" onclick="sessionStorage.setItem('hoto_refresh_seen','1')">
+          🦃 &nbsp;Thanksgiving Turkey Pre-Order →
+        </a>
       </div>
-      <div class="refresh-actions">
-        <a href="mailto:operations@heartoftexasorganics.com?subject=Order%20Inquiry&body=Hi%2C%20I%27d%20like%20to%20place%20an%20order.%20My%20discount%20code%20is%20HOTO10."
-           class="refresh-btn-primary">Place an Order →</a>
-        <button class="refresh-btn-ghost" onclick="dismissRefresh()">Continue to Site</button>
-      </div>
-      <p class="refresh-fine">Code valid for first order. Cannot be combined with other offers.</p>
+      <button class="refresh-btn-ghost" onclick="dismissRefresh()" style="width:100%;">Continue Browsing</button>
+      <p class="refresh-fine">Questions? <a href="mailto:operations@heartoftexasorganics.com" style="color:#8a7e6e;">operations@heartoftexasorganics.com</a></p>
     </div>
   </div>
 

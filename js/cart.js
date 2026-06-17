@@ -2066,8 +2066,13 @@ function openBoxCustomizer(subId, name, price) {
       neckText.appendChild(neckTag);
       neckLbl.appendChild(neckCb);
       neckLbl.appendChild(neckText);
+      neckLbl.style.display = 'none';
       chickenPanel.appendChild(neckLbl);
 
+      procCb.addEventListener('change', () => {
+        neckLbl.style.display = procCb.checked ? 'flex' : 'none';
+        if (!procCb.checked) neckCb.checked = false;
+      });
       neckCb.addEventListener('change', updateChickenAddon);
 
       wrapper.appendChild(chickenPanel);

@@ -2018,7 +2018,7 @@ function openBoxCustomizer(subId, name, price) {
       weightLbl.textContent = 'Estimated weight:';
       const weightSel = document.createElement('select');
       weightSel.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:6px 10px;background:#fff;color:var(--color-green);cursor:pointer;';
-      [8, 9, 10].forEach(lbs => {
+      [7, 8].forEach(lbs => {
         const o = document.createElement('option');
         o.value = String(lbs * 700);
         o.textContent = `~${lbs} lbs  ·  $${lbs * 7}`;
@@ -2051,15 +2051,36 @@ function openBoxCustomizer(subId, name, price) {
       procLbl.appendChild(procText);
       chickenPanel.appendChild(procLbl);
 
+      // Neckbone add-on
+      const neckLbl = document.createElement('label');
+      neckLbl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid rgba(44,62,45,0.12);border-radius:8px;cursor:pointer;margin-top:8px;';
+      const neckCb = document.createElement('input');
+      neckCb.type = 'checkbox';
+      neckCb.style.cssText = 'accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;';
+      const neckText = document.createElement('span');
+      neckText.style.cssText = 'font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);flex:1;';
+      neckText.textContent = 'Neckbone ';
+      const neckTag = document.createElement('strong');
+      neckTag.style.color = 'var(--color-rust,#8B4A2F)';
+      neckTag.textContent = '+$2';
+      neckText.appendChild(neckTag);
+      neckLbl.appendChild(neckCb);
+      neckLbl.appendChild(neckText);
+      chickenPanel.appendChild(neckLbl);
+
+      neckCb.addEventListener('change', updateChickenAddon);
+
       wrapper.appendChild(chickenPanel);
 
       function updateChickenAddon() {
         const baseCents = parseInt(weightSel.value, 10);
         const procExtra = procCb.checked ? 1000 : 0;
-        const totalCents = baseCents + procExtra;
+        const neckExtra = neckCb.checked ? 200 : 0;
+        const totalCents = baseCents + procExtra + neckExtra;
         cb.dataset.addonPrice = String(totalCents);
         const lbs = Math.round(baseCents / 700);
-        cb.dataset.addonName = `Whole Chicken (~${lbs} lbs)${procCb.checked ? ' + Cut-Up Processing' : ''}`;
+        const extras = [procCb.checked ? 'Cut-Up Processing' : '', neckCb.checked ? 'Neckbone' : ''].filter(Boolean).join(' + ');
+        cb.dataset.addonName = `Whole Chicken (~${lbs} lbs)${extras ? ' + ' + extras : ''}`;
         priceSpan.textContent = '$' + (totalCents / 100).toFixed(0);
         recalcBoxTotal();
       }

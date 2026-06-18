@@ -132,6 +132,7 @@
             <h3 class="sub-card__name">The Farm Sampler Box</h3>
             <p class="sub-card__price">$99</p>
             <p class="sub-card__billing">one-time purchase</p>
+            <button type="button" id="sampler-whats-inside" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
             <button class="sub-card__btn" data-add-to-cart="sampler-box">Add to Cart</button>
           </div>
         </article>
@@ -1048,6 +1049,60 @@
     })();
   </script>
 
+  <!-- Sampler Box — What's Inside modal -->
+  <div id="sampler-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(28,28,28,0.65);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.22);overflow:hidden;">
+      <!-- Header -->
+      <div style="background:var(--color-green,#2C3E2D);padding:28px 28px 20px;position:relative;">
+        <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(245,240,232,0.6);margin:0 0 4px;">New to the Farm?</p>
+        <h2 style="font-family:var(--font-serif,Georgia,serif);font-size:1.5rem;color:#F5F0E8;margin:0;font-weight:400;">The Farm Sampler Box</h2>
+        <p style="font-family:var(--font-sans);font-size:0.82rem;color:rgba(245,240,232,0.7);margin:6px 0 0;">One-time purchase · $99</p>
+        <button id="sampler-modal-close" style="position:absolute;top:16px;right:18px;background:none;border:none;color:rgba(245,240,232,0.5);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <!-- Contents -->
+      <div style="padding:24px 28px 28px;">
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green,#2C3E2D);margin:0 0 16px;">What's Included</p>
+        <ul id="sampler-items-list" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🐓</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Whole Chicken</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🥚</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Farm Eggs — 1 dozen</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🍞</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Japanese Milk Loaf — ready to bake</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🫙</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Seasonal Preserves</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🧈</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Real Cream Butter — ½ lb</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#F5F0E8;border-radius:10px;">
+            <span style="font-size:1.1rem;">🌶️</span>
+            <span style="font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green,#2C3E2D);flex:1;">Garlic Chili Crunch</span>
+          </li>
+        </ul>
+        <button data-add-to-cart="sampler-box" style="margin-top:20px;width:100%;padding:14px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--color-green,#2C3E2D);color:#F5F0E8;border:none;border-radius:10px;cursor:pointer;">Add to Cart — $99</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const overlay = document.getElementById('sampler-modal-overlay');
+      function openSampler() { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+      function closeSampler() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
+      document.getElementById('sampler-whats-inside').addEventListener('click', openSampler);
+      document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
+    })();
+  </script>
+
   <!-- TEMP: only turkey + bundle available — remove this block when site is fully open -->
   <style>
     .offering-card__add[data-add-to-cart]:not([data-add-to-cart="thanksgiving-turkey"]) {
@@ -1059,7 +1114,7 @@
       font-size: 11px !important;
       letter-spacing: 1.5px !important;
     }
-    .sub-card__btn[data-add-to-cart] {
+    .sub-card__btn[data-add-to-cart]:not([data-add-to-cart="sampler-box"]) {
       background: transparent !important;
       color: #a09080 !important;
       border: 1px solid #d0c8b8 !important;
@@ -1076,6 +1131,7 @@
         btn.disabled = true;
       });
       document.querySelectorAll('.sub-card__btn[data-add-to-cart]').forEach(function (btn) {
+        if (btn.dataset.addToCart === 'sampler-box') return;
         btn.textContent = 'Available Soon';
         btn.disabled = true;
       });

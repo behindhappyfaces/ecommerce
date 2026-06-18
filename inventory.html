@@ -1051,6 +1051,27 @@
         <button id="cl-copy" class="btn-action" style="white-space:nowrap;">Copy Link</button>
       </div>
       <p id="cl-copy-msg" style="font-size:0.75rem;color:#6fcf97;margin:6px 0 0;display:none;">Copied to clipboard!</p>
+
+      <!-- Cart contents preview -->
+      <div style="margin-top:14px;border-top:1px solid #333;padding-top:12px;">
+        <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin:0 0 8px;">What's in this cart</p>
+        <table style="width:100%;border-collapse:collapse;" id="cl-preview-table">
+          <thead>
+            <tr style="font-size:0.72rem;color:#888;text-transform:uppercase;letter-spacing:0.06em;">
+              <th style="text-align:left;padding:4px 0;font-weight:600;">Item</th>
+              <th style="text-align:center;padding:4px 8px;font-weight:600;">Qty</th>
+              <th style="text-align:right;padding:4px 0;font-weight:600;">Price</th>
+            </tr>
+          </thead>
+          <tbody id="cl-preview-body"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="font-size:0.8rem;font-weight:700;color:#f0ebe4;padding-top:8px;border-top:1px solid #333;">Total</td>
+              <td style="text-align:right;font-size:0.9rem;font-weight:700;color:var(--terra);padding-top:8px;border-top:1px solid #333;" id="cl-preview-total"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -3760,6 +3781,23 @@
         document.getElementById('cl-copy-msg').style.display = 'none';
         document.getElementById('cl-result').querySelector('p').textContent =
           isSub ? 'Share this subscription link with the customer:' : 'Share this link with the customer:';
+
+        // Populate cart preview
+        const previewBody = document.getElementById('cl-preview-body');
+        previewBody.innerHTML = '';
+        let grandTotal = 0;
+        items.forEach(item => {
+          const lineTotal = item.price * item.quantity;
+          grandTotal += lineTotal;
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="font-size:0.83rem;color:#f0ebe4;padding:5px 0;">${item.name}</td>
+            <td style="text-align:center;font-size:0.83rem;color:#aaa;padding:5px 8px;">×${item.quantity}</td>
+            <td style="text-align:right;font-size:0.83rem;color:#f0ebe4;padding:5px 0;">${item.price ? '$'+(item.price/100).toFixed(2) : '—'}</td>`;
+          previewBody.appendChild(row);
+        });
+        document.getElementById('cl-preview-total').textContent =
+          grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';
       } catch(e) {
         alert('Error: ' + e.message);
       } finally {

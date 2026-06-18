@@ -3790,10 +3790,16 @@
           const lineTotal = item.price * item.quantity;
           grandTotal += lineTotal;
           const row = document.createElement('tr');
-          row.innerHTML = `
-            <td style="font-size:0.83rem;color:#f0ebe4;padding:5px 0;">${item.name}</td>
-            <td style="text-align:center;font-size:0.83rem;color:#aaa;padding:5px 8px;">×${item.quantity}</td>
-            <td style="text-align:right;font-size:0.83rem;color:#f0ebe4;padding:5px 0;">${item.price ? '$'+(item.price/100).toFixed(2) : '—'}</td>`;
+          const nameTd  = document.createElement('td');
+          nameTd.style.cssText  = 'font-size:0.83rem;color:#f0ebe4;padding:5px 0;';
+          nameTd.textContent    = item.name;
+          const qtyTd   = document.createElement('td');
+          qtyTd.style.cssText   = 'text-align:center;font-size:0.83rem;color:#aaa;padding:5px 8px;';
+          qtyTd.textContent     = '×' + item.quantity;
+          const priceTd = document.createElement('td');
+          priceTd.style.cssText = 'text-align:right;font-size:0.83rem;color:#f0ebe4;padding:5px 0;';
+          priceTd.textContent   = item.price ? '$' + (item.price / 100).toFixed(2) : '—';
+          row.append(nameTd, qtyTd, priceTd);
           previewBody.appendChild(row);
         });
         document.getElementById('cl-preview-total').textContent =

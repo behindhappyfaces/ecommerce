@@ -264,13 +264,14 @@ function renderCart() {
   const itemsWrap = document.createElement('div');
   itemsWrap.className = 'cart-items';
 
-  // Only render items whose product id exists in PRODUCTS (extra safety)
+  // Render known products AND custom items (those with a stored name field)
   const adminSub   = getAdminSub();
   const subscribing = !!adminSub;
 
-  cart.items.filter(({ id }) => PRODUCTS[id]).forEach(({ id, qty, price: itemPrice }) => {
+  cart.items.filter(({ id, name }) => PRODUCTS[id] || name).forEach(({ id, qty, price: itemPrice, name: storedName }) => {
     const p = PRODUCTS[id];
-    const basePrice = itemPrice || p.price;
+    const displayName  = (p && p.name) || storedName || id;
+    const basePrice    = itemPrice || (p ? p.price : 0);
     const displayPrice = basePrice;
     const item = document.createElement('div');
     item.className = 'cart-item';
@@ -278,15 +279,16 @@ function renderCart() {
 
     const img = document.createElement('img');
     img.className = 'cart-item__image';
-    img.src = p.image;
-    img.alt = p.name;
+    img.src = (p && p.image) || '';
+    img.alt = displayName;
+    if (!p || !p.image) img.style.display = 'none';
 
     const info = document.createElement('div');
     info.className = 'cart-item__info';
 
     const name = document.createElement('p');
     name.className = 'cart-item__name';
-    name.textContent = p.name;
+    name.textContent = displayName;
 
     const price = document.createElement('p');
     price.className = 'cart-item__price';
@@ -1146,8 +1148,11 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
   btn.disabled = true;
 
   const items = cart.items
-    .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({ id, name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+    .filter(({ id, name }) => PRODUCTS[id] || name)
+    .map(({ id, qty, price, name: storedName }) => {
+      const p = PRODUCTS[id];
+      return { id, name: (p && p.name) || storedName || id, price: price || (p ? p.price : 0), quantity: qty };
+    });
 
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
@@ -1236,12 +1241,11 @@ async function checkoutSubscription(deliveryMethod, pickupLocation, pickupContac
   btn.disabled = true;
 
   const items = cart.items
-    .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({
-      name: PRODUCTS[id].name,
-      price: price || PRODUCTS[id].price,
-      quantity: qty,
-    }));
+    .filter(({ id, name }) => PRODUCTS[id] || name)
+    .map(({ id, qty, price, name: storedName }) => {
+      const p = PRODUCTS[id];
+      return { name: (p && p.name) || storedName || id, price: price || (p ? p.price : 0), quantity: qty };
+    });
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'ship' };
@@ -2374,7 +2378,9 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         d.items.forEach(function(item) {
           var pid = (item.id && PRODUCTS[item.id]) ? item.id :
             Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
-          if (pid) subCart.items.push({ id: pid, qty: item.quantity || item.qty || 1, price: item.price ?? PRODUCTS[pid].price });
+          var cartItem = { id: pid || item.id, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0) };
+          if (!pid && item.name) cartItem.name = item.name;
+          subCart.items.push(cartItem);
         });
         if (subCart.items.length) localStorage.setItem('hoto-cart', JSON.stringify(subCart));
         localStorage.setItem('hoto-admin-sub', JSON.stringify({ token: rc, subName: d.subName, subPrice: d.subPrice }));
@@ -2390,10 +2396,12 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
 
       var cart = { items: [] };
       d.items.forEach(function(item) {
-        // Prefer id-based lookup; fall back to name match
+        // Prefer id-based lookup; fall back to name match; keep custom items with stored name
         var pid = (item.id && PRODUCTS[item.id]) ? item.id :
           Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
-        if (pid) cart.items.push({ id: pid, qty: item.quantity || item.qty || 1, price: item.price ?? PRODUCTS[pid].price });
+        var cartItem = { id: pid || item.id, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0) };
+        if (!pid && item.name) cartItem.name = item.name;
+        cart.items.push(cartItem);
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));

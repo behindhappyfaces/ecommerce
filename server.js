@@ -46,7 +46,7 @@ async function sheetsEnsureTab(tabName) {
     await sheetsClient.spreadsheets.values.append({
       spreadsheetId: SHEETS_SPREADSHEET_ID,
       range: `${tabName}!A1`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       requestBody: { values: [['Date', 'Name', 'Email', 'Phone', 'Items', 'Total', 'Source', 'Notes', 'Cart Link']] },
     });
   }
@@ -63,7 +63,7 @@ async function sheetsRecordCustomer({ name, email, phone, source, items = [], to
     await sheetsClient.spreadsheets.values.append({
       spreadsheetId: SHEETS_SPREADSHEET_ID,
       range: `${tab}!A1`,
-      valueInputOption: 'USER_ENTERED',
+      valueInputOption: 'RAW',
       requestBody: { values: [row] },
     });
   }

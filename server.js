@@ -1827,6 +1827,94 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
   }
 });
 
+// Send a cart link email to a customer
+app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
+  const { to, name, cartUrl, note, items = [], total } = req.body || {};
+  if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
+
+  const greeting = name ? `Hi ${name},` : 'Hello,';
+  const noteBlock = note ? `<p style="font-style:italic;color:#5a7a5b;">${note}</p>` : '';
+
+  const itemRows = items.map(r =>
+    `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e2d6;font-size:14px;color:#2C3E2D;">${r.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e2d6;font-size:14px;color:#888;text-align:center;">${r.qty}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e8e2d6;font-size:14px;color:#2C3E2D;text-align:right;">${r.price}</td>
+    </tr>`
+  ).join('');
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0ebe4;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0ebe4;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr><td style="background:#2C3E2D;padding:32px 36px;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(245,240,232,0.6);">Heart of Texas Organics</p>
+          <h1 style="margin:0;font-size:22px;color:#F5F0E8;font-weight:400;">Your Farm Order is Ready 🌿</h1>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="padding:32px 36px;">
+          <p style="margin:0 0 16px;font-size:16px;color:#2C3E2D;">${greeting}</p>
+          ${noteBlock}
+          <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">
+            We've put together a custom order just for you. Review your items below and click the button to complete your purchase — it only takes a minute!
+          </p>
+
+          ${items.length ? `
+          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e2d6;border-radius:10px;overflow:hidden;margin-bottom:24px;">
+            <thead>
+              <tr style="background:#F5F0E8;">
+                <th style="padding:10px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8B4A2F;text-align:left;font-weight:600;">Item</th>
+                <th style="padding:10px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8B4A2F;text-align:center;font-weight:600;">Qty</th>
+                <th style="padding:10px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8B4A2F;text-align:right;font-weight:600;">Price</th>
+              </tr>
+            </thead>
+            <tbody>${itemRows}</tbody>
+            ${total ? `<tfoot><tr>
+              <td colspan="2" style="padding:12px;font-weight:700;font-size:14px;color:#2C3E2D;border-top:2px solid #e8e2d6;">Total</td>
+              <td style="padding:12px;font-weight:700;font-size:16px;color:#8B4A2F;text-align:right;border-top:2px solid #e8e2d6;">${total}</td>
+            </tr></tfoot>` : ''}
+          </table>` : ''}
+
+          <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:28px;">
+            <a href="${cartUrl}" style="display:inline-block;padding:16px 36px;background:#2C3E2D;color:#F5F0E8;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-radius:10px;">
+              Complete My Order →
+            </a>
+          </td></tr></table>
+
+          <p style="margin:0;font-size:13px;color:#888;line-height:1.6;">
+            Or copy this link into your browser:<br>
+            <a href="${cartUrl}" style="color:#8B4A2F;word-break:break-all;">${cartUrl}</a>
+          </p>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#F5F0E8;padding:20px 36px;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#888;">Questions? Reply to this email or reach us at <a href="mailto:operations@heartoftexasorganics.com" style="color:#8B4A2F;">operations@heartoftexasorganics.com</a></p>
+          <p style="margin:6px 0 0;font-size:11px;color:#aaa;">Heart of Texas Organics · Dripping Springs, TX</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await sendEmailTo(to, 'Your custom order from Heart of Texas Organics 🌿', html);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[send-cart-link-email]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // TEMP: create FREE test promo code using this server's Stripe key
 app.post('/admin/create-test-promo', requireAdmin, async (req, res) => {
   try {

@@ -1042,6 +1042,18 @@
 
     <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:20px;">+ Add Custom Item</button>
 
+    <!-- Customer info for email -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;max-width:560px;">
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Name</label>
+        <input id="cl-cust-name" type="text" placeholder="Jane Smith" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Email</label>
+        <input id="cl-cust-email" type="email" placeholder="jane@email.com" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+    </div>
+
     <button id="cl-generate" class="btn-action" style="margin-bottom:16px;">Generate Cart Link</button>
 
     <div id="cl-result" style="display:none;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:16px;max-width:560px;">
@@ -1071,6 +1083,30 @@
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <!-- Send email section -->
+      <div style="margin-top:16px;border-top:1px solid #333;padding-top:14px;">
+        <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin:0 0 10px;">Send to Customer</p>
+        <div style="background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:12px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:0.75rem;color:#888;">To:</span>
+            <span id="cl-email-preview-to" style="font-size:0.75rem;color:#f0ebe4;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:0.75rem;color:#888;">Subject:</span>
+            <span style="font-size:0.75rem;color:#f0ebe4;">Your order from Heart of Texas Organics 🌿</span>
+          </div>
+          <div style="font-size:0.75rem;color:#888;border-top:1px solid #222;padding-top:8px;margin-top:4px;line-height:1.5;">
+            Hi <span id="cl-email-preview-name" style="color:#f0ebe4;"></span>, your custom farm order is ready! Click the link below to review and complete your purchase…
+          </div>
+        </div>
+        <textarea id="cl-email-note" placeholder="Add a personal note to the email (optional)…" rows="2" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.82rem;resize:vertical;margin-bottom:10px;box-sizing:border-box;font-family:inherit;"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="cl-send-email" class="btn-action" style="background:var(--terra);">✉ Send Email to Customer</button>
+          <span id="cl-send-msg" style="font-size:0.75rem;display:none;"></span>
+        </div>
+        <p id="cl-no-email-warning" style="font-size:0.75rem;color:#e07a5f;margin:6px 0 0;display:none;">⚠ Enter a customer email above before generating the link to enable sending.</p>
       </div>
     </div>
   </div>
@@ -3804,10 +3840,61 @@
         });
         document.getElementById('cl-preview-total').textContent =
           grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';
+
+        // Update email preview pane
+        const custName  = document.getElementById('cl-cust-name').value.trim();
+        const custEmail = document.getElementById('cl-cust-email').value.trim();
+        document.getElementById('cl-email-preview-to').textContent   = custEmail || '—';
+        document.getElementById('cl-email-preview-name').textContent = custName  || 'there';
+        document.getElementById('cl-no-email-warning').style.display = custEmail ? 'none' : 'block';
+
       } catch(e) {
         alert('Error: ' + e.message);
       } finally {
         btn.textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link'; btn.disabled = false;
+      }
+    });
+
+    // Send email to customer
+    document.getElementById('cl-send-email').addEventListener('click', async () => {
+      const custEmail = document.getElementById('cl-cust-email').value.trim();
+      const custName  = document.getElementById('cl-cust-name').value.trim();
+      const cartUrl   = document.getElementById('cl-link').value;
+      const note      = document.getElementById('cl-email-note').value.trim();
+      const msgEl     = document.getElementById('cl-send-msg');
+
+      if (!custEmail) {
+        document.getElementById('cl-no-email-warning').style.display = 'block';
+        return;
+      }
+      if (!cartUrl) { alert('Generate the cart link first.'); return; }
+
+      const sendBtn = document.getElementById('cl-send-email');
+      sendBtn.textContent = 'Sending…'; sendBtn.disabled = true;
+      msgEl.style.display = 'none';
+
+      // Collect items for the email table
+      const rows = [...document.querySelectorAll('#cl-preview-body tr')].map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return { name: tds[0]?.textContent || '', qty: tds[1]?.textContent || '', price: tds[2]?.textContent || '' };
+      });
+      const total = document.getElementById('cl-preview-total').textContent;
+
+      try {
+        const res = await fetch('/admin/send-cart-link-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
+          body: JSON.stringify({ to: custEmail, name: custName, cartUrl, note, items: rows, total }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed to send');
+        msgEl.textContent = '✓ Email sent to ' + custEmail;
+        msgEl.style.cssText = 'font-size:0.75rem;color:#6fcf97;display:inline;';
+      } catch(e) {
+        msgEl.textContent = '✗ ' + e.message;
+        msgEl.style.cssText = 'font-size:0.75rem;color:#e07a5f;display:inline;';
+      } finally {
+        sendBtn.textContent = '✉ Send Email to Customer'; sendBtn.disabled = false;
       }
     });
 

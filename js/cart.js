@@ -2639,17 +2639,13 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));
-        // Apply admin discount from the cart link if present
+        // Calculate discount cents — kept in closure so showRestoredCart can use it directly
+        var discCents = 0;
         if (d.discount && d.discount.amount > 0) {
-          var subtotal = cart.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
-          var discCents = d.discount.type === 'percent'
-            ? Math.round(subtotal * d.discount.amount / 100)
+          var linkSubtotal = cart.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
+          discCents = d.discount.type === 'percent'
+            ? Math.round(linkSubtotal * d.discount.amount / 100)
             : Math.round(d.discount.amount * 100);
-          localStorage.setItem('hoto-promo-code', d.discount.label || 'Discount');
-          localStorage.setItem('hoto-promo-amt', String(discCents));
-        } else {
-          localStorage.removeItem('hoto-promo-code');
-          localStorage.removeItem('hoto-promo-amt');
         }
         // One-time purchase link — clear any stale subscription state so
         // the cart doesn't inherit a previous box customizer session
@@ -2710,11 +2706,25 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
             var subtotal = cartData.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
             var footer = document.createElement('div');
             footer.className = 'cart-footer';
+
+            // Show discount row if one was set on this cart link
+            var appliedDiscCents = (typeof discCents !== 'undefined' && discCents > 0) ? discCents : 0;
+            var appliedDiscLabel = (d.discount && d.discount.label) ? d.discount.label : 'Discount';
+            if (appliedDiscCents > 0) {
+              var discRow = document.createElement('p');
+              discRow.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;color:#2a7a2a;margin:0 0 6px;display:flex;justify-content:space-between;';
+              var discLbl = document.createElement('span'); discLbl.textContent = appliedDiscLabel;
+              var discAmt = document.createElement('span'); discAmt.textContent = '-$' + (appliedDiscCents / 100).toFixed(2);
+              discRow.appendChild(discLbl); discRow.appendChild(discAmt);
+              footer.appendChild(discRow);
+            }
+
+            var displayTotal = subtotal - appliedDiscCents;
             var totalRow = document.createElement('div');
             totalRow.className = 'cart-footer__total';
-            var lbl = document.createElement('span'); lbl.textContent = 'Subtotal';
+            var lbl = document.createElement('span'); lbl.textContent = appliedDiscCents > 0 ? 'Total' : 'Subtotal';
             var amt = document.createElement('span'); amt.id = 'cart-total';
-            amt.textContent = '$' + (subtotal / 100).toFixed(2);
+            amt.textContent = '$' + (displayTotal / 100).toFixed(2);
             totalRow.appendChild(lbl); totalRow.appendChild(amt);
             var noteEl = document.createElement('p');
             noteEl.className = 'cart-footer__note';

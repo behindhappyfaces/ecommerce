@@ -2405,6 +2405,10 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));
+        // One-time purchase link — clear any stale subscription state so
+        // the cart doesn't inherit a previous box customizer session
+        localStorage.removeItem('hoto-admin-sub');
+        localStorage.removeItem('hoto-subscribe');
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());

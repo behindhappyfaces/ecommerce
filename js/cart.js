@@ -432,6 +432,33 @@ function renderCart() {
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
 
+  // Subscribe & Save toggle — only show when cart has a subscription box item
+  const hasBoxItem = getCart().items.some(i => BOX_ITEM_IDS.has(i.id));
+  if (hasBoxItem && !adminSub) {
+    const subToggleWrap = document.createElement('label');
+    subToggleWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--color-cream,#F5F0E8);border-radius:10px;cursor:pointer;margin-bottom:10px;';
+    const subToggleCb = document.createElement('input');
+    subToggleCb.type = 'checkbox';
+    subToggleCb.checked = subscribing;
+    subToggleCb.style.cssText = 'width:16px;height:16px;accent-color:var(--color-green,#2C3E2D);flex-shrink:0;';
+    const subToggleText = document.createElement('div');
+    const subToggleLine1 = document.createElement('span');
+    subToggleLine1.style.cssText = 'font-family:var(--font-sans);font-size:0.86rem;font-weight:600;color:var(--color-green,#2C3E2D);display:block;';
+    subToggleLine1.textContent = 'Subscribe & Save';
+    const subToggleLine2 = document.createElement('span');
+    subToggleLine2.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.55);display:block;margin-top:2px;';
+    subToggleLine2.textContent = 'Get this box delivered monthly · cancel anytime';
+    subToggleText.appendChild(subToggleLine1);
+    subToggleText.appendChild(subToggleLine2);
+    subToggleWrap.appendChild(subToggleCb);
+    subToggleWrap.appendChild(subToggleText);
+    subToggleCb.addEventListener('change', () => {
+      setSubscribing(subToggleCb.checked);
+      renderCart();
+    });
+    footer.appendChild(subToggleWrap);
+  }
+
   const note = document.createElement('p');
   note.className = 'cart-footer__note';
   note.textContent = subscribing ? 'Charged monthly · cancel anytime' : 'Shipping calculated at checkout';

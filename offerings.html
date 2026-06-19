@@ -913,8 +913,9 @@
         updateCountdown();
         setInterval(updateCountdown, 30000);
 
-        // Show subscription 10% popup on offerings page load
-        if (!sessionStorage.getItem('subPopupSeen')) {
+        // Show subscription 10% popup — skip if customer arrived via a cart link
+        var hasCartLink = new URLSearchParams(window.location.search).has('rc');
+        if (!hasCartLink && !sessionStorage.getItem('subPopupSeen')) {
           setTimeout(function() {
             var p = document.getElementById('subPopup');
             if (p) { p.hidden = false; p.querySelector('input').focus(); }

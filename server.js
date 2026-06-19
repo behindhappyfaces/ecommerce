@@ -165,6 +165,7 @@ async function sendEmailTo(to, subject, html, attachments = [], text = '') {
   if (resendClient) {
     const payload = {
       from: `Heart of Texas Organics <${FROM_EMAIL}>`,
+      reply_to: FROM_EMAIL,
       to,
       subject,
       html,
@@ -178,6 +179,7 @@ async function sendEmailTo(to, subject, html, attachments = [], text = '') {
   } else if (smtpTransporter) {
     const msg = {
       from: `Heart of Texas Organics <${process.env.OUTLOOK_USER}>`,
+      replyTo: FROM_EMAIL,
       to,
       subject,
       html,

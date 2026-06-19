@@ -2608,17 +2608,12 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        function launchSubCart(attempts) {
-          attempts = attempts || 0;
-          injectCartDrawer(); injectCartIcon();
-          if (!document.getElementById('cart-body') && attempts < 40) {
-            setTimeout(function() { launchSubCart(attempts + 1); }, 50); return;
-          }
-          renderCart(); openCart();
+        function launchSubCart() { renderCart(); openCart(); }
+        if (window._hotoCartReady) {
+          launchSubCart();
+        } else {
+          window._hotoRestorePending = launchSubCart;
         }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() { launchSubCart(0); });
-        } else { launchSubCart(0); }
         return;
       }
 
@@ -2640,23 +2635,17 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        // Poll until #cart-body exists, then render and open
-        function showRestoredCart(attempts) {
-          attempts = attempts || 0;
-          injectCartDrawer();
-          injectCartIcon();
-          var body = document.getElementById('cart-body');
-          if (!body && attempts < 40) {
-            setTimeout(function() { showRestoredCart(attempts + 1); }, 50);
-            return;
-          }
+        function showRestoredCart() {
           renderCart();
           openCart();
         }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() { showRestoredCart(0); });
+        // If cart is already initialised (DOMContentLoaded has fired), run now.
+        // Otherwise store as a pending callback — the DOMContentLoaded handler
+        // at the bottom of this file will call it after all injections are done.
+        if (window._hotoCartReady) {
+          showRestoredCart();
         } else {
-          showRestoredCart(0);
+          window._hotoRestorePending = showRestoredCart;
         }
       }
     })
@@ -2690,4 +2679,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); } else { addItem(id); }
     });
   });
+
+  // Signal that cart is fully initialised — fire any pending restore from a cart link
+  window._hotoCartReady = true;
+  if (typeof window._hotoRestorePending === 'function') {
+    window._hotoRestorePending();
+    window._hotoRestorePending = null;
+  }
 });

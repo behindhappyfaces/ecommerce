@@ -336,13 +336,13 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
-  // Promo code row
+  // Promo code row — allowed for both one-time and subscription orders
   const hasTurkey = getCart().items.some(i => i.id === 'thanksgiving-turkey');
-  const savedPromo = subscribing ? '' : (localStorage.getItem('hoto-promo-code') || '');
-  const savedPromoAmt = subscribing ? 0 : parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
+  const savedPromo    = localStorage.getItem('hoto-promo-code') || '';
+  const savedPromoAmt = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
 
   const promoRow = document.createElement('div');
-  promoRow.style.cssText = 'display:' + (subscribing ? 'none' : 'flex') + ';align-items:center;gap:8px;margin-bottom:8px;';
+  promoRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
 
   const promoInput = document.createElement('input');
   promoInput.type = 'text';
@@ -358,10 +358,11 @@ function renderCart() {
   promoMsg.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;margin:0 0 6px;padding:0;';
   if (savedPromo && savedPromoAmt) {
     promoMsg.style.color = '#2a7a2a';
-    promoMsg.textContent = savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off box order';
+    promoMsg.textContent = subscribing
+      ? savedPromo + ' applied — ' + fmt(savedPromoAmt) + ' off your first week'
+      : savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off order';
   }
 
-  // Welcome coupon is only valid on the three subscription boxes
   const BOX_ITEM_IDS = new Set(['bread-box', 'harvest-subscription', 'farm-box']);
 
   promoBtn.addEventListener('click', async () => {
@@ -373,15 +374,6 @@ function renderCart() {
     }
     const code = promoInput.value.trim().toUpperCase();
     if (!code) return;
-
-    // Coupon only applies to box items — reject early if none in cart
-    const boxItems = getCart().items.filter(i => BOX_ITEM_IDS.has(i.id) && PRODUCTS[i.id]);
-    if (!boxItems.length) {
-      promoMsg.style.color = '#c0392b';
-      promoMsg.textContent = 'This code is only valid on subscription box orders';
-      return;
-    }
-
     promoBtn.textContent = '…';
     promoBtn.disabled = true;
     try {
@@ -393,9 +385,9 @@ function renderCart() {
       const d = await r.json();
       if (d.valid) {
         localStorage.setItem('hoto-promo-code', code);
-        // Discount calculated on box items only — no stacking with individual add-ons
-        const boxTotal = boxItems.reduce((s, i) => s + (i.price ?? PRODUCTS[i.id].price) * i.qty, 0);
-        const discountAmt = Math.round(boxTotal * (d.percent_off / 100));
+        // Subscription: 10% off ONE week only; one-time: off full order
+        const weeklyTotal = getTotal();
+        const discountAmt = Math.round(weeklyTotal * (d.percent_off / 100));
         localStorage.setItem('hoto-promo-amt', discountAmt);
         renderCart();
       } else {
@@ -419,11 +411,12 @@ function renderCart() {
   totalRow.className = 'cart-footer__total';
 
   const totalLabel = document.createElement('span');
-  totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
-
   const monthlyPrice = getMonthlyTotal();
+  // For subscriptions with promo: monthly total shows full recurring price;
+  // first-week discount is shown separately in promoMsg
   const baseTotal    = subscribing ? monthlyPrice : getTotal();
-  const displayTotal = (savedPromoAmt && !subscribing) ? baseTotal - savedPromoAmt : baseTotal;
+  const displayTotal = (!subscribing && savedPromoAmt) ? baseTotal - savedPromoAmt : baseTotal;
+  totalLabel.textContent = subscribing ? 'Monthly total' : 'Subtotal';
 
   const totalAmount = document.createElement('span');
   totalAmount.id = 'cart-total';
@@ -432,9 +425,8 @@ function renderCart() {
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
 
-  // Subscribe & Save toggle — only show when cart has a subscription box item
-  const hasBoxItem = getCart().items.some(i => BOX_ITEM_IDS.has(i.id));
-  if (hasBoxItem && !adminSub) {
+  // Subscribe & Save toggle — show for all carts (except box-customizer flow)
+  if (!adminSub) {
     const subToggleWrap = document.createElement('label');
     subToggleWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--color-cream,#F5F0E8);border-radius:10px;cursor:pointer;margin-bottom:10px;';
     const subToggleCb = document.createElement('input');
@@ -444,19 +436,65 @@ function renderCart() {
     const subToggleText = document.createElement('div');
     const subToggleLine1 = document.createElement('span');
     subToggleLine1.style.cssText = 'font-family:var(--font-sans);font-size:0.86rem;font-weight:600;color:var(--color-green,#2C3E2D);display:block;';
-    subToggleLine1.textContent = 'Subscribe & Save';
+    subToggleLine1.textContent = 'Subscribe & Save — 10% off your first box';
     const subToggleLine2 = document.createElement('span');
     subToggleLine2.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.55);display:block;margin-top:2px;';
-    subToggleLine2.textContent = 'Get this box delivered monthly · cancel anytime';
+    subToggleLine2.textContent = 'Delivered monthly · cancel anytime · subsequent boxes at full price';
     subToggleText.appendChild(subToggleLine1);
     subToggleText.appendChild(subToggleLine2);
     subToggleWrap.appendChild(subToggleCb);
     subToggleWrap.appendChild(subToggleText);
+
+    // Email capture section — shows below toggle when subscribe is checked and email not yet captured
+    const emailCaptureDiv = document.createElement('div');
+    emailCaptureDiv.id = 'cart-email-capture';
+    emailCaptureDiv.style.cssText = 'display:' + (subscribing && !localStorage.getItem('hoto-email-signup') ? 'block' : 'none') + ';padding:12px 14px;background:#fff;border:1px solid rgba(44,62,45,0.12);border-radius:10px;margin-bottom:10px;';
+    const ecLabel = document.createElement('p');
+    ecLabel.style.cssText = 'font-family:var(--font-sans);font-size:0.8rem;color:var(--color-green,#2C3E2D);margin:0 0 8px;font-weight:600;';
+    ecLabel.textContent = '🌿 Enter your email to receive your 10% off code';
+    const ecRow = document.createElement('div');
+    ecRow.style.cssText = 'display:flex;gap:8px;';
+    const ecInput = document.createElement('input');
+    ecInput.type = 'email';
+    ecInput.placeholder = 'your@email.com';
+    ecInput.style.cssText = 'flex:1;padding:8px 10px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;color:var(--color-green,#2C3E2D);';
+    const ecBtn = document.createElement('button');
+    ecBtn.type = 'button';
+    ecBtn.textContent = 'Claim →';
+    ecBtn.style.cssText = 'padding:8px 14px;background:var(--color-green,#2C3E2D);color:#F5F0E8;border:none;border-radius:8px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;';
+    const ecMsg = document.createElement('p');
+    ecMsg.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;margin:6px 0 0;display:none;';
+    ecBtn.addEventListener('click', async () => {
+      const em = ecInput.value.trim();
+      if (!em || !em.includes('@')) { ecMsg.style.color='#c0392b'; ecMsg.style.display='block'; ecMsg.textContent='Please enter a valid email.'; return; }
+      ecBtn.textContent = '…'; ecBtn.disabled = true;
+      try {
+        const r = await fetch('/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: em, source: 'cart' }) });
+        const d = await r.json();
+        localStorage.setItem('hoto-email-signup', em);
+        if (d.promoCode) {
+          localStorage.setItem('hoto-promo-code', d.promoCode);
+          const weeklyTotal = getTotal();
+          localStorage.setItem('hoto-promo-amt', String(Math.round(weeklyTotal * 0.10)));
+        }
+        ecMsg.style.color = '#2a7a2a'; ecMsg.style.display = 'block';
+        ecMsg.textContent = d.already ? 'Welcome back! Check your inbox for your code.' : 'Code sent to ' + em + '! Applied below.';
+        setTimeout(renderCart, 1200);
+      } catch { ecBtn.textContent='Claim →'; ecBtn.disabled=false; }
+    });
+    ecRow.appendChild(ecInput);
+    ecRow.appendChild(ecBtn);
+    emailCaptureDiv.appendChild(ecLabel);
+    emailCaptureDiv.appendChild(ecRow);
+    emailCaptureDiv.appendChild(ecMsg);
+
     subToggleCb.addEventListener('change', () => {
       setSubscribing(subToggleCb.checked);
+      if (!subToggleCb.checked) { localStorage.removeItem('hoto-subscribe'); }
       renderCart();
     });
     footer.appendChild(subToggleWrap);
+    footer.appendChild(emailCaptureDiv);
   }
 
   const note = document.createElement('p');
@@ -2416,8 +2454,8 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         window.history.replaceState({}, '', url.toString());
         function launchSubCart() { renderCart(); openCart(); }
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', launchSubCart);
-        } else { launchSubCart(); }
+          document.addEventListener('DOMContentLoaded', function() { setTimeout(launchSubCart, 0); });
+        } else { setTimeout(launchSubCart, 0); }
         return;
       }
 
@@ -2445,9 +2483,9 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
           openCart();
         }
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', showRestoredCart);
+          document.addEventListener('DOMContentLoaded', function() { setTimeout(showRestoredCart, 0); });
         } else {
-          showRestoredCart();
+          setTimeout(showRestoredCart, 0);
         }
       }
     })

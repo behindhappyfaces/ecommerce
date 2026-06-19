@@ -1868,7 +1868,7 @@ You're receiving this because you signed up at heartoftexasorganics.com. Reply a
     console.warn('[Subscribe] Email send failed:', e.message);
   }
 
-  res.json({ ok: true });
+  res.json({ ok: true, promoCode: promoCode || null });
 });
 
 // --- Test email endpoint ---

@@ -2608,7 +2608,18 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        function launchSubCart() { renderCart(); openCart(); }
+        function launchSubCart() {
+          var od = document.getElementById('cart-drawer');
+          var oo = document.getElementById('cart-overlay');
+          var oi = document.getElementById('cart-icon-btn');
+          if (od) od.parentNode.removeChild(od);
+          if (oo) oo.parentNode.removeChild(oo);
+          if (oi) oi.parentNode.removeChild(oi);
+          injectCartDrawer();
+          injectCartIcon();
+          renderCart();
+          openCart();
+        }
         if (window._hotoCartReady) {
           launchSubCart();
         } else {
@@ -2648,12 +2659,19 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
         function showRestoredCart() {
+          // Tear down any existing drawer and rebuild completely fresh
+          // so there is zero chance of stale DOM state causing blank content
+          var oldDrawer   = document.getElementById('cart-drawer');
+          var oldOverlay  = document.getElementById('cart-overlay');
+          var oldIcon     = document.getElementById('cart-icon-btn');
+          if (oldDrawer)  oldDrawer.parentNode.removeChild(oldDrawer);
+          if (oldOverlay) oldOverlay.parentNode.removeChild(oldOverlay);
+          if (oldIcon)    oldIcon.parentNode.removeChild(oldIcon);
+          injectCartDrawer();
+          injectCartIcon();
           renderCart();
           openCart();
         }
-        // If cart is already initialised (DOMContentLoaded has fired), run now.
-        // Otherwise store as a pending callback — the DOMContentLoaded handler
-        // at the bottom of this file will call it after all injections are done.
         if (window._hotoCartReady) {
           showRestoredCart();
         } else {

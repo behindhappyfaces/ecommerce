@@ -147,6 +147,7 @@ function getMonthlyTotal() {
 // --- DOM Setup ---
 
 function injectCartDrawer() {
+  if (document.getElementById('cart-drawer')) return; // already injected
   const overlay = document.createElement('div');
   overlay.className = 'cart-overlay';
   overlay.id = 'cart-overlay';
@@ -2605,7 +2606,7 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        function launchSubCart() { renderCart(); openCart(); }
+        function launchSubCart() { injectCartDrawer(); injectCartIcon(); renderCart(); openCart(); }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', function() { setTimeout(launchSubCart, 0); });
         } else { setTimeout(launchSubCart, 0); }
@@ -2631,7 +2632,10 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
         // Show the cart drawer so the customer sees their pre-filled order
+        // injectCartDrawer is idempotent — safe to call here before openCart
         function showRestoredCart() {
+          injectCartDrawer();
+          injectCartIcon();
           renderCart();
           openCart();
         }

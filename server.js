@@ -1239,10 +1239,9 @@ app.post('/create-checkout-session', async (req, res) => {
       quantity: item.quantity,
     }));
 
-    // When a pre-validated promo code was applied client-side, bake the discount
-    // into the order as a negative line item so it shows clearly on the Stripe receipt.
-    // Turkey items are excluded from the discount amount by the client.
-    if (promo_code && promo_discount_cents && promo_discount_cents > 0) {
+    // HOTO- welcome codes are subscription-only — reject silently on one-time checkout
+    const isWelcomeCode = (promo_code || '').toUpperCase().startsWith('HOTO-');
+    if (promo_code && promo_discount_cents && promo_discount_cents > 0 && !isWelcomeCode) {
       lineItems.push({
         price_data: {
           currency: 'usd',

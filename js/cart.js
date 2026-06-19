@@ -336,13 +336,17 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
-  // Promo code row — allowed for both one-time and subscription orders
+  // Promo code row — subscription orders only; clear any stored code for one-time carts
   const hasTurkey = getCart().items.some(i => i.id === 'thanksgiving-turkey');
-  const savedPromo    = localStorage.getItem('hoto-promo-code') || '';
-  const savedPromoAmt = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
+  if (!subscribing) {
+    localStorage.removeItem('hoto-promo-code');
+    localStorage.removeItem('hoto-promo-amt');
+  }
+  const savedPromo    = subscribing ? (localStorage.getItem('hoto-promo-code') || '') : '';
+  const savedPromoAmt = subscribing ? parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10) : 0;
 
   const promoRow = document.createElement('div');
-  promoRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+  promoRow.style.cssText = 'display:' + (subscribing ? 'flex' : 'none') + ';align-items:center;gap:8px;margin-bottom:8px;';
 
   const promoInput = document.createElement('input');
   promoInput.type = 'text';

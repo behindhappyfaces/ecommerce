@@ -1031,8 +1031,8 @@
     </div>
 
     <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer note (optional — for your reference only)</label>
-      <input id="cl-note" type="text" placeholder="e.g. Jane Smith — bread box order" style="width:100%;max-width:420px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Personal note to include in the email (optional)</label>
+      <input id="cl-note" type="text" placeholder="e.g. Hi Jane! Here's your custom order…" style="width:100%;max-width:420px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
     </div>
 
     <table class="data" style="max-width:620px;margin-bottom:12px;">
@@ -1123,7 +1123,6 @@
             Hi <span id="cl-email-preview-name" style="color:#f0ebe4;"></span>, your custom farm order is ready! Click the link below to review and complete your purchase…
           </div>
         </div>
-        <textarea id="cl-email-note" placeholder="Add a personal note to the email (optional)…" rows="2" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.82rem;resize:vertical;margin-bottom:10px;box-sizing:border-box;font-family:inherit;"></textarea>
         <div style="display:flex;gap:8px;align-items:center;">
           <button id="cl-send-email" class="btn-action" style="background:var(--terra);">✉ Send Email to Customer</button>
           <span id="cl-send-msg" style="font-size:0.75rem;display:none;"></span>
@@ -3884,7 +3883,7 @@
       const custPhone  = document.getElementById('cl-cust-phone').value.trim();
       const custSource = document.getElementById('cl-source').value;
       const cartUrl    = document.getElementById('cl-link').value;
-      const note       = document.getElementById('cl-email-note').value.trim();
+      const note       = document.getElementById('cl-note').value.trim();
       const msgEl      = document.getElementById('cl-send-msg');
 
       if (!custEmail) {

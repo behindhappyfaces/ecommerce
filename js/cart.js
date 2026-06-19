@@ -188,11 +188,13 @@ function injectCartDrawer() {
 }
 
 function injectCartIcon() {
+  if (document.getElementById('cart-icon-btn')) return; // already injected
   const nav = document.querySelector('.nav');
   if (!nav) return;
 
   const btn = document.createElement('button');
   btn.className = 'nav__cart';
+  btn.id = 'cart-icon-btn';
   btn.setAttribute('aria-label', 'Open cart');
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

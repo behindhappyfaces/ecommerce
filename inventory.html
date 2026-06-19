@@ -3943,12 +3943,13 @@
       });
       const total = document.getElementById('cl-preview-total').textContent;
 
+      const discAmt2 = parseFloat(document.getElementById('cl-discount-amount').value) || 0;
+      const discount = discAmt2 > 0 ? { amount: discAmt2, type: document.getElementById('cl-discount-type').value, label: document.getElementById('cl-discount-label').value.trim() || 'Discount' } : null;
+
       try {
         const res = await fetch('/admin/send-cart-link-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
-          const discAmt2  = parseFloat(document.getElementById('cl-discount-amount').value) || 0;
-          const discount  = discAmt2 > 0 ? { amount: discAmt2, type: document.getElementById('cl-discount-type').value, label: document.getElementById('cl-discount-label').value.trim() || 'Discount' } : null;
           body: JSON.stringify({ to: custEmail, name: custName, phone: custPhone, source: custSource, cartUrl, note, items: rows, total, discount }),
         });
         const data = await res.json();

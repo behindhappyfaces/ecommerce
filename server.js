@@ -1997,7 +1997,7 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
 
 // Send a cart link email to a customer
 app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
-  const { to, name, phone, source, cartUrl, note, items = [], total } = req.body || {};
+  const { to, name, phone, source, cartUrl, note, items = [], total, discount } = req.body || {};
   if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
 
   const greeting = name ? `Hi ${name},` : 'Hello,';
@@ -2044,6 +2044,10 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
               </tr>
             </thead>
             <tbody>${itemRows}</tbody>
+            ${discount ? `<tr>
+              <td colspan="2" style="padding:8px 12px;font-size:14px;color:#2a7a2a;">${discount.label || 'Discount'}</td>
+              <td style="padding:8px 12px;font-size:14px;color:#2a7a2a;text-align:right;">-${discount.type === 'percent' ? discount.amount + '%' : '$' + discount.amount}</td>
+            </tr>` : ''}
             ${total ? `<tfoot><tr>
               <td colspan="2" style="padding:12px;font-weight:700;font-size:14px;color:#2C3E2D;border-top:2px solid #e8e2d6;">Total</td>
               <td style="padding:12px;font-weight:700;font-size:16px;color:#8B4A2F;text-align:right;border-top:2px solid #e8e2d6;">${total}</td>
@@ -2133,7 +2137,7 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 // --- Cart link builder ---
 app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => {
   try {
-    const { items, note, subscription, subPrice } = req.body || {};
+    const { items, note, subscription, subPrice, discount } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
     if (subscription && (!subPrice || subPrice <= 0)) return res.status(400).json({ error: 'Monthly price required for subscription links' });
 
@@ -2158,6 +2162,7 @@ app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => 
       adminCreated:   true,
       subscription:   subscription || false,
       subPrice:       subscription ? Math.round(subPrice) : null,
+      discount:       discount || null,
     };
     writePendingCarts(carts);
 
@@ -2476,6 +2481,7 @@ app.get('/api/restore-cart', (req, res) => {
       subscription: cart.subscription  || false,
       subPrice:     cart.subPrice      || null,
       subName:      cart.subName       || null,
+      discount:     cart.discount      || null,
     });
   } catch(e) {
     res.status(500).json({ error: 'Could not restore cart' });

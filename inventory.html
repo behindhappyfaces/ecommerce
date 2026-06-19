@@ -1040,7 +1040,24 @@
       <tbody id="cl-product-rows"></tbody>
     </table>
 
-    <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:20px;">+ Add Custom Item</button>
+    <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:16px;">+ Add Custom Item</button>
+
+    <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Discount (optional)</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="cl-discount-amount" type="number" min="0" step="0.01" placeholder="e.g. 10" style="width:100px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+          <select id="cl-discount-type" style="padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+            <option value="percent">% off</option>
+            <option value="fixed">$ off</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Discount Label (shown in cart)</label>
+        <input id="cl-discount-label" type="text" placeholder="e.g. Loyalty discount" style="width:200px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+    </div>
 
     <!-- Customer info for email & CRM -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;max-width:560px;">
@@ -3825,11 +3842,16 @@
       });
 
       const note = document.getElementById('cl-note').value.trim();
+      const discountAmt   = parseFloat(document.getElementById('cl-discount-amount').value) || 0;
+      const discountType  = document.getElementById('cl-discount-type').value;
+      const discountLabel = document.getElementById('cl-discount-label').value.trim() || 'Discount';
       const btn  = document.getElementById('cl-generate');
       btn.textContent = 'Generating…'; btn.disabled = true;
 
+      const discount = discountAmt > 0 ? { amount: discountAmt, type: discountType, label: discountLabel } : null;
+
       try {
-        const body = { items, note, subscription: isSub, subPrice };
+        const body = { items, note, subscription: isSub, subPrice, discount };
         const res  = await fetch('/admin/create-cart-link', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
@@ -3863,6 +3885,19 @@
           row.append(nameTd, qtyTd, priceTd);
           previewBody.appendChild(row);
         });
+        // Show discount row in preview if set
+        if (discount) {
+          const discAmt = discount.type === 'percent'
+            ? Math.round(grandTotal * discount.amount / 100)
+            : Math.round(discount.amount * 100);
+          const discRow = document.createElement('tr');
+          const dName = document.createElement('td'); dName.style.cssText='font-size:0.83rem;color:#6fcf97;padding:5px 0;'; dName.textContent = discount.label || 'Discount';
+          const dQty  = document.createElement('td'); dQty.style.cssText='text-align:center;'; dQty.textContent='';
+          const dPrc  = document.createElement('td'); dPrc.style.cssText='text-align:right;font-size:0.83rem;color:#6fcf97;padding:5px 0;'; dPrc.textContent='-$'+(discAmt/100).toFixed(2);
+          discRow.append(dName, dQty, dPrc);
+          previewBody.appendChild(discRow);
+          grandTotal -= discAmt;
+        }
         document.getElementById('cl-preview-total').textContent =
           grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';
 
@@ -3912,7 +3947,7 @@
         const res = await fetch('/admin/send-cart-link-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
-          body: JSON.stringify({ to: custEmail, name: custName, phone: custPhone, source: custSource, cartUrl, note, items: rows, total }),
+          body: JSON.stringify({ to: custEmail, name: custName, phone: custPhone, source: custSource, cartUrl, note, items: rows, total, discount }),
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'Failed to send');

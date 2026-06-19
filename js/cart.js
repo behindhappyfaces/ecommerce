@@ -2628,6 +2628,18 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));
+        // Apply admin discount from the cart link if present
+        if (d.discount && d.discount.amount > 0) {
+          var subtotal = cart.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
+          var discCents = d.discount.type === 'percent'
+            ? Math.round(subtotal * d.discount.amount / 100)
+            : Math.round(d.discount.amount * 100);
+          localStorage.setItem('hoto-promo-code', d.discount.label || 'Discount');
+          localStorage.setItem('hoto-promo-amt', String(discCents));
+        } else {
+          localStorage.removeItem('hoto-promo-code');
+          localStorage.removeItem('hoto-promo-amt');
+        }
         // One-time purchase link — clear any stale subscription state so
         // the cart doesn't inherit a previous box customizer session
         localStorage.removeItem('hoto-admin-sub');

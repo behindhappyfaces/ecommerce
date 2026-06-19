@@ -1224,8 +1224,9 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
-    if (pickupLocation) body.pickup_location = pickupLocation;
-    if (pickupContact)  body.pickup_contact  = pickupContact;
+    if (pickupLocation)        body.pickup_location    = pickupLocation;
+    if (pickupContact)         body.pickup_contact     = pickupContact;
+    if (pickupContact?.address) body.delivery_address  = pickupContact.address;
     if (promoCode && promoAmt) { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
@@ -1271,9 +1272,13 @@ function applyShipMinimum() {} // shipping disabled — no-op
 function openCartDeliveryModal() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
+  const s1 = document.getElementById('dm-step1'), s2 = document.getElementById('dm-step2');
+  if (s1) s1.style.display = 'block';
+  if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
-  document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
-  document.getElementById('dm-cancel').onclick = closeDeliveryModal;
+  document.getElementById('dm-pickup').onclick   = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2(addr => checkoutSubscription('delivery', null, { address: addr })); };
+  document.getElementById('dm-cancel').onclick   = closeDeliveryModal;
 }
 
 function openAdminSubDeliveryModal() {
@@ -1292,8 +1297,13 @@ function openAdminSubDeliveryModal() {
 function openOneTimeDeliveryChoice() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
+  // Reset to step 1
+  const s1 = document.getElementById('dm-step1'), s2 = document.getElementById('dm-step2');
+  if (s1) s1.style.display = 'block';
+  if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2(addr => checkout('delivery', null, { address: addr })); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -2359,25 +2369,128 @@ function injectDeliveryModal() {
   const box = document.createElement('div');
   box.className = 'sub-prompt delivery-modal';
 
+  // ── Step 1: Pick-up or Delivery ──────────────────────────────────────
+  const step1 = document.createElement('div');
+  step1.id = 'dm-step1';
+
   const heading = document.createElement('p');
   heading.className = 'sub-prompt__heading';
-  heading.textContent = 'How would you like to receive your box?';
+  heading.textContent = 'How would you like to receive your order?';
 
   const opts = document.createElement('div');
   opts.className = 'delivery-modal__options';
-  opts.appendChild(makeDeliveryOpt('dm-pickup', '📍', 'Local pick-up (free)',    'Pick-up details sent after signup'));
+  opts.appendChild(makeDeliveryOpt('dm-pickup', '📍', 'Local pick-up (free)', 'Pick-up details confirmed after checkout'));
+  opts.appendChild(makeDeliveryOpt('dm-delivery', '🚚', 'Delivery', 'Enter your delivery address'));
 
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
   cancelBtn.id = 'dm-cancel';
   cancelBtn.textContent = 'Cancel';
 
-  box.appendChild(heading);
-  box.appendChild(opts);
-  box.appendChild(cancelBtn);
+  step1.appendChild(heading);
+  step1.appendChild(opts);
+  step1.appendChild(cancelBtn);
+
+  // ── Step 2: Delivery address ──────────────────────────────────────────
+  const step2 = document.createElement('div');
+  step2.id = 'dm-step2';
+  step2.style.display = 'none';
+
+  const addrHeading = document.createElement('p');
+  addrHeading.className = 'sub-prompt__heading';
+  addrHeading.textContent = 'Delivery Address';
+
+  const INP_S = 'width:100%;box-sizing:border-box;padding:9px 11px;margin-bottom:8px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);';
+
+  // Saved address notice
+  const savedNotice = document.createElement('div');
+  savedNotice.id = 'dm-saved-addr-notice';
+  savedNotice.style.cssText = 'display:none;background:var(--color-cream,#F5F0E8);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--font-sans);font-size:0.82rem;color:var(--color-green,#2C3E2D);';
+
+  const addrStreet = document.createElement('input');
+  addrStreet.id = 'dm-addr-street'; addrStreet.placeholder = 'Street address'; addrStreet.style.cssText = INP_S;
+  const addrCity = document.createElement('input');
+  addrCity.id = 'dm-addr-city'; addrCity.placeholder = 'City'; addrCity.style.cssText = INP_S;
+
+  const addrRow2 = document.createElement('div');
+  addrRow2.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;';
+  const addrState = document.createElement('input');
+  addrState.id = 'dm-addr-state'; addrState.placeholder = 'State'; addrState.style.cssText = INP_S + 'margin-bottom:0;';
+  const addrZip = document.createElement('input');
+  addrZip.id = 'dm-addr-zip'; addrZip.placeholder = 'ZIP'; addrZip.style.cssText = INP_S + 'margin-bottom:0;';
+  addrRow2.appendChild(addrState);
+  addrRow2.appendChild(addrZip);
+
+  const addrErrMsg = document.createElement('p');
+  addrErrMsg.style.cssText = 'color:#c0392b;font-family:var(--font-sans);font-size:0.75rem;margin:0 0 8px;display:none;';
+
+  const addrActions = document.createElement('div');
+  addrActions.style.cssText = 'display:flex;gap:8px;margin-top:4px;';
+
+  const addrBack = document.createElement('button');
+  addrBack.className = 'sub-prompt__btn sub-prompt__btn--no';
+  addrBack.textContent = '← Back';
+  addrBack.onclick = () => { step2.style.display = 'none'; step1.style.display = 'block'; };
+
+  const addrConfirm = document.createElement('button');
+  addrConfirm.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  addrConfirm.id = 'dm-addr-confirm';
+  addrConfirm.textContent = 'Continue to Checkout →';
+
+  addrActions.appendChild(addrBack);
+  addrActions.appendChild(addrConfirm);
+
+  step2.appendChild(addrHeading);
+  step2.appendChild(savedNotice);
+  step2.appendChild(addrStreet);
+  step2.appendChild(addrCity);
+  step2.appendChild(addrRow2);
+  step2.appendChild(addrErrMsg);
+  step2.appendChild(addrActions);
+
+  box.appendChild(step1);
+  box.appendChild(step2);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeDeliveryModal(); });
+}
+
+function _openDeliveryStep2(onConfirm) {
+  const step1 = document.getElementById('dm-step1');
+  const step2 = document.getElementById('dm-step2');
+  if (!step2) return;
+  step1.style.display = 'none';
+  step2.style.display = 'block';
+
+  // Pre-fill from localStorage if saved
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('hoto-delivery-address') || 'null'); } catch { return null; } })();
+  const notice = document.getElementById('dm-saved-addr-notice');
+  if (saved && saved.street) {
+    notice.style.display = 'block';
+    notice.textContent = '📍 Using saved address: ' + saved.street + ', ' + saved.city + ', ' + saved.state + ' ' + saved.zip + ' — update below to change.';
+    document.getElementById('dm-addr-street').value = saved.street || '';
+    document.getElementById('dm-addr-city').value   = saved.city   || '';
+    document.getElementById('dm-addr-state').value  = saved.state  || '';
+    document.getElementById('dm-addr-zip').value    = saved.zip    || '';
+  } else {
+    notice.style.display = 'none';
+  }
+
+  document.getElementById('dm-addr-confirm').onclick = () => {
+    const street = document.getElementById('dm-addr-street').value.trim();
+    const city   = document.getElementById('dm-addr-city').value.trim();
+    const state  = document.getElementById('dm-addr-state').value.trim();
+    const zip    = document.getElementById('dm-addr-zip').value.trim();
+    const errEl  = step2.querySelector('p[style*="color:#c0392b"]');
+    if (!street || !city || !state || !zip) {
+      errEl.textContent = 'Please fill in all address fields.'; errEl.style.display = 'block'; return;
+    }
+    errEl.style.display = 'none';
+    const address = { street, city, state, zip };
+    localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
+    closeDeliveryModal();
+    onConfirm(address);
+  };
 }
 
 let _pendingSubArgs = null;

@@ -1123,6 +1123,10 @@
             Hi <span id="cl-email-preview-name" style="color:#f0ebe4;"></span>, your custom farm order is ready! Click the link below to review and complete your purchase…
           </div>
         </div>
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-size:0.72rem;color:#888;margin-bottom:4px;letter-spacing:0.06em;text-transform:uppercase;">Add a personal note (optional)</label>
+          <textarea id="cl-email-note" placeholder="e.g. Hi Jane! Everything is fresh from this week's harvest…" rows="2" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.82rem;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button id="cl-send-email" class="btn-action" style="background:var(--terra);">✉ Send Email to Customer</button>
           <span id="cl-send-msg" style="font-size:0.75rem;display:none;"></span>
@@ -3883,7 +3887,8 @@
       const custPhone  = document.getElementById('cl-cust-phone').value.trim();
       const custSource = document.getElementById('cl-source').value;
       const cartUrl    = document.getElementById('cl-link').value;
-      const note       = document.getElementById('cl-note').value.trim();
+      const note       = (document.getElementById('cl-email-note').value.trim()) ||
+                         (document.getElementById('cl-note').value.trim());
       const msgEl      = document.getElementById('cl-send-msg');
 
       if (!custEmail) {

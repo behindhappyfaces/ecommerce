@@ -1139,6 +1139,67 @@ function escHtml(str) {
 
 const TURKEY_ITEM_IDS = new Set(['thanksgiving-turkey']);
 
+// =========================================
+// DELIVERY FEE CALCULATOR
+// Origin coordinates stored only in env vars — never in code or client
+// Set HOTO_ORIGIN_LAT and HOTO_ORIGIN_LNG in Render environment
+// =========================================
+
+function haversineMiles(lat1, lon1, lat2, lon2) {
+  const R = 3958.8;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
+  let feeCents;
+  if (distanceMiles <= 20) {
+    feeCents = 1500; // flat $15
+  } else if (distanceMiles <= 25) {
+    feeCents = 1500 + Math.round((distanceMiles - 20) * 0.70 * 100); // $15 + $0.70/mi over 20
+  } else {
+    feeCents = 2500; // flat $25
+  }
+  if (orderTotalCents > 10000) {
+    feeCents = Math.round(feeCents * 0.95); // 5% off delivery when order > $100
+  }
+  return feeCents;
+}
+
+async function geocodeAddress(street, city, state, zip) {
+  const params = new URLSearchParams({ street, city, state, zip, benchmark: '2020', format: 'json' });
+  const url = `https://geocoding.geo.census.gov/geocoder/locations/address?${params}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const data = await res.json();
+  const match = data?.result?.addressMatches?.[0];
+  if (!match) throw new Error('Address not found');
+  return { lat: match.coordinates.y, lng: match.coordinates.x };
+}
+
+app.post('/api/calculate-delivery-fee', express.json(), async (req, res) => {
+  const { street, city, state, zip, order_total_cents } = req.body || {};
+  if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Address fields required' });
+
+  const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT);
+  const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG);
+  if (!originLat || !originLng) return res.status(500).json({ error: 'Delivery origin not configured' });
+
+  try {
+    const { lat, lng } = await geocodeAddress(street, city, state, zip);
+    const miles = haversineMiles(originLat, originLng, lat, lng);
+    const feeCents = calcDeliveryFeeCents(miles, parseInt(order_total_cents, 10) || 0);
+    const discount = parseInt(order_total_cents, 10) > 10000;
+    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, discount_applied: discount });
+  } catch (e) {
+    console.error('[delivery-fee]', e.message);
+    res.status(422).json({ error: 'Could not calculate delivery distance. Please verify your address.' });
+  }
+});
+
 // Validate a promo code without redeeming it
 app.post('/api/validate-promo', express.json(), async (req, res) => {
   const { code } = req.body || {};
@@ -1160,6 +1221,7 @@ app.post('/api/validate-promo', express.json(), async (req, res) => {
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
+            delivery_address, delivery_fee_cents,
             promo_code, promo_discount_cents } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
@@ -1187,6 +1249,24 @@ app.post('/create-checkout-session', async (req, res) => {
         },
         quantity: 1,
       });
+    }
+
+    // Add local delivery fee when delivery_method = 'delivery'
+    if (delivery_method === 'delivery' && delivery_fee_cents > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Local Delivery Fee' },
+          unit_amount: Math.round(delivery_fee_cents),
+        },
+        quantity: 1,
+      });
+      if (delivery_address) {
+        metadata.delivery_street = (delivery_address.street || '').slice(0, 200);
+        metadata.delivery_city   = (delivery_address.city   || '').slice(0, 100);
+        metadata.delivery_state  = (delivery_address.state  || '').slice(0, 10);
+        metadata.delivery_zip    = (delivery_address.zip    || '').slice(0, 10);
+      }
     }
 
     // Add shipping as a line item when a rate was selected

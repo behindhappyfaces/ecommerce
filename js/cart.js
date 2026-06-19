@@ -1224,10 +1224,11 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
-    if (pickupLocation)        body.pickup_location    = pickupLocation;
-    if (pickupContact)         body.pickup_contact     = pickupContact;
-    if (pickupContact?.address) body.delivery_address  = pickupContact.address;
-    if (promoCode && promoAmt) { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
+    if (pickupLocation)                body.pickup_location    = pickupLocation;
+    if (pickupContact)                 body.pickup_contact     = pickupContact;
+    if (pickupContact?.address)        body.delivery_address   = pickupContact.address;
+    if (pickupContact?.deliveryFeeCents) body.delivery_fee_cents = pickupContact.deliveryFeeCents;
+    if (promoCode && promoAmt)         { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1277,7 +1278,7 @@ function openCartDeliveryModal() {
   if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
   document.getElementById('dm-pickup').onclick   = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
-  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2(addr => checkoutSubscription('delivery', null, { address: addr })); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee })); };
   document.getElementById('dm-cancel').onclick   = closeDeliveryModal;
 }
 
@@ -1303,7 +1304,7 @@ function openOneTimeDeliveryChoice() {
   if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
-  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2(addr => checkout('delivery', null, { address: addr })); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkout('delivery', null, { address: addr, deliveryFeeCents: fee })); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -2476,20 +2477,55 @@ function _openDeliveryStep2(onConfirm) {
     notice.style.display = 'none';
   }
 
-  document.getElementById('dm-addr-confirm').onclick = () => {
-    const street = document.getElementById('dm-addr-street').value.trim();
-    const city   = document.getElementById('dm-addr-city').value.trim();
-    const state  = document.getElementById('dm-addr-state').value.trim();
-    const zip    = document.getElementById('dm-addr-zip').value.trim();
-    const errEl  = step2.querySelector('p[style*="color:#c0392b"]');
+  document.getElementById('dm-addr-confirm').onclick = async () => {
+    const street  = document.getElementById('dm-addr-street').value.trim();
+    const city    = document.getElementById('dm-addr-city').value.trim();
+    const state   = document.getElementById('dm-addr-state').value.trim();
+    const zip     = document.getElementById('dm-addr-zip').value.trim();
+    const errEl   = step2.querySelector('p[style*="color:#c0392b"]');
     if (!street || !city || !state || !zip) {
       errEl.textContent = 'Please fill in all address fields.'; errEl.style.display = 'block'; return;
     }
     errEl.style.display = 'none';
+    const confirmBtn = document.getElementById('dm-addr-confirm');
+    confirmBtn.textContent = 'Calculating…'; confirmBtn.disabled = true;
+
+    const orderTotal = getTotal();
+    let feeCents = 1500; // default $15
+    let feeLabel = 'Delivery fee: $15.00';
+    let distanceMiles = null;
+    try {
+      const r = await fetch('/api/calculate-delivery-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street, city, state, zip, order_total_cents: orderTotal }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Could not calculate fee');
+      feeCents = d.fee_cents;
+      distanceMiles = d.miles;
+      const feeStr = '$' + (feeCents / 100).toFixed(2);
+      const discountNote = d.discount_applied ? ' (5% discount applied — order over $100)' : '';
+      const distNote = distanceMiles !== null ? ` · ${distanceMiles} mi` : '';
+      feeLabel = `Delivery fee: ${feeStr}${distNote}${discountNote}`;
+    } catch (err) {
+      errEl.textContent = err.message; errEl.style.display = 'block';
+      confirmBtn.textContent = 'Continue to Checkout →'; confirmBtn.disabled = false;
+      return;
+    }
+
+    // Show fee and ask for final confirmation
+    errEl.style.color = '#2a7a2a'; errEl.style.display = 'block'; errEl.textContent = '✓ ' + feeLabel;
+    confirmBtn.textContent = 'Confirm & Checkout →'; confirmBtn.disabled = false;
+
     const address = { street, city, state, zip };
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
-    closeDeliveryModal();
-    onConfirm(address);
+
+    // Second click = confirmed
+    confirmBtn.onclick = () => {
+      closeDeliveryModal();
+      onConfirm(address, feeCents);
+    };
   };
 }
 

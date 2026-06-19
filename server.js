@@ -943,7 +943,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname), {
+  extensions: ['html'],
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  }
+}));
 
 // =========================================
 // MAGAZINE SUBSCRIPTION  ($6.99 / month)

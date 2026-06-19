@@ -334,6 +334,61 @@ function lineItemsHtml(items) {
 const ORDERS_FILE        = path.join(__dirname, 'orders.json');
 const PENDING_CARTS_FILE = path.join(__dirname, 'pending-carts.json');
 
+// ── Pending carts — PostgreSQL-backed so tokens survive Render redeploys ──
+const { Pool: PgPool } = require('pg');
+let _pcPool = null;
+function getPcPool() {
+  if (!_pcPool && process.env.DATABASE_URL) {
+    _pcPool = new PgPool({ connectionString: process.env.DATABASE_URL });
+  }
+  return _pcPool;
+}
+async function ensurePcTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS pending_carts (
+    token TEXT PRIMARY KEY,
+    data  JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensurePcTable().catch(e => console.warn('[PendingCarts] table init failed:', e.message));
+
+async function readPendingCartsDB() {
+  const pg = getPcPool();
+  if (!pg) return readPendingCarts(); // fallback to file
+  const { rows } = await pg.query('SELECT token, data FROM pending_carts');
+  const obj = {};
+  rows.forEach(r => { obj[r.token] = r.data; });
+  return obj;
+}
+async function getPendingCartDB(token) {
+  const pg = getPcPool();
+  if (!pg) return readPendingCarts()[token] || null;
+  const { rows } = await pg.query('SELECT data FROM pending_carts WHERE token = $1', [token]);
+  return rows[0] ? rows[0].data : null;
+}
+async function setPendingCartDB(token, data) {
+  const pg = getPcPool();
+  if (!pg) {
+    const carts = readPendingCarts();
+    carts[token] = data;
+    writePendingCarts(carts);
+    return;
+  }
+  await pg.query(
+    `INSERT INTO pending_carts (token, data) VALUES ($1, $2)
+     ON CONFLICT (token) DO UPDATE SET data = EXCLUDED.data`,
+    [token, JSON.stringify(data)]
+  );
+}
+async function updatePendingCartDB(token, updates) {
+  const existing = await getPendingCartDB(token);
+  if (!existing) return;
+  await setPendingCartDB(token, { ...existing, ...updates });
+}
+
+
 function readOrders() {
   try { return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8')); }
   catch { return {}; }
@@ -2142,7 +2197,7 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 });
 
 // --- Cart link builder ---
-app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => {
+app.post('/admin/create-cart-link', requireAdmin, express.json(), async (req, res) => {
   try {
     const { items, note, subscription, subPrice, discount } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
@@ -2151,9 +2206,8 @@ app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => 
     const token       = crypto.randomBytes(20).toString('hex');
     const itemSummary = items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : '');
     const subName     = subscription ? `Monthly Box — ${itemSummary}` : null;
-    const carts       = readPendingCarts();
 
-    carts[token] = {
+    const cartData = {
       token,
       phone:          null,
       email:          null,
@@ -2171,7 +2225,8 @@ app.post('/admin/create-cart-link', requireAdmin, express.json(), (req, res) => 
       subPrice:       subscription ? Math.round(subPrice) : null,
       discount:       discount || null,
     };
-    writePendingCarts(carts);
+
+    await setPendingCartDB(token, cartData);
 
     const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
     res.json({ ok: true, token, url: `${siteUrl}/offerings.html?rc=${token}` });
@@ -2474,12 +2529,11 @@ app.post('/api/save-pending-cart', express.json(), (req, res) => {
   }
 });
 
-app.get('/api/restore-cart', (req, res) => {
+app.get('/api/restore-cart', async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'token required' });
-    const carts = readPendingCarts();
-    const cart = carts[token];
+    const cart = await getPendingCartDB(token);
     if (!cart) return res.status(404).json({ error: 'Cart not found or expired' });
     res.json({
       ok:           true,
@@ -2491,6 +2545,7 @@ app.get('/api/restore-cart', (req, res) => {
       discount:     cart.discount      || null,
     });
   } catch(e) {
+    console.error('[restore-cart]', e.message);
     res.status(500).json({ error: 'Could not restore cart' });
   }
 });

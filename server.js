@@ -1221,8 +1221,10 @@ app.post('/api/validate-promo', express.json(), async (req, res) => {
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
-            delivery_address, delivery_fee_cents,
+            delivery_address,
             promo_code, promo_discount_cents } = req.body;
+    // delivery_fee_cents from client is intentionally not destructured — fee is always
+    // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
 
@@ -1251,16 +1253,42 @@ app.post('/create-checkout-session', async (req, res) => {
       });
     }
 
-    // Add local delivery fee when delivery_method = 'delivery'
-    if (delivery_method === 'delivery' && delivery_fee_cents > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: { name: 'Local Delivery Fee' },
-          unit_amount: Math.round(delivery_fee_cents),
-        },
-        quantity: 1,
-      });
+    // Add local delivery fee — fee is always recalculated server-side from the
+    // submitted address; client-supplied delivery_fee_cents is intentionally ignored
+    // to prevent price tampering.
+    if (delivery_method === 'delivery' && delivery_address?.street) {
+      const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT);
+      const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG);
+      if (originLat && originLng) {
+        try {
+          const { lat, lng } = await geocodeAddress(
+            delivery_address.street, delivery_address.city,
+            delivery_address.state,  delivery_address.zip
+          );
+          const miles = haversineMiles(originLat, originLng, lat, lng);
+          const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
+          const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
+          lineItems.push({
+            price_data: {
+              currency: 'usd',
+              product_data: { name: 'Local Delivery Fee' },
+              unit_amount: authoritative_fee,
+            },
+            quantity: 1,
+          });
+        } catch (geoErr) {
+          console.error('[checkout] delivery geocode failed:', geoErr.message);
+          // Still add a fallback flat fee so the order isn't free of delivery cost
+          lineItems.push({
+            price_data: {
+              currency: 'usd',
+              product_data: { name: 'Local Delivery Fee' },
+              unit_amount: 1500,
+            },
+            quantity: 1,
+          });
+        }
+      }
       if (delivery_address) {
         metadata.delivery_street = (delivery_address.street || '').slice(0, 200);
         metadata.delivery_city   = (delivery_address.city   || '').slice(0, 100);

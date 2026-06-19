@@ -1042,8 +1042,8 @@
 
     <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:20px;">+ Add Custom Item</button>
 
-    <!-- Customer info for email -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;max-width:560px;">
+    <!-- Customer info for email & CRM -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;max-width:560px;">
       <div>
         <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Name</label>
         <input id="cl-cust-name" type="text" placeholder="Jane Smith" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
@@ -1051,6 +1051,28 @@
       <div>
         <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Email</label>
         <input id="cl-cust-email" type="email" placeholder="jane@email.com" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;max-width:560px;">
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Phone (optional)</label>
+        <input id="cl-cust-phone" type="tel" placeholder="512-555-0100" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">How did they hear about us?</label>
+        <select id="cl-source" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+          <option value="">— Select source —</option>
+          <option value="BNI">BNI</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Farmers Market">Farmers Market</option>
+          <option value="Word of Mouth">Word of Mouth</option>
+          <option value="Website">Website (Organic)</option>
+          <option value="Email / Newsletter">Email / Newsletter</option>
+          <option value="Referral">Referral / Friend</option>
+          <option value="Text Message">Text Message</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
     </div>
 
@@ -3857,11 +3879,13 @@
 
     // Send email to customer
     document.getElementById('cl-send-email').addEventListener('click', async () => {
-      const custEmail = document.getElementById('cl-cust-email').value.trim();
-      const custName  = document.getElementById('cl-cust-name').value.trim();
-      const cartUrl   = document.getElementById('cl-link').value;
-      const note      = document.getElementById('cl-email-note').value.trim();
-      const msgEl     = document.getElementById('cl-send-msg');
+      const custEmail  = document.getElementById('cl-cust-email').value.trim();
+      const custName   = document.getElementById('cl-cust-name').value.trim();
+      const custPhone  = document.getElementById('cl-cust-phone').value.trim();
+      const custSource = document.getElementById('cl-source').value;
+      const cartUrl    = document.getElementById('cl-link').value;
+      const note       = document.getElementById('cl-email-note').value.trim();
+      const msgEl      = document.getElementById('cl-send-msg');
 
       if (!custEmail) {
         document.getElementById('cl-no-email-warning').style.display = 'block';
@@ -3884,11 +3908,11 @@
         const res = await fetch('/admin/send-cart-link-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
-          body: JSON.stringify({ to: custEmail, name: custName, cartUrl, note, items: rows, total }),
+          body: JSON.stringify({ to: custEmail, name: custName, phone: custPhone, source: custSource, cartUrl, note, items: rows, total }),
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'Failed to send');
-        msgEl.textContent = '✓ Email sent to ' + custEmail;
+        msgEl.textContent = '✓ Email sent' + (data.sheetRecorded ? ' & recorded in spreadsheet' : '');
         msgEl.style.cssText = 'font-size:0.75rem;color:#6fcf97;display:inline;';
       } catch(e) {
         msgEl.textContent = '✗ ' + e.message;

@@ -11,6 +11,65 @@ const db       = require('./db');
 let cron;
 try { cron = require('node-cron'); } catch(e) { console.log('[Cron] node-cron not available'); }
 
+// =========================================
+// GOOGLE SHEETS CRM
+// =========================================
+const SHEETS_SPREADSHEET_ID = '1rJhUBYaDROIzL_plpLLffnAUv-dyy-4VvAIOjSY0pXY';
+const SHEETS_SOURCES = ['BNI','Instagram','Facebook','Farmers Market','Word of Mouth','Website','Email / Newsletter','Referral','Text Message','Other'];
+
+let sheetsClient = null;
+(function initSheets() {
+  const creds = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!creds) { console.log('[Sheets] GOOGLE_SERVICE_ACCOUNT_JSON not set — CRM logging disabled'); return; }
+  try {
+    const { google } = require('googleapis');
+    const key = JSON.parse(Buffer.from(creds, 'base64').toString('utf8'));
+    const auth = new google.auth.GoogleAuth({
+      credentials: key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+    sheetsClient = google.sheets({ version: 'v4', auth });
+    console.log('[Sheets] Google Sheets CRM ready');
+  } catch(e) { console.warn('[Sheets] Init failed:', e.message); }
+})();
+
+async function sheetsEnsureTab(tabName) {
+  if (!sheetsClient) return;
+  const meta = await sheetsClient.spreadsheets.get({ spreadsheetId: SHEETS_SPREADSHEET_ID });
+  const exists = meta.data.sheets.some(s => s.properties.title === tabName);
+  if (!exists) {
+    await sheetsClient.spreadsheets.batchUpdate({
+      spreadsheetId: SHEETS_SPREADSHEET_ID,
+      requestBody: { requests: [{ addSheet: { properties: { title: tabName } } }] },
+    });
+    // Add header row
+    await sheetsClient.spreadsheets.values.append({
+      spreadsheetId: SHEETS_SPREADSHEET_ID,
+      range: `${tabName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [['Date', 'Name', 'Email', 'Phone', 'Items', 'Total', 'Source', 'Notes', 'Cart Link']] },
+    });
+  }
+}
+
+async function sheetsRecordCustomer({ name, email, phone, source, items = [], total, note, cartUrl }) {
+  if (!sheetsClient) return false;
+  const date    = new Date().toLocaleDateString('en-US', { timeZone: 'America/Chicago' });
+  const itemStr = items.map(i => `${i.name} ${i.qty} ${i.price}`).join(' | ');
+  const row     = [date, name || '', email || '', phone || '', itemStr, total || '', source || '', note || '', cartUrl || ''];
+  const tabs    = ['All Customers', source && SHEETS_SOURCES.includes(source) ? source : null].filter(Boolean);
+  for (const tab of tabs) {
+    await sheetsEnsureTab(tab);
+    await sheetsClient.spreadsheets.values.append({
+      spreadsheetId: SHEETS_SPREADSHEET_ID,
+      range: `${tab}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [row] },
+    });
+  }
+  return true;
+}
+
 // Twilio — loads only when credentials are configured
 let twilioClient = null;
 if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
@@ -1829,7 +1888,7 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
 
 // Send a cart link email to a customer
 app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
-  const { to, name, cartUrl, note, items = [], total } = req.body || {};
+  const { to, name, phone, source, cartUrl, note, items = [], total } = req.body || {};
   if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
 
   const greeting = name ? `Hi ${name},` : 'Hello,';
@@ -1908,7 +1967,13 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
 
   try {
     await sendEmailTo(to, 'Your custom order from Heart of Texas Organics 🌿', html);
-    res.json({ ok: true });
+    let sheetRecorded = false;
+    try {
+      sheetRecorded = await sheetsRecordCustomer({ name, email: to, phone, source, items, total, note, cartUrl });
+    } catch(sheetErr) {
+      console.warn('[Sheets] Record failed (non-fatal):', sheetErr.message);
+    }
+    res.json({ ok: true, sheetRecorded });
   } catch (err) {
     console.error('[send-cart-link-email]', err.message);
     res.status(500).json({ error: err.message });

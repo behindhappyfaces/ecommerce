@@ -2608,10 +2608,17 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        function launchSubCart() { injectCartDrawer(); injectCartIcon(); renderCart(); openCart(); }
+        function launchSubCart(attempts) {
+          attempts = attempts || 0;
+          injectCartDrawer(); injectCartIcon();
+          if (!document.getElementById('cart-body') && attempts < 40) {
+            setTimeout(function() { launchSubCart(attempts + 1); }, 50); return;
+          }
+          renderCart(); openCart();
+        }
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() { setTimeout(launchSubCart, 0); });
-        } else { setTimeout(launchSubCart, 0); }
+          document.addEventListener('DOMContentLoaded', function() { launchSubCart(0); });
+        } else { launchSubCart(0); }
         return;
       }
 
@@ -2633,18 +2640,23 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());
-        // Show the cart drawer so the customer sees their pre-filled order
-        // injectCartDrawer is idempotent — safe to call here before openCart
-        function showRestoredCart() {
+        // Poll until #cart-body exists, then render and open
+        function showRestoredCart(attempts) {
+          attempts = attempts || 0;
           injectCartDrawer();
           injectCartIcon();
+          var body = document.getElementById('cart-body');
+          if (!body && attempts < 40) {
+            setTimeout(function() { showRestoredCart(attempts + 1); }, 50);
+            return;
+          }
           renderCart();
           openCart();
         }
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() { setTimeout(showRestoredCart, 0); });
+          document.addEventListener('DOMContentLoaded', function() { showRestoredCart(0); });
         } else {
-          setTimeout(showRestoredCart, 0);
+          showRestoredCart(0);
         }
       }
     })

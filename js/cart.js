@@ -2495,12 +2495,10 @@ function _openDeliveryStep2(onConfirm) {
     }
     errEl.style.display = 'none';
     const confirmBtn = document.getElementById('dm-addr-confirm');
-    confirmBtn.textContent = 'Calculating…'; confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Calculating delivery fee…'; confirmBtn.disabled = true;
 
     const orderTotal = getTotal();
-    let feeCents = 1500; // default $15
-    let feeLabel = 'Delivery fee: $15.00';
-    let distanceMiles = null;
+    let feeCents = 1500; // flat $15 fallback
     try {
       const r = await fetch('/api/calculate-delivery-fee', {
         method: 'POST',
@@ -2508,31 +2506,23 @@ function _openDeliveryStep2(onConfirm) {
         body: JSON.stringify({ street, city, state, zip, order_total_cents: orderTotal }),
       });
       const d = await r.json();
-      if (!r.ok) throw new Error(d.error || 'Could not calculate fee');
-      feeCents = d.fee_cents;
-      distanceMiles = d.miles;
-      const feeStr = '$' + (feeCents / 100).toFixed(2);
-      const discountNote = d.discount_applied ? ' (5% discount applied — order over $100)' : '';
-      const distNote = distanceMiles !== null ? ` · ${distanceMiles} mi` : '';
-      feeLabel = `Delivery fee: ${feeStr}${distNote}${discountNote}`;
-    } catch (err) {
-      errEl.textContent = err.message; errEl.style.display = 'block';
-      confirmBtn.textContent = 'Continue to Checkout →'; confirmBtn.disabled = false;
-      return;
+      if (r.ok) {
+        feeCents = d.fee_cents;
+        const feeStr = '$' + (feeCents / 100).toFixed(2);
+        const extra = d.discount_applied ? ' (5% off — order over $100)' : '';
+        errEl.style.color = '#2a7a2a'; errEl.style.display = 'block';
+        errEl.textContent = `✓ Delivery fee: ${feeStr}${d.miles ? ' · ' + d.miles + ' mi' : ''}${extra}`;
+      }
+      // If not ok, use fallback $15 and proceed
+    } catch (_) {
+      // Network error — use fallback $15 and proceed
     }
-
-    // Show fee and ask for final confirmation
-    errEl.style.color = '#2a7a2a'; errEl.style.display = 'block'; errEl.textContent = '✓ ' + feeLabel;
-    confirmBtn.textContent = 'Confirm & Checkout →'; confirmBtn.disabled = false;
 
     const address = { street, city, state, zip };
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
-
-    // Second click = confirmed
-    confirmBtn.onclick = () => {
-      closeDeliveryModal();
-      onConfirm(address, feeCents);
-    };
+    confirmBtn.textContent = 'Proceeding to checkout…';
+    closeDeliveryModal();
+    onConfirm(address, feeCents);
   };
 }
 

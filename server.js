@@ -1246,9 +1246,8 @@ app.post('/api/calculate-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip, order_total_cents } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Address fields required' });
 
-  const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT);
-  const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG);
-  if (!originLat || !originLng) return res.status(500).json({ error: 'Delivery origin not configured' });
+  const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT) || 30.1741;
+  const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG) || -98.0874;
 
   try {
     const { lat, lng } = await geocodeAddress(street, city, state, zip);
@@ -1318,8 +1317,8 @@ app.post('/create-checkout-session', async (req, res) => {
     // submitted address; client-supplied delivery_fee_cents is intentionally ignored
     // to prevent price tampering.
     if (delivery_method === 'delivery' && delivery_address?.street) {
-      const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT);
-      const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG);
+      const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT) || 30.1741;
+      const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG) || -98.0874;
       if (originLat && originLng) {
         try {
           const { lat, lng } = await geocodeAddress(

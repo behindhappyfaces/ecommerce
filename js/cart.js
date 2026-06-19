@@ -429,8 +429,8 @@ function renderCart() {
   totalRow.appendChild(totalLabel);
   totalRow.appendChild(totalAmount);
 
-  // Subscribe & Save toggle — show for all carts (except box-customizer flow)
-  if (!adminSub) {
+  // Subscribe & Save toggle — only show when weekly spend is $55 or more
+  if (!adminSub && getTotal() >= 5500) {
     const subToggleWrap = document.createElement('label');
     subToggleWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--color-cream,#F5F0E8);border-radius:10px;cursor:pointer;margin-bottom:10px;';
     const subToggleCb = document.createElement('input');
@@ -443,7 +443,7 @@ function renderCart() {
     subToggleLine1.textContent = 'Subscribe & Save — 10% off your first box';
     const subToggleLine2 = document.createElement('span');
     subToggleLine2.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.55);display:block;margin-top:2px;';
-    subToggleLine2.textContent = 'Delivered monthly · cancel anytime · subsequent boxes at full price';
+    subToggleLine2.textContent = 'Monthly · cancel anytime · subsequent boxes at full price';
     subToggleText.appendChild(subToggleLine1);
     subToggleText.appendChild(subToggleLine2);
     subToggleWrap.appendChild(subToggleCb);

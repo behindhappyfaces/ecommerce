@@ -297,12 +297,6 @@
     <!-- Body -->
     <div class="bundle-body">
 
-      <!-- Availability indicator -->
-      <div class="availability">
-        <div class="avail-dot"></div>
-        <span id="availText">Only 25 bundles available — first come, first served</span>
-      </div>
-
       <!-- Items -->
       <div class="bundle-items">
         <h3>What's Inside</h3>
@@ -310,14 +304,14 @@
           <span class="item-name">Whole Pasture-Raised Chicken <span style="color:var(--color-text-muted);font-size:12px;">· 8–10 lbs</span></span>
         </div>
         <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:2px;">
-          <span class="item-name">↳ Cut-Up Processing — 2 Breasts · 2 Leg Quarters · 2 Tenders · 2 Drumsticks · 2 Wings <span class="item-bonus">ADD-ON +$10</span></span>
+          <span class="item-name">↳ Cut-Up Processing — 2 Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats <span class="item-bonus">ADD-ON +$10</span></span>
           <span style="font-size:11px;color:var(--color-text-muted);padding-left:2px;">Select at checkout if desired</span>
         </div>
         <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
-          <span class="item-name">Ready to Bake Challah Loaf <em style="font-size:11px;color:var(--color-text-muted);font-style:normal;">— or swap for a Dozen Yeast Rolls</em></span>
+          <span class="item-name">3-Braided Challah Loaf <em style="font-size:11px;color:var(--color-text-muted);font-style:normal;">— or swap for a Dozen Yeast Rolls</em></span>
           <div style="display:flex;gap:16px;padding-left:2px;">
             <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
-              <input type="radio" name="breadChoice" value="challah" checked style="accent-color:var(--color-green);" /> Challah Loaf
+              <input type="radio" name="breadChoice" value="challah" checked style="accent-color:var(--color-green);" /> 3-Braided Challah Loaf
             </label>
             <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
               <input type="radio" name="breadChoice" value="yeast-rolls" style="accent-color:var(--color-green);" /> Dozen Yeast Rolls
@@ -330,11 +324,16 @@
         <div class="item-row">
           <span class="item-name">Garlic Chili Crunch</span>
         </div>
-        <div class="item-row">
-          <span class="item-name">Real Cream Butter (½ lb)</span>
-        </div>
-        <div class="item-row">
-          <span class="item-name">Lavender Beeswax Candle <span class="item-bonus">BONUS</span></span>
+        <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <span class="item-name">Seasonal Preserves</span>
+          <div style="display:flex;gap:16px;padding-left:2px;">
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
+              <input type="radio" name="preserveChoice" value="strawberry" checked style="accent-color:var(--color-green);" /> Strawberry
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
+              <input type="radio" name="preserveChoice" value="blackberry" style="accent-color:var(--color-green);" /> Blackberry
+            </label>
+          </div>
         </div>
         <div class="item-row">
           <span class="item-name">Farm to Table Recipe Guide <span class="item-bonus">DIGITAL DOWNLOAD</span></span>
@@ -352,7 +351,7 @@
           <input type="checkbox" id="addProcessing" style="width:18px;height:18px;accent-color:var(--color-green);flex-shrink:0;" />
           <span style="font-family:var(--font-sans);font-size:13px;color:var(--color-text);line-height:1.5;">
             Skip the butchering at home <strong style="color:var(--color-green);">+$10</strong><br>
-            <span style="font-size:11px;color:rgba(44,62,45,0.5);">↳ 2 Breasts &middot; 2 Leg Quarters &middot; 2 Tenders &middot; 2 Drumsticks &middot; 2 Wings</span>
+            <span style="font-size:11px;color:rgba(44,62,45,0.5);">↳ 2 Breasts &middot; 2 Leg Quarters &middot; 2 Tenders &middot; 2 Drums &middot; 2 Flats</span>
           </span>
         </label>
 
@@ -411,17 +410,11 @@
     .then(data => {
       const remaining = data.remaining;
       const btn = document.getElementById('buyBtn');
-      const availText = document.getElementById('availText');
 
       if (remaining <= 0) {
         btn.disabled = true;
         btn.textContent = 'Sold Out';
         document.getElementById('soldOutBanner').style.display = 'block';
-        availText.textContent = 'All 25 bundles have been claimed — thank you!';
-      } else if (remaining <= 5) {
-        availText.textContent = `Only ${remaining} bundle${remaining === 1 ? '' : 's'} left!`;
-      } else {
-        availText.textContent = `${remaining} of 25 bundles remaining`;
       }
     })
     .catch(() => {});
@@ -431,13 +424,14 @@
     const btn = document.getElementById('buyBtn');
     const addProcessing = document.getElementById('addProcessing').checked;
     const breadChoice = document.querySelector('input[name="breadChoice"]:checked')?.value || 'challah';
+    const preserveChoice = document.querySelector('input[name="preserveChoice"]:checked')?.value || 'strawberry';
     btn.disabled = true;
     btn.textContent = 'Redirecting to checkout…';
     try {
       const res = await fetch('/bundle-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addProcessing, breadChoice }),
+        body: JSON.stringify({ addProcessing, breadChoice, preserveChoice }),
       });
       const data = await res.json();
       if (data.url) {

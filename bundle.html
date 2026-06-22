@@ -461,6 +461,11 @@
     return document.querySelector('input[name="getMethod"]:checked')?.value || 'pickup';
   }
 
+  function setBtn(label) {
+    const btn = document.getElementById('buyBtn');
+    if (btn && !btn.disabled) btn.textContent = label;
+  }
+
   function updateTotals() {
     const delivery = getMethod() === 'delivery';
     const feeAmount = document.getElementById('feeAmount');
@@ -470,16 +475,20 @@
       feeRow.querySelector('span').textContent = 'Pickup';
       feeAmount.textContent = 'FREE';
       totalAmount.textContent = '$199.00';
+      setBtn('Reserve My Bundle — $199');
       return;
     }
     feeRow.querySelector('span').textContent = 'Delivery';
     if (!deliveryQuoted) {
       feeAmount.textContent = '—';
       totalAmount.textContent = '$199.00 +';
+      setBtn('Reserve My Bundle — $199 + delivery');
       return;
     }
     feeAmount.textContent = deliveryFeeCents === 0 ? 'FREE' : fmt(deliveryFeeCents);
-    totalAmount.textContent = fmt(19900 + deliveryFeeCents);
+    const total = fmt(19900 + deliveryFeeCents);
+    totalAmount.textContent = total;
+    setBtn(`Reserve My Bundle — ${total}`);
   }
 
   function onMethodChange() {
@@ -578,12 +587,12 @@
       } else if (data.error) {
         alert(data.error);
         btn.disabled = false;
-        btn.textContent = 'Reserve My Bundle — $199';
+        updateTotals();
       }
     } catch (e) {
       alert('Something went wrong. Please try again or email us.');
       btn.disabled = false;
-      btn.textContent = 'Reserve My Bundle — $199';
+      updateTotals();
     }
   }
 </script>

@@ -505,9 +505,32 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           sales.sold = Math.min(BUNDLE_TOTAL, sales.sold + 1);
           const processing = session.metadata?.processing || 'no';
           const bread = session.metadata?.bread || 'challah';
-          sales.orders.push({ name: customerName, email: customerEmail, date, sessionId: session.id, channel: 'online', processing, bread });
+
+          // Full order details captured for the backend / inventory system
+          const dMethod  = session.metadata?.delivery_method || 'pickup';
+          const dAddr    = [
+            session.metadata?.delivery_street,
+            session.metadata?.delivery_city,
+            session.metadata?.delivery_state,
+            session.metadata?.delivery_zip,
+          ].filter(Boolean).join(', ');
+          const dMiles   = session.metadata?.delivery_miles || '';
+          const dPhone   = session.customer_details?.phone || '';
+          const dNotes   = (session.custom_fields || []).find(f => f.key === 'order_notes')?.text?.value || '';
+          const dFeeCents = (items.find(li => li.description === 'Local Delivery Fee')?.amount_total) || 0;
+
+          sales.orders.push({
+            name: customerName, email: customerEmail, phone: dPhone, date,
+            sessionId: session.id, channel: 'online', processing, bread,
+            deliveryMethod: dMethod,
+            deliveryAddress: dAddr,
+            deliveryMiles: dMiles,
+            deliveryFeeCents: dFeeCents,
+            total: session.amount_total,
+            notes: dNotes,
+          });
           saveBundleSales(sales);
-          console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail}) via online`);
+          console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail}) · ${dMethod}${dAddr ? ' → ' + dAddr : ''}`);
 
           // Log to inventory system for dashboard reporting
           try {
@@ -515,10 +538,13 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             const stockBefore = inv ? inv.stock : 25;
             const stockAfter  = Math.max(0, stockBefore - 1);
             await db.adjustStock('bundle-4th-july', -1);
+            const deliveryNote = dMethod === 'delivery'
+              ? `Delivery to ${dAddr}${dMiles ? ` (${dMiles}mi, $${(dFeeCents / 100).toFixed(2)} fee)` : ''}`
+              : 'Local pickup';
             await db.addTransaction(
               'bundle-4th-july', 'sale', -1,
               null, session.id,
-              `${processing === 'yes' ? 'Processing add-on · ' : ''}Bread: ${bread} · ${customerName} <${customerEmail}>`,
+              `${deliveryNote} · Bread: ${bread} · ${customerName} <${customerEmail}>${dPhone ? ' · ' + dPhone : ''}${dNotes ? ' · Notes: ' + dNotes : ''}`,
               'online', stockBefore, stockAfter
             );
           } catch (e) {
@@ -559,6 +585,21 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           session.metadata?.delivery_zip,
         ].filter(Boolean).join(', ');
         const deliveryMiles = session.metadata?.delivery_miles || '';
+        const customerPhone = session.customer_details?.phone || '';
+
+        // Local-delivery address as a structured object (mirrors Stripe shippingAddr shape)
+        const deliveryAddrObj = session.metadata?.delivery_street ? {
+          name:   customerName,
+          street: session.metadata.delivery_street,
+          city:   session.metadata.delivery_city  || '',
+          state:  session.metadata.delivery_state || '',
+          zip:    session.metadata.delivery_zip   || '',
+          phone:  customerPhone,
+          miles:  deliveryMiles,
+        } : null;
+
+        // Delivery fee charged (from the Stripe line item), in cents
+        const deliveryFeeCents = (items.find(li => li.description === 'Local Delivery Fee')?.amount_total) || 0;
 
         const addrLine = shippingAddr
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
@@ -682,8 +723,11 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
               city: shippingAddr.city,
               state: shippingAddr.state,
               zip: shippingAddr.postal_code,
-              phone: session.customer_details?.phone || '',
-            } : null,
+              phone: customerPhone,
+            } : deliveryAddrObj,
+            deliveryFeeCents: deliveryFeeCents,
+            deliveryMiles: deliveryMiles,
+            customerPhone: customerPhone,
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
@@ -727,7 +771,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 name: customerName,
                 street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
                 city: shippingAddr.city, state: shippingAddr.state, zip: shippingAddr.postal_code,
-              } : null,
+              } : deliveryAddrObj,
               items: productItems.map(li => ({ name: li.description, qty: li.quantity, price: li.price?.unit_amount })),
               total: session.amount_total,
             };
@@ -787,8 +831,11 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
               city: shippingAddr.city,
               state: shippingAddr.state,
               zip: shippingAddr.postal_code,
-              phone: session.customer_details?.phone || '',
-            } : null,
+              phone: customerPhone,
+            } : deliveryAddrObj,
+            deliveryFeeCents: deliveryFeeCents,
+            deliveryMiles: deliveryMiles,
+            customerPhone: customerPhone,
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
@@ -826,7 +873,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 name: customerName,
                 street: shippingAddr.line1 + (shippingAddr.line2 ? ' ' + shippingAddr.line2 : ''),
                 city: shippingAddr.city, state: shippingAddr.state, zip: shippingAddr.postal_code,
-              } : null,
+              } : deliveryAddrObj,
               items: productItems.map(li => ({ name: li.description, qty: li.quantity, price: li.price?.unit_amount })),
               total: session.amount_total,
             };

@@ -1035,10 +1035,15 @@
       <input id="cl-note" type="text" placeholder="e.g. Hi Jane! Here's your custom order…" style="width:100%;max-width:420px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
     </div>
 
-    <table class="data" style="max-width:620px;margin-bottom:12px;">
-      <thead><tr><th>Item Name</th><th style="width:80px;">Qty</th><th style="width:110px;">Unit Price</th><th style="width:36px;"></th></tr></thead>
+    <table class="data" style="max-width:620px;margin-bottom:8px;">
+      <thead><tr><th>Item Name</th><th style="width:70px;">Qty</th><th style="width:100px;">Unit Price</th><th style="width:58px;">Taxable</th><th style="width:50px;">Free</th><th style="width:36px;"></th></tr></thead>
       <tbody id="cl-product-rows"></tbody>
     </table>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button id="cl-tax-all" type="button" class="btn-sm btn-ghost">Mark all taxable</button>
+      <button id="cl-tax-none" type="button" class="btn-sm btn-ghost">Clear all taxable</button>
+    </div>
 
     <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:16px;">+ Add Custom Item</button>
 
@@ -1056,6 +1061,14 @@
       <div>
         <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Discount Label (shown in cart)</label>
         <input id="cl-discount-label" type="text" placeholder="e.g. Loyalty discount" style="width:200px;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;">
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Sales Tax (applies to items checked "Taxable")</label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #333;border-radius:6px;background:#1a1a1a;cursor:pointer;width:fit-content;">
+          <input type="checkbox" id="cl-tax-enable" style="accent-color:var(--terra);">
+          <input id="cl-tax-rate" type="number" min="0" step="0.01" value="8.25" disabled style="width:60px;padding:4px 6px;background:#111;border:1px solid #333;border-radius:4px;color:#f0ebe4;font-size:0.85rem;">
+          <span style="font-size:0.85rem;color:#aaa;">%</span>
+        </label>
       </div>
     </div>
 
@@ -3730,7 +3743,7 @@
   // ── CART LINK BUILDER ──────────────────────────────────────────
   (function() {
     const CART_PRODUCTS = [
-      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',        price: 1600 },
+      { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',        price: 1500 },
       { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf',          price: 1800 },
       { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            price: 0 },
       { id: 'yeast-rolls',        name: 'Yeast Rolls',               price: 0 },
@@ -3741,7 +3754,7 @@
       { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',      price: 1800 },
       { id: 'herb-dipping-oil',   name: 'Tuscany Herb Dipping Oil', price: 1800 },
       { id: 'seasonal-preserves', name: 'Seasonal Preserves',        price: 1500 },
-      { id: 'sampler-box',        name: 'The Farm Sampler Box',      price: 9900 },
+      { id: 'sampler-box',        name: 'The Farm Sampler Box',      price: 14900 },
       { id: 'thanksgiving-turkey',name: 'Thanksgiving Turkey',       price: 10000 },
     ];
 
@@ -3786,6 +3799,22 @@
       const priceTd = document.createElement('td');
       priceTd.appendChild(priceInp);
 
+      const taxCb = document.createElement('input');
+      taxCb.type = 'checkbox';
+      taxCb.dataset.taxableFor = id;
+      taxCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
+      const taxTd = document.createElement('td');
+      taxTd.style.cssText = 'text-align:center;';
+      taxTd.appendChild(taxCb);
+
+      const freeCb = document.createElement('input');
+      freeCb.type = 'checkbox';
+      freeCb.dataset.freeFor = id;
+      freeCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
+      const freeTd = document.createElement('td');
+      freeTd.style.cssText = 'text-align:center;';
+      freeTd.appendChild(freeCb);
+
       const removeTd = document.createElement('td');
       if (isCustom) {
         const removeBtn = document.createElement('button');
@@ -3799,6 +3828,8 @@
       tr.appendChild(nameTd);
       tr.appendChild(qtyTd);
       tr.appendChild(priceTd);
+      tr.appendChild(taxTd);
+      tr.appendChild(freeTd);
       tr.appendChild(removeTd);
       tbody.appendChild(tr);
     }
@@ -3809,6 +3840,16 @@
     document.getElementById('cl-add-custom').addEventListener('click', () => {
       customCounter++;
       addRow('custom-' + customCounter, '', 0, true);
+    });
+
+    document.getElementById('cl-tax-enable').addEventListener('change', (e) => {
+      document.getElementById('cl-tax-rate').disabled = !e.target.checked;
+    });
+    document.getElementById('cl-tax-all').addEventListener('click', () => {
+      document.querySelectorAll('#cl-product-rows input[data-taxable-for]').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('cl-tax-none').addEventListener('click', () => {
+      document.querySelectorAll('#cl-product-rows input[data-taxable-for]').forEach(cb => cb.checked = false);
     });
 
     // Show/hide monthly price field based on type selection
@@ -3838,20 +3879,24 @@
                       (CART_PRODUCTS.find(x => x.id === id) || {}).name || id;
         const rawPrice = parseFloat(document.querySelector(`[data-price-for="${id}"]`).value);
         const price = isNaN(rawPrice) ? 0 : Math.round(rawPrice * 100);
-        return { id, name, price, quantity: qty };
+        const taxable = document.querySelector(`[data-taxable-for="${id}"]`).checked;
+        const free    = document.querySelector(`[data-free-for="${id}"]`).checked;
+        return { id, name, price, quantity: qty, taxable, free };
       });
 
       const note = document.getElementById('cl-note').value.trim();
       const discountAmt   = parseFloat(document.getElementById('cl-discount-amount').value) || 0;
       const discountType  = document.getElementById('cl-discount-type').value;
       const discountLabel = document.getElementById('cl-discount-label').value.trim() || 'Discount';
+      const taxEnabled = document.getElementById('cl-tax-enable').checked;
+      const taxRate    = taxEnabled ? (parseFloat(document.getElementById('cl-tax-rate').value) || 0) : 0;
       const btn  = document.getElementById('cl-generate');
       btn.textContent = 'Generating…'; btn.disabled = true;
 
       const discount = discountAmt > 0 ? { amount: discountAmt, type: discountType, label: discountLabel } : null;
 
       try {
-        const body = { items, note, subscription: isSub, subPrice, discount };
+        const body = { items, note, subscription: isSub, subPrice, discount, taxRate };
         const res  = await fetch('/admin/create-cart-link', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
@@ -3869,19 +3914,33 @@
         const previewBody = document.getElementById('cl-preview-body');
         previewBody.innerHTML = '';
         let grandTotal = 0;
+        let taxableSubtotal = 0;
         items.forEach(item => {
-          const lineTotal = item.price * item.quantity;
+          const charged = item.free ? 0 : item.price;
+          const lineTotal = charged * item.quantity;
           grandTotal += lineTotal;
+          if (item.taxable && !item.free) taxableSubtotal += lineTotal;
           const row = document.createElement('tr');
           const nameTd  = document.createElement('td');
           nameTd.style.cssText  = 'font-size:0.83rem;color:#f0ebe4;padding:5px 0;';
-          nameTd.textContent    = item.name;
+          nameTd.textContent    = item.name + (item.free ? ' (FREE)' : '');
           const qtyTd   = document.createElement('td');
           qtyTd.style.cssText   = 'text-align:center;font-size:0.83rem;color:#aaa;padding:5px 8px;';
           qtyTd.textContent     = '×' + item.quantity;
           const priceTd = document.createElement('td');
           priceTd.style.cssText = 'text-align:right;font-size:0.83rem;color:#f0ebe4;padding:5px 0;';
-          priceTd.textContent   = item.price ? '$' + (item.price / 100).toFixed(2) : '—';
+          if (item.free) {
+            const origPriceSpan = document.createElement('span');
+            origPriceSpan.style.cssText = 'text-decoration:line-through;color:#888;';
+            origPriceSpan.textContent = '$' + (item.price / 100).toFixed(2);
+            const freeSpan = document.createElement('span');
+            freeSpan.style.color = '#6fcf97';
+            freeSpan.textContent = ' FREE';
+            priceTd.appendChild(origPriceSpan);
+            priceTd.appendChild(freeSpan);
+          } else {
+            priceTd.textContent = item.price ? '$' + (item.price / 100).toFixed(2) : '—';
+          }
           row.append(nameTd, qtyTd, priceTd);
           previewBody.appendChild(row);
         });
@@ -3897,6 +3956,17 @@
           discRow.append(dName, dQty, dPrc);
           previewBody.appendChild(discRow);
           grandTotal -= discAmt;
+        }
+        // Show tax row if enabled and any taxable items
+        if (taxRate > 0 && taxableSubtotal > 0) {
+          const taxCents = Math.round(taxableSubtotal * taxRate / 100);
+          const taxRow = document.createElement('tr');
+          const tName = document.createElement('td'); tName.style.cssText='font-size:0.83rem;color:#aaa;padding:5px 0;'; tName.textContent = `Sales Tax (${taxRate}%)`;
+          const tQty  = document.createElement('td'); tQty.style.cssText='text-align:center;'; tQty.textContent='';
+          const tPrc  = document.createElement('td'); tPrc.style.cssText='text-align:right;font-size:0.83rem;color:#f0ebe4;padding:5px 0;'; tPrc.textContent='$'+(taxCents/100).toFixed(2);
+          taxRow.append(tName, tQty, tPrc);
+          previewBody.appendChild(taxRow);
+          grandTotal += taxCents;
         }
         document.getElementById('cl-preview-total').textContent =
           grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';

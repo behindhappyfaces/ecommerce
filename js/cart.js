@@ -3,7 +3,7 @@
    ========================================= */
 
 const PRODUCTS = {
-  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 1600, subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
+  'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 1500, subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
   'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 1800, subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
   'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
@@ -13,7 +13,7 @@ const PRODUCTS = {
   'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
-  'sampler-box':           { name: 'The Farm Sampler Box',  price: 9900,  subPrice: null, image: null },
+  'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
   'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 0,     subPrice: null, image: 'images/chili-crunch.jpg' },
   'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 0,  subPrice: null, image: 'images/herb-dipping-oil.jpg' },
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
@@ -1182,12 +1182,14 @@ async function submitOrderWithDetails() {
 
   const items = cart.items
     .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({ id, name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+    .map(({ id, qty, price, taxable, free }) => ({ id, name: PRODUCTS[id].name, price: free ? 0 : (price ?? PRODUCTS[id].price), quantity: qty, taxable: !!taxable }));
 
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
+  const taxRatePct = parseFloat(localStorage.getItem('hoto-cart-tax-rate') || '0');
   const shipBody  = { items, shipping: _shipCalcRate, delivery_method: 'ship', billing, gift };
   if (promoCode && promoAmt) { shipBody.promo_code = promoCode; shipBody.promo_discount_cents = promoAmt; }
+  if (taxRatePct > 0) shipBody.tax_rate_pct = taxRatePct;
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -1221,13 +1223,14 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
   const items = cart.items
     .filter(({ id, name }) => PRODUCTS[id] || name)
-    .map(({ id, qty, price, name: storedName }) => {
+    .map(({ id, qty, price, name: storedName, taxable, free }) => {
       const p = PRODUCTS[id];
-      return { id, name: (p && p.name) || storedName || id, price: price || (p ? p.price : 0), quantity: qty };
+      return { id, name: (p && p.name) || storedName || id, price: free ? 0 : (price || (p ? p.price : 0)), quantity: qty, taxable: !!taxable };
     });
 
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
+  const taxRatePct = parseFloat(localStorage.getItem('hoto-cart-tax-rate') || '0');
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
@@ -1236,6 +1239,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (pickupContact?.address)        body.delivery_address   = pickupContact.address;
     if (pickupContact?.deliveryFeeCents) body.delivery_fee_cents = pickupContact.deliveryFeeCents;
     if (promoCode && promoAmt)         { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
+    if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1247,6 +1251,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
       localStorage.setItem('hoto-checkout-location', pickupLocation || '');
       localStorage.removeItem('hoto-promo-code');
       localStorage.removeItem('hoto-promo-amt');
+      localStorage.removeItem('hoto-cart-tax-rate');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {
@@ -2623,20 +2628,25 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         // Prefer id-based lookup; fall back to name match; keep custom items with stored name
         var pid = (item.id && PRODUCTS[item.id]) ? item.id :
           Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
-        var cartItem = { id: pid || item.id, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0) };
+        var cartItem = { id: pid || item.id, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0), taxable: !!item.taxable, free: !!item.free };
         if (!pid && item.name) cartItem.name = item.name;
         cart.items.push(cartItem);
       });
       if (cart.items.length) {
         localStorage.setItem('hoto-cart', JSON.stringify(cart));
         // Calculate discount cents — kept in closure so showRestoredCart can use it directly
+        // (charged subtotal — free items contribute $0 even though their real price is shown to the customer)
+        var chargedSubtotal = cart.items.reduce(function(s, i) { return s + (i.free ? 0 : (i.price || 0)) * i.qty; }, 0);
+        var taxableSubtotal = cart.items.reduce(function(s, i) { return s + (i.taxable && !i.free ? (i.price || 0) * i.qty : 0); }, 0);
         var discCents = 0;
         if (d.discount && d.discount.amount > 0) {
-          var linkSubtotal = cart.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
           discCents = d.discount.type === 'percent'
-            ? Math.round(linkSubtotal * d.discount.amount / 100)
+            ? Math.round(chargedSubtotal * d.discount.amount / 100)
             : Math.round(d.discount.amount * 100);
         }
+        var taxRatePct = d.taxRate || 0;
+        var taxCents = taxRatePct > 0 ? Math.round(taxableSubtotal * taxRatePct / 100) : 0;
+        localStorage.setItem('hoto-cart-tax-rate', String(taxRatePct));
         // One-time purchase link — clear any stale subscription state so
         // the cart doesn't inherit a previous box customizer session
         localStorage.removeItem('hoto-admin-sub');
@@ -2677,7 +2687,19 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
               var nameEl = document.createElement('p');
               nameEl.className = 'cart-item__name'; nameEl.textContent = displayName;
               var priceEl = document.createElement('p');
-              priceEl.className = 'cart-item__price'; priceEl.textContent = '$' + (price / 100).toFixed(2);
+              priceEl.className = 'cart-item__price';
+              if (item.free) {
+                var origPriceSpan = document.createElement('span');
+                origPriceSpan.style.cssText = 'text-decoration:line-through;opacity:0.6;';
+                origPriceSpan.textContent = '$' + (price / 100).toFixed(2);
+                var freeSpan = document.createElement('span');
+                freeSpan.style.color = '#2a7a2a';
+                freeSpan.textContent = ' FREE';
+                priceEl.appendChild(origPriceSpan);
+                priceEl.appendChild(freeSpan);
+              } else {
+                priceEl.textContent = '$' + (price / 100).toFixed(2);
+              }
               var qtyRow = document.createElement('div');
               qtyRow.className = 'cart-item__qty';
               var minus = document.createElement('button'); minus.className='cart-qty-btn'; minus.textContent='−';
@@ -2693,7 +2715,7 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
               div.appendChild(info); div.appendChild(removeBtn);
               wrap.appendChild(div);
             });
-            var subtotal = cartData.items.reduce(function(s, i) { return s + (i.price || 0) * i.qty; }, 0);
+            var subtotal = cartData.items.reduce(function(s, i) { return s + (i.free ? 0 : (i.price || 0)) * i.qty; }, 0);
             var footer = document.createElement('div');
             footer.className = 'cart-footer';
 
@@ -2709,10 +2731,21 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
               footer.appendChild(discRow);
             }
 
-            var displayTotal = subtotal - appliedDiscCents;
+            // Show sales tax row if this cart link has taxable items
+            var appliedTaxCents = (typeof taxCents !== 'undefined' && taxCents > 0) ? taxCents : 0;
+            if (appliedTaxCents > 0) {
+              var taxRow = document.createElement('p');
+              taxRow.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;color:#888;margin:0 0 6px;display:flex;justify-content:space-between;';
+              var taxLbl = document.createElement('span'); taxLbl.textContent = 'Sales Tax (' + taxRatePct + '%)';
+              var taxAmt = document.createElement('span'); taxAmt.textContent = '$' + (appliedTaxCents / 100).toFixed(2);
+              taxRow.appendChild(taxLbl); taxRow.appendChild(taxAmt);
+              footer.appendChild(taxRow);
+            }
+
+            var displayTotal = subtotal - appliedDiscCents + appliedTaxCents;
             var totalRow = document.createElement('div');
             totalRow.className = 'cart-footer__total';
-            var lbl = document.createElement('span'); lbl.textContent = appliedDiscCents > 0 ? 'Total' : 'Subtotal';
+            var lbl = document.createElement('span'); lbl.textContent = (appliedDiscCents > 0 || appliedTaxCents > 0) ? 'Total' : 'Subtotal';
             var amt = document.createElement('span'); amt.id = 'cart-total';
             amt.textContent = '$' + (displayTotal / 100).toFixed(2);
             totalRow.appendChild(lbl); totalRow.appendChild(amt);

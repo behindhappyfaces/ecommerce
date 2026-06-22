@@ -1388,7 +1388,7 @@ app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
             delivery_address,
-            promo_code, promo_discount_cents } = req.body;
+            promo_code, promo_discount_cents, tax_rate_pct } = req.body;
     // delivery_fee_cents from client is intentionally not destructured — fee is always
     // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -1404,6 +1404,26 @@ app.post('/create-checkout-session', async (req, res) => {
       },
       quantity: item.quantity,
     }));
+
+    // Sales tax — only applied to items the admin/cart marked as taxable;
+    // free items already carry unit_amount 0 so they contribute nothing here
+    const taxPct = parseFloat(tax_rate_pct) || 0;
+    if (taxPct > 0) {
+      const taxableSubtotal = items.reduce(
+        (s, i) => s + (i.taxable ? (i.price || 0) * (i.quantity || 1) : 0), 0
+      );
+      const taxCents = Math.round(taxableSubtotal * taxPct / 100);
+      if (taxCents > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: `Sales Tax (${taxPct}%)` },
+            unit_amount: taxCents,
+          },
+          quantity: 1,
+        });
+      }
+    }
 
     // HOTO- welcome codes are subscription-only — reject silently on one-time checkout
     const isWelcomeCode = (promo_code || '').toUpperCase().startsWith('HOTO-');
@@ -2303,7 +2323,7 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 // --- Cart link builder ---
 app.post('/admin/create-cart-link', requireAdmin, express.json(), async (req, res) => {
   try {
-    const { items, note, subscription, subPrice, discount } = req.body || {};
+    const { items, note, subscription, subPrice, discount, taxRate } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
     if (subscription && (!subPrice || subPrice <= 0)) return res.status(400).json({ error: 'Monthly price required for subscription links' });
 
@@ -2328,6 +2348,7 @@ app.post('/admin/create-cart-link', requireAdmin, express.json(), async (req, re
       subscription:   subscription || false,
       subPrice:       subscription ? Math.round(subPrice) : null,
       discount:       discount || null,
+      taxRate:        taxRate > 0 ? taxRate : 0,
     };
 
     await setPendingCartDB(token, cartData);
@@ -2647,6 +2668,7 @@ app.get('/api/restore-cart', async (req, res) => {
       subPrice:     cart.subPrice      || null,
       subName:      cart.subName       || null,
       discount:     cart.discount      || null,
+      taxRate:      cart.taxRate       || 0,
     });
   } catch(e) {
     console.error('[restore-cart]', e.message);

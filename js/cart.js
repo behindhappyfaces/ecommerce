@@ -19,7 +19,7 @@ const PRODUCTS = {
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
   // Subscription boxes — shown as a single line item in the cart
   'bread-box':            { name: 'The Bread & Butter Board Box', price: 5500, subPrice: null, image: null },
-  'harvest-subscription': { name: 'The Supper Starter Box',       price: 0, subPrice: null, image: null },
+  'harvest-subscription': { name: 'The Supper Starter Box',       price: 15000, subPrice: null, image: null },
   'farm-box':             { name: "Monthly Farm Butcher's Box",   price: 0, subPrice: null, image: null },
   // Add-on items selectable from the box customizer
   'addon-yeast-rolls':    { name: 'Yeast Rolls (1 doz)',              price: 2400,  subPrice: null, image: null },

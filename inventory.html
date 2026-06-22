@@ -3862,7 +3862,7 @@
     });
 
     document.getElementById('cl-generate').addEventListener('click', async () => {
-      const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox]:checked')];
+      const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox][data-id]:checked')];
       if (!checked.length) { alert('Select at least one item.'); return; }
 
       const isSub = document.querySelector('input[name="cl-type"]:checked').value === 'subscription';

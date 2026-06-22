@@ -526,10 +526,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           }
         }
 
-        // Product items only (exclude shipping and tax line items for display)
-        const productItems   = items.filter(li => !li.description?.startsWith('Shipping —') && !li.description?.startsWith('Sales Tax'));
+        // Product items only (exclude the shipping line item for display)
+        const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
         const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
-        const taxItem        = items.find(li => li.description?.startsWith('Sales Tax'));
 
         // Customer-entered notes / delivery instructions (Stripe custom field)
         const customerNotes  = (session.custom_fields || [])
@@ -614,11 +613,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 <tr>
                   <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#888;">${shippingItem.description}</td>
                   <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#888;">${formatMoney(shippingItem.amount_total)}</td>
-                </tr>` : ''}
-                ${taxItem ? `
-                <tr>
-                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#888;">${taxItem.description}</td>
-                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#888;">${formatMoney(taxItem.amount_total)}</td>
                 </tr>` : ''}
                 <tr style="background:#F5F0E8;">
                   <td style="padding:12px 16px;font-weight:700;color:#2C3E2D;">Total</td>
@@ -3260,23 +3254,17 @@ app.post('/bundle-checkout', async (req, res) => {
     const { breadChoice } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
 
-    // Itemized contents (shown line-by-line on the Stripe pay screen)
+    // Contents mirror the bundle page's "What's Inside" — each shown as its own
+    // row ($0 / "Free") on the Stripe pay screen so the buyer can scan everything
+    // they're getting without a wall of text.
     const includedItems = [
       'Whole Pasture-Raised Chicken — processed into 10 cuts (2 boneless/skinless breasts, 2 leg quarters, 2 tenders, 2 drums, 2 flats)',
       breadChoice === 'yeast-rolls' ? 'Dozen Yeast Rolls' : '3-Braided Challah Loaf',
       'Cinnamon Rolls (6-pack)',
       'Garlic Chili Crunch',
-      'Real Cream Farm Butter',
       'Seasonal Preserves',
-      'Lavender Beeswax Candle',
       'Farm to Table Recipe Guide (digital download)',
     ];
-    const itemizedDescription = includedItems.map(i => `• ${i}`).join('\n')
-      + '\n\nFREE delivery within a 10-mile radius · Local pick-up Dripping Springs, TX — Friday, July 3rd.';
-
-    // 8.25% sales tax, applied to the bundle price
-    const TAX_RATE = 0.0825;
-    const taxCents = Math.round(BUNDLE_PRICE_CENTS * TAX_RATE);
 
     const lineItems = [
       {
@@ -3284,21 +3272,22 @@ app.post('/bundle-checkout', async (req, res) => {
           currency: 'usd',
           product_data: {
             name: '4th of July Homestead Table Bundle',
-            description: itemizedDescription,
+            description: 'Everything below, ready for your table. FREE delivery within a 10-mile radius · Local pick-up Dripping Springs, TX — Friday, July 3rd.',
             images: [`${origin}/images/hero-ingredients.jpg`],
           },
           unit_amount: BUNDLE_PRICE_CENTS,
         },
         quantity: 1,
       },
-      {
+      // Included items — itemized as their own ($0) rows for easy scanning
+      ...includedItems.map(name => ({
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Sales Tax (8.25%)' },
-          unit_amount: taxCents,
+          product_data: { name: `✓ ${name}` },
+          unit_amount: 0,
         },
         quantity: 1,
-      },
+      })),
     ];
 
     const session = await stripe.checkout.sessions.create({

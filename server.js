@@ -526,9 +526,20 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           }
         }
 
-        // Product items only (exclude the shipping line item for display)
-        const productItems   = items.filter(li => !li.description?.startsWith('Shipping —'));
+        // Product items only (exclude shipping and tax line items for display)
+        const productItems   = items.filter(li => !li.description?.startsWith('Shipping —') && !li.description?.startsWith('Sales Tax'));
         const shippingItem   = items.find(li => li.description?.startsWith('Shipping —'));
+        const taxItem        = items.find(li => li.description?.startsWith('Sales Tax'));
+
+        // Customer-entered notes / delivery instructions (Stripe custom field)
+        const customerNotes  = (session.custom_fields || [])
+          .find(f => f.key === 'order_notes')?.text?.value || '';
+        const notesHtml = customerNotes
+          ? `<div style="background:#f0ede4;border-left:4px solid #2C3E2D;padding:12px 20px;margin:16px 0;font-size:0.9rem;">
+               <strong>📝 Order Notes</strong>
+               <p style="margin:6px 0 0;color:#555;">${escHtml(customerNotes)}</p>
+             </div>`
+          : '';
 
         const pickupLoc      = session.metadata?.pickup_location || '';
         const pickupPhone    = session.metadata?.pickup_phone   || '';
@@ -604,6 +615,11 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                   <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#888;">${shippingItem.description}</td>
                   <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#888;">${formatMoney(shippingItem.amount_total)}</td>
                 </tr>` : ''}
+                ${taxItem ? `
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;color:#888;">${taxItem.description}</td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #f0ebe0;text-align:right;color:#888;">${formatMoney(taxItem.amount_total)}</td>
+                </tr>` : ''}
                 <tr style="background:#F5F0E8;">
                   <td style="padding:12px 16px;font-weight:700;color:#2C3E2D;">Total</td>
                   <td style="padding:12px 16px;font-weight:700;text-align:right;color:#2C3E2D;">${total}</td>
@@ -613,6 +629,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
             ${deliveryBlock}
             ${billHtml}
+            ${notesHtml}
             ${giftHtml}
             ${statusNote ? `<p style="color:#8B4A2F;font-size:0.85rem;margin-top:16px;line-height:1.7;">${statusNote}</p>` : ''}
 
@@ -664,6 +681,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
+            customerNotes: customerNotes || '',
           });
           const _invId = session.metadata?.inventory_id;
           if (_invId) {
@@ -730,8 +748,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
              <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
              <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
              ${billHtml}
+             <p><strong>Phone:</strong> ${session.customer_details?.phone || 'not provided'}</p>
              <p><strong>Payment:</strong> Card (cleared immediately)</p>
              ${lineItemsHtml(items)}
+             ${notesHtml}
              ${giftHtml}
              ${fulfillmentBadge('READY_TO_SHIP')}
              <p style="color:#888;font-size:12px;">Reference: ${session.id}</p>`
@@ -766,6 +786,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
+            customerNotes: customerNotes || '',
           });
           await deductStockForOrder(items, session.id);
 
@@ -826,8 +847,10 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
              <p><strong>Customer:</strong> ${customerEmail || 'unknown'}</p>
              <p><strong>Delivery:</strong> ${deliveryMethod}${addrLine ? ' — ' + addrLine : ''}</p>
              ${billHtml}
+             <p><strong>Phone:</strong> ${session.customer_details?.phone || 'not provided'}</p>
              <p><strong>Payment:</strong> ACH Bank Transfer (3–5 business days to clear)</p>
              ${lineItemsHtml(items)}
+             ${notesHtml}
              ${giftHtml}
              ${fulfillmentBadge('AWAITING_PAYMENT')}
              <p style="color:#888;font-size:12px;">
@@ -3234,38 +3257,63 @@ app.post('/bundle-checkout', async (req, res) => {
     if (sales.sold >= BUNDLE_TOTAL) {
       return res.json({ error: 'Sorry — all 25 bundles have been claimed. Thank you for your interest!' });
     }
-    const { addProcessing, breadChoice } = req.body;
+    const { breadChoice } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
 
-    const lineItems = [{
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: '4th of July Homestead Table Bundle',
-          description: `Whole pasture chicken (8–10 lbs), processed into 10 cuts (2 boneless/skinless breasts, 2 leg quarters, 2 tenders, 2 drums, 2 flats), ${breadChoice === 'yeast-rolls' ? 'dozen yeast rolls' : 'ready to bake challah loaf'}, cinnamon rolls (6-pack), garlic chili crunch, real cream butter, lavender beeswax candle + Farm to Table Recipe Guide (digital download). Local pick-up Dripping Springs, TX — Friday July 3rd.`,
-          images: [`${origin}/images/hero-ingredients.jpg`],
-        },
-        unit_amount: BUNDLE_PRICE_CENTS,
-      },
-      quantity: 1,
-    }];
+    // Itemized contents (shown line-by-line on the Stripe pay screen)
+    const includedItems = [
+      'Whole Pasture-Raised Chicken — processed into 10 cuts (2 boneless/skinless breasts, 2 leg quarters, 2 tenders, 2 drums, 2 flats)',
+      breadChoice === 'yeast-rolls' ? 'Dozen Yeast Rolls' : '3-Braided Challah Loaf',
+      'Cinnamon Rolls (6-pack)',
+      'Garlic Chili Crunch',
+      'Real Cream Farm Butter',
+      'Seasonal Preserves',
+      'Lavender Beeswax Candle',
+      'Farm to Table Recipe Guide (digital download)',
+    ];
+    const itemizedDescription = includedItems.map(i => `• ${i}`).join('\n')
+      + '\n\nFREE delivery within a 10-mile radius · Local pick-up Dripping Springs, TX — Friday, July 3rd.';
 
-    if (addProcessing) {
-      lineItems.push({
+    // 8.25% sales tax, applied to the bundle price
+    const TAX_RATE = 0.0825;
+    const taxCents = Math.round(BUNDLE_PRICE_CENTS * TAX_RATE);
+
+    const lineItems = [
+      {
         price_data: {
           currency: 'usd',
-          product_data: { name: 'Cut-Up Processing Add-On', description: 'Skip the butchering at home. Chicken arrives divided into 2 Breasts, 2 Leg Quarters, 2 Tenders, 2 Drumsticks, 2 Wings.' },
-          unit_amount: 1000,
+          product_data: {
+            name: '4th of July Homestead Table Bundle',
+            description: itemizedDescription,
+            images: [`${origin}/images/hero-ingredients.jpg`],
+          },
+          unit_amount: BUNDLE_PRICE_CENTS,
         },
         quantity: 1,
-      });
-    }
+      },
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Sales Tax (8.25%)' },
+          unit_amount: taxCents,
+        },
+        quantity: 1,
+      },
+    ];
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: lineItems,
-      metadata: { type: 'bundle', bundle: '4th-july-homestead-table', processing: addProcessing ? 'yes' : 'no', bread: breadChoice || 'challah' },
+      shipping_address_collection: { allowed_countries: ['US'] },
+      phone_number_collection: { enabled: true },
+      custom_fields: [{
+        key: 'order_notes',
+        label: { type: 'custom', custom: 'Notes / delivery instructions (optional)' },
+        type: 'text',
+        optional: true,
+      }],
+      metadata: { type: 'bundle', bundle: '4th-july-homestead-table', processing: 'no', bread: breadChoice || 'challah' },
       success_url: `${origin}/bundle-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/bundle.html`,
     });

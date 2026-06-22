@@ -3242,7 +3242,7 @@ app.post('/bundle-checkout', async (req, res) => {
         currency: 'usd',
         product_data: {
           name: '4th of July Homestead Table Bundle',
-          description: `Whole pasture chicken (8–10 lbs), ${breadChoice === 'yeast-rolls' ? 'dozen yeast rolls' : 'ready to bake challah loaf'}, cinnamon rolls (6-pack), garlic chili crunch, real cream butter, lavender beeswax candle + Farm to Table Recipe Guide (digital download). Local pick-up Dripping Springs, TX — Friday July 3rd.`,
+          description: `Whole pasture chicken (8–10 lbs), processed into 10 cuts (2 boneless/skinless breasts, 2 leg quarters, 2 tenders, 2 drums, 2 flats), ${breadChoice === 'yeast-rolls' ? 'dozen yeast rolls' : 'ready to bake challah loaf'}, cinnamon rolls (6-pack), garlic chili crunch, real cream butter, lavender beeswax candle + Farm to Table Recipe Guide (digital download). Local pick-up Dripping Springs, TX — Friday July 3rd.`,
           images: [`${origin}/images/hero-ingredients.jpg`],
         },
         unit_amount: BUNDLE_PRICE_CENTS,

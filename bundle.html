@@ -303,9 +303,9 @@
         <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
           <span class="item-name">Whole Pasture-Raised Chicken <span style="color:var(--color-text-muted);font-size:12px;">· 8–10 lbs</span></span>
           <span style="font-family:var(--font-sans);font-size:12px;color:var(--color-text);line-height:1.5;padding-left:2px;">
-            One big bird that breaks down into <strong style="color:var(--color-green);">10 premium cuts</strong> —<br>
-            2 Breasts &middot; 2 Leg Quarters &middot; 2 Tenders &middot; 2 Drums &middot; 2 Flats.
-            <em style="font-style:normal;color:var(--color-text-muted);">Multiple meals from a single chicken — or add processing below and we'll cut it for you.</em>
+            One big bird, already processed into <strong style="color:var(--color-green);">10 premium cuts</strong> —<br>
+            2 Boneless/Skinless Breasts &middot; 2 Leg Quarters &middot; 2 Tenders &middot; 2 Drums &middot; 2 Flats.
+            <em style="font-style:normal;color:var(--color-text-muted);">Multiple meals from a single chicken — cut, packed, and ready to cook.</em>
           </span>
         </div>
         <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
@@ -346,15 +346,6 @@
         <p class="price-label">Your Price</p>
         <div class="price-amount">$199</div>
         <p class="price-sub">Secure checkout · Stripe encrypted payment</p>
-
-        <!-- Processing add-on -->
-        <label style="display:flex;align-items:center;gap:10px;background:#f0ede4;border-radius:4px;padding:14px 16px;margin-bottom:20px;cursor:pointer;text-align:left;">
-          <input type="checkbox" id="addProcessing" style="width:18px;height:18px;accent-color:var(--color-green);flex-shrink:0;" />
-          <span style="font-family:var(--font-sans);font-size:13px;color:var(--color-text);line-height:1.5;">
-            Skip the butchering at home <strong style="color:var(--color-green);">+$10</strong><br>
-            <span style="font-size:11px;color:rgba(44,62,45,0.5);">↳ 2 Breasts &middot; 2 Leg Quarters &middot; 2 Tenders &middot; 2 Drums &middot; 2 Flats</span>
-          </span>
-        </label>
 
         <button class="btn-bundle" id="buyBtn" onclick="checkout()">
           Reserve My Bundle — $199
@@ -423,7 +414,7 @@
   // Checkout
   async function checkout() {
     const btn = document.getElementById('buyBtn');
-    const addProcessing = document.getElementById('addProcessing').checked;
+    const addProcessing = false; // processing now included automatically
     const breadChoice = document.querySelector('input[name="breadChoice"]:checked')?.value || 'challah';
     const preserveChoice = document.querySelector('input[name="preserveChoice"]:checked')?.value || 'strawberry';
     btn.disabled = true;

@@ -347,6 +347,45 @@
         <div class="price-amount">$199</div>
         <p class="price-sub">Secure checkout · Stripe encrypted payment</p>
 
+        <!-- Get it: pickup or delivery -->
+        <div style="text-align:left;background:#f0ede4;border-radius:4px;padding:16px;margin-bottom:18px;">
+          <p style="font-family:var(--font-sans);font-size:13px;font-weight:700;color:var(--color-text);margin:0 0 10px;">How would you like to get it?</p>
+          <label style="display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;margin-bottom:8px;">
+            <input type="radio" name="getMethod" value="pickup" checked style="accent-color:var(--color-green);" onchange="onMethodChange()" />
+            Local Pickup — <strong style="color:var(--color-green);">FREE</strong> (Dripping Springs, TX)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;">
+            <input type="radio" name="getMethod" value="delivery" style="accent-color:var(--color-green);" onchange="onMethodChange()" />
+            Local Delivery — FREE within 10 mi, then by distance
+          </label>
+
+          <!-- Delivery address -->
+          <div id="deliveryFields" style="display:none;margin-top:14px;">
+            <input id="dStreet" type="text" placeholder="Street address" autocomplete="address-line1"
+              style="width:100%;box-sizing:border-box;font-family:var(--font-sans);font-size:13px;padding:9px 10px;border:1px solid #ccc6b8;border-radius:4px;margin-bottom:8px;" />
+            <div style="display:flex;gap:8px;">
+              <input id="dCity" type="text" placeholder="City" autocomplete="address-level2"
+                style="flex:2;min-width:0;box-sizing:border-box;font-family:var(--font-sans);font-size:13px;padding:9px 10px;border:1px solid #ccc6b8;border-radius:4px;margin-bottom:8px;" />
+              <input id="dState" type="text" placeholder="State" maxlength="2" autocomplete="address-level1"
+                style="flex:1;min-width:0;box-sizing:border-box;font-family:var(--font-sans);font-size:13px;padding:9px 10px;border:1px solid #ccc6b8;border-radius:4px;margin-bottom:8px;text-transform:uppercase;" />
+              <input id="dZip" type="text" placeholder="ZIP" maxlength="5" inputmode="numeric" autocomplete="postal-code"
+                style="flex:1;min-width:0;box-sizing:border-box;font-family:var(--font-sans);font-size:13px;padding:9px 10px;border:1px solid #ccc6b8;border-radius:4px;margin-bottom:8px;" />
+            </div>
+            <button type="button" id="quoteBtn" onclick="quoteDelivery()"
+              style="font-family:var(--font-sans);font-size:12px;font-weight:600;color:#fff;background:var(--color-green);border:none;border-radius:4px;padding:8px 14px;cursor:pointer;">
+              Calculate delivery fee
+            </button>
+            <p id="quoteResult" style="font-family:var(--font-sans);font-size:13px;color:var(--color-text);margin:10px 0 0;"></p>
+          </div>
+        </div>
+
+        <!-- Order total -->
+        <div style="text-align:left;font-family:var(--font-sans);font-size:14px;color:var(--color-text);border-top:1px solid #e2dccd;padding-top:12px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>Bundle</span><span>$199.00</span></div>
+          <div id="feeRow" style="display:flex;justify-content:space-between;margin-bottom:4px;color:var(--color-text-muted);"><span>Delivery</span><span id="feeAmount">FREE</span></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;border-top:1px solid #e2dccd;padding-top:8px;margin-top:4px;"><span>Total</span><span id="totalAmount">$199.00</span></div>
+        </div>
+
         <button class="btn-bundle" id="buyBtn" onclick="checkout()">
           Reserve My Bundle — $199
         </button>
@@ -412,19 +451,126 @@
     })
     .catch(() => {});
 
+  // --- Delivery method + fee quoting -------------------------------------
+  let deliveryFeeCents = 0;     // current quoted fee
+  let deliveryQuoted   = false; // has a valid quote been obtained?
+
+  function fmt(cents) { return '$' + (cents / 100).toFixed(2); }
+
+  function getMethod() {
+    return document.querySelector('input[name="getMethod"]:checked')?.value || 'pickup';
+  }
+
+  function updateTotals() {
+    const delivery = getMethod() === 'delivery';
+    const feeAmount = document.getElementById('feeAmount');
+    const totalAmount = document.getElementById('totalAmount');
+    const feeRow = document.getElementById('feeRow');
+    if (!delivery) {
+      feeRow.querySelector('span').textContent = 'Pickup';
+      feeAmount.textContent = 'FREE';
+      totalAmount.textContent = '$199.00';
+      return;
+    }
+    feeRow.querySelector('span').textContent = 'Delivery';
+    if (!deliveryQuoted) {
+      feeAmount.textContent = '—';
+      totalAmount.textContent = '$199.00 +';
+      return;
+    }
+    feeAmount.textContent = deliveryFeeCents === 0 ? 'FREE' : fmt(deliveryFeeCents);
+    totalAmount.textContent = fmt(19900 + deliveryFeeCents);
+  }
+
+  function onMethodChange() {
+    const delivery = getMethod() === 'delivery';
+    document.getElementById('deliveryFields').style.display = delivery ? 'block' : 'none';
+    deliveryQuoted = false;
+    deliveryFeeCents = 0;
+    document.getElementById('quoteResult').textContent = '';
+    updateTotals();
+  }
+
+  // Re-quote needed if address changes after a quote
+  ['dStreet', 'dCity', 'dState', 'dZip'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      deliveryQuoted = false;
+      updateTotals();
+    });
+  });
+
+  async function quoteDelivery() {
+    const street = document.getElementById('dStreet').value.trim();
+    const city   = document.getElementById('dCity').value.trim();
+    const state  = document.getElementById('dState').value.trim();
+    const zip    = document.getElementById('dZip').value.trim();
+    const result = document.getElementById('quoteResult');
+    const qBtn   = document.getElementById('quoteBtn');
+    if (!street || !city || !state || !zip) {
+      result.style.color = '#b3402f';
+      result.textContent = 'Please fill in street, city, state, and ZIP.';
+      return;
+    }
+    qBtn.disabled = true;
+    qBtn.textContent = 'Calculating…';
+    try {
+      const res = await fetch('/api/bundle-delivery-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street, city, state, zip }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        deliveryFeeCents = data.fee_cents;
+        deliveryQuoted = true;
+        result.style.color = 'var(--color-green)';
+        result.textContent = data.free
+          ? `${data.miles} mi away — delivery is FREE! 🎉`
+          : `${data.miles} mi away — delivery fee: ${fmt(data.fee_cents)}`;
+      } else {
+        deliveryQuoted = false;
+        result.style.color = '#b3402f';
+        result.textContent = data.error || 'Could not calculate. Please check the address.';
+      }
+    } catch (e) {
+      deliveryQuoted = false;
+      result.style.color = '#b3402f';
+      result.textContent = 'Something went wrong. Please try again.';
+    } finally {
+      qBtn.disabled = false;
+      qBtn.textContent = 'Calculate delivery fee';
+      updateTotals();
+    }
+  }
+
   // Checkout
   async function checkout() {
     const btn = document.getElementById('buyBtn');
-    const addProcessing = false; // processing now included automatically
     const breadChoice = document.querySelector('input[name="breadChoice"]:checked')?.value || 'challah';
     const preserveChoice = document.querySelector('input[name="preserveChoice"]:checked')?.value || 'strawberry';
+    const method = getMethod();
+
+    let address = null;
+    if (method === 'delivery') {
+      if (!deliveryQuoted) {
+        alert('Please calculate your delivery fee first by entering your address and tapping "Calculate delivery fee".');
+        return;
+      }
+      address = {
+        street: document.getElementById('dStreet').value.trim(),
+        city:   document.getElementById('dCity').value.trim(),
+        state:  document.getElementById('dState').value.trim(),
+        zip:    document.getElementById('dZip').value.trim(),
+      };
+    }
+
     btn.disabled = true;
     btn.textContent = 'Redirecting to checkout…';
     try {
       const res = await fetch('/bundle-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ addProcessing, breadChoice, preserveChoice }),
+        body: JSON.stringify({ breadChoice, preserveChoice, deliveryMethod: method, address }),
       });
       const data = await res.json();
       if (data.url) {

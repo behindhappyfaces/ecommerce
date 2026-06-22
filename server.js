@@ -550,11 +550,23 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const pickupZip      = session.metadata?.pickup_zip     || '';
         const pickupAddress  = [pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupZip].filter(Boolean).join(', ');
         const pickupCommPref = session.metadata?.pickup_comm    || '';
+
+        // Local delivery address (collected on our page, stored in metadata)
+        const deliveryAddrStr = [
+          session.metadata?.delivery_street,
+          session.metadata?.delivery_city,
+          session.metadata?.delivery_state,
+          session.metadata?.delivery_zip,
+        ].filter(Boolean).join(', ');
+        const deliveryMiles = session.metadata?.delivery_miles || '';
+
         const addrLine = shippingAddr
           ? `${shippingAddr.line1}${shippingAddr.line2 ? ', ' + shippingAddr.line2 : ''}, ${shippingAddr.city}, ${shippingAddr.state} ${shippingAddr.postal_code}`
-          : (deliveryMethod === 'pickup'
-              ? `Local pick-up${pickupLoc ? ' — ' + pickupLoc : ''} (details to follow)`
-              : '');
+          : deliveryAddrStr
+            ? deliveryAddrStr
+            : (deliveryMethod === 'pickup'
+                ? `Local pick-up${pickupLoc ? ' — ' + pickupLoc : ''} (details to follow)`
+                : '');
 
         // Gift + billing metadata
         const isGift   = session.metadata?.is_gift === 'true';
@@ -583,7 +595,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           const deliveryBlock = deliveryMethod === 'pickup'
             ? `<p style="margin:0;color:#3d3d3d;line-height:1.8;"><strong>Delivery:</strong> Local Pick-up — we'll be in touch soon to confirm your pick-up time and location.</p>`
             : addrLine
-              ? `<p style="margin:0;color:#3d3d3d;line-height:1.8;"><strong>Delivery:</strong> Shipping to ${addrLine}</p>`
+              ? `<p style="margin:0;color:#3d3d3d;line-height:1.8;"><strong>${deliveryMethod === 'delivery' ? 'Local Delivery to' : 'Shipping to'}:</strong> ${addrLine}${deliveryMiles ? ` <span style="color:#888;">(${deliveryMiles} mi)</span>` : ''}</p>`
               : '';
 
           return `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
@@ -1258,6 +1270,35 @@ async function geocodeAddress(street, city, state, zip) {
   if (!match) throw new Error('Address not found');
   return { lat: match.coordinates.y, lng: match.coordinates.x };
 }
+
+// Bundle-specific delivery fee:
+//   ≤ 10 mi  → FREE
+//   ≤ 20 mi  → $15 flat
+//   > 20 mi  → $15 + $0.70 per mile beyond 20
+// Origin: 100 Commons Rd, Dripping Springs, TX 78620
+function calcBundleDeliveryFeeCents(distanceMiles) {
+  if (distanceMiles <= 10) return 0;
+  if (distanceMiles <= 20) return 1500;
+  return 1500 + Math.round((distanceMiles - 20) * 0.70 * 100);
+}
+
+const BUNDLE_ORIGIN_LAT = parseFloat(process.env.BUNDLE_ORIGIN_LAT) || 30.191784;
+const BUNDLE_ORIGIN_LNG = parseFloat(process.env.BUNDLE_ORIGIN_LNG) || -98.084784;
+
+// POST /api/bundle-delivery-fee — quotes the bundle delivery fee for an address
+app.post('/api/bundle-delivery-fee', express.json(), async (req, res) => {
+  const { street, city, state, zip } = req.body || {};
+  if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in street, city, state, and ZIP.' });
+  try {
+    const { lat, lng } = await geocodeAddress(street, city, state, zip);
+    const miles = haversineMiles(BUNDLE_ORIGIN_LAT, BUNDLE_ORIGIN_LNG, lat, lng);
+    const feeCents = calcBundleDeliveryFeeCents(miles);
+    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, free: feeCents === 0 });
+  } catch (e) {
+    console.error('[bundle-delivery-fee]', e.message);
+    res.status(422).json({ error: 'Could not verify that address. Please double-check it.' });
+  }
+});
 
 app.post('/api/calculate-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip, order_total_cents } = req.body || {};
@@ -3251,8 +3292,9 @@ app.post('/bundle-checkout', async (req, res) => {
     if (sales.sold >= BUNDLE_TOTAL) {
       return res.json({ error: 'Sorry — all 25 bundles have been claimed. Thank you for your interest!' });
     }
-    const { breadChoice } = req.body;
+    const { breadChoice, deliveryMethod, address } = req.body;
     const origin = `${req.protocol}://${req.get('host')}`;
+    const isDelivery = deliveryMethod === 'delivery';
 
     // Contents mirror the bundle page's "What's Inside" — each shown as its own
     // row ($0 / "Free") on the Stripe pay screen so the buyer can scan everything
@@ -3290,11 +3332,43 @@ app.post('/bundle-checkout', async (req, res) => {
       })),
     ];
 
+    // Delivery fee — always recomputed server-side from the submitted address
+    // (client-supplied amounts are ignored to prevent tampering). Free ≤10 mi.
+    const deliveryMeta = {};
+    if (isDelivery && address?.street) {
+      let feeCents;
+      try {
+        const { lat, lng } = await geocodeAddress(address.street, address.city, address.state, address.zip);
+        const miles = haversineMiles(BUNDLE_ORIGIN_LAT, BUNDLE_ORIGIN_LNG, lat, lng);
+        feeCents = calcBundleDeliveryFeeCents(miles);
+        deliveryMeta.delivery_miles = String(Math.round(miles * 10) / 10);
+      } catch (geoErr) {
+        console.error('[bundle checkout] delivery geocode failed:', geoErr.message);
+        feeCents = 1500; // fallback flat fee if the address can't be geocoded
+      }
+      if (feeCents > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Local Delivery Fee' },
+            unit_amount: feeCents,
+          },
+          quantity: 1,
+        });
+      }
+      deliveryMeta.delivery_street = (address.street || '').slice(0, 200);
+      deliveryMeta.delivery_city   = (address.city   || '').slice(0, 100);
+      deliveryMeta.delivery_state  = (address.state  || '').slice(0, 10);
+      deliveryMeta.delivery_zip    = (address.zip    || '').slice(0, 10);
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
       line_items: lineItems,
-      shipping_address_collection: { allowed_countries: ['US'] },
+      // Delivery address is collected on our page (needed to price by distance);
+      // for pickup we let Stripe collect the address for the customer record.
+      ...(isDelivery ? {} : { shipping_address_collection: { allowed_countries: ['US'] } }),
       phone_number_collection: { enabled: true },
       custom_fields: [{
         key: 'order_notes',
@@ -3302,7 +3376,14 @@ app.post('/bundle-checkout', async (req, res) => {
         type: 'text',
         optional: true,
       }],
-      metadata: { type: 'bundle', bundle: '4th-july-homestead-table', processing: 'no', bread: breadChoice || 'challah' },
+      metadata: {
+        type: 'bundle',
+        bundle: '4th-july-homestead-table',
+        processing: 'no',
+        bread: breadChoice || 'challah',
+        delivery_method: isDelivery ? 'delivery' : 'pickup',
+        ...deliveryMeta,
+      },
       success_url: `${origin}/bundle-success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/bundle.html`,
     });

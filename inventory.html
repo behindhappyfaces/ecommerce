@@ -1015,6 +1015,11 @@
     <p class="section-title">Build a Cart Link</p>
     <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;">Pick items and quantities, then generate a link. Send it to a customer — when they open it their cart fills automatically.</p>
 
+    <div id="cl-draft-banner" style="display:none;background:#2a2a1a;border:1px solid #5a5030;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#d4c89a;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <span>Draft restored from your last session.</span>
+      <button id="cl-draft-clear" type="button" class="btn-sm btn-ghost">Clear Draft</button>
+    </div>
+
     <div style="display:flex;gap:10px;margin-bottom:18px;">
       <label style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid #444;border-radius:8px;cursor:pointer;font-size:0.84rem;color:#f0ebe4;background:#1a1a1a;">
         <input type="radio" name="cl-type" value="onetime" checked style="accent-color:var(--terra);"> One-time purchase
@@ -3821,7 +3826,7 @@
         removeBtn.textContent = '×';
         removeBtn.title = 'Remove row';
         removeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:2px 6px;';
-        removeBtn.onclick = () => tr.remove();
+        removeBtn.onclick = () => { tr.remove(); saveDraft(); };
         removeTd.appendChild(removeBtn);
       }
 
@@ -3840,6 +3845,7 @@
     document.getElementById('cl-add-custom').addEventListener('click', () => {
       customCounter++;
       addRow('custom-' + customCounter, '', 0, true);
+      saveDraft();
     });
 
     document.getElementById('cl-tax-enable').addEventListener('change', (e) => {
@@ -3858,8 +3864,96 @@
         const isSub = document.querySelector('input[name="cl-type"]:checked').value === 'subscription';
         document.getElementById('cl-sub-price-row').style.display = isSub ? 'block' : 'none';
         document.getElementById('cl-generate').textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link';
+        saveDraft();
       });
     });
+
+    // ── Draft autosave — survives a refresh or freeze ──────────────────────
+    const DRAFT_KEY = 'hoto-cartlink-draft';
+
+    function saveDraft() {
+      const rows = [...tbody.querySelectorAll('tr')].map(tr => {
+        const id = tr.dataset.rowId;
+        return {
+          id,
+          isCustom: !!tr.querySelector('button'),
+          checked:  tr.querySelector('[data-id]').checked,
+          name:     tr.querySelector(`[data-name-for="${id}"]`).value,
+          qty:      tr.querySelector(`[data-qty-for="${id}"]`).value,
+          price:    tr.querySelector(`[data-price-for="${id}"]`).value,
+          taxable:  tr.querySelector(`[data-taxable-for="${id}"]`).checked,
+          free:     tr.querySelector(`[data-free-for="${id}"]`).checked,
+        };
+      });
+      const draft = {
+        rows,
+        type:           document.querySelector('input[name="cl-type"]:checked').value,
+        subPrice:       document.getElementById('cl-sub-price').value,
+        note:           document.getElementById('cl-note').value,
+        discountAmount: document.getElementById('cl-discount-amount').value,
+        discountType:   document.getElementById('cl-discount-type').value,
+        discountLabel:  document.getElementById('cl-discount-label').value,
+        taxEnabled:     document.getElementById('cl-tax-enable').checked,
+        taxRate:        document.getElementById('cl-tax-rate').value,
+        custName:       document.getElementById('cl-cust-name').value,
+        custEmail:      document.getElementById('cl-cust-email').value,
+        custPhone:      document.getElementById('cl-cust-phone').value,
+        source:         document.getElementById('cl-source').value,
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    }
+
+    function clearDraft() {
+      localStorage.removeItem(DRAFT_KEY);
+      document.getElementById('cl-draft-banner').style.display = 'none';
+    }
+
+    function loadDraft() {
+      let draft;
+      try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { draft = null; }
+      if (!draft) return;
+
+      draft.rows.forEach(r => {
+        let tr = tbody.querySelector(`tr[data-row-id="${r.id}"]`);
+        if (!tr && r.isCustom) {
+          addRow(r.id, r.name, 0, true);
+          tr = tbody.querySelector(`tr[data-row-id="${r.id}"]`);
+          const n = parseInt(r.id.replace('custom-', ''), 10);
+          if (!isNaN(n) && n > customCounter) customCounter = n;
+        }
+        if (!tr) return;
+        tr.querySelector('[data-id]').checked = r.checked;
+        tr.querySelector(`[data-name-for="${r.id}"]`).value = r.name;
+        tr.querySelector(`[data-qty-for="${r.id}"]`).value = r.qty;
+        tr.querySelector(`[data-price-for="${r.id}"]`).value = r.price;
+        tr.querySelector(`[data-taxable-for="${r.id}"]`).checked = r.taxable;
+        tr.querySelector(`[data-free-for="${r.id}"]`).checked = r.free;
+      });
+
+      document.querySelector(`input[name="cl-type"][value="${draft.type}"]`).checked = true;
+      const isSub = draft.type === 'subscription';
+      document.getElementById('cl-sub-price-row').style.display = isSub ? 'block' : 'none';
+      document.getElementById('cl-generate').textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link';
+      document.getElementById('cl-sub-price').value = draft.subPrice || '';
+      document.getElementById('cl-note').value = draft.note || '';
+      document.getElementById('cl-discount-amount').value = draft.discountAmount || '';
+      document.getElementById('cl-discount-type').value = draft.discountType || 'percent';
+      document.getElementById('cl-discount-label').value = draft.discountLabel || '';
+      document.getElementById('cl-tax-enable').checked = !!draft.taxEnabled;
+      document.getElementById('cl-tax-rate').value = draft.taxRate || '8.25';
+      document.getElementById('cl-tax-rate').disabled = !draft.taxEnabled;
+      document.getElementById('cl-cust-name').value = draft.custName || '';
+      document.getElementById('cl-cust-email').value = draft.custEmail || '';
+      document.getElementById('cl-cust-phone').value = draft.custPhone || '';
+      document.getElementById('cl-source').value = draft.source || '';
+
+      document.getElementById('cl-draft-banner').style.display = 'flex';
+    }
+
+    document.getElementById('cl-draft-clear').addEventListener('click', clearDraft);
+    document.getElementById('panel-cart-links').addEventListener('input', saveDraft);
+    document.getElementById('panel-cart-links').addEventListener('change', saveDraft);
+    loadDraft();
 
     document.getElementById('cl-generate').addEventListener('click', async () => {
       const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox][data-id]:checked')];
@@ -3904,6 +3998,7 @@
         });
         const data = await res.json();
         if (!data.url) throw new Error(data.error || 'Failed');
+        clearDraft();
         document.getElementById('cl-link').value = data.url;
         document.getElementById('cl-result').style.display = 'block';
         document.getElementById('cl-copy-msg').style.display = 'none';

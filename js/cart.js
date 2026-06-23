@@ -326,7 +326,7 @@ function renderCart() {
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'cart-item__remove';
-    removeBtn.setAttribute('aria-label', 'Remove ' + p.name);
+    removeBtn.setAttribute('aria-label', 'Remove ' + displayName);
     removeBtn.textContent = '✕';
     removeBtn.addEventListener('click', () => removeItem(id));
 

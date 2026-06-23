@@ -295,7 +295,12 @@ function renderCart() {
 
     const price = document.createElement('p');
     price.className = 'cart-item__price';
-    price.textContent = fmt(displayPrice);
+    if (displayPrice < 0) {
+      price.textContent = '-' + fmt(Math.abs(displayPrice));
+      price.style.color = '#2a7a2a';
+    } else {
+      price.textContent = fmt(displayPrice);
+    }
 
     const qtyRow = document.createElement('div');
     qtyRow.className = 'cart-item__qty';
@@ -433,7 +438,8 @@ function renderCart() {
   totalRow.appendChild(totalAmount);
 
   // Subscribe & Save toggle — only show when weekly spend is $55 or more
-  if (!adminSub && getTotal() >= 5500) {
+  const hasSamplerBox = cart.items.some(i => i.id === 'sampler-box');
+  if (!adminSub && !hasSamplerBox && getTotal() >= 5500) {
     const subToggleWrap = document.createElement('label');
     subToggleWrap.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--color-cream,#F5F0E8);border-radius:10px;cursor:pointer;margin-bottom:10px;';
     const subToggleCb = document.createElement('input');

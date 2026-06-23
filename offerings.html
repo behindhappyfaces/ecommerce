@@ -143,7 +143,7 @@
             <p class="sub-card__price">$149</p>
             <p class="sub-card__billing">one-time purchase</p>
             <button type="button" id="sampler-whats-inside" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
-            <button class="sub-card__btn" data-add-to-cart="sampler-box">Add to Cart</button>
+            <button type="button" class="sub-card__btn" id="sampler-card-add">Add to Cart</button>
           </div>
         </article>
         <article class="sub-card sub-card--featured" data-fade>
@@ -1230,15 +1230,17 @@
         });
         var yeastCb  = document.getElementById('sampler-yeast-cb');
         var savings  = (yeastCb && yeastCb.checked) ? Math.round((BASE + addonTotal) * 0.05) : 0;
-        var boxPrice = BASE - savings;
         var sauceSel   = document.getElementById('sampler-sauce-swap');
         var swapNote   = sauceSel.value !== 'garlic-chili-crunch' ? 'Swap: Tuscany Herb Dipping Oil' : '';
 
         // Build cart items: sampler box + add-ons
         var cartData   = typeof getCart === 'function' ? getCart() : { items: [] };
-        // Remove any existing sampler-box entry first
-        cartData.items = cartData.items.filter(function(i) { return i.id !== 'sampler-box'; });
-        cartData.items.unshift({ id: 'sampler-box', qty: 1, price: boxPrice });
+        // Remove any existing sampler-box / discount entry first
+        cartData.items = cartData.items.filter(function(i) { return i.id !== 'sampler-box' && i.id !== 'sampler-yeast-discount'; });
+        cartData.items.unshift({ id: 'sampler-box', qty: 1, price: BASE });
+        if (savings > 0) {
+          cartData.items.splice(1, 0, { id: 'sampler-yeast-discount', qty: 1, price: -savings, name: '5% Savings — Yeast Rolls Added' });
+        }
 
         document.querySelectorAll('.sampler-addon:checked').forEach(function(cb) {
           var existing = cartData.items.find(function(i) { return i.id === cb.dataset.addonId; });
@@ -1256,6 +1258,7 @@
       function openSampler()  { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; recalc(); }
       function closeSampler() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
       document.getElementById('sampler-whats-inside').addEventListener('click', openSampler);
+      document.getElementById('sampler-card-add').addEventListener('click', openSampler);
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
     })();

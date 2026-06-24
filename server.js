@@ -1293,16 +1293,18 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+const DELIVERY_MIN_ORDER_CENTS = 7500; // $75 minimum order required for delivery
+
 function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
   let feeCents;
   if (distanceMiles <= 20) {
-    feeCents = 1500; // flat $15
+    feeCents = 0; // free within 20 miles
   } else if (distanceMiles <= 25) {
     feeCents = 1500 + Math.round((distanceMiles - 20) * 0.70 * 100); // $15 + $0.70/mi over 20
   } else {
     feeCents = 2500; // flat $25
   }
-  if (orderTotalCents > 10000) {
+  if (feeCents > 0 && orderTotalCents > 10000) {
     feeCents = Math.round(feeCents * 0.95); // 5% off delivery when order > $100
   }
   return feeCents;
@@ -1393,6 +1395,13 @@ app.post('/create-checkout-session', async (req, res) => {
     // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
+
+    if (delivery_method === 'delivery') {
+      const itemsSubtotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
+      if (itemsSubtotal < DELIVERY_MIN_ORDER_CENTS) {
+        return res.status(400).json({ error: `Delivery requires a $${(DELIVERY_MIN_ORDER_CENTS / 100).toFixed(0)} minimum order.` });
+      }
+    }
 
     const hasTurkey = items.some(i => TURKEY_ITEM_IDS.has(i.id));
 
@@ -2181,11 +2190,8 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
   }
 });
 
-// Send a cart link email to a customer
-app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
-  const { to, name, phone, source, cartUrl, note, items = [], total, discount } = req.body || {};
-  if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
-
+// Builds the "your custom order is ready" email shared by send + resend
+function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
   const noteBlock = note ? `<p style="font-style:italic;color:#5a7a5b;">${note}</p>` : '';
 
@@ -2263,9 +2269,46 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
   </table>
 </body>
 </html>`;
+  return html;
+}
+
+// Extracts the rc= token from a cart link URL
+function tokenFromCartUrl(cartUrl) {
+  try { return new URL(cartUrl).searchParams.get('rc'); }
+  catch { return null; }
+}
+
+// Send a cart link email to a customer
+app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
+  const { to, name, phone, source, cartUrl, note, items = [], total, discount } = req.body || {};
+  if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
+
+  const html = cartLinkEmailHtml({ name, note, items, total, discount, cartUrl });
 
   try {
     await sendEmailTo(to, 'Your custom order from Heart of Texas Organics 🌿', html);
+
+    // Persist customer details + reminder count back onto the saved cart link
+    // so it can be found later in the Sent Cart Links list, resent, or duplicated.
+    const token = tokenFromCartUrl(cartUrl);
+    if (token) {
+      try {
+        const existing = await getPendingCartDB(token);
+        if (existing) {
+          await updatePendingCartDB(token, {
+            name:           name  || existing.name  || '',
+            email:          to,
+            phone:          phone || existing.phone || null,
+            source:         source || existing.source || '',
+            remindersSent:  (existing.remindersSent || 0) + 1,
+            lastReminderAt: new Date().toISOString(),
+          });
+        }
+      } catch (pcErr) {
+        console.warn('[CartLink] Could not update pending cart record:', pcErr.message);
+      }
+    }
+
     let sheetRecorded = false;
     try {
       sheetRecorded = await sheetsRecordCustomer({ name, email: to, phone, source, items, total, note, cartUrl });
@@ -2276,6 +2319,79 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
   } catch (err) {
     console.error('[send-cart-link-email]', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// List all admin-created cart links (for resending / duplicating)
+app.get('/admin/cart-links', requireAdmin, async (req, res) => {
+  try {
+    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+    const carts = await readPendingCartsDB();
+    const list = Object.values(carts)
+      .filter(c => c.adminCreated)
+      .map(c => ({ ...c, url: `${siteUrl}/offerings.html?rc=${c.token}` }))
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    res.json(list);
+  } catch (e) {
+    console.error('[cart-links list]', e.message);
+    res.status(500).json({ error: 'Could not load cart links' });
+  }
+});
+
+// Resend the order email for an existing cart link
+app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async (req, res) => {
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).json({ error: 'Cart link not found' });
+    if (!cart.email) return res.status(400).json({ error: 'This cart link has no customer email on file' });
+
+    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+    const cartUrl = `${siteUrl}/offerings.html?rc=${cart.token}`;
+    const itemRows = (cart.items || []).map(i => ({
+      name: i.name + (i.free ? ' (FREE)' : ''),
+      qty: 'x' + (i.quantity || 1),
+      price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
+    }));
+    const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+    const html = cartLinkEmailHtml({
+      name: cart.name, note: cart.note, items: itemRows,
+      total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
+    });
+
+    await sendEmailTo(cart.email, 'Your custom order from Heart of Texas Organics 🌿', html);
+    await updatePendingCartDB(cart.token, {
+      remindersSent:  (cart.remindersSent || 0) + 1,
+      lastReminderAt: new Date().toISOString(),
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[cart-link resend]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Duplicate an existing cart link into a brand-new link (same items/customer, fresh token)
+app.post('/admin/cart-links/:token/duplicate', requireAdmin, async (req, res) => {
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).json({ error: 'Cart link not found' });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const newCart = {
+      ...cart,
+      token,
+      createdAt:      new Date().toISOString(),
+      remindersSent:  0,
+      lastReminderAt: null,
+      completed:      false,
+    };
+    await setPendingCartDB(token, newCart);
+
+    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+    res.json({ ok: true, token, url: `${siteUrl}/offerings.html?rc=${token}` });
+  } catch (e) {
+    console.error('[cart-link duplicate]', e.message);
+    res.status(500).json({ error: 'Could not duplicate cart link' });
   }
 });
 
@@ -2323,7 +2439,7 @@ app.get('/admin/check', requireAdmin, (req, res) => {
 // --- Cart link builder ---
 app.post('/admin/create-cart-link', requireAdmin, express.json(), async (req, res) => {
   try {
-    const { items, note, subscription, subPrice, discount, taxRate } = req.body || {};
+    const { items, note, subscription, subPrice, discount, taxRate, custName, custEmail, custPhone, custSource } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'items required' });
     if (subscription && (!subPrice || subPrice <= 0)) return res.status(400).json({ error: 'Monthly price required for subscription links' });
 
@@ -2333,8 +2449,10 @@ app.post('/admin/create-cart-link', requireAdmin, express.json(), async (req, re
 
     const cartData = {
       token,
-      phone:          null,
-      email:          null,
+      name:           custName  || '',
+      email:          custEmail || null,
+      phone:          custPhone || null,
+      source:         custSource || '',
       items,
       itemSummary,
       subName,

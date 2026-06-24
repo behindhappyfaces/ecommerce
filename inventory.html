@@ -1169,6 +1169,27 @@
         <p id="cl-no-email-warning" style="font-size:0.75rem;color:#e07a5f;margin:6px 0 0;display:none;">⚠ Enter a customer email above before generating the link to enable sending.</p>
       </div>
     </div>
+
+    <!-- Sent Cart Links — view, resend, or duplicate any link ever generated -->
+    <div style="margin-top:36px;border-top:1px solid #333;padding-top:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <p class="section-title" style="margin:0;">Sent Cart Links</p>
+        <button id="cl-list-refresh" class="btn-sm btn-ghost">&#8635; Refresh</button>
+      </div>
+      <table class="data" style="max-width:920px;">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Items</th>
+            <th style="width:80px;">Total</th>
+            <th style="width:110px;">Sent</th>
+            <th style="width:90px;">Status</th>
+            <th style="width:220px;"></th>
+          </tr>
+        </thead>
+        <tbody id="cl-list-body"><tr><td colspan="6" class="empty-msg">Loading…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- TAB: ORDERS -->
@@ -1412,6 +1433,7 @@
       if (btn.dataset.tab === 'subscribers') loadSubscribers();
       if (btn.dataset.tab === 'staples') loadStaples();
       if (btn.dataset.tab === 'workshop-interest') loadWorkshopInterest();
+      if (btn.dataset.tab === 'cart-links') loadCartLinks();
     });
   });
 
@@ -3807,6 +3829,7 @@
       const taxCb = document.createElement('input');
       taxCb.type = 'checkbox';
       taxCb.dataset.taxableFor = id;
+      taxCb.checked = !!document.getElementById('cl-tax-enable')?.checked;
       taxCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
       const taxTd = document.createElement('td');
       taxTd.style.cssText = 'text-align:center;';
@@ -3850,6 +3873,11 @@
 
     document.getElementById('cl-tax-enable').addEventListener('change', (e) => {
       document.getElementById('cl-tax-rate').disabled = !e.target.checked;
+      // Enabling Sales Tax defaults every item to taxable — otherwise tax silently
+      // computes to $0 unless each row's "Taxable" box is also checked individually.
+      if (e.target.checked) {
+        document.querySelectorAll('#cl-product-rows input[data-taxable-for]').forEach(cb => cb.checked = true);
+      }
     });
     document.getElementById('cl-tax-all').addEventListener('click', () => {
       document.querySelectorAll('#cl-product-rows input[data-taxable-for]').forEach(cb => cb.checked = true);
@@ -3988,9 +4016,13 @@
       btn.textContent = 'Generating…'; btn.disabled = true;
 
       const discount = discountAmt > 0 ? { amount: discountAmt, type: discountType, label: discountLabel } : null;
+      const custName   = document.getElementById('cl-cust-name').value.trim();
+      const custEmail  = document.getElementById('cl-cust-email').value.trim();
+      const custPhone  = document.getElementById('cl-cust-phone').value.trim();
+      const custSource = document.getElementById('cl-source').value;
 
       try {
-        const body = { items, note, subscription: isSub, subPrice, discount, taxRate };
+        const body = { items, note, subscription: isSub, subPrice, discount, taxRate, custName, custEmail, custPhone, custSource };
         const res  = await fetch('/admin/create-cart-link', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
@@ -4138,7 +4170,83 @@
         setTimeout(() => { msg.style.display = 'none'; }, 2500);
       });
     });
+
+    document.getElementById('cl-list-refresh').addEventListener('click', loadCartLinks);
   }());
+
+  // ── SENT CART LINKS — view, resend, duplicate ───────────────────────────────
+  function escCartLink(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function loadCartLinks() {
+    const tbody = document.getElementById('cl-list-body');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Loading…</td></tr>';
+    try {
+      const res = await fetch('/admin/cart-links', { headers: authHeaders() });
+      const links = await res.json();
+      if (!Array.isArray(links) || !links.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No cart links sent yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = links.map(renderCartLinkRow).join('');
+      tbody.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => handleCartLinkAction(btn.dataset.action, btn.dataset.token));
+      });
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Failed to load cart links.</td></tr>';
+    }
+  }
+
+  function renderCartLinkRow(c) {
+    const total = (c.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+    const sentDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
+    const statusBadge = c.completed
+      ? '<span style="color:#6fcf97;">&#10003; Completed</span>'
+      : '<span style="color:#d4a96a;">Pending</span>';
+    const custLine = escCartLink(c.name || '(no name)') +
+      (c.email ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.email) + '</span>' : '');
+    return `<tr>
+      <td>${custLine}</td>
+      <td style="font-size:0.82rem;color:#ccc;">${escCartLink(c.itemSummary || '')}</td>
+      <td>$${(total / 100).toFixed(2)}</td>
+      <td style="font-size:0.78rem;color:#aaa;">${sentDate}${c.remindersSent ? ' · sent ' + c.remindersSent + 'x' : ''}</td>
+      <td>${statusBadge}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy</button>
+        <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" ${c.email ? '' : 'disabled title="No email on file"'}>Resend</button>
+        <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
+      </td>
+    </tr>`;
+  }
+
+  async function handleCartLinkAction(action, token) {
+    if (action === 'copy') {
+      const btn = document.querySelector(`[data-token="${token}"][data-action="copy"]`);
+      const url = btn?.dataset.url;
+      if (url) { navigator.clipboard.writeText(url); showToast('Link copied'); }
+      return;
+    }
+    if (action === 'resend') {
+      if (!confirm('Resend this order email to the customer?')) return;
+      try {
+        const res = await fetch(`/admin/cart-links/${token}/resend`, { method: 'POST', headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed');
+        showToast('Email resent');
+        loadCartLinks();
+      } catch (e) { showToast(e.message, true); }
+      return;
+    }
+    if (action === 'duplicate') {
+      try {
+        const res = await fetch(`/admin/cart-links/${token}/duplicate`, { method: 'POST', headers: authHeaders() });
+        const data = await res.json();
+        if (!data.url) throw new Error(data.error || 'Failed');
+        await navigator.clipboard.writeText(data.url);
+        showToast('New link created & copied to clipboard');
+        loadCartLinks();
+      } catch (e) { showToast(e.message, true); }
+    }
+  }
 
   // ── BUNDLES PANEL ──────────────────────────────────────────────────────────
   (function () {

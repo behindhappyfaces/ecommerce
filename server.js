@@ -919,6 +919,13 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       case 'payment_intent.succeeded': {
         const pi = event.data.object;
 
+        // Phone (MOTO) orders are created directly as PaymentIntents — no
+        // checkout.session.completed will ever fire for them — so handle here.
+        if (pi.metadata?.type === 'phone-order') {
+          await handlePhoneOrderSucceeded(pi);
+          break;
+        }
+
         // FIX: check the actual payment method TYPE used, not the allowed list.
         // pi.payment_method_types is always ['card','us_bank_account'] for all sessions
         // checking it would always evaluate to 'card' and skip ACH. Instead, retrieve
@@ -2328,7 +2335,7 @@ app.get('/admin/cart-links', requireAdmin, async (req, res) => {
     const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
     const carts = await readPendingCartsDB();
     const list = Object.values(carts)
-      .filter(c => c.adminCreated)
+      .filter(c => c.adminCreated && !c.isPhoneOrder)
       .map(c => ({ ...c, url: `${siteUrl}/offerings.html?rc=${c.token}` }))
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     res.json(list);
@@ -2394,6 +2401,111 @@ app.post('/admin/cart-links/:token/duplicate', requireAdmin, async (req, res) =>
     res.status(500).json({ error: 'Could not duplicate cart link' });
   }
 });
+
+// ─── Phone (MOTO) payments ────────────────────────────────────────────────
+// Lets the admin key in a customer's card over the phone. Raw card data is
+// entered into a Stripe Elements iframe in the browser and goes straight to
+// Stripe — it never touches our server. We only ever see a PaymentIntent id.
+
+app.get('/admin/stripe-publishable-key', requireAdmin, (req, res) => {
+  res.json({ key: process.env.STRIPE_PUBLISHABLE_KEY || '' });
+});
+
+app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req, res) => {
+  try {
+    const { items, customerName, customerEmail, customerPhone, note, taxRate } = req.body || {};
+    if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
+
+    const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
+    const taxableSubtotal = items.reduce((s, i) => s + (i.taxable ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
+    const taxPct = parseFloat(taxRate) || 0;
+    const taxCents = taxPct > 0 ? Math.round(taxableSubtotal * taxPct / 100) : 0;
+    const totalCents = subtotalCents + taxCents;
+    if (totalCents <= 0) return res.status(400).json({ error: 'Total must be greater than $0' });
+
+    const intent = await stripe.paymentIntents.create({
+      amount: totalCents,
+      currency: 'usd',
+      payment_method_types: ['card'],
+      payment_method_options: { card: { moto: true, request_three_d_secure: 'any' } },
+      description: `Phone order — ${customerName || 'customer'}`,
+      receipt_email: customerEmail || undefined,
+      metadata: { type: 'phone-order' },
+    });
+
+    // Persisted under the PaymentIntent id so the webhook can find full order
+    // details on success (Stripe metadata is too small to hold a full item list).
+    await setPendingCartDB(intent.id, {
+      token: intent.id, isPhoneOrder: true, adminCreated: true,
+      name: customerName || '', email: customerEmail || null, phone: customerPhone || null,
+      items, note: note || '', taxRate: taxPct, totalCents,
+      itemSummary: items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : ''),
+      createdAt: new Date().toISOString(), completed: false, remindersSent: 0, lastReminderAt: null,
+    });
+
+    res.json({ ok: true, clientSecret: intent.client_secret, totalCents, taxCents, subtotalCents });
+  } catch (e) {
+    console.error('[charge/create-intent]', e.message);
+    res.status(500).json({ error: e.message || 'Could not start payment' });
+  }
+});
+
+// Persisted phone order, looked up by the webhook once the PaymentIntent succeeds
+async function handlePhoneOrderSucceeded(pi) {
+  const order = await getPendingCartDB(pi.id);
+  if (!order) { console.error('[phone-order] No pending record for', pi.id); return; }
+
+  const total = formatMoney(pi.amount_received);
+  saveOrder(pi.id, {
+    sessionId:       pi.id,
+    status:          'READY_TO_SHIP',
+    source:          'phone',
+    total:           pi.amount_received,
+    items:           order.items.map(i => ({ name: i.name, qty: i.quantity })),
+    paymentMethod:   'card',
+    created:         new Date().toISOString(),
+    customerName:    order.name  || '',
+    customerEmail:   order.email || '',
+    customerPhone:   order.phone || '',
+    deliveryMethod:  'phone-order',
+    customerNotes:   order.note || '',
+  });
+
+  try {
+    await deductStockForOrder(order.items.map(i => ({ description: i.name, quantity: i.quantity })), pi.id);
+  } catch (e) { console.error('[phone-order] stock deduction error:', e.message); }
+
+  await updatePendingCartDB(pi.id, { completed: true });
+
+  const itemLines = order.items.map(i =>
+    `<tr><td style="padding:6px 10px;border-bottom:1px solid #e8e2d6;">${i.name}</td>
+         <td style="padding:6px 10px;border-bottom:1px solid #e8e2d6;text-align:center;">x${i.quantity}</td></tr>`
+  ).join('');
+
+  await sendEmail(
+    `📞 Phone Order Charged — ${total}`,
+    `<h2 style="color:#2C3E2D;">Phone Order Payment Succeeded</h2>
+     <p><strong>Customer:</strong> ${order.name || 'unknown'} ${order.email ? '&lt;' + order.email + '&gt;' : ''} ${order.phone ? '· ' + order.phone : ''}</p>
+     <p><strong>Total charged:</strong> ${total}</p>
+     <table style="width:100%;border-collapse:collapse;">${itemLines}</table>
+     ${order.note ? `<p><strong>Note:</strong> ${order.note}</p>` : ''}
+     ${fulfillmentBadge('READY_TO_SHIP')}
+     <p style="color:#888;font-size:12px;">PaymentIntent: ${pi.id}</p>`
+  );
+
+  if (order.email) {
+    await sendEmailTo(order.email,
+      'Your Heart of Texas Organics Order is Confirmed 🌾',
+      `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 32px;background:#F5F0E8;">
+        <h2 style="color:#2C3E2D;">Your order is confirmed! 🌾</h2>
+        <p style="color:#3d3d3d;line-height:1.9;">Hi ${order.name || 'there'}, thanks for your order over the phone — here's what we charged:</p>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">${itemLines}</table>
+        <p style="color:#2C3E2D;font-weight:700;margin-top:16px;">Total: ${total}</p>
+        <p style="color:#3d3d3d;line-height:1.9;margin-top:24px;">Questions? Just reply to this email or reach us at operations@heartoftexasorganics.com.</p>
+      </div>`
+    );
+  }
+}
 
 // TEMP: create FREE test promo code using this server's Stripe key
 app.post('/admin/create-test-promo', requireAdmin, async (req, res) => {

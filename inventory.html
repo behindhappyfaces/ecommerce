@@ -488,6 +488,7 @@
     <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
     <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
     <button class="tab-btn" data-tab="cart-links">Cart Links</button>
+    <button class="tab-btn" data-tab="charge">📞 Charge Customer</button>
   </div>
 
   <!-- TAB: STOCK -->
@@ -1192,6 +1193,63 @@
     </div>
   </div>
 
+  <!-- TAB: CHARGE CUSTOMER (phone / MOTO payments) -->
+  <div class="panel" id="panel-charge">
+    <p class="section-title">Charge a Customer by Phone</p>
+    <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;max-width:560px;">
+      Use this when a customer is on the phone with you and needs help paying. Enter the card number they read to you directly into the card field below —
+      it's a secure Stripe field, so the card number never passes through our server.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;max-width:680px;">
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Customer Name</label>
+        <input id="ch-cust-name" type="text" placeholder="Jane Smith" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Email (for receipt)</label>
+        <input id="ch-cust-email" type="email" placeholder="jane@email.com" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Phone</label>
+        <input id="ch-cust-phone" type="tel" placeholder="512-555-0100" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+      </div>
+    </div>
+
+    <table class="data" style="max-width:680px;margin-bottom:8px;">
+      <thead><tr><th>Item</th><th style="width:70px;">Qty</th><th style="width:100px;">Price</th><th style="width:58px;">Taxable</th><th style="width:36px;"></th></tr></thead>
+      <tbody id="ch-item-rows"></tbody>
+    </table>
+    <button id="ch-add-item" class="btn-sm btn-ghost" style="margin-bottom:16px;">+ Add Item</button>
+
+    <div style="margin-bottom:16px;">
+      <label style="display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #333;border-radius:6px;background:#1a1a1a;cursor:pointer;width:fit-content;">
+        <input type="checkbox" id="ch-tax-enable" style="accent-color:var(--terra);">
+        <span style="font-size:0.85rem;color:#aaa;">Sales Tax</span>
+        <input id="ch-tax-rate" type="number" min="0" step="0.01" value="8.25" disabled style="width:60px;padding:4px 6px;background:#111;border:1px solid #333;border-radius:4px;color:#f0ebe4;font-size:0.85rem;">
+        <span style="font-size:0.85rem;color:#aaa;">%</span>
+      </label>
+    </div>
+
+    <div style="margin-bottom:16px;max-width:680px;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Note (optional, for your records)</label>
+      <input id="ch-note" type="text" placeholder="e.g. Trouble checking out online, charged manually" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;max-width:420px;font-size:0.95rem;color:#f0ebe4;border-top:1px solid #333;padding-top:10px;margin-bottom:16px;">
+      <span>Total</span>
+      <span id="ch-total" style="font-weight:700;color:var(--terra);">$0.00</span>
+    </div>
+
+    <div style="max-width:420px;margin-bottom:16px;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:6px;">Card Details</label>
+      <div id="ch-card-element" style="padding:12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;"></div>
+    </div>
+
+    <button id="ch-submit" class="btn-action" style="background:var(--terra);">Charge Customer</button>
+    <p id="ch-msg" style="font-size:0.82rem;margin-top:10px;display:none;"></p>
+  </div>
+
   <!-- TAB: ORDERS -->
   <div class="panel" id="panel-orders">
     <div class="orders-toolbar">
@@ -1434,6 +1492,7 @@
       if (btn.dataset.tab === 'staples') loadStaples();
       if (btn.dataset.tab === 'workshop-interest') loadWorkshopInterest();
       if (btn.dataset.tab === 'cart-links') loadCartLinks();
+      if (btn.dataset.tab === 'charge') initChargeTab();
     });
   });
 
@@ -4365,8 +4424,180 @@
     document.querySelector('[data-tab="bundles"]').addEventListener('click', loadBundles);
   }());
 
+  // ── CHARGE CUSTOMER (phone / MOTO payments) ─────────────────────────────
+  let chStripe = null, chCard = null, chReady = false, chInitialized = false;
+
+  function chRowStyle() {
+    return 'padding:4px 6px;background:#1a1a1a;border:1px solid #333;border-radius:4px;color:#f0ebe4;font-size:0.82rem;box-sizing:border-box;';
+  }
+
+  function chAddItemRow(name, priceDollars, qty, taxable) {
+    const tbody = document.getElementById('ch-item-rows');
+    const tr = document.createElement('tr');
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text'; nameInp.value = name || ''; nameInp.placeholder = 'Item name';
+    nameInp.style.cssText = chRowStyle() + 'width:100%;min-width:140px;';
+    nameInp.addEventListener('input', chUpdateTotal);
+
+    const qtyInp = document.createElement('input');
+    qtyInp.type = 'number'; qtyInp.min = 1; qtyInp.max = 99; qtyInp.value = qty || 1;
+    qtyInp.style.cssText = chRowStyle() + 'width:56px;';
+    qtyInp.addEventListener('input', chUpdateTotal);
+
+    const priceInp = document.createElement('input');
+    priceInp.type = 'number'; priceInp.min = 0; priceInp.step = '0.01'; priceInp.placeholder = 'e.g. 25.00';
+    priceInp.value = priceDollars != null ? priceDollars : '';
+    priceInp.style.cssText = chRowStyle() + 'width:90px;';
+    priceInp.addEventListener('input', chUpdateTotal);
+
+    const taxCb = document.createElement('input');
+    taxCb.type = 'checkbox';
+    taxCb.checked = taxable != null ? !!taxable : !!document.getElementById('ch-tax-enable').checked;
+    taxCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
+    taxCb.addEventListener('change', chUpdateTotal);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '×'; removeBtn.title = 'Remove row';
+    removeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:2px 6px;';
+    removeBtn.onclick = () => { tr.remove(); chUpdateTotal(); };
+
+    [nameInp, qtyInp, priceInp, taxCb, removeBtn].forEach((el, i) => {
+      const td = document.createElement('td');
+      if (i === 3) td.style.textAlign = 'center';
+      td.appendChild(el);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+    chUpdateTotal();
+  }
+
+  function chGetItems() {
+    return [...document.querySelectorAll('#ch-item-rows tr')].map(tr => {
+      const inputs = tr.querySelectorAll('input');
+      return {
+        name: inputs[0].value.trim(),
+        quantity: parseInt(inputs[1].value, 10) || 1,
+        price: Math.round((parseFloat(inputs[2].value) || 0) * 100),
+        taxable: inputs[3].checked,
+      };
+    }).filter(i => i.name && i.price > 0);
+  }
+
+  function chUpdateTotal() {
+    const items = chGetItems();
+    const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const taxEnabled = document.getElementById('ch-tax-enable').checked;
+    const taxRate = taxEnabled ? (parseFloat(document.getElementById('ch-tax-rate').value) || 0) : 0;
+    const taxableSubtotal = items.reduce((s, i) => s + (i.taxable ? i.price * i.quantity : 0), 0);
+    const taxCents = taxRate > 0 ? Math.round(taxableSubtotal * taxRate / 100) : 0;
+    const total = subtotal + taxCents;
+    document.getElementById('ch-total').textContent = '$' + (total / 100).toFixed(2);
+    return total;
+  }
+
+  function chShowMsg(text, ok) {
+    const el = document.getElementById('ch-msg');
+    el.style.cssText = 'font-size:0.82rem;margin-top:10px;display:block;color:' + (ok ? '#6fcf97' : '#e07a5f') + ';';
+    el.textContent = text;
+  }
+
+  async function initChargeTab() {
+    if (chInitialized) return;
+    chInitialized = true;
+
+    document.getElementById('ch-add-item').addEventListener('click', () => chAddItemRow());
+    document.getElementById('ch-tax-enable').addEventListener('change', (e) => {
+      document.getElementById('ch-tax-rate').disabled = !e.target.checked;
+      if (e.target.checked) {
+        document.querySelectorAll('#ch-item-rows tr').forEach(tr => { tr.querySelectorAll('input[type=checkbox]')[0].checked = true; });
+      }
+      chUpdateTotal();
+    });
+    document.getElementById('ch-tax-rate').addEventListener('input', chUpdateTotal);
+    chAddItemRow();
+
+    try {
+      const res = await fetch('/admin/stripe-publishable-key', { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.key) { chShowMsg('Stripe publishable key is not configured on the server.', false); document.getElementById('ch-submit').disabled = true; return; }
+      chStripe = Stripe(data.key);
+      const elements = chStripe.elements();
+      chCard = elements.create('card', {
+        style: { base: { color: '#f0ebe4', fontSize: '15px', '::placeholder': { color: '#888' } }, invalid: { color: '#e07a5f' } },
+      });
+      chCard.mount('#ch-card-element');
+      chReady = true;
+    } catch (e) {
+      console.error('[charge] Stripe init failed', e);
+      chShowMsg('Could not load the card field. Refresh and try again.', false);
+    }
+  }
+
+  document.getElementById('ch-submit').addEventListener('click', async () => {
+    document.getElementById('ch-msg').style.display = 'none';
+    if (!chReady) { chShowMsg('Card field is not ready yet.', false); return; }
+
+    const items = chGetItems();
+    if (!items.length) { chShowMsg('Add at least one item with a name and price.', false); return; }
+
+    const customerName  = document.getElementById('ch-cust-name').value.trim();
+    const customerEmail = document.getElementById('ch-cust-email').value.trim();
+    const customerPhone = document.getElementById('ch-cust-phone').value.trim();
+    const note          = document.getElementById('ch-note').value.trim();
+    const taxEnabled    = document.getElementById('ch-tax-enable').checked;
+    const taxRate       = taxEnabled ? (parseFloat(document.getElementById('ch-tax-rate').value) || 0) : 0;
+
+    const btn = document.getElementById('ch-submit');
+    btn.disabled = true; btn.textContent = 'Processing…';
+
+    try {
+      const res = await fetch('/admin/charge/create-intent', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ items, customerName, customerEmail, customerPhone, note, taxRate }),
+      });
+      const data = await res.json();
+      if (!data.clientSecret) throw new Error(data.error || 'Could not start payment');
+
+      const result = await chStripe.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: chCard,
+          billing_details: {
+            name:  customerName  || undefined,
+            email: customerEmail || undefined,
+            phone: customerPhone || undefined,
+          },
+        },
+      });
+
+      if (result.error) throw new Error(result.error.message);
+      if (result.paymentIntent.status === 'requires_action') {
+        throw new Error("This card needs extra verification that can't be completed by phone. Ask the customer to pay through a cart link instead.");
+      }
+      if (result.paymentIntent.status !== 'succeeded') {
+        throw new Error('Payment did not complete (status: ' + result.paymentIntent.status + ')');
+      }
+
+      chShowMsg('✓ Charged ' + document.getElementById('ch-total').textContent + ' — order saved to Orders.', true);
+      document.getElementById('ch-cust-name').value = '';
+      document.getElementById('ch-cust-email').value = '';
+      document.getElementById('ch-cust-phone').value = '';
+      document.getElementById('ch-note').value = '';
+      document.getElementById('ch-item-rows').innerHTML = '';
+      chAddItemRow();
+      chCard.clear();
+    } catch (e) {
+      chShowMsg('✗ ' + e.message, false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Charge Customer';
+    }
+  });
+
 })();
 </script>
+<!-- Stripe.js (phone/MOTO card payments) -->
+<script src="https://js.stripe.com/v3/"></script>
 <!-- SheetJS (Excel export) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <!-- jsPDF + autoTable (PDF export) -->

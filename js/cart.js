@@ -5,7 +5,7 @@
 const PRODUCTS = {
   'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 1500, subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
   'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 1800, subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
-  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 0,    subPrice: null, image: 'images/cinnamon-rolls.jpg' },
+  'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 600,  subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
   'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 3200, subPrice: null, image: 'images/focaccia-loaf.jpg' },
   'whole-chicken':      { name: 'Whole Chicken',       price: 0, subPrice: null, image: 'images/chicken.jpg' },
@@ -74,13 +74,17 @@ function saveCart(cart) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
+// Items sold only in fixed increments (e.g. cinnamon rolls: half-dozen minimum)
+const QTY_STEP = { 'cinnamon-rolls': 6 };
+
 function addItem(productId, priceOverride) {
   if (!PRODUCTS[productId]) return;
   const cart = getCart();
   const existing = cart.items.find(i => i.id === productId);
   const price = priceOverride ?? null;
-  if (existing) { existing.qty += 1; existing.price = price; }
-  else { cart.items.push({ id: productId, qty: 1, price }); }
+  const step = QTY_STEP[productId] || 1;
+  if (existing) { existing.qty += step; existing.price = price; }
+  else { cart.items.push({ id: productId, qty: step, price }); }
   saveCart(cart);
   renderCart();
   openCart();
@@ -90,7 +94,8 @@ function updateQty(productId, delta) {
   const cart = getCart();
   const item = cart.items.find(i => i.id === productId);
   if (!item) return;
-  item.qty += delta;
+  const step = QTY_STEP[productId] || 1;
+  item.qty += delta * step;
   if (item.qty <= 0) cart.items = cart.items.filter(i => i.id !== productId);
   saveCart(cart);
   renderCart();

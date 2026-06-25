@@ -4281,16 +4281,37 @@
   }
 
   function renderCartLinkRow(c) {
-    const total = (c.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+    const items = c.items || [];
+    const total = items.reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
     const sentDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
     const statusBadge = c.completed
       ? '<span style="color:#6fcf97;">&#10003; Completed</span>'
       : '<span style="color:#d4a96a;">Pending</span>';
     const custLine = escCartLink(c.name || '(no name)') +
-      (c.email ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.email) + '</span>' : '');
+      (c.email ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.email) + '</span>' : '') +
+      (c.phone ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.phone) + '</span>' : '');
+
+    const uid = 'cl-items-' + c.token;
+    const preview = items.slice(0, 2).map(i => escCartLink(i.name || i.id)).join(', ');
+    const moreCount = items.length > 2 ? items.length - 2 : 0;
+    const allItemsHtml = items.map(i => {
+      const price = i.free ? 'FREE' : (i.price ? '$' + ((i.price * (i.quantity || 1)) / 100).toFixed(2) : '—');
+      return `<div style="display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px solid #2a2a2a;">
+        <span>${escCartLink((i.quantity > 1 ? i.quantity + 'x ' : '') + (i.name || i.id))}</span>
+        <span style="color:#d4a96a;white-space:nowrap;">${price}</span>
+      </div>`;
+    }).join('');
+
+    const itemCell = `<div style="font-size:0.82rem;color:#ccc;">
+      ${preview}${moreCount ? ` <button onclick="var el=document.getElementById('${uid}');var isOpen=el.style.display!=='none';el.style.display=isOpen?'none':'block';this.textContent=isOpen?'▸ +${moreCount} more':'▴ hide';" style="background:none;border:none;color:#8db88f;font-size:0.75rem;cursor:pointer;padding:0 4px;">▸ +${moreCount} more</button>` : ''}
+      <div id="${uid}" style="display:none;margin-top:6px;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:8px 10px;font-size:0.78rem;color:#ccc;">
+        ${allItemsHtml}
+      </div>
+    </div>`;
+
     return `<tr>
       <td>${custLine}</td>
-      <td style="font-size:0.82rem;color:#ccc;">${escCartLink(c.itemSummary || '')}</td>
+      <td>${itemCell}</td>
       <td>$${(total / 100).toFixed(2)}</td>
       <td style="font-size:0.78rem;color:#aaa;">${sentDate}${c.remindersSent ? ' · sent ' + c.remindersSent + 'x' : ''}</td>
       <td>${statusBadge}</td>

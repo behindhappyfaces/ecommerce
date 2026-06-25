@@ -4298,6 +4298,7 @@
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy</button>
         <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" ${c.email ? '' : 'disabled title="No email on file"'}>Resend</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
+        <button class="btn-sm" style="background:#5a1a1a;color:#f4a261;border:1px solid #8b2222;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.75rem;" data-action="delete" data-token="${c.token}">Delete</button>
       </td>
     </tr>`;
   }
@@ -4327,6 +4328,16 @@
         if (!data.url) throw new Error(data.error || 'Failed');
         await navigator.clipboard.writeText(data.url);
         showToast('New link created & copied to clipboard');
+        loadCartLinks();
+      } catch (e) { showToast(e.message, true); }
+    }
+    if (action === 'delete') {
+      if (!confirm('Permanently delete this cart link?')) return;
+      try {
+        const res = await fetch(`/admin/cart-links/${token}`, { method: 'DELETE', headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Failed');
+        showToast('Cart link deleted');
         loadCartLinks();
       } catch (e) { showToast(e.message, true); }
     }

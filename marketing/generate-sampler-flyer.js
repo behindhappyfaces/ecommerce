@@ -38,7 +38,7 @@ const ADDONS = [
   ['Seasonal Preserves', '$15-$18'],
   ['Butter  1/2 lb $17  |  1 lb $24.99', ''],
   ['Cinnamon Rolls (1/2 doz)', '$35'],
-  ['Yeast Rolls (1 doz)', '$24'],
+  ['Yeast Rolls (1 doz) — save 5% off total', '$24'],
 ];
 
 async function main() {

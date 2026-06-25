@@ -2400,6 +2400,24 @@ app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async 
   }
 });
 
+// Delete a cart link permanently
+app.delete('/admin/cart-links/:token', requireAdmin, async (req, res) => {
+  try {
+    const pg = getPcPool();
+    if (pg) {
+      await pg.query('DELETE FROM pending_carts WHERE token = $1', [req.params.token]);
+    } else {
+      const carts = readPendingCarts();
+      delete carts[req.params.token];
+      writePendingCarts(carts);
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[cart-link delete]', e.message);
+    res.status(500).json({ error: 'Could not delete cart link' });
+  }
+});
+
 // Duplicate an existing cart link into a brand-new link (same items/customer, fresh token)
 app.post('/admin/cart-links/:token/duplicate', requireAdmin, async (req, res) => {
   try {

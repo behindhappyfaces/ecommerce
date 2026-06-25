@@ -2093,6 +2093,23 @@ h1, h2, h3, h4 {
   color: var(--color-green);
 }
 
+.cart-footer__clear {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 6px;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: rgba(44, 62, 45, 0.45);
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: center;
+}
+
+.cart-footer__clear:hover { color: #c0392b; }
+
 .cart-footer__crypto:disabled {
   opacity: 0.5;
   cursor: not-allowed;

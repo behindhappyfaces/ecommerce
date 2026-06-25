@@ -349,14 +349,12 @@ function renderCart() {
   const footer = document.createElement('div');
   footer.className = 'cart-footer';
 
-  // Promo code row — subscription orders only; clear any stored code for one-time carts
+  // Promo code row — the typed input box is subscription-only, but an
+  // already-applied code (e.g. from the cart-abandonment save offer) is
+  // honored and shown for any cart type
   const hasTurkey = getCart().items.some(i => i.id === 'thanksgiving-turkey');
-  if (!subscribing) {
-    localStorage.removeItem('hoto-promo-code');
-    localStorage.removeItem('hoto-promo-amt');
-  }
-  const savedPromo    = subscribing ? (localStorage.getItem('hoto-promo-code') || '') : '';
-  const savedPromoAmt = subscribing ? parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10) : 0;
+  const savedPromo    = localStorage.getItem('hoto-promo-code') || '';
+  const savedPromoAmt = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
 
   const promoRow = document.createElement('div');
   promoRow.style.cssText = 'display:' + (subscribing ? 'flex' : 'none') + ';align-items:center;gap:8px;margin-bottom:8px;';
@@ -377,7 +375,7 @@ function renderCart() {
     promoMsg.style.color = '#2a7a2a';
     promoMsg.textContent = subscribing
       ? savedPromo + ' applied — ' + fmt(savedPromoAmt) + ' off your first week'
-      : savedPromo + ' applied — ' + fmt(-savedPromoAmt) + ' off order';
+      : savedPromo + ' applied — -' + fmt(savedPromoAmt) + ' off order';
   }
 
   const BOX_ITEM_IDS = new Set(['bread-box', 'harvest-subscription', 'farm-box']);
@@ -540,6 +538,12 @@ function renderCart() {
   cryptoBtn.textContent = '₿  Pay with Bitcoin';
   cryptoBtn.addEventListener('click', checkoutCrypto);
 
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'cart-footer__clear';
+  clearBtn.id = 'cart-clear';
+  clearBtn.textContent = 'Clear Cart';
+  clearBtn.addEventListener('click', openClearCartModal);
+
   footer.appendChild(promoRow);
   footer.appendChild(promoMsg);
   footer.appendChild(totalRow);
@@ -547,9 +551,86 @@ function renderCart() {
   footer.appendChild(checkoutBtn);
   footer.appendChild(divider);
   footer.appendChild(cryptoBtn);
+  footer.appendChild(clearBtn);
 
   body.appendChild(itemsWrap);
   body.appendChild(footer);
+}
+
+// --- Clear Cart (with a save-the-sale offer) ---
+
+function injectClearCartModal() {
+  if (document.getElementById('clear-cart-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'clear-cart-overlay';
+  overlay.className = 'sub-prompt-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+
+  const box = document.createElement('div');
+  box.className = 'sub-prompt';
+
+  const heading = document.createElement('p');
+  heading.className = 'sub-prompt__heading';
+  heading.textContent = 'Wait — are you sure?';
+
+  const body = document.createElement('p');
+  body.className = 'sub-prompt__body';
+  body.id = 'clear-cart-body';
+
+  const keepBtn = document.createElement('button');
+  keepBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  keepBtn.id = 'clear-cart-keep';
+  keepBtn.textContent = 'Keep My Cart & Save 10%';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
+  confirmBtn.id = 'clear-cart-confirm';
+  confirmBtn.textContent = 'No thanks, clear my cart';
+
+  const actions = document.createElement('div');
+  actions.className = 'sub-prompt__actions';
+  actions.appendChild(keepBtn);
+  actions.appendChild(confirmBtn);
+
+  box.appendChild(heading);
+  box.appendChild(body);
+  box.appendChild(actions);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeClearCartModal(); });
+
+  keepBtn.addEventListener('click', () => {
+    const amt = Math.round(getTotal() * 0.10);
+    if (amt > 0) {
+      localStorage.setItem('hoto-promo-code', 'STAY10');
+      localStorage.setItem('hoto-promo-amt', String(amt));
+    }
+    closeClearCartModal();
+    renderCart();
+  });
+
+  confirmBtn.addEventListener('click', () => {
+    saveCart({ items: [] });
+    localStorage.removeItem('hoto-promo-code');
+    localStorage.removeItem('hoto-promo-amt');
+    closeClearCartModal();
+    renderCart();
+  });
+}
+
+function openClearCartModal() {
+  const bodyText = document.getElementById('clear-cart-body');
+  if (bodyText) {
+    bodyText.textContent = "You're so close to having real, local food on your table. Stick around and we'll take 10% off your order right now.";
+  }
+  document.getElementById('clear-cart-overlay')?.classList.add('open');
+}
+
+function closeClearCartModal() {
+  document.getElementById('clear-cart-overlay')?.classList.remove('open');
 }
 
 // --- Open / Close ---
@@ -2827,6 +2908,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { injectAddressConfirmModal(); } catch(e) { console.error('injectAddressConfirmModal', e); }
   try { injectOrderDetailsModal(); } catch(e) { console.error('injectOrderDetailsModal', e); }
   try { injectBoxCustomizer(); } catch(e) { console.error('injectBoxCustomizer', e); }
+  try { injectClearCartModal(); } catch(e) { console.error('injectClearCartModal', e); }
   try { renderCart(); } catch(e) { console.error('renderCart', e); }
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {

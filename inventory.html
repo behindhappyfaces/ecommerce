@@ -1016,6 +1016,18 @@
     <p class="section-title">Build a Cart Link</p>
     <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;">Pick items and quantities, then generate a link. Send it to a customer — when they open it their cart fills automatically.</p>
 
+    <!-- Sampler Box quick-send link -->
+    <div style="background:#1e2b1f;border:1px solid #3a5a3c;border-radius:10px;padding:14px 16px;margin-bottom:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <p style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8db88f;margin:0 0 3px;">Farm Sampler Box — Customer Order Link</p>
+        <p style="font-size:0.78rem;color:#b0c8b2;margin:0;">Sends customer to the full order flow — they pick butter flavor, add-ons, and confirm before checkout.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="sampler-direct-url" readonly value="https://www.heartoftexasorganics.com/offerings.html?open=sampler" style="font-size:0.75rem;padding:6px 10px;background:#111;border:1px solid #3a5a3c;border-radius:6px;color:#8db88f;width:260px;">
+        <button onclick="(function(){var el=document.getElementById('sampler-direct-url');el.select();document.execCommand('copy');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)}).call(this)" style="padding:6px 14px;background:#3a5a3c;border:none;border-radius:6px;color:#f0ebe4;font-size:0.78rem;cursor:pointer;white-space:nowrap;">Copy</button>
+      </div>
+    </div>
+
     <div id="cl-draft-banner" style="display:none;background:#2a2a1a;border:1px solid #5a5030;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#d4c89a;display:flex;justify-content:space-between;align-items:center;gap:12px;">
       <span>Draft restored from your last session.</span>
       <button id="cl-draft-clear" type="button" class="btn-sm btn-ghost">Clear Draft</button>

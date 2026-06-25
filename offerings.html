@@ -1287,9 +1287,9 @@
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
 
-      // Auto-open when arriving from the QR code flyer
+      // Auto-open when arriving from the QR code flyer — setTimeout lets the rest of the page finish rendering
       if (new URLSearchParams(window.location.search).get('open') === 'sampler') {
-        openSampler();
+        setTimeout(openSampler, 300);
       }
     })();
   </script>

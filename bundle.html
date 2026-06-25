@@ -279,7 +279,7 @@
 
     <!-- Countdown bar -->
     <div class="countdown-bar">
-      Presale closes <strong>June 28th</strong> &nbsp;·&nbsp; Pickup <strong>Friday, July 3rd</strong> &nbsp;·&nbsp; <span id="countdown"></span>
+      Presale closes <strong>June 30th</strong> &nbsp;·&nbsp; Pickup &amp; Delivery <strong>Friday, July 3rd</strong> &nbsp;·&nbsp; <span id="countdown"></span>
     </div>
 
     <!-- Header -->
@@ -361,7 +361,7 @@
             <input type="radio" name="getMethod" value="delivery" style="accent-color:var(--color-green);margin-top:2px;" onchange="onMethodChange()" />
             <span>
               Local Delivery — FREE within 10 mi, then by distance
-              <br><span style="font-size:12px;color:var(--color-text-muted);">*Delivered on Friday, July 3rd.</span>
+              <br><span style="font-size:12px;color:var(--color-text-muted);">*Pickup &amp; delivery scheduled for Friday, July 3rd.</span>
             </span>
           </label>
 
@@ -400,11 +400,15 @@
 
       <!-- Pickup info -->
       <div class="pickup-info">
-        <strong>Pickup Details</strong>
-        Local Pick-up ✦ <strong>Dripping Springs, TX</strong><br>
-        <strong style="color:var(--color-green);">FREE delivery within a 10-mile radius</strong><br>
-        Pick-up date: <strong>Friday, July 3rd</strong><br>
-        Exact address and time confirmed after purchase.<br>
+        <strong>Pickup &amp; Delivery — Friday, July 3rd</strong><br><br>
+        <span style="font-size:13px;">
+          🚗 <strong>Local Pick-up</strong> &nbsp;✦&nbsp; Dripping Springs, TX<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Exact address &amp; time window confirmed after purchase.<br><br>
+          🚚 <strong>Local Delivery</strong> &nbsp;✦&nbsp; FREE within 10 miles<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Deliveries scheduled for <strong>Friday, July 3rd</strong>.<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Delivery window confirmed after purchase.<br><br>
+          Order deadline: <strong>June 30th</strong>
+        </span><br><br>
         Questions? <a href="mailto:operations@heartoftexasorganics.com" style="color:var(--color-green);text-decoration:underline;">operations@heartoftexasorganics.com</a>
       </div>
 
@@ -425,9 +429,9 @@
 </div>
 
 <script>
-  // Countdown to June 28
+  // Countdown to June 30
   function updateCountdown() {
-    const deadline = new Date('2026-06-28T23:59:59');
+    const deadline = new Date('2026-06-30T23:59:59');
     const now = new Date();
     const diff = deadline - now;
     if (diff <= 0) {

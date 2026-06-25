@@ -1558,9 +1558,11 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
   const taxRatePct = parseFloat(localStorage.getItem('hoto-cart-tax-rate') || '0');
   const freeGiftEligible = localStorage.getItem('hoto-free-gift-eligible') === 'true';
+  const cartLinkToken = localStorage.getItem('hoto-cart-link-token') || null;
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
+    if (cartLinkToken) body.cart_link_token = cartLinkToken;
     if (pickupLocation)                body.pickup_location    = pickupLocation;
     if (pickupContact)                 body.pickup_contact     = pickupContact;
     if (pickupContact?.address)        body.delivery_address   = pickupContact.address;
@@ -1581,6 +1583,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
       localStorage.removeItem('hoto-promo-amt');
       localStorage.removeItem('hoto-cart-tax-rate');
       localStorage.removeItem('hoto-free-gift-eligible');
+      localStorage.removeItem('hoto-cart-link-token');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {
@@ -3001,6 +3004,8 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         // the cart doesn't inherit a previous box customizer session
         localStorage.removeItem('hoto-admin-sub');
         localStorage.removeItem('hoto-subscribe');
+        // Store token so checkout can pass it to Stripe metadata for precise webhook matching
+        localStorage.setItem('hoto-cart-link-token', rc);
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());

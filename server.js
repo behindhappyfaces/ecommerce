@@ -751,18 +751,22 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             await deductStockForOrder(items, session.id);
           }
 
-          // Mark any abandoned cart as completed
+          // Mark the cart link as completed — try precise token match first, then email/phone
           try {
-            const pc = readPendingCarts();
-            const phone = normalizePhone(session.metadata?.pickup_phone || '');
-            const email = session.customer_details?.email || '';
-            Object.keys(pc).forEach(k => {
-              if (!pc[k].completed && (pc[k].phone === phone || pc[k].email === email)) {
-                pc[k].completed = true;
-              }
-            });
-            writePendingCarts(pc);
-          } catch {}
+            const rcToken = session.metadata?.cart_link_token;
+            if (rcToken) {
+              await updatePendingCartDB(rcToken, { completed: true, completedAt: new Date().toISOString() });
+            } else {
+              const phone = normalizePhone(session.metadata?.pickup_phone || '');
+              const email = session.customer_details?.email || '';
+              const allCarts = await readPendingCartsDB();
+              await Promise.all(
+                Object.keys(allCarts)
+                  .filter(k => !allCarts[k].completed && (allCarts[k].phone === phone || allCarts[k].email === email))
+                  .map(k => updatePendingCartDB(k, { completed: true, completedAt: new Date().toISOString() }))
+              );
+            }
+          } catch (e) { console.error('[cart-link complete]', e.message); }
 
           // Customer confirmation with PDF receipt
           if (customerEmail) {
@@ -855,18 +859,22 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           });
           await deductStockForOrder(items, session.id);
 
-          // Mark any abandoned cart as completed
+          // Mark the cart link as completed — try precise token match first, then email/phone
           try {
-            const pc = readPendingCarts();
-            const phone = normalizePhone(session.metadata?.pickup_phone || '');
-            const email = session.customer_details?.email || '';
-            Object.keys(pc).forEach(k => {
-              if (!pc[k].completed && (pc[k].phone === phone || pc[k].email === email)) {
-                pc[k].completed = true;
-              }
-            });
-            writePendingCarts(pc);
-          } catch {}
+            const rcToken = session.metadata?.cart_link_token;
+            if (rcToken) {
+              await updatePendingCartDB(rcToken, { completed: true, completedAt: new Date().toISOString() });
+            } else {
+              const phone = normalizePhone(session.metadata?.pickup_phone || '');
+              const email = session.customer_details?.email || '';
+              const allCarts = await readPendingCartsDB();
+              await Promise.all(
+                Object.keys(allCarts)
+                  .filter(k => !allCarts[k].completed && (allCarts[k].phone === phone || allCarts[k].email === email))
+                  .map(k => updatePendingCartDB(k, { completed: true, completedAt: new Date().toISOString() }))
+              );
+            }
+          } catch (e) { console.error('[cart-link complete]', e.message); }
 
           // Customer confirmation (note: not shipped until ACH clears)
           if (customerEmail) {
@@ -1410,7 +1418,8 @@ app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
             delivery_address,
-            promo_code, promo_discount_cents, tax_rate_pct, free_gift_eligible } = req.body;
+            promo_code, promo_discount_cents, tax_rate_pct, free_gift_eligible,
+            cart_link_token } = req.body;
     // delivery_fee_cents from client is intentionally not destructured — fee is always
     // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -1550,6 +1559,9 @@ app.post('/create-checkout-session', async (req, res) => {
     }
     if (free_gift_eligible) {
       metadata.free_gift_eligible = 'true';
+    }
+    if (cart_link_token) {
+      metadata.cart_link_token = cart_link_token.slice(0, 500);
     }
 
     // Allow Stripe's promo code box only when no turkey in cart and no discount already applied

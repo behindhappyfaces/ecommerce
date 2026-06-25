@@ -1999,6 +1999,8 @@ const PRODUCT_MAP = {
   'Sourdough':                   'sourdough',
   'Challah':                     'challah',
   'Pasture-Raised Eggs':         'farm-eggs',
+  'Farm Eggs (1 dozen)':         'farm-eggs',
+  'Whole Chicken':               'whole-chicken',
   'Real Cream Butter':           'cultured-butter',
   'Seasonal Preserves':          'seasonal-preserves',
   'Garlic Chili Crunch':         'garlic-chili-crunch',

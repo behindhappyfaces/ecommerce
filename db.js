@@ -14,6 +14,7 @@ const SEED = [
   { id:'sourdough',           name:'Sourdough',                    category:'Bakery',       stock:6,  reorder_level:4,  unit:'loaf',   price_cents:1500,  cost_cents:420,  allow_preorder:0, active:1 },
   { id:'challah',             name:'Challah',                      category:'Bakery',       stock:4,  reorder_level:3,  unit:'loaf',   price_cents:1600,  cost_cents:500,  allow_preorder:0, active:1 },
   { id:'farm-eggs',           name:'Pasture-Raised Eggs',          category:'Farm Fresh',   stock:18, reorder_level:10, unit:'dozen',  price_cents:800,   cost_cents:200,  allow_preorder:0, active:1 },
+  { id:'whole-chicken',       name:'Whole Chicken',                category:'Farm Fresh',   stock:10, reorder_level:3,  unit:'bird',   price_cents:4900,  cost_cents:0,    allow_preorder:0, active:1 },
   { id:'cultured-butter',     name:'Real Cream Butter',            category:'Dairy',        stock:8,  reorder_level:5,  unit:'jar',    price_cents:900,   cost_cents:280,  allow_preorder:0, active:1 },
   { id:'seasonal-preserves',  name:'Seasonal Preserves',           category:'Larder',       stock:15, reorder_level:8,  unit:'jar',    price_cents:1200,  cost_cents:350,  allow_preorder:0, active:1 },
   { id:'garlic-chili-crunch', name:'Garlic Chili Crunch',          category:'Larder',       stock:10, reorder_level:5,  unit:'jar',    price_cents:1400,  cost_cents:400,  allow_preorder:0, active:1 },

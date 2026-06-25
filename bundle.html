@@ -350,13 +350,19 @@
         <!-- Get it: pickup or delivery -->
         <div style="text-align:left;background:#f0ede4;border-radius:4px;padding:16px;margin-bottom:18px;">
           <p style="font-family:var(--font-sans);font-size:13px;font-weight:700;color:var(--color-text);margin:0 0 10px;">How would you like to get it?</p>
-          <label style="display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;margin-bottom:8px;">
-            <input type="radio" name="getMethod" value="pickup" checked style="accent-color:var(--color-green);" onchange="onMethodChange()" />
-            Local Pickup — <strong style="color:var(--color-green);">FREE</strong> (Dripping Springs, TX)
+          <label style="display:flex;align-items:flex-start;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;margin-bottom:8px;">
+            <input type="radio" name="getMethod" value="pickup" checked style="accent-color:var(--color-green);margin-top:2px;" onchange="onMethodChange()" />
+            <span>
+              Local Pickup — <strong style="color:var(--color-green);">FREE</strong> (Dripping Springs, TX)
+              <br><span style="font-size:12px;color:var(--color-text-muted);">*Location address emailed once order is confirmed.</span>
+            </span>
           </label>
-          <label style="display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;">
-            <input type="radio" name="getMethod" value="delivery" style="accent-color:var(--color-green);" onchange="onMethodChange()" />
-            Local Delivery — FREE within 10 mi, then by distance
+          <label style="display:flex;align-items:flex-start;gap:8px;font-family:var(--font-sans);font-size:13px;color:var(--color-text);cursor:pointer;">
+            <input type="radio" name="getMethod" value="delivery" style="accent-color:var(--color-green);margin-top:2px;" onchange="onMethodChange()" />
+            <span>
+              Local Delivery — FREE within 10 mi, then by distance
+              <br><span style="font-size:12px;color:var(--color-text-muted);">*Delivered on Friday, July 3rd.</span>
+            </span>
           </label>
 
           <!-- Delivery address -->

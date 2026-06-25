@@ -2011,7 +2011,12 @@ const PRODUCT_MAP = {
 
 async function deductStockForOrder(lineItems, orderId, orderDate = null) {
   for (const item of lineItems) {
-    const pid = PRODUCT_MAP[item.description] || PRODUCT_MAP[item.name];
+    // Variant items (e.g. "Real Cream Butter — 1/2 lb, Sea Salt") carry extra detail
+    // after " — " — strip it so the base product still matches PRODUCT_MAP.
+    const desc = item.description || '';
+    const name = item.name || '';
+    const pid = PRODUCT_MAP[desc] || PRODUCT_MAP[name]
+             || PRODUCT_MAP[desc.split(' — ')[0]] || PRODUCT_MAP[name.split(' — ')[0]];
     if (!pid) continue;
     // Skip if this order+product was already logged (prevents double-deduction on re-sync)
     if (await db.hasTransaction(orderId, pid)) continue;

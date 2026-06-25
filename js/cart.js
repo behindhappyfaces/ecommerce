@@ -6,17 +6,17 @@ const PRODUCTS = {
   'japanese-milk-loaf': { name: 'Japanese Milk Loaf', price: 1500, subPrice: null, image: 'images/japanese-milk-loaf.jpg' },
   'whole-wheat-loaf':   { name: 'Whole Wheat Loaf',   price: 1800, subPrice: null, image: 'images/whole-wheat-loaf.jpg' },
   'cinnamon-rolls':     { name: 'Cinnamon Rolls',      price: 600,  subPrice: null, image: 'images/cinnamon-rolls.jpg' },
-  'yeast-rolls':        { name: 'Yeast Rolls',         price: 0,    subPrice: null, image: 'images/yeast-rolls.jpg' },
+  'yeast-rolls':        { name: 'Yeast Rolls',         price: 2400, subPrice: null, image: 'images/yeast-rolls.jpg' },
   'focaccia-loaf':      { name: 'Focaccia Loaf',       price: 3200, subPrice: null, image: 'images/focaccia-loaf.jpg' },
-  'whole-chicken':      { name: 'Whole Chicken',       price: 0, subPrice: null, image: 'images/chicken.jpg' },
-  'cultured-butter':    { name: 'Real Cream Butter',   price: 0, subPrice: null, image: 'images/butter.jpg' },
-  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 0, subPrice: null, image: 'images/eggs.jpg' },
+  'whole-chicken':      { name: 'Whole Chicken',       price: 4900, subPrice: null, image: 'images/chicken.jpg' },
+  'cultured-butter':    { name: 'Real Cream Butter',   price: 1700, subPrice: null, image: 'images/butter.jpg' },
+  'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 1300, subPrice: null, image: 'images/eggs.jpg' },
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
   'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
-  'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 0,     subPrice: null, image: 'images/chili-crunch.jpg' },
-  'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 0,  subPrice: null, image: 'images/herb-dipping-oil.jpg' },
-  'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 0,     subPrice: null, image: 'images/preserves.jpg' },
+  'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 1800, subPrice: null, image: 'images/chili-crunch.jpg' },
+  'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 1800, subPrice: null, image: 'images/herb-dipping-oil.jpg' },
+  'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 1500, subPrice: null, image: 'images/preserves.jpg' },
   // Subscription boxes — shown as a single line item in the cart
   'bread-box':            { name: 'The Bread & Butter Board Box', price: 5500, subPrice: null, image: null },
   'harvest-subscription': { name: 'The Supper Starter Box',       price: 15000, subPrice: null, image: null },
@@ -278,7 +278,7 @@ function renderCart() {
 
   cart.items.filter(({ id, name }) => PRODUCTS[id] || name).forEach(({ id, qty, price: itemPrice, name: storedName }) => {
     const p = PRODUCTS[id];
-    const displayName  = (p && p.name) || storedName || id;
+    const displayName  = storedName || (p && p.name) || id;
     const basePrice    = itemPrice || (p ? p.price : 0);
     const displayPrice = basePrice;
     const item = document.createElement('div');
@@ -627,6 +627,238 @@ function openClearCartModal() {
 
 function closeClearCartModal() {
   document.getElementById('clear-cart-overlay')?.classList.remove('open');
+}
+
+// --- Whole Chicken — weight + processing modal ---
+
+const CHICKEN_PRICE_PER_LB = 700; // $7/lb
+const CHICKEN_PROCESSING_PRICE = 1000; // $10
+const CHICKEN_WEIGHTS = [
+  { lbs: 7,  available: true },
+  { lbs: 8,  available: true },
+  { lbs: 9,  available: false },
+  { lbs: 10, available: false },
+];
+
+function injectChickenModal() {
+  if (document.getElementById('chicken-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'chicken-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.3s,visibility 0.3s;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.25);">
+      <div style="padding:24px 28px 16px;border-bottom:1px solid rgba(44,62,45,0.08);">
+        <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:0 0 4px;">Pasture-Raised</p>
+        <h2 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--color-green);margin:0;font-weight:400;">Whole Chicken</h2>
+      </div>
+      <div style="padding:24px 28px;">
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Choose a Weight</p>
+        <div id="chk-weights" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+
+        <label style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--color-cream,#F5F0E8);border-radius:10px;cursor:pointer;margin-bottom:20px;">
+          <input type="checkbox" id="chk-processing" style="width:16px;height:16px;accent-color:var(--color-rust,#8B4A2F);flex-shrink:0;margin-top:2px;">
+          <div>
+            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green);display:block;">Cut into 10 Premium Cuts <strong style="color:var(--color-rust,#8B4A2F);">+$10</strong></span>
+            <span style="font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);display:block;margin-top:3px;">2 Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats</span>
+          </div>
+        </label>
+
+        <div style="background:var(--color-cream,#F5F0E8);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-green);">Total</span>
+          <span id="chk-total" style="font-family:var(--font-serif);font-size:1.3rem;color:var(--color-green);font-weight:400;"></span>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button id="chk-cancel" style="flex:1;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:1.5px solid rgba(44,62,45,0.2);background:transparent;color:rgba(44,62,45,0.6);border-radius:8px;cursor:pointer;">Cancel</button>
+          <button id="chk-add" style="flex:2;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;background:var(--color-green);color:var(--color-cream,#F5F0E8);border-radius:8px;cursor:pointer;">Add to Cart</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeChickenModal(); });
+  document.getElementById('chk-cancel').onclick = closeChickenModal;
+
+  const weightsEl = document.getElementById('chk-weights');
+  CHICKEN_WEIGHTS.forEach((w, i) => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid rgba(44,62,45,0.15);border-radius:8px;cursor:' + (w.available ? 'pointer' : 'not-allowed') + ';opacity:' + (w.available ? '1' : '0.45') + ';';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'chk-weight';
+    radio.value = String(w.lbs);
+    radio.disabled = !w.available;
+    radio.checked = w.available && !CHICKEN_WEIGHTS.slice(0, i).some(x => x.available);
+    radio.style.cssText = 'width:16px;height:16px;accent-color:var(--color-rust,#8B4A2F);';
+    radio.addEventListener('change', chkUpdateTotal);
+    const text = document.createElement('span');
+    text.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    text.textContent = w.lbs + ' lb' + (w.available ? '' : ' — Sold Out');
+    const price = document.createElement('span');
+    price.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;color:rgba(44,62,45,0.5);';
+    price.textContent = w.available ? '$' + (w.lbs * CHICKEN_PRICE_PER_LB / 100).toFixed(2) : '';
+    label.appendChild(radio); label.appendChild(text); label.appendChild(price);
+    weightsEl.appendChild(label);
+  });
+
+  document.getElementById('chk-processing').addEventListener('change', chkUpdateTotal);
+
+  document.getElementById('chk-add').onclick = () => {
+    const lbs = parseInt(document.querySelector('input[name="chk-weight"]:checked')?.value || '7', 10);
+    const processing = document.getElementById('chk-processing').checked;
+    const priceCents = lbs * CHICKEN_PRICE_PER_LB + (processing ? CHICKEN_PROCESSING_PRICE : 0);
+    const name = 'Whole Chicken — ' + lbs + ' lb' + (processing ? ' (Cut into 10 Premium Cuts)' : '');
+
+    const cart = getCart();
+    cart.items = cart.items.filter(i => i.id !== 'whole-chicken');
+    cart.items.unshift({ id: 'whole-chicken', qty: 1, price: priceCents, name });
+    saveCart(cart);
+
+    closeChickenModal();
+    renderCart();
+    openCart();
+  };
+}
+
+function chkUpdateTotal() {
+  const lbs = parseInt(document.querySelector('input[name="chk-weight"]:checked')?.value || '7', 10);
+  const processing = document.getElementById('chk-processing')?.checked;
+  const total = lbs * CHICKEN_PRICE_PER_LB + (processing ? CHICKEN_PROCESSING_PRICE : 0);
+  const el = document.getElementById('chk-total');
+  if (el) el.textContent = fmt(total);
+}
+
+function openChickenModal() {
+  if (!document.getElementById('chicken-modal-overlay')) injectChickenModal();
+  chkUpdateTotal();
+  const overlay = document.getElementById('chicken-modal-overlay');
+  overlay.style.visibility = 'visible';
+  overlay.style.pointerEvents = 'all';
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
+function closeChickenModal() {
+  const overlay = document.getElementById('chicken-modal-overlay');
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }, 300);
+}
+
+// --- Real Cream Butter — size + salt type modal ---
+
+const BUTTER_SIZES = [
+  { id: 'half', label: '½ lb', price: 1700 },
+  { id: 'full', label: '1 lb',  price: 2499 },
+];
+const BUTTER_TYPES = ['Sea Salt', 'Unsalted', 'Rosemary (+$4)'];
+const BUTTER_ROSEMARY_UPCHARGE = 400; // $4
+
+function injectButterModal() {
+  if (document.getElementById('butter-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'butter-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.3s,visibility 0.3s;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.25);">
+      <div style="padding:24px 28px 16px;border-bottom:1px solid rgba(44,62,45,0.08);">
+        <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:0 0 4px;">Dairy</p>
+        <h2 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--color-green);margin:0;font-weight:400;">Real Cream Butter</h2>
+      </div>
+      <div style="padding:24px 28px;">
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Choose a Size</p>
+        <div id="but-sizes" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Choose a Type</p>
+        <select id="but-type" style="width:100%;padding:10px 12px;font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);border:1.5px solid rgba(44,62,45,0.15);border-radius:8px;background:#fff;cursor:pointer;margin-bottom:24px;"></select>
+
+        <div style="background:var(--color-cream,#F5F0E8);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-green);">Total</span>
+          <span id="but-total" style="font-family:var(--font-serif);font-size:1.3rem;color:var(--color-green);font-weight:400;"></span>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button id="but-cancel" style="flex:1;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:1.5px solid rgba(44,62,45,0.2);background:transparent;color:rgba(44,62,45,0.6);border-radius:8px;cursor:pointer;">Cancel</button>
+          <button id="but-add" style="flex:2;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;background:var(--color-green);color:var(--color-cream,#F5F0E8);border-radius:8px;cursor:pointer;">Add to Cart</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeButterModal(); });
+  document.getElementById('but-cancel').onclick = closeButterModal;
+
+  const sizesEl = document.getElementById('but-sizes');
+  BUTTER_SIZES.forEach((s, i) => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid rgba(44,62,45,0.15);border-radius:8px;cursor:pointer;';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'but-size';
+    radio.value = s.id;
+    radio.checked = i === 0;
+    radio.style.cssText = 'width:16px;height:16px;accent-color:var(--color-rust,#8B4A2F);';
+    radio.addEventListener('change', butUpdateTotal);
+    const text = document.createElement('span');
+    text.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    text.textContent = s.label;
+    const price = document.createElement('span');
+    price.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;color:rgba(44,62,45,0.5);';
+    price.textContent = fmt(s.price);
+    label.appendChild(radio); label.appendChild(text); label.appendChild(price);
+    sizesEl.appendChild(label);
+  });
+
+  const typeSel = document.getElementById('but-type');
+  BUTTER_TYPES.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    typeSel.appendChild(opt);
+  });
+  typeSel.addEventListener('change', butUpdateTotal);
+
+  document.getElementById('but-add').onclick = () => {
+    const sizeId = document.querySelector('input[name="but-size"]:checked')?.value || 'half';
+    const size = BUTTER_SIZES.find(s => s.id === sizeId) || BUTTER_SIZES[0];
+    const type = document.getElementById('but-type').value;
+    const rosemary = type.startsWith('Rosemary');
+    const priceCents = size.price + (rosemary ? BUTTER_ROSEMARY_UPCHARGE : 0);
+    const typeLabel = rosemary ? 'Rosemary' : type;
+    const name = 'Real Cream Butter — ' + size.label + ', ' + typeLabel;
+
+    const cart = getCart();
+    cart.items = cart.items.filter(i => i.id !== 'cultured-butter');
+    cart.items.unshift({ id: 'cultured-butter', qty: 1, price: priceCents, name });
+    saveCart(cart);
+
+    closeButterModal();
+    renderCart();
+    openCart();
+  };
+}
+
+function butUpdateTotal() {
+  const sizeId = document.querySelector('input[name="but-size"]:checked')?.value || 'half';
+  const size = BUTTER_SIZES.find(s => s.id === sizeId) || BUTTER_SIZES[0];
+  const type = document.getElementById('but-type')?.value || '';
+  const rosemary = type.startsWith('Rosemary');
+  const total = size.price + (rosemary ? BUTTER_ROSEMARY_UPCHARGE : 0);
+  const el = document.getElementById('but-total');
+  if (el) el.textContent = fmt(total);
+}
+
+function openButterModal() {
+  if (!document.getElementById('butter-modal-overlay')) injectButterModal();
+  butUpdateTotal();
+  const overlay = document.getElementById('butter-modal-overlay');
+  overlay.style.visibility = 'visible';
+  overlay.style.pointerEvents = 'all';
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
+function closeButterModal() {
+  const overlay = document.getElementById('butter-modal-overlay');
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }, 300);
 }
 
 // --- Open / Close ---
@@ -1269,8 +1501,11 @@ async function submitOrderWithDetails() {
   if (!cart.items.length) return;
 
   const items = cart.items
-    .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price, taxable, free }) => ({ id, name: PRODUCTS[id].name, price: free ? 0 : (price ?? PRODUCTS[id].price), quantity: qty, taxable: !!taxable }));
+    .filter(({ id, name }) => PRODUCTS[id] || name)
+    .map(({ id, qty, price, name: storedName, taxable, free }) => {
+      const p = PRODUCTS[id];
+      return { id, name: storedName || (p && p.name) || id, price: free ? 0 : (price ?? (p ? p.price : 0)), quantity: qty, taxable: !!taxable };
+    });
 
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
@@ -1316,7 +1551,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     .filter(({ id, name }) => PRODUCTS[id] || name)
     .map(({ id, qty, price, name: storedName, taxable, free }) => {
       const p = PRODUCTS[id];
-      return { id, name: (p && p.name) || storedName || id, price: free ? 0 : (price || (p ? p.price : 0)), quantity: qty, taxable: !!taxable };
+      return { id, name: storedName || (p && p.name) || id, price: free ? 0 : (price || (p ? p.price : 0)), quantity: qty, taxable: !!taxable };
     });
 
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
@@ -1444,7 +1679,7 @@ async function checkoutSubscription(deliveryMethod, pickupLocation, pickupContac
     .filter(({ id, name }) => PRODUCTS[id] || name)
     .map(({ id, qty, price, name: storedName }) => {
       const p = PRODUCTS[id];
-      return { name: (p && p.name) || storedName || id, price: price || (p ? p.price : 0), quantity: qty };
+      return { name: storedName || (p && p.name) || id, price: price || (p ? p.price : 0), quantity: qty };
     });
 
   try {
@@ -1483,8 +1718,11 @@ async function checkoutCrypto() {
   btn.disabled = true;
 
   const items = cart.items
-    .filter(({ id }) => PRODUCTS[id])
-    .map(({ id, qty, price }) => ({ name: PRODUCTS[id].name, price: price ?? PRODUCTS[id].price, quantity: qty }));
+    .filter(({ id, name }) => PRODUCTS[id] || name)
+    .map(({ id, qty, price, name: storedName }) => {
+      const p = PRODUCTS[id];
+      return { name: storedName || (p && p.name) || id, price: price ?? (p ? p.price : 0), quantity: qty };
+    });
 
   try {
     const res = await fetch('/create-crypto-session', {
@@ -2911,12 +3149,17 @@ document.addEventListener('DOMContentLoaded', () => {
   try { injectOrderDetailsModal(); } catch(e) { console.error('injectOrderDetailsModal', e); }
   try { injectBoxCustomizer(); } catch(e) { console.error('injectBoxCustomizer', e); }
   try { injectClearCartModal(); } catch(e) { console.error('injectClearCartModal', e); }
+  try { injectChickenModal(); } catch(e) { console.error('injectChickenModal', e); }
+  try { injectButterModal(); } catch(e) { console.error('injectButterModal', e); }
   try { renderCart(); } catch(e) { console.error('renderCart', e); }
 
   document.querySelectorAll('[data-add-to-cart]').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.addToCart;
-      if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); } else { addItem(id); }
+      if (id === 'whole-chicken')      { openChickenModal(); }
+      else if (id === 'cultured-butter') { openButterModal(); }
+      else if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); }
+      else { addItem(id); }
     });
   });
 

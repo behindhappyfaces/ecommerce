@@ -1288,6 +1288,22 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
 function applyShipMinimum() {} // shipping disabled — no-op
 
+const DELIVERY_MIN_CENTS = 7500;
+
+function updateDeliveryMinimumState() {
+  const btn = document.getElementById('dm-delivery');
+  if (!btn) return;
+  const note  = btn.querySelector('.delivery-modal__note');
+  const total = getTotal();
+  if (total < DELIVERY_MIN_CENTS) {
+    btn.disabled = true;
+    if (note) note.textContent = 'Requires a $' + (DELIVERY_MIN_CENTS / 100).toFixed(0) + ' minimum order — add ' + fmt(DELIVERY_MIN_CENTS - total) + ' more to qualify';
+  } else {
+    btn.disabled = false;
+    if (note) note.textContent = 'Free within 20 miles · Enter your delivery address';
+  }
+}
+
 function openCartDeliveryModal() {
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
@@ -1295,6 +1311,7 @@ function openCartDeliveryModal() {
   if (s1) s1.style.display = 'block';
   if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
+  updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick   = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
   document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee })); };
   document.getElementById('dm-cancel').onclick   = closeDeliveryModal;
@@ -1321,6 +1338,7 @@ function openOneTimeDeliveryChoice() {
   if (s1) s1.style.display = 'block';
   if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
+  updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
   document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkout('delivery', null, { address: addr, deliveryFeeCents: fee })); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;

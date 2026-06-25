@@ -1354,6 +1354,8 @@ h1, h2, h3, h4 {
   padding: 16px; cursor: pointer; text-align: left; transition: border-color 0.15s, background 0.15s;
 }
 .delivery-modal__opt:hover { border-color: var(--color-rust); background: #fff8f5; }
+.delivery-modal__opt:disabled { cursor: not-allowed; opacity: 0.55; background: #f3f1ec; }
+.delivery-modal__opt:disabled:hover { border-color: #e8e0d6; background: #f3f1ec; }
 .delivery-modal__icon { font-size: 1.5rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
 .delivery-modal__label { display: block; font-weight: 700; font-size: 0.95rem; color: var(--color-green); margin-bottom: 3px; }
 .delivery-modal__note { display: block; font-size: 0.8rem; color: #888; }

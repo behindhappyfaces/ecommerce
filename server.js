@@ -615,6 +615,15 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const giftMsg  = session.metadata?.gift_msg      || '';
         const billName = session.metadata?.bill_name     || '';
 
+        // Exit-intent "keep my cart" free-gift offer
+        const freeGiftEligible = session.metadata?.free_gift_eligible === 'true';
+        const freeGiftHtml = freeGiftEligible
+          ? `<div style="background:#fff8f0;border-left:4px solid #2a7a2a;padding:12px 20px;margin:16px 0;font-size:0.9rem;">
+               <strong style="color:#2a7a2a;">🎁 Free Gift Eligible</strong>
+               <p style="margin:4px 0 0;color:#555;">This customer kept their cart after the exit prompt — include a free gift with their order.</p>
+             </div>`
+          : '';
+
         const occasionLabel = giftOcc
           ? giftOcc.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
           : '';
@@ -731,6 +740,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
+            freeGiftEligible: freeGiftEligible,
             customerNotes: customerNotes || '',
           });
           const _invId = session.metadata?.inventory_id;
@@ -791,7 +801,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
           // Admin notification
           await sendEmail(
-            `✅ New Order ${total} Ready to Ship${isGift ? ' 🎁 GIFT' : ''}`,
+            `✅ New Order ${total} Ready to Ship${isGift ? ' 🎁 GIFT' : ''}${freeGiftEligible ? ' 🎁 FREE GIFT' : ''}`,
             `<h2 style="color:#2C3E2D;">New Order Payment Cleared</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
@@ -803,6 +813,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
              ${lineItemsHtml(items)}
              ${notesHtml}
              ${giftHtml}
+             ${freeGiftHtml}
              ${fulfillmentBadge('READY_TO_SHIP')}
              <p style="color:#888;font-size:12px;">Reference: ${session.id}</p>`
           );
@@ -839,6 +850,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             isGift: isGift,
             giftOccasion: giftOcc || '',
             giftMsg: giftMsg || '',
+            freeGiftEligible: freeGiftEligible,
             customerNotes: customerNotes || '',
           });
           await deductStockForOrder(items, session.id);
@@ -893,7 +905,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
           // Admin notification
           await sendEmail(
-            `⏳ New ACH Order ${total} DO NOT SHIP YET${isGift ? ' 🎁 GIFT' : ''}`,
+            `⏳ New ACH Order ${total} DO NOT SHIP YET${isGift ? ' 🎁 GIFT' : ''}${freeGiftEligible ? ' 🎁 FREE GIFT' : ''}`,
             `<h2 style="color:#8B4A2F;">New ACH Order Awaiting Bank Settlement</h2>
              <p><strong>Date:</strong> ${date}</p>
              <p><strong>Total:</strong> ${total}</p>
@@ -905,6 +917,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
              ${lineItemsHtml(items)}
              ${notesHtml}
              ${giftHtml}
+             ${freeGiftHtml}
              ${fulfillmentBadge('AWAITING_PAYMENT')}
              <p style="color:#888;font-size:12px;">
                You will receive a second email the moment funds clear.<br>
@@ -1397,7 +1410,7 @@ app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
             delivery_address,
-            promo_code, promo_discount_cents, tax_rate_pct } = req.body;
+            promo_code, promo_discount_cents, tax_rate_pct, free_gift_eligible } = req.body;
     // delivery_fee_cents from client is intentionally not destructured — fee is always
     // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -1534,6 +1547,9 @@ app.post('/create-checkout-session', async (req, res) => {
       metadata.is_gift        = 'true';
       metadata.gift_occasion  = gift.occasion || '';
       metadata.gift_msg       = (gift.message || '').slice(0, 500);
+    }
+    if (free_gift_eligible) {
+      metadata.free_gift_eligible = 'true';
     }
 
     // Allow Stripe's promo code box only when no turkey in cart and no discount already applied

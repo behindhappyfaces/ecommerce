@@ -3151,6 +3151,19 @@
         card.appendChild(giftBanner);
       }
 
+      // Free gift eligible banner (kept cart after exit-intent offer)
+      if (order.freeGiftEligible) {
+        const fgBanner = document.createElement('div');
+        fgBanner.className = 'order-gift-banner';
+        fgBanner.style.background = '#1e2a1f';
+        fgBanner.style.borderColor = '#6fcf97';
+        const fgTitle = document.createElement('strong');
+        fgTitle.style.color = '#6fcf97';
+        fgTitle.textContent = '🎁 Free Gift Eligible — include a free gift with this order';
+        fgBanner.appendChild(fgTitle);
+        card.appendChild(fgBanner);
+      }
+
       // Actions
       const actions = document.createElement('div');
       actions.className = 'order-actions';

@@ -582,7 +582,7 @@ function injectClearCartModal() {
   const keepBtn = document.createElement('button');
   keepBtn.className = 'sub-prompt__btn sub-prompt__btn--yes';
   keepBtn.id = 'clear-cart-keep';
-  keepBtn.textContent = 'Keep My Cart & Save 10%';
+  keepBtn.textContent = 'Keep My Cart & Receive Free Gift';
 
   const confirmBtn = document.createElement('button');
   confirmBtn.className = 'sub-prompt__btn sub-prompt__btn--no';
@@ -603,13 +603,9 @@ function injectClearCartModal() {
   overlay.addEventListener('click', e => { if (e.target === overlay) closeClearCartModal(); });
 
   keepBtn.addEventListener('click', () => {
-    const amt = Math.round(getTotal() * 0.10);
-    if (amt > 0) {
-      localStorage.setItem('hoto-promo-code', 'STAY10');
-      localStorage.setItem('hoto-promo-amt', String(amt));
-    }
+    localStorage.setItem('hoto-free-gift-eligible', 'true');
     closeClearCartModal();
-    renderCart();
+    document.getElementById('cart-checkout')?.click();
   });
 
   confirmBtn.addEventListener('click', () => {
@@ -624,7 +620,7 @@ function injectClearCartModal() {
 function openClearCartModal() {
   const bodyText = document.getElementById('clear-cart-body');
   if (bodyText) {
-    bodyText.textContent = "You're so close to having real, local food on your table. Stick around and we'll take 10% off your order right now.";
+    bodyText.textContent = "You're so close to having real, local food on your table. Stick around and enjoy a free gift from us.";
   }
   document.getElementById('clear-cart-overlay')?.classList.add('open');
 }
@@ -1279,9 +1275,11 @@ async function submitOrderWithDetails() {
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
   const taxRatePct = parseFloat(localStorage.getItem('hoto-cart-tax-rate') || '0');
+  const freeGiftEligible = localStorage.getItem('hoto-free-gift-eligible') === 'true';
   const shipBody  = { items, shipping: _shipCalcRate, delivery_method: 'ship', billing, gift };
   if (promoCode && promoAmt) { shipBody.promo_code = promoCode; shipBody.promo_discount_cents = promoAmt; }
   if (taxRatePct > 0) shipBody.tax_rate_pct = taxRatePct;
+  if (freeGiftEligible) shipBody.free_gift_eligible = true;
 
   try {
     const res = await fetch('/create-checkout-session', {
@@ -1291,6 +1289,7 @@ async function submitOrderWithDetails() {
     });
     const data = await res.json();
     if (data.url) {
+      localStorage.removeItem('hoto-free-gift-eligible');
       window.location.href = data.url;
     } else {
       alert(data.error || 'Checkout error');
@@ -1323,6 +1322,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
   const promoCode = localStorage.getItem('hoto-promo-code') || null;
   const promoAmt  = parseInt(localStorage.getItem('hoto-promo-amt') || '0', 10);
   const taxRatePct = parseFloat(localStorage.getItem('hoto-cart-tax-rate') || '0');
+  const freeGiftEligible = localStorage.getItem('hoto-free-gift-eligible') === 'true';
 
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
@@ -1332,6 +1332,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (pickupContact?.deliveryFeeCents) body.delivery_fee_cents = pickupContact.deliveryFeeCents;
     if (promoCode && promoAmt)         { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
+    if (freeGiftEligible)              body.free_gift_eligible = true;
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1344,6 +1345,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
       localStorage.removeItem('hoto-promo-code');
       localStorage.removeItem('hoto-promo-amt');
       localStorage.removeItem('hoto-cart-tax-rate');
+      localStorage.removeItem('hoto-free-gift-eligible');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {

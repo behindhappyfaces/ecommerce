@@ -4187,8 +4187,6 @@
           grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';
 
         // Update email preview pane
-        const custName  = document.getElementById('cl-cust-name').value.trim();
-        const custEmail = document.getElementById('cl-cust-email').value.trim();
         document.getElementById('cl-email-preview-to').textContent   = custEmail || '—';
         document.getElementById('cl-email-preview-name').textContent = custName  || 'there';
         document.getElementById('cl-no-email-warning').style.display = custEmail ? 'none' : 'block';

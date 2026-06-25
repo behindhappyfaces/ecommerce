@@ -1082,15 +1082,25 @@
             <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">Farm Eggs — 1 dozen</span>
             <span style="font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.4);letter-spacing:0.06em;">included</span>
           </li>
-          <li style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:#F5F0E8;border-radius:10px;">
+          <li style="display:flex;align-items:flex-start;gap:12px;padding:11px 14px;background:#F5F0E8;border-radius:10px;">
             <span style="font-size:1rem;">🧈</span>
-            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">Real Cream Butter — ½ lb</span>
-            <span style="font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.4);letter-spacing:0.06em;">included</span>
+            <div style="flex:1;">
+              <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);display:block;">Real Cream Butter — ½ lb</span>
+              <span style="font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);display:block;margin-top:2px;">included</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+              <span style="font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);">Flavor</span>
+              <select id="sampler-butter-flavor" style="font-family:var(--font-sans);font-size:0.75rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:4px 8px;background:#fff;color:var(--color-green,#2C3E2D);cursor:pointer;">
+                <option value="sea-salt" data-upcharge="0">Sea Salt ✓</option>
+                <option value="unsalted" data-upcharge="0">Unsalted</option>
+                <option value="rosemary" data-upcharge="400">Rosemary +$4</option>
+              </select>
+            </div>
           </li>
           <!-- Garlic Chili Crunch with swap -->
           <li style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:#F5F0E8;border-radius:10px;">
             <span style="font-size:1rem;">🌶️</span>
-            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">Garlic Chili Crunch <span style="font-size:0.72rem;color:rgba(44,62,45,0.45);">(sample size)</span></span>
+            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">Garlic Chili Crunch <span style="font-size:0.72rem;color:rgba(44,62,45,0.45);">(4oz)</span></span>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
               <span style="font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);">Swap</span>
               <select id="sampler-sauce-swap" style="font-family:var(--font-sans);font-size:0.75rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:4px 8px;background:#fff;color:var(--color-green,#2C3E2D);cursor:pointer;">
@@ -1110,9 +1120,14 @@
         <p style="font-family:var(--font-sans);font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green,#2C3E2D);margin:0 0 10px;">Add to Your Box <span style="font-weight:400;font-size:0.68rem;color:rgba(44,62,45,0.4);text-transform:none;letter-spacing:0;">(optional)</span></p>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;">
           <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;">
-            <input type="checkbox" class="sampler-addon" data-addon-id="japanese-milk-loaf" data-addon-name="Japanese Milk Loaf" data-addon-price="1500" style="accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;">
-            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🍞 Japanese Milk Loaf</span>
-            <span style="font-family:var(--font-serif,Georgia,serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);">$15</span>
+            <input type="checkbox" class="sampler-addon" data-addon-id="neckbone" data-addon-name="Neckbone" data-addon-price="200" style="accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;">
+            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🦴 Neckbone</span>
+            <span style="font-family:var(--font-serif,Georgia,serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);">$2</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;">
+            <input type="checkbox" class="sampler-addon" data-addon-id="chicken-bone-broth" data-addon-name="Chicken Bone Broth (16 oz)" data-addon-price="2000" style="accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;">
+            <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🍲 Chicken Bone Broth <span style="font-size:0.75rem;color:rgba(44,62,45,0.4);">(16 oz)</span></span>
+            <span style="font-family:var(--font-serif,Georgia,serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);">$20</span>
           </label>
           <div>
             <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid rgba(44,62,45,0.1);border-radius:10px 10px 0 0;cursor:pointer;">
@@ -1189,9 +1204,17 @@
       });
       preservesFlavorSel.addEventListener('change', function() { syncPreservesPrice(); recalc(); });
 
+      var butterSel = document.getElementById('sampler-butter-flavor');
+      butterSel.addEventListener('change', recalc);
+
       function recalc() {
         var total = BASE;
         var lines = [{ label: 'Sampler Box', amount: BASE }];
+        var butterUpcharge = parseInt(butterSel.options[butterSel.selectedIndex].dataset.upcharge, 10) || 0;
+        if (butterUpcharge > 0) {
+          total += butterUpcharge;
+          lines.push({ label: 'Butter — Rosemary', amount: butterUpcharge });
+        }
         document.querySelectorAll('.sampler-addon:checked').forEach(function(cb) {
           var p = parseInt(cb.dataset.addonPrice, 10);
           total += p;
@@ -1232,6 +1255,7 @@
         var savings  = (yeastCb && yeastCb.checked) ? Math.round((BASE + addonTotal) * 0.05) : 0;
         var sauceSel   = document.getElementById('sampler-sauce-swap');
         var swapNote   = sauceSel.value !== 'garlic-chili-crunch' ? 'Swap: Tuscany Herb Dipping Oil' : '';
+        var butterNote = butterSel.options[butterSel.selectedIndex].text;
 
         // Build cart items: sampler box + add-ons
         var cartData   = typeof getCart === 'function' ? getCart() : { items: [] };
@@ -1250,6 +1274,7 @@
 
         localStorage.setItem('hoto-cart', JSON.stringify(cartData));
         if (swapNote) localStorage.setItem('sampler-swap-note', swapNote);
+        localStorage.setItem('sampler-butter-note', butterNote);
         closeSampler();
         if (typeof renderCart === 'function') renderCart();
         if (typeof openCart  === 'function') openCart();
@@ -1261,6 +1286,11 @@
       document.getElementById('sampler-card-add').addEventListener('click', openSampler);
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
+
+      // Auto-open when arriving from the QR code flyer
+      if (new URLSearchParams(window.location.search).get('open') === 'sampler') {
+        openSampler();
+      }
     })();
   </script>
 

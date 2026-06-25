@@ -30,7 +30,6 @@ const INCLUDED = [
   ['Farm Fresh Eggs', 'Pasture-raised, Non-GMO, soy-free. 1 dozen.'],
   ['Real Cream Butter', 'Made from real grass-fed and finished cream. Half a pound of the real thing. Choose Sea Salt or Unsalted — add Rosemary for $4.'],
   ['Garlic Chili Crunch', 'A farm-made finishing oil with heat and depth. 4oz — swap for Tuscany Herb Dipping Oil.'],
-  ['Farm to Table Recipe Guide', 'Digital download with recipes built around what\'s in the box.'],
 ];
 
 const ADDONS = [
@@ -38,7 +37,7 @@ const ADDONS = [
   ['Seasonal Preserves', '$15-$18'],
   ['Butter  1/2 lb $17  |  1 lb $24.99', ''],
   ['Cinnamon Rolls (1/2 doz)', '$35'],
-  ['Yeast Rolls (1 doz) — save 5% off total', '$24'],
+  ['Yeast Rolls (dz) - ADD & Save 5% off total', '$24'],
 ];
 
 async function main() {

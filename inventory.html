@@ -1185,13 +1185,17 @@
 
     <!-- Sent Cart Links — view, resend, or duplicate any link ever generated -->
     <div style="margin-top:36px;border-top:1px solid #333;padding-top:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
         <p class="section-title" style="margin:0;">Sent Cart Links</p>
-        <button id="cl-list-refresh" class="btn-sm btn-ghost">&#8635; Refresh</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="cl-delete-selected" class="btn-sm" style="display:none;background:#5a1a1a;color:#f4a261;border:1px solid #8b2222;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:0.8rem;">Delete Selected</button>
+          <button id="cl-list-refresh" class="btn-sm btn-ghost">&#8635; Refresh</button>
+        </div>
       </div>
       <table class="data" style="max-width:920px;">
         <thead>
           <tr>
+            <th style="width:32px;"><input type="checkbox" id="cl-select-all" title="Select all" style="cursor:pointer;accent-color:var(--terra);"></th>
             <th>Customer</th>
             <th>Items</th>
             <th style="width:80px;">Total</th>
@@ -1200,7 +1204,7 @@
             <th style="width:220px;"></th>
           </tr>
         </thead>
-        <tbody id="cl-list-body"><tr><td colspan="6" class="empty-msg">Loading…</td></tr></tbody>
+        <tbody id="cl-list-body"><tr><td colspan="7" class="empty-msg">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -4256,6 +4260,39 @@
     });
 
     document.getElementById('cl-list-refresh').addEventListener('click', loadCartLinks);
+
+    function syncDeleteSelectedBtn() {
+      const any = document.querySelectorAll('.cl-row-cb:checked').length > 0;
+      document.getElementById('cl-delete-selected').style.display = any ? 'inline-block' : 'none';
+    }
+
+    document.getElementById('cl-select-all').addEventListener('change', function() {
+      document.querySelectorAll('.cl-row-cb').forEach(cb => cb.checked = this.checked);
+      syncDeleteSelectedBtn();
+    });
+
+    document.getElementById('cl-list-body').addEventListener('change', function(e) {
+      if (e.target.classList.contains('cl-row-cb')) {
+        const all = document.querySelectorAll('.cl-row-cb');
+        const checked = document.querySelectorAll('.cl-row-cb:checked');
+        document.getElementById('cl-select-all').checked = all.length === checked.length;
+        syncDeleteSelectedBtn();
+      }
+    });
+
+    document.getElementById('cl-delete-selected').addEventListener('click', async function() {
+      const tokens = [...document.querySelectorAll('.cl-row-cb:checked')].map(cb => cb.dataset.token);
+      if (!tokens.length) return;
+      if (!confirm(`Permanently delete ${tokens.length} cart link${tokens.length > 1 ? 's' : ''}?`)) return;
+      try {
+        await Promise.all(tokens.map(token =>
+          fetch(`/admin/cart-links/${token}`, { method: 'DELETE', headers: authHeaders() })
+        ));
+        showToast(`${tokens.length} cart link${tokens.length > 1 ? 's' : ''} deleted`);
+        document.getElementById('cl-select-all').checked = false;
+        loadCartLinks();
+      } catch (e) { showToast('Delete failed: ' + e.message, true); }
+    });
   }());
 
   // ── SENT CART LINKS — view, resend, duplicate ───────────────────────────────
@@ -4263,12 +4300,12 @@
 
   async function loadCartLinks() {
     const tbody = document.getElementById('cl-list-body');
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Loading…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Loading…</td></tr>';
     try {
       const res = await fetch('/admin/cart-links', { headers: authHeaders() });
       const links = await res.json();
       if (!Array.isArray(links) || !links.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No cart links sent yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No cart links sent yet.</td></tr>';
         return;
       }
       tbody.innerHTML = links.map(renderCartLinkRow).join('');
@@ -4276,7 +4313,7 @@
         btn.addEventListener('click', () => handleCartLinkAction(btn.dataset.action, btn.dataset.token));
       });
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Failed to load cart links.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Failed to load cart links.</td></tr>';
     }
   }
 
@@ -4310,6 +4347,7 @@
     </div>`;
 
     return `<tr>
+      <td><input type="checkbox" class="cl-row-cb" data-token="${c.token}" style="cursor:pointer;accent-color:var(--terra);"></td>
       <td>${custLine}</td>
       <td>${itemCell}</td>
       <td>$${(total / 100).toFixed(2)}</td>

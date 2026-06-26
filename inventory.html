@@ -4624,6 +4624,9 @@
     el.textContent = text;
   }
 
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
   async function loadDeliveryPromos() {
     const msg = document.getElementById('dp-msg');
     const body = document.getElementById('dp-list-body');
@@ -4633,11 +4636,11 @@
     } else {
       body.innerHTML = rows.map(r => `
         <tr style="border-bottom:1px solid #f0ebe3;">
-          <td style="padding:8px;font-weight:700;letter-spacing:0.04em;">${r.code}</td>
-          <td style="padding:8px;">${r.pct_off}%</td>
+          <td style="padding:8px;font-weight:700;letter-spacing:0.04em;">${escHtml(r.code)}</td>
+          <td style="padding:8px;">${escHtml(r.pct_off)}%</td>
           <td style="padding:8px;color:${r.active ? '#2a7a2a' : '#999'};">${r.active ? 'Active' : 'Disabled'}</td>
           <td style="padding:8px;text-align:right;">
-            <button onclick="deleteDeliveryPromo('${r.code}')" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Disable</button>
+            <button onclick="deleteDeliveryPromo(${JSON.stringify(escHtml(r.code))})" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Disable</button>
           </td>
         </tr>`).join('');
     }

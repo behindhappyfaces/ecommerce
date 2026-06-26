@@ -1470,6 +1470,8 @@ app.get('/admin/delivery-promos', requireAdmin, async (req, res) => {
 app.post('/admin/delivery-promos', requireAdmin, express.json(), async (req, res) => {
   const { code, pct_off } = req.body || {};
   if (!code || !pct_off) return res.status(400).json({ error: 'code and pct_off required' });
+  if (!/^[A-Z0-9_-]{1,32}$/.test((code || '').trim().toUpperCase()))
+    return res.status(400).json({ error: 'Code must be 1–32 characters: letters, numbers, - or _' });
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ error: 'Service unavailable' });
   await pg.query(

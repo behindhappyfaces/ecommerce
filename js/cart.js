@@ -2873,45 +2873,23 @@ function _openDeliveryStep2(onConfirm) {
   }
 
   confirmBtn.onclick = async () => {
-    const street  = document.getElementById('dm-addr-street').value.trim();
-    const city    = document.getElementById('dm-addr-city').value.trim();
-    const state   = document.getElementById('dm-addr-state').value.trim();
-    const zip     = document.getElementById('dm-addr-zip').value.trim();
-    const errEl   = document.getElementById('dm-addr-err');
+    const street = document.getElementById('dm-addr-street').value.trim();
+    const city   = document.getElementById('dm-addr-city').value.trim();
+    const state  = document.getElementById('dm-addr-state').value.trim();
+    const zip    = document.getElementById('dm-addr-zip').value.trim();
+    const errEl  = document.getElementById('dm-addr-err');
     if (!street || !city || !state || !zip) {
       errEl.textContent = 'Please fill in all address fields.'; errEl.style.display = 'block'; return;
     }
     errEl.style.display = 'none';
-    confirmBtn.textContent = 'Calculating delivery fee…'; confirmBtn.disabled = true;
-
-    const orderTotal = getTotal();
-    let feeCents = 1500; // flat $15 fallback
-    try {
-      const r = await fetch('/api/calculate-delivery-fee', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ street, city, state, zip, order_total_cents: orderTotal }),
-      });
-      const d = await r.json();
-      if (r.ok) {
-        feeCents = d.fee_cents;
-        const feeStr = '$' + (feeCents / 100).toFixed(2);
-        const extra = d.discount_applied ? ' (5% off — order over $100)' : '';
-        errEl.style.color = '#2a7a2a'; errEl.style.display = 'block';
-        errEl.textContent = `✓ Delivery fee: ${feeStr}${d.miles ? ' · ' + d.miles + ' mi' : ''}${extra}`;
-      }
-    } catch (_) {
-      // Network error — use fallback $15 and proceed
-    }
+    confirmBtn.textContent = 'Proceeding to checkout…'; confirmBtn.disabled = true;
 
     const address = { street, city, state, zip };
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
-    confirmBtn.textContent = 'Proceeding to checkout…';
     closeDeliveryModal();
     try {
-      await onConfirm(address, feeCents);
+      await onConfirm(address, 0);
     } catch (err) {
-      // Re-open modal to let customer try again
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Continue to Checkout →';
     }

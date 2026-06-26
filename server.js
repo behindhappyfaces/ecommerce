@@ -1324,28 +1324,28 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
 const DELIVERY_MIN_ORDER_CENTS = 3500; // $35 minimum order required for delivery
 
 function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
-  let feeCents;
-  if (distanceMiles <= 20) {
-    feeCents = 0; // free within 20 miles
-  } else if (distanceMiles <= 25) {
-    feeCents = 1500 + Math.round((distanceMiles - 20) * 0.70 * 100); // $15 + $0.70/mi over 20
+  if (orderTotalCents >= 7500) {
+    // $75+ orders
+    if (distanceMiles <= 10) return 0;                                          // FREE
+    if (distanceMiles <= 20) return 999;                                        // $9.99
+    return 999 + Math.round((distanceMiles - 20) * 70);                        // $9.99 + $0.70/mi over 20
   } else {
-    feeCents = 2500; // flat $25
+    // $35–$74.99 orders
+    if (distanceMiles <= 10) return 999;                                        // $9.99
+    if (distanceMiles <= 20) return 1500;                                       // $15.00
+    return 1500 + Math.round((distanceMiles - 20) * 100);                      // $15 + $1.00/mi over 20
   }
-  if (feeCents > 0 && orderTotalCents > 10000) {
-    feeCents = Math.round(feeCents * 0.95); // 5% off delivery when order > $100
-  }
-  return feeCents;
 }
 
 async function geocodeAddress(street, city, state, zip) {
-  const params = new URLSearchParams({ street, city, state, zip, benchmark: '2020', format: 'json' });
-  const url = `https://geocoding.geo.census.gov/geocoder/locations/address?${params}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  const data = await res.json();
-  const match = data?.result?.addressMatches?.[0];
-  if (!match) throw new Error('Address not found');
-  return { lat: match.coordinates.y, lng: match.coordinates.x };
+  const q = encodeURIComponent(`${street}, ${city}, ${state} ${zip}, USA`);
+  const r = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
+    { signal: AbortSignal.timeout(7000), headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (operations@heartoftexasorganics.com)' } }
+  );
+  const data = await r.json();
+  if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  throw new Error('Address not found');
 }
 
 // Bundle-specific delivery fee:
@@ -1400,15 +1400,14 @@ app.post('/api/calculate-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip, order_total_cents } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Address fields required' });
 
-  const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT) || 30.1741;
-  const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG) || -98.0874;
+  const originLat = 30.191784; // 100 Commons Rd, Dripping Springs TX 78620
+  const originLng = -98.084784;
 
   try {
     const { lat, lng } = await geocodeAddress(street, city, state, zip);
     const miles = haversineMiles(originLat, originLng, lat, lng);
     const feeCents = calcDeliveryFeeCents(miles, parseInt(order_total_cents, 10) || 0);
-    const discount = parseInt(order_total_cents, 10) > 10000;
-    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, discount_applied: discount });
+    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents });
   } catch (e) {
     console.error('[delivery-fee]', e.message);
     res.status(422).json({ error: 'Could not calculate delivery distance. Please verify your address.' });
@@ -1499,8 +1498,8 @@ app.post('/create-checkout-session', async (req, res) => {
     // submitted address; client-supplied delivery_fee_cents is intentionally ignored
     // to prevent price tampering.
     if (delivery_method === 'delivery' && delivery_address?.street) {
-      const originLat = parseFloat(process.env.HOTO_ORIGIN_LAT) || 30.1741;
-      const originLng = parseFloat(process.env.HOTO_ORIGIN_LNG) || -98.0874;
+      const originLat = 30.191784; // 100 Commons Rd, Dripping Springs TX 78620
+      const originLng = -98.084784;
       if (originLat && originLng) {
         try {
           const { lat, lng } = await geocodeAddress(

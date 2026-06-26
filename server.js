@@ -1452,14 +1452,25 @@ app.post('/create-checkout-session', async (req, res) => {
 
     const hasTurkey = items.some(i => TURKEY_ITEM_IDS.has(i.id));
 
-    const lineItems = items.map(item => ({
-      price_data: {
-        currency: 'usd',
-        product_data: { name: item.name },
-        unit_amount: item.price,
-      },
-      quantity: item.quantity,
-    }));
+    // Negative-price items (e.g. "5% Savings") cannot be sent to Stripe as
+    // line items — collect them and apply as a coupon instead.
+    let cartDiscountCents = 0;
+    const lineItems = [];
+    for (const item of items) {
+      const amount = Math.round(item.price || 0) * (item.quantity || 1);
+      if (item.price < 0) {
+        cartDiscountCents += Math.abs(amount);
+      } else {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: item.name },
+            unit_amount: Math.round(item.price || 0),
+          },
+          quantity: item.quantity,
+        });
+      }
+    }
 
     // Sales tax — only applied to items the admin/cart marked as taxable;
     // free items already carry unit_amount 0 so they contribute nothing here
@@ -1602,15 +1613,20 @@ app.post('/create-checkout-session', async (req, res) => {
       sessionParams.customer = customer.id;
     }
 
-    // Apply discount via Stripe coupon (negative line items are not allowed)
-    if (promo_code && promo_discount_cents > 0 && !isWelcomeCode) {
+    // Combine promo code + any cart-level discounts (negative-price items) into
+    // a single Stripe coupon — Stripe forbids negative unit_amount line items.
+    const totalDiscountCents = cartDiscountCents +
+      (!isWelcomeCode && promo_discount_cents > 0 ? Math.abs(Math.round(promo_discount_cents)) : 0);
+    if (totalDiscountCents > 0) {
+      const discountLabel = promo_code && !isWelcomeCode ? `Discount (${promo_code})` : 'Savings';
       const coupon = await stripe.coupons.create({
-        amount_off: Math.abs(Math.round(promo_discount_cents)),
+        amount_off: totalDiscountCents,
         currency:   'usd',
         duration:   'once',
-        name:       `Discount (${promo_code})`,
+        name:       discountLabel,
       });
-      sessionParams.discounts = [{ coupon: coupon.id }];
+      sessionParams.discounts        = [{ coupon: coupon.id }];
+      sessionParams.allow_promotion_codes = false;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

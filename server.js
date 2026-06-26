@@ -1513,13 +1513,14 @@ app.post('/create-checkout-session', async (req, res) => {
             delivery_address.state,  delivery_address.zip
           );
           const miles = haversineMiles(originLat, originLng, lat, lng);
+          const milesRounded = Math.round(miles * 10) / 10;
           const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
           const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
           if (authoritative_fee > 0) {
             lineItems.push({
               price_data: {
                 currency: 'usd',
-                product_data: { name: 'Local Delivery Fee' },
+                product_data: { name: `Local Delivery (${milesRounded} mi from farm)` },
                 unit_amount: authoritative_fee,
               },
               quantity: 1,

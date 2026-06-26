@@ -1571,10 +1571,11 @@ app.post('/create-checkout-session', async (req, res) => {
           const miles = haversineMiles(originLat, originLng, lat, lng);
           const milesRounded = Math.round(miles * 10) / 10;
           const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-          let authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
+          const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
 
-          // Apply delivery promo code — reduces fee only, not the cart total
-          let deliveryPromoLabel = '';
+          // Delivery promo: compute discount in cents so it rolls into the
+          // combined Stripe coupon alongside loyalty/cart discounts.
+          // Keep the fee line item at full price so both savings are visible.
           if (delivery_promo_code && authoritative_fee > 0) {
             const pg = getPcPool();
             if (pg) {
@@ -1584,8 +1585,7 @@ app.post('/create-checkout-session', async (req, res) => {
               );
               if (promoRows[0]) {
                 const pct = promoRows[0].pct_off;
-                authoritative_fee = Math.round(authoritative_fee * (1 - pct / 100));
-                deliveryPromoLabel = ` · ${pct}% promo applied`;
+                cartDiscountCents += Math.round(authoritative_fee * pct / 100);
               }
             }
           }
@@ -1594,7 +1594,7 @@ app.post('/create-checkout-session', async (req, res) => {
             lineItems.push({
               price_data: {
                 currency: 'usd',
-                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm${deliveryPromoLabel}` },
+                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm` },
                 unit_amount: authoritative_fee,
               },
               quantity: 1,
@@ -1693,17 +1693,25 @@ app.post('/create-checkout-session', async (req, res) => {
       sessionParams.customer = customer.id;
     }
 
-    // Combine promo code + any cart-level discounts (negative-price items) into
-    // a single Stripe coupon — Stripe forbids negative unit_amount line items.
-    const totalDiscountCents = cartDiscountCents +
-      (!isWelcomeCode && promo_discount_cents > 0 ? Math.abs(Math.round(promo_discount_cents)) : 0);
+    // Combine all discounts into one Stripe coupon (Stripe allows only one).
+    // cartDiscountCents already includes: negative cart items + delivery promo.
+    const promoDiscountCents = !isWelcomeCode && promo_discount_cents > 0
+      ? Math.abs(Math.round(promo_discount_cents)) : 0;
+    const totalDiscountCents = cartDiscountCents + promoDiscountCents;
     if (totalDiscountCents > 0) {
-      const discountLabel = promo_code && !isWelcomeCode ? `Discount (${promo_code})` : 'Savings';
+      // Build a label that lists every active discount so the customer sees
+      // exactly what's been applied.
+      const labelParts = [];
+      if (promoDiscountCents > 0 && promo_code && !isWelcomeCode)
+        labelParts.push(`${promo_code} loyalty`);
+      if (delivery_promo_code && cartDiscountCents > 0)
+        labelParts.push(`${delivery_promo_code} delivery discount`);
+      if (!labelParts.length) labelParts.push('Savings');
       const coupon = await stripe.coupons.create({
         amount_off: totalDiscountCents,
         currency:   'usd',
         duration:   'once',
-        name:       discountLabel,
+        name:       labelParts.join(' + '),
       });
       sessionParams.discounts = [{ coupon: coupon.id }];
       delete sessionParams.allow_promotion_codes;

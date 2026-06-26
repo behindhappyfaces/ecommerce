@@ -1619,6 +1619,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     btn.textContent = original;
     btn.disabled = false;
     console.error('Checkout error:', err);
+    alert('Something went wrong starting checkout. Please try again or call us if the problem continues.');
   }
 }
 
@@ -2851,6 +2852,11 @@ function _openDeliveryStep2(onConfirm) {
   step1.style.display = 'none';
   step2.style.display = 'block';
 
+  // Always reset — a failed previous attempt leaves the button disabled
+  const confirmBtn = document.getElementById('dm-addr-confirm');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = 'Continue to Checkout →';
+
   // Pre-fill from localStorage if saved
   const saved = (() => { try { return JSON.parse(localStorage.getItem('hoto-delivery-address') || 'null'); } catch { return null; } })();
   const notice = document.getElementById('dm-saved-addr-notice');
@@ -2865,7 +2871,7 @@ function _openDeliveryStep2(onConfirm) {
     notice.style.display = 'none';
   }
 
-  document.getElementById('dm-addr-confirm').onclick = async () => {
+  confirmBtn.onclick = async () => {
     const street  = document.getElementById('dm-addr-street').value.trim();
     const city    = document.getElementById('dm-addr-city').value.trim();
     const state   = document.getElementById('dm-addr-state').value.trim();
@@ -2875,7 +2881,6 @@ function _openDeliveryStep2(onConfirm) {
       errEl.textContent = 'Please fill in all address fields.'; errEl.style.display = 'block'; return;
     }
     errEl.style.display = 'none';
-    const confirmBtn = document.getElementById('dm-addr-confirm');
     confirmBtn.textContent = 'Calculating delivery fee…'; confirmBtn.disabled = true;
 
     const orderTotal = getTotal();
@@ -2894,7 +2899,6 @@ function _openDeliveryStep2(onConfirm) {
         errEl.style.color = '#2a7a2a'; errEl.style.display = 'block';
         errEl.textContent = `✓ Delivery fee: ${feeStr}${d.miles ? ' · ' + d.miles + ' mi' : ''}${extra}`;
       }
-      // If not ok, use fallback $15 and proceed
     } catch (_) {
       // Network error — use fallback $15 and proceed
     }
@@ -2903,7 +2907,13 @@ function _openDeliveryStep2(onConfirm) {
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
     confirmBtn.textContent = 'Proceeding to checkout…';
     closeDeliveryModal();
-    onConfirm(address, feeCents);
+    try {
+      await onConfirm(address, feeCents);
+    } catch (err) {
+      // Re-open modal to let customer try again
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Continue to Checkout →';
+    }
   };
 }
 

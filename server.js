@@ -1509,14 +1509,16 @@ app.post('/create-checkout-session', async (req, res) => {
           const miles = haversineMiles(originLat, originLng, lat, lng);
           const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
           const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
-          lineItems.push({
-            price_data: {
-              currency: 'usd',
-              product_data: { name: 'Local Delivery Fee' },
-              unit_amount: authoritative_fee,
-            },
-            quantity: 1,
-          });
+          if (authoritative_fee > 0) {
+            lineItems.push({
+              price_data: {
+                currency: 'usd',
+                product_data: { name: 'Local Delivery Fee' },
+                unit_amount: authoritative_fee,
+              },
+              quantity: 1,
+            });
+          }
         } catch (geoErr) {
           console.error('[checkout] delivery geocode failed:', geoErr.message);
           // Still add a fallback flat fee so the order isn't free of delivery cost

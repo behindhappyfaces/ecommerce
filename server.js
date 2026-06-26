@@ -1531,12 +1531,6 @@ app.post('/create-checkout-session', async (req, res) => {
           });
         }
       }
-      if (delivery_address) {
-        metadata.delivery_street = (delivery_address.street || '').slice(0, 200);
-        metadata.delivery_city   = (delivery_address.city   || '').slice(0, 100);
-        metadata.delivery_state  = (delivery_address.state  || '').slice(0, 10);
-        metadata.delivery_zip    = (delivery_address.zip    || '').slice(0, 10);
-      }
     }
 
     // Add shipping as a line item when a rate was selected
@@ -1553,6 +1547,12 @@ app.post('/create-checkout-session', async (req, res) => {
 
     // Build metadata (Stripe limits: 50 keys, values ≤ 500 chars)
     const metadata = { delivery_method: delivery_method || 'ship' };
+    if (delivery_address) {
+      metadata.delivery_street = (delivery_address.street || '').slice(0, 200);
+      metadata.delivery_city   = (delivery_address.city   || '').slice(0, 100);
+      metadata.delivery_state  = (delivery_address.state  || '').slice(0, 10);
+      metadata.delivery_zip    = (delivery_address.zip    || '').slice(0, 10);
+    }
     if (pickup_location) metadata.pickup_location = pickup_location;
     if (pickup_contact) {
       metadata.pickup_phone   = (pickup_contact.phone   || '').slice(0, 100);

@@ -1626,7 +1626,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
 
 function applyShipMinimum() {} // shipping disabled — no-op
 
-const DELIVERY_MIN_CENTS = 7500;
+const DELIVERY_MIN_CENTS = 3500;
 
 function updateDeliveryMinimumState() {
   const btn = document.getElementById('dm-delivery');

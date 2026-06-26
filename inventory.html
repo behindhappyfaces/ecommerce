@@ -3860,8 +3860,8 @@
     const CART_PRODUCTS = [
       { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',        price: 1500 },
       { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf',          price: 1800 },
-      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            price: 0 },
-      { id: 'yeast-rolls',        name: 'Yeast Rolls',               price: 0 },
+      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            price: 600 },
+      { id: 'yeast-rolls',        name: 'Yeast Rolls',               price: 600 },
       { id: 'focaccia-loaf',      name: 'Focaccia Loaf',             price: 3200 },
       { id: 'whole-chicken',      name: 'Whole Chicken',             price: 0 },
       { id: 'cultured-butter',    name: 'Real Cream Butter',         price: 0 },
@@ -4119,7 +4119,11 @@
         const data = await res.json();
         if (!data.url) throw new Error(data.error || 'Failed');
         clearDraft();
+        // Reset all product checkboxes so stale selections don't carry into the next link
+        document.querySelectorAll('#cl-product-rows input[type=checkbox][data-id]').forEach(cb => cb.checked = false);
         document.getElementById('cl-link').value = data.url;
+        // Refresh the sent list so the new link appears and there's no confusion with old entries
+        loadCartLinks();
         document.getElementById('cl-result').style.display = 'block';
         document.getElementById('cl-copy-msg').style.display = 'none';
         document.getElementById('cl-result').querySelector('p').textContent =

@@ -1321,7 +1321,7 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const DELIVERY_MIN_ORDER_CENTS = 7500; // $75 minimum order required for delivery
+const DELIVERY_MIN_ORDER_CENTS = 3500; // $35 minimum order required for delivery
 
 function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
   let feeCents;

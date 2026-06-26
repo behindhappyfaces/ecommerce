@@ -1639,7 +1639,7 @@ function updateDeliveryMinimumState() {
     if (note) note.textContent = 'Requires a $' + (DELIVERY_MIN_CENTS / 100).toFixed(0) + ' minimum order — add ' + fmt(DELIVERY_MIN_CENTS - total) + ' more to qualify';
   } else {
     btn.disabled = false;
-    if (note) note.textContent = 'Free within 20 miles · Enter your delivery address';
+    if (note) note.textContent = 'Free delivery for eligible orders · Enter your delivery address';
   }
 }
 
@@ -2770,7 +2770,7 @@ function injectDeliveryModal() {
   const opts = document.createElement('div');
   opts.className = 'delivery-modal__options';
   opts.appendChild(makeDeliveryOpt('dm-pickup', '📍', 'Local pick-up (free)', 'Pick-up details confirmed after checkout'));
-  opts.appendChild(makeDeliveryOpt('dm-delivery', '🚚', 'Delivery', 'Enter your delivery address'));
+  opts.appendChild(makeDeliveryOpt('dm-delivery', '🚚', 'Delivery', 'Free delivery for eligible orders · Enter your delivery address'));
 
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'sub-prompt__btn sub-prompt__btn--no';

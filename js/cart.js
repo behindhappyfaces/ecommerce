@@ -1669,6 +1669,17 @@ function openAdminSubDeliveryModal() {
 }
 
 function openOneTimeDeliveryChoice() {
+  // Sampler box QR flow — delivery already verified in the modal, skip straight to checkout
+  const samplerDelivery = (() => { try { return JSON.parse(localStorage.getItem('hoto-sampler-delivery') || 'null'); } catch { return null; } })();
+  const cartItems = getCart().items;
+  if (samplerDelivery && cartItems.some(i => i.id === 'sampler-box')) {
+    checkout('delivery', null, {
+      address: { street: samplerDelivery.street, city: samplerDelivery.city, state: samplerDelivery.state, zip: samplerDelivery.zip },
+      deliveryFeeCents: samplerDelivery.feeCents,
+    });
+    return;
+  }
+
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
   // Reset to step 1
@@ -3018,6 +3029,11 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         localStorage.removeItem('hoto-subscribe');
         // Store token so checkout can pass it to Stripe metadata for precise webhook matching
         localStorage.setItem('hoto-cart-link-token', rc);
+        // Persist cart-link discount so checkout() picks it up via the normal promo path
+        if (discCents > 0) {
+          localStorage.setItem('hoto-promo-code', d.discount.label || 'Discount');
+          localStorage.setItem('hoto-promo-amt', String(discCents));
+        }
         var url = new URL(window.location.href);
         url.searchParams.delete('rc');
         window.history.replaceState({}, '', url.toString());

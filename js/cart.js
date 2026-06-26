@@ -1560,6 +1560,17 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
   const freeGiftEligible = localStorage.getItem('hoto-free-gift-eligible') === 'true';
   const cartLinkToken = localStorage.getItem('hoto-cart-link-token') || null;
 
+  // If this is a sampler box delivery (QR flow), override method and inject delivery details
+  const samplerDelivery = (() => { try { return JSON.parse(localStorage.getItem('hoto-sampler-delivery') || 'null'); } catch { return null; } })();
+  const hasSamplerBox = items.some(i => i.id === 'sampler-box');
+  if (hasSamplerBox && samplerDelivery) {
+    deliveryMethod = 'delivery';
+    pickupContact = {
+      address: { street: samplerDelivery.street, city: samplerDelivery.city, state: samplerDelivery.state, zip: samplerDelivery.zip },
+      deliveryFeeCents: samplerDelivery.feeCents,
+    };
+  }
+
   try {
     const body = { items, delivery_method: deliveryMethod || 'pickup' };
     if (cartLinkToken) body.cart_link_token = cartLinkToken;
@@ -1584,6 +1595,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
       localStorage.removeItem('hoto-cart-tax-rate');
       localStorage.removeItem('hoto-free-gift-eligible');
       localStorage.removeItem('hoto-cart-link-token');
+      localStorage.removeItem('hoto-sampler-delivery');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {

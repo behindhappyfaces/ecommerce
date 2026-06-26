@@ -1362,6 +1362,25 @@ function calcBundleDeliveryFeeCents(distanceMiles) {
 const BUNDLE_ORIGIN_LAT = parseFloat(process.env.BUNDLE_ORIGIN_LAT) || 30.191784;
 const BUNDLE_ORIGIN_LNG = parseFloat(process.env.BUNDLE_ORIGIN_LNG) || -98.084784;
 
+// POST /api/sampler-delivery-fee — Sampler Box: FREE ≤20 mi, $15 flat >20 mi
+// Origin: 100 Commons Rd, Dripping Springs TX 78620
+function calcSamplerDeliveryFeeCents(miles) {
+  return miles <= 20 ? 0 : 1500;
+}
+app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
+  const { street, city, state, zip } = req.body || {};
+  if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in all address fields.' });
+  try {
+    const { lat, lng } = await geocodeAddress(street, city, state, zip);
+    const miles = haversineMiles(BUNDLE_ORIGIN_LAT, BUNDLE_ORIGIN_LNG, lat, lng);
+    const feeCents = calcSamplerDeliveryFeeCents(miles);
+    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, free: feeCents === 0 });
+  } catch (e) {
+    console.error('[sampler-delivery-fee]', e.message);
+    res.status(422).json({ error: 'Could not verify that address. Please double-check it.' });
+  }
+});
+
 // POST /api/bundle-delivery-fee — quotes the bundle delivery fee for an address
 app.post('/api/bundle-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip } = req.body || {};

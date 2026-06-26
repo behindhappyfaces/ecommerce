@@ -1149,6 +1149,22 @@
           </label>
         </div>
 
+        <!-- Delivery address — shown only for QR code visitors (?open=sampler) -->
+        <div id="sampler-delivery-section" style="display:none;margin-bottom:18px;">
+          <p style="font-family:var(--font-sans);font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green,#2C3E2D);margin:0 0 6px;">Delivery Address <span style="font-weight:400;color:rgba(44,62,45,0.5);text-transform:none;letter-spacing:0;font-size:0.68rem;">(local delivery only)</span></p>
+          <p style="font-family:var(--font-sans);font-size:0.75rem;color:rgba(44,62,45,0.6);margin:0 0 10px;">FREE within 20 miles &nbsp;·&nbsp; $15 flat fee beyond 20 miles</p>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input id="sampler-d-street" type="text" placeholder="Street address" style="width:100%;padding:9px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);box-sizing:border-box;">
+            <div style="display:flex;gap:8px;">
+              <input id="sampler-d-city"  type="text" placeholder="City"  style="flex:2;padding:9px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);">
+              <input id="sampler-d-state" type="text" placeholder="State" maxlength="2" style="flex:1;padding:9px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);">
+              <input id="sampler-d-zip"   type="text" placeholder="ZIP"   maxlength="5" style="flex:1;padding:9px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);">
+            </div>
+            <button id="sampler-d-check" type="button" style="width:100%;padding:10px;background:rgba(44,62,45,0.08);border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-green,#2C3E2D);cursor:pointer;">Check Delivery</button>
+            <div id="sampler-d-result" style="display:none;padding:10px 14px;border-radius:8px;font-family:var(--font-sans);font-size:0.82rem;"></div>
+          </div>
+        </div>
+
         <!-- Price summary -->
         <div style="background:#F5F0E8;border-radius:10px;padding:14px 16px;margin-bottom:16px;">
           <div id="sampler-price-lines" style="font-family:var(--font-sans);font-size:0.78rem;color:rgba(44,62,45,0.6);display:flex;flex-direction:column;gap:4px;margin-bottom:10px;"></div>
@@ -1270,6 +1286,9 @@
         localStorage.setItem('hoto-cart', JSON.stringify(cartData));
         if (swapNote) localStorage.setItem('sampler-swap-note', swapNote);
         localStorage.setItem('sampler-butter-note', butterNote);
+        if (samplerFromQR && samplerDeliveryData) {
+          localStorage.setItem('hoto-sampler-delivery', JSON.stringify(samplerDeliveryData));
+        }
         closeSampler();
         if (typeof renderCart === 'function') renderCart();
         if (typeof openCart  === 'function') openCart();
@@ -1282,8 +1301,78 @@
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
 
+      // Delivery section — only active for QR code visitors
+      var samplerFromQR = new URLSearchParams(window.location.search).get('open') === 'sampler';
+      var samplerDeliveryVerified = false;
+      var samplerDeliveryData = null;
+
+      if (samplerFromQR) {
+        document.getElementById('sampler-delivery-section').style.display = 'block';
+        atcBtn.disabled = true;
+        atcBtn.style.opacity = '0.5';
+
+        var dStreet = document.getElementById('sampler-d-street');
+        var dCity   = document.getElementById('sampler-d-city');
+        var dState  = document.getElementById('sampler-d-state');
+        var dZip    = document.getElementById('sampler-d-zip');
+        var dCheck  = document.getElementById('sampler-d-check');
+        var dResult = document.getElementById('sampler-d-result');
+
+        // Re-lock if address fields change after a successful check
+        [dStreet, dCity, dState, dZip].forEach(function(el) {
+          el.addEventListener('input', function() {
+            samplerDeliveryVerified = false;
+            samplerDeliveryData = null;
+            dResult.style.display = 'none';
+            atcBtn.disabled = true;
+            atcBtn.style.opacity = '0.5';
+          });
+        });
+
+        dCheck.addEventListener('click', async function() {
+          var street = dStreet.value.trim();
+          var city   = dCity.value.trim();
+          var state  = dState.value.trim();
+          var zip    = dZip.value.trim();
+          if (!street || !city || !state || !zip) {
+            dResult.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;background:#fff3cd;color:#856404;font-family:var(--font-sans);font-size:0.82rem;';
+            dResult.textContent = 'Please fill in all address fields.';
+            return;
+          }
+          dCheck.textContent = 'Checking…';
+          dCheck.disabled = true;
+          try {
+            var resp = await fetch('/api/sampler-delivery-fee', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ street, city, state, zip }),
+            });
+            var data = await resp.json();
+            if (!data.ok) throw new Error(data.error || 'Could not verify address.');
+            samplerDeliveryVerified = true;
+            samplerDeliveryData = { street, city, state, zip, feeCents: data.fee_cents, miles: data.miles };
+            if (data.free) {
+              dResult.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;background:#d4edda;color:#155724;font-family:var(--font-sans);font-size:0.82rem;font-weight:700;';
+              dResult.textContent = data.miles + ' mi away — Delivery is FREE! 🎉';
+            } else {
+              dResult.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;background:#F5F0E8;color:var(--color-green,#2C3E2D);font-family:var(--font-sans);font-size:0.82rem;font-weight:700;';
+              dResult.textContent = data.miles + ' mi away — Delivery fee: $15.00';
+            }
+            atcBtn.disabled = false;
+            atcBtn.style.opacity = '1';
+            recalc();
+          } catch (e) {
+            dResult.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;background:#f8d7da;color:#721c24;font-family:var(--font-sans);font-size:0.82rem;';
+            dResult.textContent = e.message;
+          } finally {
+            dCheck.textContent = 'Check Delivery';
+            dCheck.disabled = false;
+          }
+        });
+      }
+
       // Auto-open when arriving from the QR code flyer — setTimeout lets the rest of the page finish rendering
-      if (new URLSearchParams(window.location.search).get('open') === 'sampler') {
+      if (samplerFromQR) {
         setTimeout(openSampler, 300);
       }
     })();

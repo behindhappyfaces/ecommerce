@@ -1530,7 +1530,8 @@ h1, h2, h3, h4 {
   border-radius: 8px; cursor: pointer; font-family: inherit; text-align: left;
   transition: border-color 0.15s, background 0.15s; width: 100%;
 }
-.pickup-loc-opt:hover { border-color: var(--color-rust); background: #fff8f5; }
+.pickup-loc-opt:hover:not(:disabled) { border-color: var(--color-rust); background: #fff8f5; }
+.pickup-loc-opt--disabled { opacity: 0.45; cursor: not-allowed; }
 .pickup-loc-opt__icon { font-size: 1.4rem; flex-shrink: 0; }
 .pickup-loc-opt__label { display: block; font-weight: 700; font-size: 0.93rem; color: var(--color-green); margin-bottom: 2px; }
 .pickup-loc-opt__note { display: block; font-size: 0.78rem; color: #888; }

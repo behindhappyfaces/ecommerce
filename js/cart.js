@@ -1872,15 +1872,16 @@ function injectPickupLocationModal() {
   opts.className = 'pickup-loc-opts';
 
   const locations = [
-    { id: 'pl-lakeway',   icon: '📍', label: 'Lakeway / Bee Cave',  note: 'Central location near Lake Travis' },
-    { id: 'pl-dripping',  icon: '📍', label: 'Dripping Springs',    note: 'Hill Country pick-up point' },
-    { id: 'pl-austin',    icon: '📍', label: 'Austin',              note: 'South Austin area pick-up' },
+    { id: 'pl-lakeway',   icon: '📍', label: 'Lakeway / Bee Cave',  note: 'Central location near Lake Travis', disabled: true },
+    { id: 'pl-dripping',  icon: '📍', label: 'Dripping Springs',    note: 'Hill Country pick-up point',        disabled: false },
+    { id: 'pl-austin',    icon: '📍', label: 'Austin',              note: 'South Austin area pick-up',         disabled: true },
   ];
 
-  locations.forEach(({ id, icon, label, note }) => {
+  locations.forEach(({ id, icon, label, note, disabled }) => {
     const btn = document.createElement('button');
-    btn.className = 'pickup-loc-opt';
+    btn.className = 'pickup-loc-opt' + (disabled ? ' pickup-loc-opt--disabled' : '');
     btn.id = id;
+    if (disabled) btn.disabled = true;
 
     const iconSpan = document.createElement('span');
     iconSpan.className = 'pickup-loc-opt__icon';
@@ -1896,13 +1897,14 @@ function injectPickupLocationModal() {
     noteSpan.className = 'pickup-loc-opt__note';
     noteSpan.textContent = note;
 
-    const comingSoon = document.createElement('span');
-    comingSoon.className = 'pickup-loc-opt__coming-soon';
-    comingSoon.textContent = '*Location Coming Soon';
-
     textWrap.appendChild(labelSpan);
     textWrap.appendChild(noteSpan);
-    textWrap.appendChild(comingSoon);
+    if (disabled) {
+      const comingSoon = document.createElement('span');
+      comingSoon.className = 'pickup-loc-opt__coming-soon';
+      comingSoon.textContent = '*Location Coming Soon';
+      textWrap.appendChild(comingSoon);
+    }
     btn.appendChild(iconSpan);
     btn.appendChild(textWrap);
     opts.appendChild(btn);

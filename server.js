@@ -1483,16 +1483,6 @@ app.post('/create-checkout-session', async (req, res) => {
 
     // HOTO- welcome codes are subscription-only — reject silently on one-time checkout
     const isWelcomeCode = (promo_code || '').toUpperCase().startsWith('HOTO-');
-    if (promo_code && promo_discount_cents && promo_discount_cents > 0 && !isWelcomeCode) {
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: { name: `Discount (${promo_code})` },
-          unit_amount: -Math.abs(Math.round(promo_discount_cents)),
-        },
-        quantity: 1,
-      });
-    }
 
     // Add local delivery fee — fee is always recalculated server-side from the
     // submitted address; client-supplied delivery_fee_cents is intentionally ignored
@@ -1610,6 +1600,17 @@ app.post('/create-checkout-session', async (req, res) => {
         ? existing.data[0]
         : await stripe.customers.create({ email });
       sessionParams.customer = customer.id;
+    }
+
+    // Apply discount via Stripe coupon (negative line items are not allowed)
+    if (promo_code && promo_discount_cents > 0 && !isWelcomeCode) {
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.abs(Math.round(promo_discount_cents)),
+        currency:   'usd',
+        duration:   'once',
+        name:       `Discount (${promo_code})`,
+      });
+      sessionParams.discounts = [{ coupon: coupon.id }];
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

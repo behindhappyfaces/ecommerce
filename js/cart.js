@@ -2812,6 +2812,7 @@ function injectDeliveryModal() {
   addrRow2.appendChild(addrZip);
 
   const addrErrMsg = document.createElement('p');
+  addrErrMsg.id = 'dm-addr-err';
   addrErrMsg.style.cssText = 'color:#c0392b;font-family:var(--font-sans);font-size:0.75rem;margin:0 0 8px;display:none;';
 
   const addrActions = document.createElement('div');
@@ -2876,7 +2877,7 @@ function _openDeliveryStep2(onConfirm) {
     const city    = document.getElementById('dm-addr-city').value.trim();
     const state   = document.getElementById('dm-addr-state').value.trim();
     const zip     = document.getElementById('dm-addr-zip').value.trim();
-    const errEl   = step2.querySelector('p[style*="color:#c0392b"]');
+    const errEl   = document.getElementById('dm-addr-err');
     if (!street || !city || !state || !zip) {
       errEl.textContent = 'Please fill in all address fields.'; errEl.style.display = 'block'; return;
     }

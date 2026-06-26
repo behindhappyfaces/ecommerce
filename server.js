@@ -1630,8 +1630,8 @@ app.post('/create-checkout-session', async (req, res) => {
         duration:   'once',
         name:       discountLabel,
       });
-      sessionParams.discounts        = [{ coupon: coupon.id }];
-      sessionParams.allow_promotion_codes = false;
+      sessionParams.discounts = [{ coupon: coupon.id }];
+      delete sessionParams.allow_promotion_codes;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

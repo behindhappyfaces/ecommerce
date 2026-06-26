@@ -1453,13 +1453,14 @@ app.post('/create-checkout-session', async (req, res) => {
     const hasTurkey = items.some(i => TURKEY_ITEM_IDS.has(i.id));
 
     // Negative-price items (e.g. "5% Savings") cannot be sent to Stripe as
-    // line items — collect them and apply as a coupon instead.
+    // line items. Collect discount items separately, but cap to the actual
+    // positive subtotal to prevent price manipulation.
     let cartDiscountCents = 0;
     const lineItems = [];
     for (const item of items) {
-      const amount = Math.round(item.price || 0) * (item.quantity || 1);
       if (item.price < 0) {
-        cartDiscountCents += Math.abs(amount);
+        // Collect discount — will be validated against subtotal below
+        cartDiscountCents += Math.abs(Math.round(item.price || 0)) * (item.quantity || 1);
       } else {
         lineItems.push({
           price_data: {
@@ -1471,6 +1472,10 @@ app.post('/create-checkout-session', async (req, res) => {
         });
       }
     }
+    // Cap cart-level discounts to the actual subtotal so a tampered request
+    // can never reduce the charge below $0.
+    const positiveSubtotal = lineItems.reduce((s, li) => s + li.price_data.unit_amount * li.quantity, 0);
+    cartDiscountCents = Math.min(cartDiscountCents, positiveSubtotal);
 
     // Sales tax — only applied to items the admin/cart marked as taxable;
     // free items already carry unit_amount 0 so they contribute nothing here

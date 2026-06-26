@@ -1594,7 +1594,7 @@ app.post('/create-checkout-session', async (req, res) => {
             lineItems.push({
               price_data: {
                 currency: 'usd',
-                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm` },
+                product_data: { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
                 unit_amount: authoritative_fee,
               },
               quantity: 1,
@@ -1703,9 +1703,9 @@ app.post('/create-checkout-session', async (req, res) => {
       // exactly what's been applied.
       const labelParts = [];
       if (promoDiscountCents > 0 && promo_code && !isWelcomeCode)
-        labelParts.push(`${promo_code} loyalty`);
-      if (delivery_promo_code && cartDiscountCents > 0)
-        labelParts.push(`${delivery_promo_code} delivery discount`);
+        labelParts.push(`${promo_code} (loyalty)`);
+      if (delivery_promo_code)
+        labelParts.push(`${delivery_promo_code} (delivery)`);
       if (!labelParts.length) labelParts.push('Savings');
       const coupon = await stripe.coupons.create({
         amount_off: totalDiscountCents,

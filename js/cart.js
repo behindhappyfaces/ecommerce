@@ -2936,9 +2936,11 @@ function _openDeliveryStep2(onConfirm) {
 
     const address = { street, city, state, zip };
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
+    // Capture promo BEFORE closeDeliveryModal resets _validatedDeliveryPromo
+    const capturedPromo = _validatedDeliveryPromo || null;
     closeDeliveryModal();
     try {
-      await onConfirm(address, 0, _validatedDeliveryPromo || null);
+      await onConfirm(address, 0, capturedPromo);
     } catch (err) {
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Continue to Checkout →';

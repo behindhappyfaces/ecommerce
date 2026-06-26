@@ -2830,7 +2830,7 @@ function injectDeliveryModal() {
   delivPromoRow.appendChild(delivPromoInput);
   delivPromoRow.appendChild(delivPromoBtn);
 
-  let _validatedDeliveryPromo = null;
+  _validatedDeliveryPromo = null;
   delivPromoBtn.onclick = async () => {
     const code = delivPromoInput.value.trim().toUpperCase();
     delivPromoMsg.style.display = 'none';
@@ -2946,6 +2946,7 @@ function _openDeliveryStep2(onConfirm) {
   };
 }
 
+let _validatedDeliveryPromo = null;
 let _pendingSubArgs = null;
 
 function openDeliveryModal(subId, name, price, swaps = [], addons = []) {
@@ -2959,6 +2960,7 @@ function openDeliveryModal(subId, name, price, swaps = [], addons = []) {
 function closeDeliveryModal() {
   document.getElementById('delivery-modal-overlay')?.classList.remove('open');
   _pendingSubArgs = null;
+  _validatedDeliveryPromo = null;
 }
 
 // --- Subscribe ---

@@ -1520,7 +1520,7 @@ app.post('/create-checkout-session', async (req, res) => {
             lineItems.push({
               price_data: {
                 currency: 'usd',
-                product_data: { name: `Local Delivery (${milesRounded} mi from farm)` },
+                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm` },
                 unit_amount: authoritative_fee,
               },
               quantity: 1,

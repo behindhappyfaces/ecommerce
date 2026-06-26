@@ -1619,7 +1619,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     btn.textContent = original;
     btn.disabled = false;
     console.error('Checkout error:', err);
-    alert('Something went wrong starting checkout. Please try again or call us if the problem continues.');
+    alert('Checkout error: ' + (err.message || 'Please try again.'));
   }
 }
 

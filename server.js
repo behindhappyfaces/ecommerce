@@ -1444,7 +1444,7 @@ app.post('/create-checkout-session', async (req, res) => {
     const origin = `${req.protocol}://${req.get('host')}`;
     const isShip = delivery_method !== 'pickup';
 
-    if (delivery_method === 'delivery') {
+    if (delivery_method === 'delivery' && !cart_link_token) {
       const itemsSubtotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
       if (itemsSubtotal < DELIVERY_MIN_ORDER_CENTS) {
         return res.status(400).json({ error: `Delivery requires a $${(DELIVERY_MIN_ORDER_CENTS / 100).toFixed(0)} minimum order.` });

@@ -1577,8 +1577,9 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (pickupLocation)                body.pickup_location    = pickupLocation;
     if (pickupContact)                 body.pickup_contact     = pickupContact;
     if (pickupContact?.address)        body.delivery_address   = pickupContact.address;
-    if (pickupContact?.deliveryFeeCents) body.delivery_fee_cents = pickupContact.deliveryFeeCents;
-    if (promoCode && promoAmt)         { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
+    if (pickupContact?.deliveryFeeCents)  body.delivery_fee_cents    = pickupContact.deliveryFeeCents;
+    if (pickupContact?.deliveryPromoCode) body.delivery_promo_code   = pickupContact.deliveryPromoCode;
+    if (promoCode && promoAmt)            { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
     if (freeGiftEligible)              body.free_gift_eligible = true;
     const res = await fetch('/create-checkout-session', {
@@ -1652,7 +1653,7 @@ function openCartDeliveryModal() {
   overlay.classList.add('open');
   updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick   = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkoutSubscription('pickup', loc, contact)); };
-  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee })); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee, delivPromo) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo })); };
   document.getElementById('dm-cancel').onclick   = closeDeliveryModal;
 }
 
@@ -1690,7 +1691,7 @@ function openOneTimeDeliveryChoice() {
   overlay.classList.add('open');
   updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick = () => { closeDeliveryModal(); openPickupLocationModal((loc, contact) => checkout('pickup', loc, contact)); };
-  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee) => checkout('delivery', null, { address: addr, deliveryFeeCents: fee })); };
+  document.getElementById('dm-delivery').onclick = () => { _openDeliveryStep2((addr, fee, delivPromo) => checkout('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo })); };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
 
@@ -2813,6 +2814,51 @@ function injectDeliveryModal() {
   addrRow2.appendChild(addrState);
   addrRow2.appendChild(addrZip);
 
+  const delivPromoRow = document.createElement('div');
+  delivPromoRow.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;';
+  const delivPromoInput = document.createElement('input');
+  delivPromoInput.id = 'dm-delivery-promo';
+  delivPromoInput.placeholder = 'Delivery promo code (optional)';
+  delivPromoInput.style.cssText = 'flex:1;padding:9px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:var(--font-sans);font-size:0.85rem;';
+  const delivPromoBtn = document.createElement('button');
+  delivPromoBtn.type = 'button';
+  delivPromoBtn.textContent = 'Apply';
+  delivPromoBtn.style.cssText = 'padding:9px 14px;background:var(--color-rust,#8B3A2A);color:#fff;border:none;border-radius:6px;font-family:var(--font-sans);font-size:0.85rem;cursor:pointer;white-space:nowrap;';
+  const delivPromoMsg = document.createElement('p');
+  delivPromoMsg.id = 'dm-delivery-promo-msg';
+  delivPromoMsg.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;margin:0 0 8px;display:none;';
+  delivPromoRow.appendChild(delivPromoInput);
+  delivPromoRow.appendChild(delivPromoBtn);
+
+  let _validatedDeliveryPromo = null;
+  delivPromoBtn.onclick = async () => {
+    const code = delivPromoInput.value.trim().toUpperCase();
+    delivPromoMsg.style.display = 'none';
+    if (!code) return;
+    delivPromoBtn.textContent = '…'; delivPromoBtn.disabled = true;
+    try {
+      const r = await fetch('/api/validate-delivery-promo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const d = await r.json();
+      if (d.valid) {
+        _validatedDeliveryPromo = code;
+        delivPromoMsg.style.color = '#2a7a2a';
+        delivPromoMsg.textContent = `✓ ${d.pct_off}% off delivery applied!`;
+      } else {
+        _validatedDeliveryPromo = null;
+        delivPromoMsg.style.color = '#c0392b';
+        delivPromoMsg.textContent = d.error || 'Invalid code';
+      }
+    } catch (_) {
+      delivPromoMsg.style.color = '#c0392b';
+      delivPromoMsg.textContent = 'Could not validate — try again';
+    }
+    delivPromoMsg.style.display = 'block';
+    delivPromoBtn.textContent = 'Apply'; delivPromoBtn.disabled = false;
+  };
+
   const addrErrMsg = document.createElement('p');
   addrErrMsg.id = 'dm-addr-err';
   addrErrMsg.style.cssText = 'color:#c0392b;font-family:var(--font-sans);font-size:0.75rem;margin:0 0 8px;display:none;';
@@ -2838,6 +2884,8 @@ function injectDeliveryModal() {
   step2.appendChild(addrStreet);
   step2.appendChild(addrCity);
   step2.appendChild(addrRow2);
+  step2.appendChild(delivPromoRow);
+  step2.appendChild(delivPromoMsg);
   step2.appendChild(addrErrMsg);
   step2.appendChild(addrActions);
 
@@ -2890,7 +2938,7 @@ function _openDeliveryStep2(onConfirm) {
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
     closeDeliveryModal();
     try {
-      await onConfirm(address, 0);
+      await onConfirm(address, 0, _validatedDeliveryPromo || null);
     } catch (err) {
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Continue to Checkout →';

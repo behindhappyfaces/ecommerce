@@ -354,6 +354,19 @@ async function ensurePcTable() {
 }
 ensurePcTable().catch(e => console.warn('[PendingCarts] table init failed:', e.message));
 
+// ── Delivery Promo Codes ─────────────────────────────────────────────────────
+async function ensureDeliveryPromosTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS delivery_promos (
+    code      TEXT PRIMARY KEY,
+    pct_off   INT  NOT NULL CHECK (pct_off > 0 AND pct_off <= 100),
+    active    BOOL NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensureDeliveryPromosTable().catch(e => console.warn('[DeliveryPromos] table init failed:', e.message));
+
 async function readPendingCartsDB() {
   const pg = getPcPool();
   if (!pg) return readPendingCarts(); // fallback to file
@@ -1432,10 +1445,51 @@ app.post('/api/validate-promo', express.json(), async (req, res) => {
   }
 });
 
+// ── Delivery promo — public validate ────────────────────────────────────────
+app.post('/api/validate-delivery-promo', express.json(), async (req, res) => {
+  const { code } = req.body || {};
+  if (!code) return res.status(400).json({ valid: false, error: 'No code' });
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ valid: false, error: 'Service unavailable' });
+  const { rows } = await pg.query(
+    'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
+    [code.trim().toUpperCase()]
+  );
+  if (!rows[0]) return res.json({ valid: false, error: 'Code not found or expired' });
+  res.json({ valid: true, pct_off: rows[0].pct_off });
+});
+
+// ── Delivery promo — admin CRUD ─────────────────────────────────────────────
+app.get('/admin/delivery-promos', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json([]);
+  const { rows } = await pg.query('SELECT code, pct_off, active, created_at FROM delivery_promos ORDER BY created_at DESC');
+  res.json(rows);
+});
+
+app.post('/admin/delivery-promos', requireAdmin, express.json(), async (req, res) => {
+  const { code, pct_off } = req.body || {};
+  if (!code || !pct_off) return res.status(400).json({ error: 'code and pct_off required' });
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'Service unavailable' });
+  await pg.query(
+    'INSERT INTO delivery_promos (code, pct_off) VALUES ($1, $2) ON CONFLICT (code) DO UPDATE SET pct_off = $2, active = TRUE',
+    [code.trim().toUpperCase(), parseInt(pct_off, 10)]
+  );
+  res.json({ ok: true });
+});
+
+app.delete('/admin/delivery-promos/:code', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'Service unavailable' });
+  await pg.query('UPDATE delivery_promos SET active = FALSE WHERE code = $1', [req.params.code.toUpperCase()]);
+  res.json({ ok: true });
+});
+
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
-            delivery_address,
+            delivery_address, delivery_promo_code,
             promo_code, promo_discount_cents, tax_rate_pct, free_gift_eligible,
             cart_link_token } = req.body;
     // delivery_fee_cents from client is intentionally not destructured — fee is always
@@ -1515,12 +1569,30 @@ app.post('/create-checkout-session', async (req, res) => {
           const miles = haversineMiles(originLat, originLng, lat, lng);
           const milesRounded = Math.round(miles * 10) / 10;
           const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-          const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
+          let authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
+
+          // Apply delivery promo code — reduces fee only, not the cart total
+          let deliveryPromoLabel = '';
+          if (delivery_promo_code && authoritative_fee > 0) {
+            const pg = getPcPool();
+            if (pg) {
+              const { rows: promoRows } = await pg.query(
+                'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
+                [delivery_promo_code.trim().toUpperCase()]
+              );
+              if (promoRows[0]) {
+                const pct = promoRows[0].pct_off;
+                authoritative_fee = Math.round(authoritative_fee * (1 - pct / 100));
+                deliveryPromoLabel = ` · ${pct}% promo applied`;
+              }
+            }
+          }
+
           if (authoritative_fee > 0) {
             lineItems.push({
               price_data: {
                 currency: 'usd',
-                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm` },
+                product_data: { name: 'Local Delivery Fee', description: `${milesRounded} miles from farm${deliveryPromoLabel}` },
                 unit_amount: authoritative_fee,
               },
               quantity: 1,

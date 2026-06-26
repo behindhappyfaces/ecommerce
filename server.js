@@ -1588,7 +1588,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     const sessionParams = {
       mode: 'payment',
-      payment_method_types: ['card', 'us_bank_account'],
+      payment_method_types: ['card'],
       line_items: lineItems,
       allow_promotion_codes: allowPromoCodes,
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,

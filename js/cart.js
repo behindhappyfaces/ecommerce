@@ -2938,6 +2938,7 @@ function _openDeliveryStep2(onConfirm) {
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
     // Capture promo BEFORE closeDeliveryModal resets _validatedDeliveryPromo
     const capturedPromo = _validatedDeliveryPromo || null;
+    console.log('[HOTO] delivery promo captured:', capturedPromo);
     closeDeliveryModal();
     try {
       await onConfirm(address, 0, capturedPromo);

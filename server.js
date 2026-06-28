@@ -1115,6 +1115,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Recipe guide — inline view (open in tab) and force-download
+app.get('/recipe-guide', (req, res) => {
+  res.sendFile(path.join(__dirname, 'recipe-guide.html'));
+});
+app.get('/download-recipe-guide', (req, res) => {
+  res.setHeader('Content-Disposition', 'attachment; filename="HOTO-Farm-to-Table-Recipe-Guide.html"');
+  res.setHeader('Content-Type', 'text/html');
+  res.sendFile(path.join(__dirname, 'recipe-guide.html'));
+});
+
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   setHeaders(res, filePath) {

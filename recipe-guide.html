@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farm to Table Recipe Guide | Heart of Texas Organics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --rust:   #8B3A2A;
+      --cream:  #FAF6EE;
+      --tan:    #EDE3D0;
+      --brown:  #5C3D2E;
+      --dark:   #2B1A11;
+      --gold:   #B8860B;
+      --sage:   #6B7C5C;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Raleway', sans-serif;
+      background: var(--cream);
+      color: var(--dark);
+    }
+
+    /* ── PRINT BUTTON (screen only) ── */
+    .print-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--rust);
+      color: #fff;
+      text-align: center;
+      padding: 12px;
+      z-index: 999;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .print-bar a {
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+    .print-btn {
+      background: #fff;
+      color: var(--rust);
+      border: none;
+      padding: 7px 20px;
+      border-radius: 3px;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    /* ── COVER PAGE ── */
+    .cover {
+      min-height: 100vh;
+      background: var(--dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 40px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 30%, rgba(139,58,42,0.25) 0%, transparent 70%);
+    }
+    .cover__eyebrow {
+      font-size: 0.6rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(250,246,238,0.4);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .cover__farm {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .cover__rule {
+      width: 1px;
+      height: 48px;
+      background: rgba(184,134,11,0.4);
+      margin: 0 auto 16px;
+      position: relative;
+    }
+    .cover__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.1;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .cover__title em {
+      font-style: italic;
+      color: #E8C898;
+    }
+    .cover__subtitle {
+      font-size: 0.72rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(250,246,238,0.45);
+      margin-bottom: 48px;
+      position: relative;
+    }
+    .cover__divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .cover__divider-line {
+      width: 60px;
+      height: 1px;
+      background: rgba(184,134,11,0.35);
+    }
+    .cover__divider-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0.6;
+    }
+    .cover__tagline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: rgba(250,246,238,0.55);
+      max-width: 420px;
+      line-height: 1.7;
+      position: relative;
+    }
+    .cover__footer {
+      position: absolute;
+      bottom: 32px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: rgba(250,246,238,0.2);
+      text-transform: uppercase;
+    }
+
+    /* ── SECTION DIVIDERS ── */
+    .chapter-break {
+      background: var(--dark);
+      color: var(--cream);
+      padding: 60px 40px;
+      text-align: center;
+      page-break-before: always;
+    }
+    .chapter-break__number {
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.7;
+      margin-bottom: 14px;
+    }
+    .chapter-break__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--cream);
+      margin-bottom: 14px;
+    }
+    .chapter-break__sub {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(250,246,238,0.3);
+    }
+
+    /* ── RECIPE PAGES ── */
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 60px 48px;
+    }
+    @media (max-width: 600px) {
+      .page { padding: 40px 24px; }
+    }
+
+    .recipe + .recipe {
+      border-top: 1px solid var(--tan);
+      padding-top: 60px;
+      margin-top: 60px;
+    }
+
+    .recipe__label {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 10px;
+    }
+    .recipe__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      font-weight: 400;
+      color: var(--dark);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .recipe__note {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--brown);
+      opacity: 0.75;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .recipe__meta {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--tan);
+    }
+    .recipe__meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .recipe__meta-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rust);
+      opacity: 0.7;
+    }
+    .recipe__meta-value {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .recipe__body {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 40px;
+    }
+    @media (max-width: 600px) {
+      .recipe__body { grid-template-columns: 1fr; gap: 24px; }
+    }
+
+    .recipe__ingredients-title,
+    .recipe__instructions-title {
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 14px;
+    }
+
+    .recipe__ingredients ul {
+      list-style: none;
+      padding: 0;
+    }
+    .recipe__ingredients li {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      padding: 5px 0 5px 14px;
+      border-bottom: 1px solid var(--tan);
+      color: var(--dark);
+      position: relative;
+    }
+    .recipe__ingredients li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 13px;
+      width: 5px;
+      height: 1px;
+      background: var(--rust);
+    }
+
+    .recipe__instructions ol {
+      list-style: none;
+      padding: 0;
+      counter-reset: step;
+    }
+    .recipe__instructions li {
+      counter-increment: step;
+      font-size: 0.84rem;
+      line-height: 1.7;
+      padding: 0 0 16px 32px;
+      position: relative;
+      color: var(--dark);
+    }
+    .recipe__instructions li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 1px;
+      width: 22px;
+      height: 22px;
+      background: var(--rust);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Raleway', sans-serif;
+    }
+
+    .recipe__tip {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: var(--tan);
+      border-left: 3px solid var(--gold);
+      font-family: 'Playfair Display', Georgia, serif;
+      font-style: italic;
+      font-size: 0.82rem;
+      color: var(--brown);
+      line-height: 1.65;
+    }
+    .recipe__tip strong {
+      font-style: normal;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--rust);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    /* ── TABLE OF CONTENTS ── */
+    .toc {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 60px 48px;
+    }
+    .toc__eyebrow {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 16px;
+    }
+    .toc__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 400;
+      color: var(--dark);
+      margin-bottom: 36px;
+    }
+    .toc__section {
+      margin-bottom: 28px;
+    }
+    .toc__section-name {
+      font-size: 0.62rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--tan);
+    }
+    .toc__item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      font-size: 0.84rem;
+      color: var(--dark);
+    }
+    .toc__item-name {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .toc__item-dots {
+      flex: 1;
+      margin: 0 8px;
+      border-bottom: 1px dotted rgba(43,26,17,0.2);
+      height: 1px;
+      align-self: flex-end;
+      margin-bottom: 4px;
+    }
+
+    /* ── CLOSING PAGE ── */
+    .closing {
+      background: var(--dark);
+      padding: 80px 40px;
+      text-align: center;
+    }
+    .closing__rule { width: 1px; height: 48px; background: rgba(184,134,11,0.3); margin: 0 auto 24px; }
+    .closing__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-style: italic;
+      color: var(--cream);
+      margin-bottom: 16px;
+    }
+    .closing__body {
+      font-size: 0.82rem;
+      color: rgba(250,246,238,0.5);
+      line-height: 1.8;
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .closing__farm {
+      font-size: 0.62rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.6;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      .print-bar { display: none !important; }
+      body { padding-top: 0; }
+      .cover { min-height: 100vh; page-break-after: always; }
+      .chapter-break { page-break-before: always; page-break-after: avoid; }
+      .recipe { page-break-inside: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+    }
+
+    body { padding-top: 48px; }
+    @media print { body { padding-top: 0; } }
+  </style>
+</head>
+<body>
+
+<!-- PRINT BAR -->
+<div class="print-bar">
+  <span>Save as PDF: click Print below → choose "Save as PDF"</span>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <a href="/">← Back to website</a>
+</div>
+
+<!-- ── COVER ── -->
+<div class="cover">
+  <p class="cover__eyebrow">Heart of Texas Organics</p>
+  <p class="cover__farm">Dripping Springs, Texas</p>
+  <div class="cover__rule"></div>
+  <h1 class="cover__title">Farm to <em>Table</em><br>Recipe Guide</h1>
+  <p class="cover__subtitle">Pasture Raised · Honest Ingredients · Real Food</p>
+  <div class="cover__divider">
+    <span class="cover__divider-line"></span>
+    <span class="cover__divider-dot"></span>
+    <span class="cover__divider-line"></span>
+  </div>
+  <p class="cover__tagline">Recipes grown from land we tend, using food we raise. Nothing fancy. Just real.</p>
+  <p class="cover__footer">heartoftexasorganics.com &nbsp;·&nbsp; Dripping Springs, TX 78620</p>
+</div>
+
+<!-- ── TABLE OF CONTENTS ── -->
+<div class="toc">
+  <p class="toc__eyebrow">Inside This Guide</p>
+  <h2 class="toc__title">What's Cooking</h2>
+
+  <div class="toc__section">
+    <p class="toc__section-name">Pasture-Raised Chicken</p>
+    <div class="toc__item"><span class="toc__item-name">Sunday Herb-Roasted Whole Chicken</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Slow-Cooked Chicken &amp; Root Vegetable Stew</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Golden Farm Chicken Bone Broth</span><span class="toc__item-dots"></span></div>
+  </div>
+
+  <div class="toc__section">
+    <p class="toc__section-name">Challah Bread</p>
+    <div class="toc__item"><span class="toc__item-name">Heart of Texas Honey Challah</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Challah French Toast with Fresh Berries</span><span class="toc__item-dots"></span></div>
+  </div>
+
+  <div class="toc__section">
+    <p class="toc__section-name">Garlic Chili Crunch</p>
+    <div class="toc__item"><span class="toc__item-name">Homemade Garlic Chili Crunch</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Chili Crunch Butter Noodles</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Farm Egg Scramble with Chili Crunch</span><span class="toc__item-dots"></span></div>
+  </div>
+
+  <div class="toc__section">
+    <p class="toc__section-name">Seasonal Preserves</p>
+    <div class="toc__item"><span class="toc__item-name">Texas Peach Jam</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Summer Strawberry Preserves</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Bread &amp; Butter Pickles</span><span class="toc__item-dots"></span></div>
+  </div>
+
+  <div class="toc__section">
+    <p class="toc__section-name">Farm Kitchen Basics</p>
+    <div class="toc__item"><span class="toc__item-name">Homemade Farm Butter</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Butter-Basted Skillet Eggs</span><span class="toc__item-dots"></span></div>
+    <div class="toc__item"><span class="toc__item-name">Simple Herb Salad with Soft Farm Eggs</span><span class="toc__item-dots"></span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     CHAPTER 1: PASTURE-RAISED CHICKEN
+     ════════════════════════════════════ -->
+<div class="chapter-break">
+  <p class="chapter-break__number">Chapter One</p>
+  <h2 class="chapter-break__title">Pasture-Raised Chicken</h2>
+  <p class="chapter-break__sub">From our pasture to your table</p>
+</div>
+
+<div class="page">
+
+  <!-- RECIPE 1 -->
+  <div class="recipe">
+    <p class="recipe__label">Pasture-Raised Chicken</p>
+    <h2 class="recipe__title">Sunday Herb-Roasted Whole Chicken</h2>
+    <p class="recipe__note">This is the one we come back to every Sunday. The skin crisps up golden, the inside stays juicy, and the smell that fills the house while it roasts — there's nothing better. Use a HOTO pasture-raised bird and you'll taste the difference immediately.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">1 hr 20 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">4 – 6</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Temp</span><span class="recipe__meta-value">425°F</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>1 whole HOTO pasture-raised chicken (3½ – 4½ lbs)</li>
+          <li>4 tbsp unsalted butter, softened</li>
+          <li>4 cloves garlic, minced</li>
+          <li>2 tbsp fresh rosemary, chopped</li>
+          <li>2 tbsp fresh thyme leaves</li>
+          <li>1 tbsp fresh sage, chopped</li>
+          <li>1½ tsp kosher salt</li>
+          <li>½ tsp black pepper</li>
+          <li>1 lemon, halved</li>
+          <li>1 head garlic, halved crosswise</li>
+          <li>Fresh herb sprigs for the cavity</li>
+          <li>Drizzle of olive oil</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Pull the chicken from the refrigerator 30 minutes before cooking. Preheat oven to 425°F.</li>
+          <li>Pat the chicken completely dry with paper towels — inside and out. Dry skin is crispy skin.</li>
+          <li>Mix softened butter with minced garlic, rosemary, thyme, sage, salt, and pepper until well combined.</li>
+          <li>Using your fingers, gently loosen the skin over the breast and thighs. Tuck herb butter underneath the skin and rub the rest all over the outside.</li>
+          <li>Stuff the cavity with the lemon halves, halved garlic head, and extra herb sprigs.</li>
+          <li>Tie the legs together with kitchen twine and tuck the wing tips under the body.</li>
+          <li>Place breast-side up in a cast iron skillet or roasting pan. Drizzle with olive oil.</li>
+          <li>Roast for 20 minutes at 425°F, then reduce to 375°F and roast another 50–60 minutes, until a thermometer in the thickest part of the thigh reads 165°F.</li>
+          <li>Rest uncovered for 15 minutes before carving. Do not skip the rest.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Save the carcass. Every bone, every dripping — put it in a pot tonight and make the bone broth on page 3. Pasture-raised bones make a broth you cannot buy in any store.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 2 -->
+  <div class="recipe">
+    <p class="recipe__label">Pasture-Raised Chicken</p>
+    <h2 class="recipe__title">Slow-Cooked Chicken &amp; Root Vegetable Stew</h2>
+    <p class="recipe__note">When the weather turns or everyone's run down, this is what gets made. Low and slow, everything in one pot. By the time it's done the whole house smells like comfort.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">20 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">3 hrs</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">6 – 8</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Method</span><span class="recipe__meta-value">Dutch oven</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>1 whole chicken, cut into pieces (or 4 bone-in thighs)</li>
+          <li>2 tbsp butter or lard</li>
+          <li>1 large onion, rough chopped</li>
+          <li>4 cloves garlic, smashed</li>
+          <li>3 medium carrots, cut into chunks</li>
+          <li>3 stalks celery, sliced</li>
+          <li>3 medium potatoes, cubed</li>
+          <li>2 parsnips, cubed</li>
+          <li>1 cup dry white wine (or extra broth)</li>
+          <li>4 cups chicken broth</li>
+          <li>1 bay leaf, fresh thyme, rosemary</li>
+          <li>Salt and pepper to taste</li>
+          <li>Fresh parsley to finish</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Season chicken pieces generously with salt and pepper on all sides.</li>
+          <li>Heat butter in a large Dutch oven over medium-high heat. Sear chicken pieces skin-side down for 4–5 minutes until deeply golden. Work in batches — don't crowd the pot. Remove and set aside.</li>
+          <li>In the same pot, cook onion and garlic over medium heat until softened, about 5 minutes. Scrape up all the brown bits from the bottom.</li>
+          <li>Add wine and let it reduce by half, about 2 minutes.</li>
+          <li>Add broth, carrots, celery, potatoes, parsnips, bay leaf, and herbs. Nestle chicken pieces back in, skin-side up.</li>
+          <li>Bring to a gentle simmer. Cover and cook on low heat for 2½ hours, or in a 325°F oven.</li>
+          <li>Remove lid for the last 20 minutes to let the broth concentrate and the chicken skin crisp slightly.</li>
+          <li>Discard bay leaf. Taste and adjust salt. Finish with fresh parsley.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          This stew is better the next day. Make it the night before if you can — the flavors deepen overnight and the fat rises so you can skim it clean.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 3 -->
+  <div class="recipe">
+    <p class="recipe__label">Pasture-Raised Chicken</p>
+    <h2 class="recipe__title">Golden Farm Chicken Bone Broth</h2>
+    <p class="recipe__note">This is medicine. Pasture-raised bones carry nutrients that factory-farmed birds simply don't have. Make a big batch every time you roast a chicken. Freeze it in quart jars and you'll always have something real to cook with.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">10 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Simmer</span><span class="recipe__meta-value">12 – 24 hrs</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">3 – 4 quarts</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Method</span><span class="recipe__meta-value">Stovetop / slow cooker</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>1 roasted chicken carcass (or 2–3 lbs raw backs/necks)</li>
+          <li>2 tbsp apple cider vinegar</li>
+          <li>2 medium carrots, halved</li>
+          <li>3 stalks celery with leaves</li>
+          <li>1 large onion, quartered (unpeeled)</li>
+          <li>1 whole head garlic, halved</li>
+          <li>1 tbsp black peppercorns</li>
+          <li>2 bay leaves</li>
+          <li>Fresh parsley stems</li>
+          <li>1 tsp turmeric (optional, for color)</li>
+          <li>Cold filtered water to cover</li>
+          <li>Salt to taste at the end</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Place carcass and all ingredients in a large pot. Cover with cold water by 2 inches. Add apple cider vinegar — it draws minerals out of the bones.</li>
+          <li>Bring to a boil over high heat, then immediately reduce to the lowest simmer possible. You want lazy, slow bubbles — not a rolling boil.</li>
+          <li>Skim any foam that rises in the first 30 minutes and discard.</li>
+          <li>Simmer uncovered (or barely covered) for at least 12 hours. The longer it goes, the richer it gets. Overnight on the lowest setting is ideal.</li>
+          <li>Strain through a fine-mesh sieve. Press the solids gently to extract every drop.</li>
+          <li>Let cool, then refrigerate overnight. Skim the solidified fat cap from the top (or leave it if using within 2 days — it seals and preserves the broth).</li>
+          <li>Season with salt. The broth should be deeply golden and slightly gelatinous when cold — that's the collagen. That's the good stuff.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Freeze in quart-size mason jars (leave 1 inch headspace) or silicone ice cube trays for small portions. Good for 6 months in the freezer. Sip it warm with just a pinch of salt when someone's under the weather.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+
+<!-- ════════════════════════════
+     CHAPTER 2: CHALLAH BREAD
+     ════════════════════════════ -->
+<div class="chapter-break">
+  <p class="chapter-break__number">Chapter Two</p>
+  <h2 class="chapter-break__title">Challah Bread</h2>
+  <p class="chapter-break__sub">A braided loaf worth making every week</p>
+</div>
+
+<div class="page">
+
+  <!-- RECIPE 4 -->
+  <div class="recipe">
+    <p class="recipe__label">Challah Bread</p>
+    <h2 class="recipe__title">Heart of Texas Honey Challah</h2>
+    <p class="recipe__note">Challah is one of those breads that looks like it took all day but is actually forgiving once you get your hands in the dough. Honey, eggs, and a slow rise give it that golden color and soft pull-apart texture. Worth every minute.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Rise</span><span class="recipe__meta-value">2 hrs</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Bake</span><span class="recipe__meta-value">35 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">1 large loaf</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>1 packet (2¼ tsp) active dry yeast</li>
+          <li>1 cup warm water (110°F)</li>
+          <li>⅓ cup honey, plus 1 tsp for yeast</li>
+          <li>4 cups all-purpose flour, plus more for kneading</li>
+          <li>1½ tsp kosher salt</li>
+          <li>3 large farm eggs (2 for dough, 1 for egg wash)</li>
+          <li>⅓ cup neutral oil (vegetable or light olive oil)</li>
+          <li>Sesame or poppy seeds for topping (optional)</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Dissolve yeast with 1 tsp honey in warm water. Let sit 5–10 minutes until foamy and alive.</li>
+          <li>In a large bowl, whisk together flour and salt. Make a well in the center.</li>
+          <li>Add the yeast mixture, ⅓ cup honey, oil, and 2 beaten eggs to the well. Mix until a shaggy dough forms.</li>
+          <li>Turn onto a floured surface and knead for 8–10 minutes until the dough is smooth, elastic, and slightly tacky but not sticky.</li>
+          <li>Place in an oiled bowl, cover with a damp towel, and let rise in a warm spot for 1 hour until doubled.</li>
+          <li>Punch down the dough and divide into 3 equal pieces. Roll each into a long rope about 16 inches.</li>
+          <li>Braid the three ropes together, tucking the ends under. Place on a parchment-lined baking sheet.</li>
+          <li>Cover loosely and let rise another 45–60 minutes until puffy.</li>
+          <li>Preheat oven to 375°F. Beat the remaining egg and brush it all over the loaf. Sprinkle with seeds if using.</li>
+          <li>Bake 30–35 minutes until deep golden brown. Tap the bottom — it should sound hollow. Cool at least 20 minutes before slicing.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          The egg wash is what gives challah that lacquered, dark-gold crust. Don't skip it and don't be light with it — really coat every crevice of the braid. Two egg wash coats (one before baking, one halfway through) gives an even deeper color.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 5 -->
+  <div class="recipe">
+    <p class="recipe__label">Challah Bread</p>
+    <h2 class="recipe__title">Challah French Toast with Fresh Berries</h2>
+    <p class="recipe__note">Day-old challah was practically invented for French toast. The thick slices soak up the custard without falling apart, and the honey sweetness in the bread means you barely need syrup. This is a weekend morning worth waking up for.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">10 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">20 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">4</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>6 thick slices challah (1 inch each), preferably day-old</li>
+          <li>4 large farm eggs</li>
+          <li>¾ cup whole milk</li>
+          <li>2 tbsp heavy cream</li>
+          <li>1 tsp pure vanilla extract</li>
+          <li>1 tsp cinnamon</li>
+          <li>Pinch of nutmeg</li>
+          <li>1 tbsp honey or maple syrup</li>
+          <li>2 tbsp unsalted butter (for the pan)</li>
+          <li>Fresh berries, powdered sugar, more butter to serve</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Whisk together eggs, milk, cream, vanilla, cinnamon, nutmeg, and honey in a wide, shallow dish.</li>
+          <li>Lay challah slices in the custard and let them soak 2 minutes per side. Thick slices need time to absorb — don't rush it.</li>
+          <li>Melt butter in a large skillet or griddle over medium heat until it starts to foam.</li>
+          <li>Cook soaked slices 3–4 minutes per side until puffed and deep golden brown. Work in batches, adding more butter between rounds.</li>
+          <li>Serve immediately with fresh berries, a dusting of powdered sugar, and a pat of farm butter melting on top.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Fresh farm eggs make the custard richer and deeper yellow than store-bought. If your eggs have dark orange yolks, the French toast will be a beautiful gold color you won't believe came out of your own kitchen.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+
+<!-- ════════════════════════════════
+     CHAPTER 3: GARLIC CHILI CRUNCH
+     ════════════════════════════════ -->
+<div class="chapter-break">
+  <p class="chapter-break__number">Chapter Three</p>
+  <h2 class="chapter-break__title">Garlic Chili Crunch</h2>
+  <p class="chapter-break__sub">The condiment that changes everything</p>
+</div>
+
+<div class="page">
+
+  <!-- RECIPE 6 -->
+  <div class="recipe">
+    <p class="recipe__label">Garlic Chili Crunch</p>
+    <h2 class="recipe__title">Homemade Garlic Chili Crunch</h2>
+    <p class="recipe__note">This is the jar that disappears fastest in this house. Once you make it from scratch you'll never go back to store-bought. Crispy garlic, toasted chili flakes, and a warm savory oil that works on absolutely everything.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">20 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">~1½ cups</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Keeps</span><span class="recipe__meta-value">3 months</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>1 cup neutral oil (avocado or vegetable)</li>
+          <li>10 cloves garlic, thinly sliced</li>
+          <li>3 large shallots, thinly sliced</li>
+          <li>3 tbsp red chili flakes (or gochugaru)</li>
+          <li>1 tbsp Sichuan peppercorns, lightly crushed</li>
+          <li>1 tsp smoked paprika</li>
+          <li>2 tbsp soy sauce</li>
+          <li>1 tsp sesame oil</li>
+          <li>1 tbsp brown sugar</li>
+          <li>1 tsp kosher salt</li>
+          <li>2 tbsp sesame seeds</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Place chili flakes, paprika, sesame seeds, sugar, and salt in a large heat-safe bowl. Set aside.</li>
+          <li>Heat oil in a small saucepan over medium heat. Add shallots and cook, stirring frequently, 8–10 minutes until golden and starting to crisp.</li>
+          <li>Add garlic slices and continue cooking another 5–6 minutes, watching carefully — garlic goes from golden to burnt quickly. You want deep amber, not brown.</li>
+          <li>Add Sichuan peppercorns to the oil and cook 1 minute more.</li>
+          <li>Carefully pour the hot oil, garlic, and shallots directly over the chili mixture in the bowl. It will sizzle and bubble — that's what blooms the spices.</li>
+          <li>Stir in soy sauce and sesame oil.</li>
+          <li>Let cool completely. Store in a clean jar. The flavors deepen after 24 hours.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          The oil temperature is everything. Too cold and the chili flakes taste raw. Too hot and they burn bitter. Pour when the oil is around 325°F — if a chili flake sizzles immediately when you drop it in, you're ready.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 7 -->
+  <div class="recipe">
+    <p class="recipe__label">Garlic Chili Crunch</p>
+    <h2 class="recipe__title">Chili Crunch Butter Noodles</h2>
+    <p class="recipe__note">Ten minutes, one pot, and a jar of chili crunch. This is what gets made on tired weeknights and somehow it always gets eaten before anything else.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">5 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">10 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">2 – 3</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>8 oz noodles (spaghetti, ramen, or lo mein)</li>
+          <li>3 tbsp HOTO Garlic Chili Crunch</li>
+          <li>2 tbsp unsalted farm butter</li>
+          <li>1 tbsp soy sauce</li>
+          <li>1 tsp rice vinegar</li>
+          <li>1 tsp honey</li>
+          <li>2 green onions, sliced thin</li>
+          <li>Sesame seeds and extra chili crunch to serve</li>
+          <li>Soft-boiled farm egg (optional but highly recommended)</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Cook noodles in well-salted boiling water according to package directions. Reserve ½ cup pasta water before draining.</li>
+          <li>In the same pot (or a skillet), melt butter over medium heat. Add garlic chili crunch and stir 30 seconds.</li>
+          <li>Add soy sauce, rice vinegar, and honey. Add a splash of pasta water to loosen.</li>
+          <li>Toss noodles in the sauce until every strand is coated. Add more pasta water if needed to keep it glossy.</li>
+          <li>Serve topped with green onions, sesame seeds, more chili crunch, and a halved soft-boiled egg.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Use the farm butter from the basics chapter if you've made it. The richness against the heat of the chili crunch is something else entirely.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 8 -->
+  <div class="recipe">
+    <p class="recipe__label">Garlic Chili Crunch</p>
+    <h2 class="recipe__title">Farm Egg Scramble with Chili Crunch</h2>
+    <p class="recipe__note">The simplest thing and somehow one of the most satisfying. Fresh farm eggs scrambled low and slow in butter, finished with a big spoonful of garlic chili crunch. This is breakfast when you want to feel like you're doing something right.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">2 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">6 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">1 – 2</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>3 large farm eggs</li>
+          <li>1 tbsp unsalted butter</li>
+          <li>1 tbsp heavy cream or whole milk</li>
+          <li>Salt and white pepper</li>
+          <li>1–2 tbsp Garlic Chili Crunch</li>
+          <li>Fresh chives or green onion</li>
+          <li>Challah toast to serve</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Whisk eggs with cream, a pinch of salt, and white pepper until fully combined and slightly frothy.</li>
+          <li>Melt butter in a small non-stick pan over the lowest heat possible. When just melted and beginning to foam, pour in the eggs.</li>
+          <li>Stir slowly and continuously with a rubber spatula, moving it across the entire bottom of the pan in gentle figure-eights. Never stop moving.</li>
+          <li>When the eggs are just barely set — still soft, glossy, and slightly underdone — pull the pan off the heat entirely. The residual heat finishes them.</li>
+          <li>Pile onto challah toast. Spoon garlic chili crunch generously over the top. Finish with chives.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Low and slow is the only way. High heat makes rubber. If you can smell butter browning, your heat is already too high. The patience is worth it — these are the most tender eggs you'll ever eat.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+
+<!-- ═══════════════════════════════
+     CHAPTER 4: SEASONAL PRESERVES
+     ═══════════════════════════════ -->
+<div class="chapter-break">
+  <p class="chapter-break__number">Chapter Four</p>
+  <h2 class="chapter-break__title">Seasonal Preserves</h2>
+  <p class="chapter-break__sub">Put up what the season gives you</p>
+</div>
+
+<div class="page">
+
+  <!-- RECIPE 9 -->
+  <div class="recipe">
+    <p class="recipe__label">Seasonal Preserves</p>
+    <h2 class="recipe__title">Texas Peach Jam</h2>
+    <p class="recipe__note">Texas peaches are their own thing — sweeter and softer than anything you'll find shipped from out of state. When they're in season, make this jam. Put it up in jars and you'll have summer in your pantry all year long.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">40 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">4–5 half-pint jars</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>4 lbs ripe Texas peaches</li>
+          <li>2½ cups granulated sugar</li>
+          <li>3 tbsp fresh lemon juice</li>
+          <li>1 tsp lemon zest</li>
+          <li>¼ tsp cinnamon (optional)</li>
+          <li>1 tsp pure vanilla extract</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Peel peaches: score an X on the bottom, dip in boiling water 30 seconds, then into ice water. The skins slip right off. Pit and chop into small chunks.</li>
+          <li>Combine peaches, sugar, and lemon juice in a large heavy-bottomed pot. Let sit 30 minutes — the sugar draws out the juices.</li>
+          <li>Bring to a boil over medium-high heat, stirring to dissolve sugar. Reduce heat and simmer actively, stirring often, 25–35 minutes.</li>
+          <li>Test for set: put a small plate in the freezer. Drop a spoonful of jam on it. Push it with your finger — if it wrinkles, it's ready. If it runs, cook 5 more minutes and test again.</li>
+          <li>Stir in lemon zest, vanilla, and cinnamon if using. Remove from heat.</li>
+          <li>Ladle into sterilized half-pint jars, leaving ¼ inch headspace. Process in a boiling water bath 10 minutes. Cool undisturbed 12 hours.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Don't rush the cook time trying to preserve more volume. Proper set is worth the extra 10 minutes. A runny jam is a sad jam on a beautiful piece of challah.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 10 -->
+  <div class="recipe">
+    <p class="recipe__label">Seasonal Preserves</p>
+    <h2 class="recipe__title">Summer Strawberry Preserves</h2>
+    <p class="recipe__note">These preserves keep whole or halved strawberry pieces — you want to taste the actual fruit, not just sweet red gel. Beautiful on challah, stirred into oatmeal, or spooned over farm fresh yogurt.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">20 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">30 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">3–4 half-pint jars</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>3 lbs fresh strawberries, hulled</li>
+          <li>2 cups sugar</li>
+          <li>¼ cup fresh lemon juice</li>
+          <li>1 tsp lemon zest</li>
+          <li>1 tsp balsamic vinegar (secret ingredient)</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Halve or quarter larger berries; leave small ones whole. Toss with sugar and lemon juice. Macerate 1 hour (or overnight in the refrigerator for deeper flavor).</li>
+          <li>Transfer to a large pot and bring to a boil, stirring to dissolve sugar. Reduce to a steady simmer.</li>
+          <li>Cook 25–30 minutes, skimming foam as it forms. Stir more frequently as it thickens.</li>
+          <li>Stir in balsamic vinegar and lemon zest in the last 5 minutes — the balsamic deepens the strawberry flavor without tasting like vinegar.</li>
+          <li>Test for set (wrinkle test on a frozen plate). Once set, ladle into sterilized jars and process 10 minutes.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Don't mash the berries. Preserves should have texture — suspended pieces of fruit, not smooth jam. A gentle hand and a wide pot (more surface area = faster cook, better color) is all you need.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 11 -->
+  <div class="recipe">
+    <p class="recipe__label">Seasonal Preserves</p>
+    <h2 class="recipe__title">Bread &amp; Butter Pickles</h2>
+    <p class="recipe__note">Crispy, sweet-tangy, and addictive. Make these when cucumbers are coming in faster than you can eat them raw. On a sandwich, next to a roasted chicken, or straight from the jar — no wrong answer.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min + 2 hr salting</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">15 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">4 pint jars</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>4 lbs pickling cucumbers, sliced ¼ inch</li>
+          <li>2 medium onions, thinly sliced</li>
+          <li>¼ cup kosher salt (for salting)</li>
+          <li>2 cups apple cider vinegar</li>
+          <li>1½ cups white vinegar</li>
+          <li>2½ cups granulated sugar</li>
+          <li>1 tbsp mustard seeds</li>
+          <li>1 tsp celery seeds</li>
+          <li>1 tsp turmeric</li>
+          <li>½ tsp red pepper flakes</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Toss cucumbers and onions with kosher salt. Pack into a bowl, cover with ice, and refrigerate 2 hours. This draws out excess water and keeps the pickles crisp.</li>
+          <li>Drain and rinse cucumbers and onions thoroughly. Pat dry.</li>
+          <li>Combine vinegars, sugar, and all spices in a large pot. Bring to a boil, stirring to dissolve sugar completely.</li>
+          <li>Add cucumbers and onions to the brine. Bring back to just barely a simmer — do not fully boil or your pickles will go soft.</li>
+          <li>Ladle into sterilized pint jars, distributing spices evenly. Leave ½ inch headspace.</li>
+          <li>Process in a boiling water bath 10 minutes. Let cool undisturbed. The rings seal as they cool. Refrigerate any jars that didn't seal and use within 1 month.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          They're good after 24 hours, better after 3 days, best after a week. If you can wait, wait. The turmeric gives them that beautiful golden color and the celery seed is what makes them taste like old-fashioned pickles are supposed to taste.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+
+<!-- ════════════════════════════════
+     CHAPTER 5: FARM KITCHEN BASICS
+     ════════════════════════════════ -->
+<div class="chapter-break">
+  <p class="chapter-break__number">Chapter Five</p>
+  <h2 class="chapter-break__title">Farm Kitchen Basics</h2>
+  <p class="chapter-break__sub">The building blocks behind everything we make</p>
+</div>
+
+<div class="page">
+
+  <!-- RECIPE 12 -->
+  <div class="recipe">
+    <p class="recipe__label">Farm Kitchen Basics</p>
+    <h2 class="recipe__title">Homemade Farm Butter</h2>
+    <p class="recipe__note">Real butter from good cream takes about eight minutes and tastes nothing like what's in the store. If you have access to raw or non-homogenized cream, use it. Once you make this, you'll understand what everyone from before grocery stores knew — butter is worth making yourself.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">5 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Make</span><span class="recipe__meta-value">8–10 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Yield</span><span class="recipe__meta-value">~1 cup butter</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>2 cups heavy whipping cream, room temperature</li>
+          <li>½ tsp flaky sea salt (for salted butter)</li>
+          <li>Ice water for washing</li>
+          <li>Optional add-ins: fresh herbs, roasted garlic, honey</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Pour cream into a stand mixer bowl with the whisk attachment. Beat on medium-high speed.</li>
+          <li>It will go through stages: fluffy whipped cream (2 min) → thick and stiff (4 min) → grainy (5 min) → suddenly the fat separates from the buttermilk (6–8 min). The liquid sloshing is buttermilk — save it for baking.</li>
+          <li>Drain off the buttermilk. You now have butter.</li>
+          <li>With clean hands or a wooden spoon, knead the butter in a bowl of ice water. Press and fold it repeatedly, pouring off the milky water and replacing with fresh. Repeat until the water runs clear. This washing prevents the butter from going rancid quickly.</li>
+          <li>Work in salt (and any add-ins) by hand.</li>
+          <li>Press into a ramekin, wrap in parchment, or roll into a log. Keeps 2 weeks refrigerated, 3 months frozen.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Don't skip the washing step. It sounds fussy but it's the difference between butter that lasts two weeks and butter that turns in three days. Cold water, keep pressing, keep changing it until clear.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 13 -->
+  <div class="recipe">
+    <p class="recipe__label">Farm Kitchen Basics</p>
+    <h2 class="recipe__title">Butter-Basted Skillet Eggs</h2>
+    <p class="recipe__note">This is how eggs should be cooked. Basting them in hot foaming butter on the stovetop gives you crispy edges, a set white, and a yolk that's runny in the middle without any flipping. Two minutes, total.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">1 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">2–3 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">1 – 2</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>2 large farm eggs</li>
+          <li>2 tbsp unsalted butter</li>
+          <li>Flaky sea salt</li>
+          <li>Cracked black pepper</li>
+          <li>Fresh herbs (chives, thyme, or tarragon)</li>
+          <li>Crusty bread or challah toast to serve</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Heat a small skillet over medium-high heat until quite hot. Add butter — it should foam vigorously immediately.</li>
+          <li>Crack eggs directly into the foaming butter. The whites should set at the edges right away and begin to turn opaque.</li>
+          <li>Immediately tilt the pan slightly and use a large spoon to scoop the hot butter from the pool at the edge and pour it over the top of the eggs. Repeat continuously for 1–2 minutes, basting the whites until fully set but the yolk is still soft when pressed gently.</li>
+          <li>Slide onto toast. Season with flaky salt, pepper, and fresh herbs.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          The yolks on pasture-raised eggs are dark orange — almost red. That's beta-carotene and healthy fat from birds that eat real food and see sunlight. A pale yellow yolk tells you what kind of life that chicken lived. An orange yolk tells you too.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECIPE 14 -->
+  <div class="recipe">
+    <p class="recipe__label">Farm Kitchen Basics</p>
+    <h2 class="recipe__title">Simple Herb Salad with Soft Farm Eggs</h2>
+    <p class="recipe__note">This is the salad that isn't really a salad — it's mostly fresh herbs, with greens to hold them together. A soft farm egg broken over the top and a bright lemony dressing. Light enough for lunch, satisfying enough to be a meal.</p>
+    <div class="recipe__meta">
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">8 min (eggs)</span></div>
+      <div class="recipe__meta-item"><span class="recipe__meta-label">Serves</span><span class="recipe__meta-value">2</span></div>
+    </div>
+    <div class="recipe__body">
+      <div class="recipe__ingredients">
+        <p class="recipe__ingredients-title">Ingredients</p>
+        <ul>
+          <li>4 cups mixed greens or butter lettuce</li>
+          <li>1 cup flat-leaf parsley leaves (whole)</li>
+          <li>½ cup fresh mint leaves</li>
+          <li>¼ cup fresh dill fronds</li>
+          <li>3 green onions, sliced thin</li>
+          <li>1 avocado, sliced</li>
+          <li>2 soft-boiled farm eggs, halved</li>
+          <li>Flaky salt and fresh cracked pepper</li>
+          <li><strong>Dressing:</strong> 3 tbsp olive oil, 1½ tbsp lemon juice, 1 tsp Dijon mustard, 1 tsp honey, salt &amp; pepper</li>
+        </ul>
+      </div>
+      <div class="recipe__instructions">
+        <p class="recipe__instructions-title">Instructions</p>
+        <ol>
+          <li>Soft-boil eggs: lower into boiling water and cook exactly 7 minutes. Transfer immediately to ice water for 2 minutes. Peel gently under cool running water.</li>
+          <li>Whisk dressing ingredients together until emulsified.</li>
+          <li>Toss greens and all herbs together in a large bowl. Add green onions.</li>
+          <li>Dress lightly and toss — you want the herbs coated but not wilted. You may not need all the dressing.</li>
+          <li>Pile onto plates. Fan avocado slices alongside. Place egg halves on top, cut-side up. Season with flaky salt and cracked pepper. Drizzle a little extra dressing over the eggs.</li>
+        </ol>
+        <div class="recipe__tip">
+          <strong>Farm Note</strong>
+          Use herbs like vegetables here, not garnish. A handful of mint, a full cup of parsley — that's what makes this salad taste alive. If you're not a little intimidated by how many herbs you're using, you haven't used enough.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+
+<!-- ── CLOSING ── -->
+<div class="closing">
+  <div class="closing__rule"></div>
+  <h2 class="closing__title">From Our Table to Yours</h2>
+  <p class="closing__body">These recipes come from a farm that believes food is supposed to taste like something. We raise our chickens on pasture, tend our land with intention, and make things the long way because the long way is better. We hope these recipes find a place in your kitchen and bring your family around the table. That's all we're really after.</p>
+  <p class="closing__farm">Heart of Texas Organics &nbsp;·&nbsp; Dripping Springs, TX &nbsp;·&nbsp; heartoftexasorganics.com</p>
+</div>
+
+</body>
+</html>

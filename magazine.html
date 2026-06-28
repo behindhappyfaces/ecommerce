@@ -436,6 +436,101 @@
       color: rgba(245,240,232,0.2);
     }
 
+    /* ── RECIPE GUIDE SECTION ── */
+    .recipe-guide-section {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto 48px;
+      padding: 0 20px;
+    }
+    .recipe-guide-section__inner {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(245,240,232,0.1);
+      border-radius: 8px;
+      padding: 36px 32px;
+      text-align: center;
+    }
+    .recipe-guide-section__label {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #B8860B;
+      margin-bottom: 10px;
+    }
+    .recipe-guide-section__title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 400;
+      font-style: italic;
+      color: #f5f0e8;
+      margin-bottom: 12px;
+    }
+    .recipe-guide-section__sub {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.8rem;
+      color: rgba(245,240,232,0.5);
+      line-height: 1.7;
+      max-width: 460px;
+      margin: 0 auto 20px;
+    }
+    .recipe-guide-section__list {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto 24px;
+      max-width: 400px;
+      text-align: left;
+    }
+    .recipe-guide-section__list li {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.76rem;
+      color: rgba(245,240,232,0.45);
+      padding: 5px 0 5px 16px;
+      position: relative;
+      border-bottom: 1px solid rgba(245,240,232,0.06);
+    }
+    .recipe-guide-section__list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: #8B3A2A;
+      opacity: 0.7;
+    }
+    .recipe-guide-section__btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .recipe-guide-section__btn {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      transition: opacity 0.2s;
+    }
+    .recipe-guide-section__btn:hover { opacity: 0.85; }
+    .recipe-guide-section__btn--primary {
+      background: #8B3A2A;
+      color: #fff;
+    }
+    .recipe-guide-section__btn--secondary {
+      background: transparent;
+      color: rgba(245,240,232,0.7);
+      border: 1px solid rgba(245,240,232,0.2);
+    }
+    .recipe-guide-section__fine {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      color: rgba(245,240,232,0.18);
+    }
+
   </style>
 </head>
 <body>
@@ -520,6 +615,27 @@
       </p>
       <button class="mag-sub-box__btn" id="mag-open-modal-btn" type="button">Subscribe &rarr;</button>
       <p class="mag-sub-box__fine">Cancel anytime &bull; Your info stays private</p>
+    </div>
+
+    <!-- ── RECIPE GUIDE DOWNLOAD ── -->
+    <div class="recipe-guide-section">
+      <div class="recipe-guide-section__inner">
+        <div class="recipe-guide-section__label">Free Download</div>
+        <h2 class="recipe-guide-section__title">Farm to Table Recipe Guide</h2>
+        <p class="recipe-guide-section__sub">14 recipes from our farm kitchen — pasture-raised chicken, honey challah, garlic chili crunch, seasonal preserves, and farm basics. Real food, honest ingredients, nothing fancy.</p>
+        <ul class="recipe-guide-section__list">
+          <li>Herb-roasted whole chicken &amp; bone broth</li>
+          <li>Honey challah &amp; challah french toast</li>
+          <li>Homemade garlic chili crunch (3 ways)</li>
+          <li>Texas peach jam, strawberry preserves &amp; bread &amp; butter pickles</li>
+          <li>Homemade farm butter, basted skillet eggs &amp; herb salad</li>
+        </ul>
+        <div class="recipe-guide-section__btns">
+          <a class="recipe-guide-section__btn recipe-guide-section__btn--primary" href="/recipe-guide" target="_blank">View Recipe Guide</a>
+          <a class="recipe-guide-section__btn recipe-guide-section__btn--secondary" href="/download-recipe-guide" download>Download PDF</a>
+        </div>
+        <p class="recipe-guide-section__fine">Open in browser → File → Print → Save as PDF to keep a copy</p>
+      </div>
     </div>
 
     <div class="mag-actions">

@@ -438,13 +438,38 @@
       opacity: 0.6;
     }
 
+    /* ── BUYER WATERMARK ── */
+    .buyer-watermark {
+      background: #2B1A11;
+      color: rgba(250,246,238,0.55);
+      text-align: center;
+      padding: 10px 20px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+    }
+    .buyer-watermark strong { color: var(--gold); }
+
+    /* ── RECIPE IMAGE ── */
+    .recipe__image {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      display: block;
+    }
+    @media (max-width: 600px) { .recipe__image { height: 200px; } }
+
     /* ── PRINT ── */
     @media print {
       .print-bar { display: none !important; }
+      .buyer-watermark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       body { padding-top: 0; }
       .cover { min-height: 100vh; page-break-after: always; }
       .chapter-break { page-break-before: always; page-break-after: avoid; }
       .recipe { page-break-inside: avoid; }
+      .recipe__image { height: 200px; }
       a { color: inherit !important; text-decoration: none !important; }
     }
 
@@ -460,6 +485,7 @@
   <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
   <a href="/">← Back to website</a>
 </div>
+<!--BUYER_WATERMARK-->
 
 <!-- ── COVER ── -->
 <div class="cover">
@@ -533,6 +559,7 @@
     <p class="recipe__label">Pasture-Raised Chicken</p>
     <h2 class="recipe__title">Sunday Herb-Roasted Whole Chicken</h2>
     <p class="recipe__note">This is the one we come back to every Sunday. The skin crisps up golden, the inside stays juicy, and the smell that fills the house while it roasts — there's nothing better. Use a HOTO pasture-raised bird and you'll taste the difference immediately.</p>
+    <img class="recipe__image" src="/images/customer-chicken-grilled.jpg" alt="Herb-roasted pasture-raised chicken" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">1 hr 20 min</span></div>
@@ -583,6 +610,7 @@
     <p class="recipe__label">Pasture-Raised Chicken</p>
     <h2 class="recipe__title">Slow-Cooked Chicken &amp; Root Vegetable Stew</h2>
     <p class="recipe__note">When the weather turns or everyone's run down, this is what gets made. Low and slow, everything in one pot. By the time it's done the whole house smells like comfort.</p>
+    <img class="recipe__image" src="/images/chicken-landscape.jpg" alt="Farm chicken in a field" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">20 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">3 hrs</span></div>
@@ -633,6 +661,7 @@
     <p class="recipe__label">Pasture-Raised Chicken</p>
     <h2 class="recipe__title">Golden Farm Chicken Bone Broth</h2>
     <p class="recipe__note">This is medicine. Pasture-raised bones carry nutrients that factory-farmed birds simply don't have. Make a big batch every time you roast a chicken. Freeze it in quart jars and you'll always have something real to cook with.</p>
+    <img class="recipe__image" src="/images/hero-ingredients.jpg" alt="Fresh farm ingredients" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">10 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Simmer</span><span class="recipe__meta-value">12 – 24 hrs</span></div>
@@ -695,6 +724,7 @@
     <p class="recipe__label">Challah Bread</p>
     <h2 class="recipe__title">Heart of Texas Honey Challah</h2>
     <p class="recipe__note">Challah is one of those breads that looks like it took all day but is actually forgiving once you get your hands in the dough. Honey, eggs, and a slow rise give it that golden color and soft pull-apart texture. Worth every minute.</p>
+    <img class="recipe__image" src="/images/loaf.jpg" alt="Golden braided challah loaf" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Rise</span><span class="recipe__meta-value">2 hrs</span></div>
@@ -742,6 +772,7 @@
     <p class="recipe__label">Challah Bread</p>
     <h2 class="recipe__title">Challah French Toast with Fresh Berries</h2>
     <p class="recipe__note">Day-old challah was practically invented for French toast. The thick slices soak up the custard without falling apart, and the honey sweetness in the bread means you barely need syrup. This is a weekend morning worth waking up for.</p>
+    <img class="recipe__image" src="/images/pastries-flat.jpg" alt="Golden pastries laid out on a surface" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">10 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">20 min</span></div>
@@ -799,6 +830,7 @@
     <p class="recipe__label">Garlic Chili Crunch</p>
     <h2 class="recipe__title">Homemade Garlic Chili Crunch</h2>
     <p class="recipe__note">This is the jar that disappears fastest in this house. Once you make it from scratch you'll never go back to store-bought. Crispy garlic, toasted chili flakes, and a warm savory oil that works on absolutely everything.</p>
+    <img class="recipe__image" src="/images/chili-crunch.jpg" alt="Homemade garlic chili crunch in a jar" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">20 min</span></div>
@@ -846,6 +878,7 @@
     <p class="recipe__label">Garlic Chili Crunch</p>
     <h2 class="recipe__title">Chili Crunch Butter Noodles</h2>
     <p class="recipe__note">Ten minutes, one pot, and a jar of chili crunch. This is what gets made on tired weeknights and somehow it always gets eaten before anything else.</p>
+    <img class="recipe__image" src="/images/herb-dipping-oil.jpg" alt="Herb dipping oil with fresh ingredients" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">5 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">10 min</span></div>
@@ -888,6 +921,7 @@
     <p class="recipe__label">Garlic Chili Crunch</p>
     <h2 class="recipe__title">Farm Egg Scramble with Chili Crunch</h2>
     <p class="recipe__note">The simplest thing and somehow one of the most satisfying. Fresh farm eggs scrambled low and slow in butter, finished with a big spoonful of garlic chili crunch. This is breakfast when you want to feel like you're doing something right.</p>
+    <img class="recipe__image" src="/images/eggs.jpg" alt="Fresh farm eggs" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">2 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">6 min</span></div>
@@ -942,6 +976,7 @@
     <p class="recipe__label">Seasonal Preserves</p>
     <h2 class="recipe__title">Texas Peach Jam</h2>
     <p class="recipe__note">Texas peaches are their own thing — sweeter and softer than anything you'll find shipped from out of state. When they're in season, make this jam. Put it up in jars and you'll have summer in your pantry all year long.</p>
+    <img class="recipe__image" src="/images/preserves.jpg" alt="Homemade preserves in jars" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">40 min</span></div>
@@ -982,6 +1017,7 @@
     <p class="recipe__label">Seasonal Preserves</p>
     <h2 class="recipe__title">Summer Strawberry Preserves</h2>
     <p class="recipe__note">These preserves keep whole or halved strawberry pieces — you want to taste the actual fruit, not just sweet red gel. Beautiful on challah, stirred into oatmeal, or spooned over farm fresh yogurt.</p>
+    <img class="recipe__image" src="/images/harvest-2.jpg" alt="Summer farm harvest" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">20 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">30 min</span></div>
@@ -1020,6 +1056,7 @@
     <p class="recipe__label">Seasonal Preserves</p>
     <h2 class="recipe__title">Bread &amp; Butter Pickles</h2>
     <p class="recipe__note">Crispy, sweet-tangy, and addictive. Make these when cucumbers are coming in faster than you can eat them raw. On a sandwich, next to a roasted chicken, or straight from the jar — no wrong answer.</p>
+    <img class="recipe__image" src="/images/backyard-garden.jpg" alt="Backyard garden growing vegetables" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">30 min + 2 hr salting</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">15 min</span></div>
@@ -1078,6 +1115,7 @@
     <p class="recipe__label">Farm Kitchen Basics</p>
     <h2 class="recipe__title">Homemade Farm Butter</h2>
     <p class="recipe__note">Real butter from good cream takes about eight minutes and tastes nothing like what's in the store. If you have access to raw or non-homogenized cream, use it. Once you make this, you'll understand what everyone from before grocery stores knew — butter is worth making yourself.</p>
+    <img class="recipe__image" src="/images/butter.jpg" alt="Fresh homemade farm butter" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">5 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Make</span><span class="recipe__meta-value">8–10 min</span></div>
@@ -1116,6 +1154,7 @@
     <p class="recipe__label">Farm Kitchen Basics</p>
     <h2 class="recipe__title">Butter-Basted Skillet Eggs</h2>
     <p class="recipe__note">This is how eggs should be cooked. Basting them in hot foaming butter on the stovetop gives you crispy edges, a set white, and a yolk that's runny in the middle without any flipping. Two minutes, total.</p>
+    <img class="recipe__image" src="/images/customer-deviled-eggs.jpg" alt="Farm fresh deviled eggs" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">1 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">2–3 min</span></div>
@@ -1154,6 +1193,7 @@
     <p class="recipe__label">Farm Kitchen Basics</p>
     <h2 class="recipe__title">Simple Herb Salad with Soft Farm Eggs</h2>
     <p class="recipe__note">This is the salad that isn't really a salad — it's mostly fresh herbs, with greens to hold them together. A soft farm egg broken over the top and a bright lemony dressing. Light enough for lunch, satisfying enough to be a meal.</p>
+    <img class="recipe__image" src="/images/harvest.jpg" alt="Fresh farm harvest" loading="lazy" />
     <div class="recipe__meta">
       <div class="recipe__meta-item"><span class="recipe__meta-label">Prep</span><span class="recipe__meta-value">15 min</span></div>
       <div class="recipe__meta-item"><span class="recipe__meta-label">Cook</span><span class="recipe__meta-value">8 min (eggs)</span></div>

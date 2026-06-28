@@ -524,11 +524,63 @@
       color: rgba(245,240,232,0.7);
       border: 1px solid rgba(245,240,232,0.2);
     }
+    .recipe-guide-section__price {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--cream, #f5f0e8);
+      margin-bottom: 4px;
+    }
+    .recipe-guide-section__price-note {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.68rem;
+      color: rgba(245,240,232,0.35);
+      margin-bottom: 18px;
+      letter-spacing: 0.04em;
+    }
+    .recipe-guide-section__inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      margin: 0 auto 16px;
+    }
+    .recipe-guide-section__input {
+      background: rgba(245,240,232,0.06);
+      border: 1px solid rgba(245,240,232,0.15);
+      border-radius: 4px;
+      padding: 10px 14px;
+      color: #f5f0e8;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.82rem;
+      width: 100%;
+      outline: none;
+    }
+    .recipe-guide-section__input:focus { border-color: rgba(245,240,232,0.4); }
+    .recipe-guide-section__input::placeholder { color: rgba(245,240,232,0.3); }
+    .recipe-guide-section__toggle {
+      background: none;
+      border: none;
+      color: rgba(245,240,232,0.35);
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.72rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+    .recipe-guide-section__code-row {
+      display: flex;
+      gap: 10px;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+    .recipe-guide-section__input--code { flex: 1; }
     .recipe-guide-section__fine {
       font-family: 'Raleway', sans-serif;
       font-size: 0.58rem;
       letter-spacing: 0.08em;
       color: rgba(245,240,232,0.18);
+      margin-top: 20px;
     }
 
   </style>
@@ -617,24 +669,45 @@
       <p class="mag-sub-box__fine">Cancel anytime &bull; Your info stays private</p>
     </div>
 
-    <!-- ── RECIPE GUIDE DOWNLOAD ── -->
-    <div class="recipe-guide-section">
+    <!-- ── RECIPE GUIDE PAYWALL ── -->
+    <div class="recipe-guide-section" id="recipe-guide">
       <div class="recipe-guide-section__inner">
-        <div class="recipe-guide-section__label">Free Download</div>
+        <div class="recipe-guide-section__label">Digital Download</div>
         <h2 class="recipe-guide-section__title">Farm to Table Recipe Guide</h2>
-        <p class="recipe-guide-section__sub">14 recipes from our farm kitchen — pasture-raised chicken, honey challah, garlic chili crunch, seasonal preserves, and farm basics. Real food, honest ingredients, nothing fancy.</p>
+        <p class="recipe-guide-section__sub">14 recipes from the HOTO farm kitchen — pasture-raised chicken, honey challah, garlic chili crunch, seasonal preserves &amp; farm basics. Real food, honest ingredients, nothing fancy.</p>
         <ul class="recipe-guide-section__list">
-          <li>Herb-roasted whole chicken &amp; bone broth</li>
-          <li>Honey challah &amp; challah french toast</li>
-          <li>Homemade garlic chili crunch (3 ways)</li>
+          <li>Herb-roasted whole chicken, stew &amp; bone broth</li>
+          <li>Honey challah loaf &amp; challah French toast</li>
+          <li>Homemade garlic chili crunch (3 ways to use it)</li>
           <li>Texas peach jam, strawberry preserves &amp; bread &amp; butter pickles</li>
-          <li>Homemade farm butter, basted skillet eggs &amp; herb salad</li>
+          <li>Farm butter, butter-basted skillet eggs &amp; herb salad</li>
         </ul>
-        <div class="recipe-guide-section__btns">
-          <a class="recipe-guide-section__btn recipe-guide-section__btn--primary" href="/recipe-guide" target="_blank">View Recipe Guide</a>
-          <a class="recipe-guide-section__btn recipe-guide-section__btn--secondary" href="/download-recipe-guide" download>Download PDF</a>
+
+        <!-- BUY FORM -->
+        <div id="rg-buy-form">
+          <div class="recipe-guide-section__price">$25</div>
+          <p class="recipe-guide-section__price-note">One-time purchase · Instant access · Personalized with your name</p>
+          <div class="recipe-guide-section__inputs">
+            <input class="recipe-guide-section__input" type="text" id="rg-name" placeholder="Your name" autocomplete="name" />
+            <input class="recipe-guide-section__input" type="email" id="rg-email" placeholder="Email address" autocomplete="email" />
+          </div>
+          <button class="recipe-guide-section__btn recipe-guide-section__btn--primary" id="rg-buy-btn" type="button">Get Recipe Guide — $25</button>
+          <p id="rg-buy-err" style="font-size:0.72rem;color:#e07060;margin:8px 0 0;display:none;"></p>
         </div>
-        <p class="recipe-guide-section__fine">Open in browser → File → Print → Save as PDF to keep a copy</p>
+
+        <!-- CODE ENTRY (toggle) -->
+        <div style="margin-top:20px;">
+          <button class="recipe-guide-section__toggle" id="rg-code-toggle" type="button">Already have a code?</button>
+        </div>
+        <div id="rg-code-form" style="display:none;margin-top:14px;">
+          <div class="recipe-guide-section__code-row">
+            <input class="recipe-guide-section__input recipe-guide-section__input--code" type="text" id="rg-code-input" placeholder="Enter access code" maxlength="12" style="text-transform:uppercase;letter-spacing:0.12em;" />
+            <button class="recipe-guide-section__btn recipe-guide-section__btn--secondary" id="rg-code-btn" type="button">Access Guide</button>
+          </div>
+          <p id="rg-code-err" style="font-size:0.72rem;color:#e07060;margin:8px 0 0;display:none;"></p>
+        </div>
+
+        <p class="recipe-guide-section__fine">Bundle buyers receive a free access code at pickup/delivery</p>
       </div>
     </div>
 
@@ -967,6 +1040,67 @@
         showSuccess(pending);
       }
     })();
+  })();
+  </script>
+
+  <!-- ── RECIPE GUIDE PAYWALL LOGIC ── -->
+  <script>
+  (function () {
+    var buyBtn    = document.getElementById('rg-buy-btn');
+    var buyErr    = document.getElementById('rg-buy-err');
+    var codeToggle = document.getElementById('rg-code-toggle');
+    var codeForm  = document.getElementById('rg-code-form');
+    var codeBtn   = document.getElementById('rg-code-btn');
+    var codeInput = document.getElementById('rg-code-input');
+    var codeErr   = document.getElementById('rg-code-err');
+
+    codeToggle.addEventListener('click', function () {
+      codeForm.style.display = codeForm.style.display === 'none' ? '' : 'none';
+      codeInput.focus();
+    });
+
+    buyBtn.addEventListener('click', async function () {
+      var name  = (document.getElementById('rg-name').value || '').trim();
+      var email = (document.getElementById('rg-email').value || '').trim();
+      buyErr.style.display = 'none';
+      if (!email || !email.includes('@')) {
+        buyErr.textContent = 'Please enter a valid email address.';
+        buyErr.style.display = 'block';
+        return;
+      }
+      buyBtn.disabled = true;
+      buyBtn.textContent = 'Heading to checkout…';
+      try {
+        var res = await fetch('/create-recipe-guide-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, email: email }),
+        });
+        var data = await res.json();
+        if (data.url) { window.location.href = data.url; return; }
+        throw new Error(data.error || 'Checkout unavailable');
+      } catch (err) {
+        buyErr.textContent = err.message || 'Something went wrong. Please try again.';
+        buyErr.style.display = 'block';
+        buyBtn.disabled = false;
+        buyBtn.textContent = 'Get Recipe Guide — $25';
+      }
+    });
+
+    codeInput.addEventListener('input', function () {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    codeBtn.addEventListener('click', function () {
+      var code = codeInput.value.trim();
+      codeErr.style.display = 'none';
+      if (!code) { codeErr.textContent = 'Enter your access code.'; codeErr.style.display = 'block'; return; }
+      window.location.href = '/recipe-guide?code=' + encodeURIComponent(code);
+    });
+
+    codeInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') codeBtn.click();
+    });
   })();
   </script>
 </body>

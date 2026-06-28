@@ -367,6 +367,20 @@ async function ensureDeliveryPromosTable() {
 }
 ensureDeliveryPromosTable().catch(e => console.warn('[DeliveryPromos] table init failed:', e.message));
 
+async function ensureRecipeAccessCodesTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS recipe_access_codes (
+    code             TEXT PRIMARY KEY,
+    name             TEXT NOT NULL DEFAULT '',
+    email            TEXT NOT NULL,
+    paid             BOOLEAN NOT NULL DEFAULT FALSE,
+    stripe_session_id TEXT,
+    created_at       TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensureRecipeAccessCodesTable().catch(e => console.warn('[RecipeCodes] table init failed:', e.message));
+
 async function readPendingCartsDB() {
   const pg = getPcPool();
   if (!pg) return readPendingCarts(); // fallback to file
@@ -1115,14 +1129,161 @@ app.use((req, res, next) => {
   next();
 });
 
-// Recipe guide — inline view (open in tab) and force-download
-app.get('/recipe-guide', (req, res) => {
-  res.sendFile(path.join(__dirname, 'recipe-guide.html'));
+// ── RECIPE GUIDE PAYWALL ────────────────────────────────────────────
+const fs = require('fs');
+
+function servePersonalizedGuide(name, email, res, download = false) {
+  let html = fs.readFileSync(path.join(__dirname, 'recipe-guide.html'), 'utf8');
+  const display = escHtml(name || email);
+  const watermark = display
+    ? `<div class="buyer-watermark">Prepared for: <strong>${display}</strong> &nbsp;&middot;&nbsp; heartoftexasorganics.com &nbsp;&middot;&nbsp; For personal use only.</div>`
+    : '';
+  html = html.replace('<!--BUYER_WATERMARK-->', watermark);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  if (download) res.setHeader('Content-Disposition', 'attachment; filename="HOTO-Farm-to-Table-Recipe-Guide.html"');
+  res.send(html);
+}
+
+// Stripe checkout — $25 one-time payment
+app.post('/create-recipe-guide-checkout', express.json(), async (req, res) => {
+  try {
+    const { name = '', email = '' } = req.body || {};
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email required' });
+    const origin = SITE_URL_BASE;
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: email.trim(),
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Farm to Table Recipe Guide',
+            description: '14 recipes — pasture-raised chicken, honey challah, garlic chili crunch, seasonal preserves & farm kitchen basics',
+          },
+          unit_amount: 2500,
+        },
+        quantity: 1,
+      }],
+      success_url: `${origin}/recipe-guide-access?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${origin}/magazine.html#recipe-guide`,
+      metadata: { buyer_name: name.trim(), buyer_email: email.trim() },
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[recipe-guide-checkout]', err);
+    res.status(500).json({ error: err.message });
+  }
 });
-app.get('/download-recipe-guide', (req, res) => {
-  res.setHeader('Content-Disposition', 'attachment; filename="HOTO-Farm-to-Table-Recipe-Guide.html"');
-  res.setHeader('Content-Type', 'text/html');
-  res.sendFile(path.join(__dirname, 'recipe-guide.html'));
+
+// Post-Stripe redirect — create access code, redirect to guide
+app.get('/recipe-guide-access', async (req, res) => {
+  const { session_id } = req.query;
+  if (!session_id) return res.redirect('/magazine.html#recipe-guide');
+  try {
+    const pg = getPcPool();
+    if (pg) {
+      const existing = await pg.query(
+        'SELECT code FROM recipe_access_codes WHERE stripe_session_id = $1', [session_id]
+      );
+      if (existing.rows[0]) return res.redirect(`/recipe-guide?code=${existing.rows[0].code}`);
+    }
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (session.payment_status !== 'paid') return res.redirect('/magazine.html#recipe-guide');
+    const name  = session.metadata?.buyer_name || session.customer_details?.name || '';
+    const email = session.customer_details?.email || session.metadata?.buyer_email || '';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 10; i++) code += chars[crypto.randomInt(0, chars.length)];
+    if (pg) {
+      await pg.query(
+        'INSERT INTO recipe_access_codes (code, name, email, paid, stripe_session_id) VALUES ($1,$2,$3,TRUE,$4) ON CONFLICT DO NOTHING',
+        [code, name, email, session_id]
+      );
+    }
+    res.redirect(`/recipe-guide?code=${code}`);
+  } catch (err) {
+    console.error('[recipe-guide-access]', err);
+    res.redirect('/magazine.html#recipe-guide');
+  }
+});
+
+// View guide (requires valid code)
+app.get('/recipe-guide', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.redirect('/magazine.html#recipe-guide');
+  try {
+    const pg = getPcPool();
+    let name = '', email = '';
+    if (pg) {
+      const result = await pg.query(
+        'SELECT name, email FROM recipe_access_codes WHERE code = $1', [code]
+      );
+      if (!result.rows[0]) return res.redirect('/magazine.html#recipe-guide');
+      name  = result.rows[0].name  || '';
+      email = result.rows[0].email || '';
+    }
+    servePersonalizedGuide(name, email, res, false);
+  } catch (err) {
+    console.error('[recipe-guide]', err);
+    res.redirect('/magazine.html#recipe-guide');
+  }
+});
+
+// Download guide (requires valid code)
+app.get('/download-recipe-guide', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.redirect('/magazine.html#recipe-guide');
+  try {
+    const pg = getPcPool();
+    let name = '', email = '';
+    if (pg) {
+      const result = await pg.query(
+        'SELECT name, email FROM recipe_access_codes WHERE code = $1', [code]
+      );
+      if (!result.rows[0]) return res.redirect('/magazine.html#recipe-guide');
+      name  = result.rows[0].name  || '';
+      email = result.rows[0].email || '';
+    }
+    servePersonalizedGuide(name, email, res, true);
+  } catch (err) {
+    console.error('[download-recipe-guide]', err);
+    res.redirect('/magazine.html#recipe-guide');
+  }
+});
+
+// Admin: list recipe access codes
+app.get('/admin/recipe-guide-codes', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.json([]);
+  const { rows } = await pg.query(
+    'SELECT code, name, email, paid, created_at FROM recipe_access_codes ORDER BY created_at DESC'
+  );
+  res.json(rows);
+});
+
+// Admin: generate free code (for bundle buyers)
+app.post('/admin/recipe-guide-codes', requireAdmin, express.json(), async (req, res) => {
+  const { name = '', email = '' } = req.body || {};
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email required' });
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 10; i++) code += chars[crypto.randomInt(0, chars.length)];
+  await pg.query(
+    'INSERT INTO recipe_access_codes (code, name, email, paid) VALUES ($1,$2,$3,FALSE)',
+    [code, name.trim(), email.trim()]
+  );
+  res.json({ code, name: name.trim(), email: email.trim(), paid: false });
+});
+
+// Admin: revoke a code
+app.delete('/admin/recipe-guide-codes/:code', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query('DELETE FROM recipe_access_codes WHERE code = $1', [req.params.code]);
+  res.json({ ok: true });
 });
 
 app.use(express.static(path.join(__dirname), {

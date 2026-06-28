@@ -489,6 +489,7 @@
     <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
     <button class="tab-btn" data-tab="cart-links">Cart Links</button>
     <button class="tab-btn" data-tab="delivery-promos">🚚 Delivery Promos</button>
+    <button class="tab-btn" data-tab="recipe-codes">📖 Recipe Guide</button>
     <button class="tab-btn" data-tab="charge">📞 Charge Customer</button>
   </div>
 
@@ -1234,6 +1235,31 @@
     </div>
   </div>
 
+  <!-- TAB: RECIPE GUIDE CODES -->
+  <div class="panel" id="panel-recipe-codes">
+    <div class="section-card">
+      <p class="section-title">Recipe Guide Access Codes</p>
+      <p style="font-size:0.82rem;color:#666;margin:0 0 16px;">Generate free codes for bundle buyers. Paid customers get their code automatically after Stripe checkout.</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <input id="rg-admin-name" placeholder="Customer name" style="flex:1;min-width:140px;padding:8px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:inherit;font-size:0.85rem;">
+        <input id="rg-admin-email" placeholder="Email address" type="email" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:inherit;font-size:0.85rem;">
+        <button id="rg-admin-create-btn" class="btn-sm" style="background:var(--terra);color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">Generate Free Code</button>
+      </div>
+      <p id="rg-admin-msg" style="font-size:0.8rem;margin:0 0 12px;display:none;"></p>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead><tr style="border-bottom:2px solid #e8e0d6;">
+          <th style="text-align:left;padding:6px 8px;">Code</th>
+          <th style="text-align:left;padding:6px 8px;">Name</th>
+          <th style="text-align:left;padding:6px 8px;">Email</th>
+          <th style="text-align:left;padding:6px 8px;">Type</th>
+          <th style="text-align:left;padding:6px 8px;">Date</th>
+          <th style="padding:6px 8px;"></th>
+        </tr></thead>
+        <tbody id="rg-admin-list-body"><tr><td colspan="6" style="padding:12px 8px;color:#999;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="panel" id="panel-charge">
     <p class="section-title">Charge a Customer by Phone</p>
     <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;max-width:560px;">
@@ -1533,6 +1559,7 @@
       if (btn.dataset.tab === 'workshop-interest') loadWorkshopInterest();
       if (btn.dataset.tab === 'cart-links') loadCartLinks();
       if (btn.dataset.tab === 'delivery-promos') loadDeliveryPromos();
+      if (btn.dataset.tab === 'recipe-codes') loadRecipeCodes();
       if (btn.dataset.tab === 'charge') initChargeTab();
     });
   });
@@ -4658,6 +4685,45 @@
     if (!confirm(`Disable code "${code}"?`)) return;
     await fetch(`/admin/delivery-promos/${encodeURIComponent(code)}`, { method:'DELETE', headers: authHeaders() });
     loadDeliveryPromos();
+  }
+
+  async function loadRecipeCodes() {
+    const body = document.getElementById('rg-admin-list-body');
+    if (!body) return;
+    const res = await fetch('/admin/recipe-guide-codes', { headers: authHeaders() });
+    const rows = await res.json();
+    if (!rows.length) { body.innerHTML = '<tr><td colspan="6" style="padding:12px 8px;color:#999;">No codes yet.</td></tr>'; }
+    else body.innerHTML = rows.map(r => `<tr style="border-bottom:1px solid #e8e0d6;">
+      <td style="padding:6px 8px;font-family:monospace;font-weight:600;color:#5a2a1a;">${escHtml(r.code)}</td>
+      <td style="padding:6px 8px;">${escHtml(r.name || '—')}</td>
+      <td style="padding:6px 8px;">${escHtml(r.email)}</td>
+      <td style="padding:6px 8px;">${r.paid ? '<span style="color:#2a7a2a;">Paid</span>' : '<span style="color:#888;">Free</span>'}</td>
+      <td style="padding:6px 8px;font-size:0.78rem;color:#888;">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</td>
+      <td style="padding:6px 8px;">
+        <button onclick="revokeRecipeCode(${JSON.stringify(escHtml(r.code))})" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Revoke</button>
+      </td>
+    </tr>`).join('');
+    document.getElementById('rg-admin-create-btn').onclick = async () => {
+      const name = document.getElementById('rg-admin-name').value.trim();
+      const email = document.getElementById('rg-admin-email').value.trim();
+      const msg = document.getElementById('rg-admin-msg');
+      if (!email || !email.includes('@')) { msg.style.color='#c0392b'; msg.textContent='Valid email required.'; msg.style.display='block'; return; }
+      const r = await fetch('/admin/recipe-guide-codes', { method:'POST', headers:{...authHeaders(),'Content-Type':'application/json'}, body: JSON.stringify({ name, email }) });
+      const d = await r.json();
+      if (r.ok) {
+        msg.style.color='#2a7a2a';
+        msg.textContent=`✓ Code "${d.code}" created for ${d.email}. Share: heartoftexasorganics.com/recipe-guide?code=${d.code}`;
+        msg.style.display='block';
+        document.getElementById('rg-admin-name').value='';
+        document.getElementById('rg-admin-email').value='';
+        loadRecipeCodes();
+      } else { msg.style.color='#c0392b'; msg.textContent=d.error||'Error'; msg.style.display='block'; }
+    };
+  }
+  async function revokeRecipeCode(code) {
+    if (!confirm(`Revoke code "${code}"? The customer will lose access.`)) return;
+    await fetch(`/admin/recipe-guide-codes/${encodeURIComponent(code)}`, { method:'DELETE', headers: authHeaders() });
+    loadRecipeCodes();
   }
 
   async function initChargeTab() {

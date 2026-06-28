@@ -1132,6 +1132,51 @@ app.use((req, res, next) => {
 // ── RECIPE GUIDE PAYWALL ────────────────────────────────────────────
 const fs = require('fs');
 
+// Block direct .html access — the file must be served through the auth route only
+app.use((req, res, next) => {
+  if (/^\/recipe-guide\.html?$/i.test(req.path)) return res.redirect(302, '/magazine.html#recipe-guide');
+  next();
+});
+
+// Signed session cookie helpers — code never stays in URL after first visit
+const _RG_SECRET = () => process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || 'hoto-rg-fallback';
+const RG_COOKIE = 'hoto_rg';
+
+function signRgCookie(code) {
+  const payload = `${code}:${Date.now()}`;
+  const sig = crypto.createHmac('sha256', _RG_SECRET()).update(payload).digest('hex').slice(0, 24);
+  return `${Buffer.from(payload).toString('base64url')}.${sig}`;
+}
+
+function verifyRgCookie(val) {
+  try {
+    if (!val) return null;
+    const dot = val.lastIndexOf('.');
+    const b64 = val.slice(0, dot);
+    const sig = val.slice(dot + 1);
+    const payload = Buffer.from(b64, 'base64url').toString();
+    const expected = crypto.createHmac('sha256', _RG_SECRET()).update(payload).digest('hex').slice(0, 24);
+    if (sig !== expected) return null;
+    const [code, ts] = payload.split(':');
+    if (!code || !ts || Date.now() - parseInt(ts, 10) > 30 * 24 * 60 * 60 * 1000) return null; // 30-day expiry
+    return code;
+  } catch { return null; }
+}
+
+function getRgCookie(req) {
+  const raw = req.headers.cookie || '';
+  const part = raw.split(';').find(c => c.trim().startsWith(RG_COOKIE + '='));
+  return part ? decodeURIComponent(part.split('=').slice(1).join('=').trim()) : null;
+}
+
+function setRgCookie(res, code) {
+  const val = signRgCookie(code);
+  const maxAge = 30 * 24 * 60 * 60; // 30 days
+  res.setHeader('Set-Cookie',
+    `${RG_COOKIE}=${encodeURIComponent(val)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`
+  );
+}
+
 function servePersonalizedGuide(name, email, res, download = false) {
   let html = fs.readFileSync(path.join(__dirname, 'recipe-guide.html'), 'utf8');
   const display = escHtml(name || email);
@@ -1208,44 +1253,48 @@ app.get('/recipe-guide-access', async (req, res) => {
   }
 });
 
-// View guide (requires valid code)
+// Shared helper — resolves code from URL param (first visit) or cookie (return visit)
+async function resolveRgAccess(req, res) {
+  const urlCode = req.query.code;
+  const cookieCode = verifyRgCookie(getRgCookie(req));
+  const code = urlCode || cookieCode;
+  if (!code) return null;
+  const pg = getPcPool();
+  if (!pg) return null;
+  const result = await pg.query(
+    'SELECT name, email FROM recipe_access_codes WHERE code = $1', [code]
+  );
+  if (!result.rows[0]) return null;
+  // First visit via URL code: exchange for HttpOnly cookie, strip code from URL
+  if (urlCode && !cookieCode) {
+    setRgCookie(res, urlCode);
+    return 'redirect'; // caller must redirect to clean URL
+  }
+  return result.rows[0];
+}
+
+// View guide — code-in-URL on first visit only; cookie session on return visits
 app.get('/recipe-guide', async (req, res) => {
-  const { code } = req.query;
-  if (!code) return res.redirect('/magazine.html#recipe-guide');
   try {
-    const pg = getPcPool();
-    let name = '', email = '';
-    if (pg) {
-      const result = await pg.query(
-        'SELECT name, email FROM recipe_access_codes WHERE code = $1', [code]
-      );
-      if (!result.rows[0]) return res.redirect('/magazine.html#recipe-guide');
-      name  = result.rows[0].name  || '';
-      email = result.rows[0].email || '';
-    }
-    servePersonalizedGuide(name, email, res, false);
+    const row = await resolveRgAccess(req, res);
+    if (!row) return res.redirect('/magazine.html#recipe-guide');
+    if (row === 'redirect') return res.redirect(302, '/recipe-guide');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    servePersonalizedGuide(row.name || '', row.email || '', res, false);
   } catch (err) {
     console.error('[recipe-guide]', err);
     res.redirect('/magazine.html#recipe-guide');
   }
 });
 
-// Download guide (requires valid code)
+// Download guide — same auth, triggers file download
 app.get('/download-recipe-guide', async (req, res) => {
-  const { code } = req.query;
-  if (!code) return res.redirect('/magazine.html#recipe-guide');
   try {
-    const pg = getPcPool();
-    let name = '', email = '';
-    if (pg) {
-      const result = await pg.query(
-        'SELECT name, email FROM recipe_access_codes WHERE code = $1', [code]
-      );
-      if (!result.rows[0]) return res.redirect('/magazine.html#recipe-guide');
-      name  = result.rows[0].name  || '';
-      email = result.rows[0].email || '';
-    }
-    servePersonalizedGuide(name, email, res, true);
+    const row = await resolveRgAccess(req, res);
+    if (!row) return res.redirect('/magazine.html#recipe-guide');
+    if (row === 'redirect') return res.redirect(302, '/download-recipe-guide');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    servePersonalizedGuide(row.name || '', row.email || '', res, true);
   } catch (err) {
     console.error('[download-recipe-guide]', err);
     res.redirect('/magazine.html#recipe-guide');

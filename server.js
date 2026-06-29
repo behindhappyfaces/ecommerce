@@ -3865,6 +3865,98 @@ app.post('/api/workshop-interest', express.json(), async (req, res) => {
   }
 });
 
+// ── LEGACY FARM SIGNING ─────────────────────────────────────────────
+app.post('/api/legacy-signing', express.json(), async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://legacy-farm-arnosky.netlify.app');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  try {
+    const { name, date, timestamp, isTest } = req.body;
+    if (!name || !date) return res.status(400).json({ error: 'Missing fields' });
+
+    // Generate PDF
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ size: 'LETTER', margin: 72 });
+      const chunks = [];
+      doc.on('data', c => chunks.push(c));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      const green = '#3c5238';
+      const amber = '#7a5c2e';
+      const ink   = '#2a1d0e';
+      const gray  = '#888888';
+
+      if (isTest) {
+        doc.fontSize(9).fillColor('red').text('*** TEST SUBMISSION ***', { align: 'center' });
+        doc.moveDown(0.5);
+      }
+
+      doc.fontSize(8).fillColor(amber).text('CONFIDENTIALITY ACKNOWLEDGMENT', { align: 'center', characterSpacing: 1.5 });
+      doc.moveDown(0.4);
+      doc.fontSize(20).fillColor(green).text('Legacy Farm Transition', { align: 'center' });
+      doc.moveDown(0.2);
+      doc.fontSize(10).fillColor(gray).text('Peyton Colony  ·  13977 Ranch Rd. 2325, Blanco, TX 78606', { align: 'center' });
+      doc.moveDown(0.8);
+      doc.moveTo(72, doc.y).lineTo(540, doc.y).strokeColor('#c8b49a').stroke();
+      doc.moveDown(0.8);
+
+      doc.fontSize(11).fillColor(ink).text(
+        'Thank you for taking the time to review the attached vision document. I prepared this specifically for you — Pamela & Frank Arnosky — based on our conversations and the possibility of exploring a future transition for the property located at 13977 Ranch Rd. 2325, Blanco, TX 78606. Because this includes my personal information, identity, and a thoughtful vision created specifically for this opportunity, I kindly ask that it remain a private conversation between our families and not be publicly shared, posted, forwarded, or distributed at this time. This acknowledgment is simply to respect the time, thought, and personal nature of these discussions while we determine whether there is a shared vision for the future.',
+        { align: 'left', lineGap: 4 }
+      );
+      doc.moveDown(2);
+
+      doc.moveTo(72, doc.y).lineTo(540, doc.y).strokeColor('#c8b49a').stroke();
+      doc.moveDown(0.8);
+
+      doc.fontSize(8).fillColor(amber).text('ELECTRONIC SIGNATURE', { characterSpacing: 1.2 });
+      doc.moveDown(0.3);
+      doc.fontSize(28).fillColor(ink).text(name);
+      doc.moveDown(0.4);
+      doc.fontSize(8).fillColor(amber).text('DATE', { characterSpacing: 1.2 });
+      doc.moveDown(0.2);
+      doc.fontSize(11).fillColor(ink).text(date);
+      doc.moveDown(0.4);
+      doc.fontSize(8).fillColor(gray).text('Timestamp: ' + timestamp);
+      doc.moveDown(1.5);
+
+      doc.fontSize(8).fillColor(gray).text(
+        'This document was electronically acknowledged. The signature above represents the full legal name of the individual who agreed to the confidentiality terms on the date shown.',
+        { align: 'left', lineGap: 3 }
+      );
+
+      doc.end();
+    });
+
+    const prefix = isTest ? '[TEST] ' : '';
+    const safeName = name.replace(/[^a-z0-9 ]/gi, '').trim().replace(/\s+/g, '-');
+    const filename = `Legacy-Farm-Signed-Acknowledgment-${safeName}.pdf`;
+
+    await sendEmailTo(
+      ADMIN_EMAIL,
+      `${prefix}Legacy Farm Document Signed — ${name}`,
+      `<p><strong>${name}</strong> has signed the Confidentiality Acknowledgment.</p>
+       <p><strong>Date:</strong> ${date}<br>
+       <strong>Timestamp:</strong> ${timestamp}</p>
+       ${isTest ? '<p style="color:red"><strong>*** This is a test submission ***</strong></p>' : ''}
+       <p>The signed PDF acknowledgment is attached.</p>`,
+      [{ filename, content: pdfBuffer }]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Legacy signing error:', err.message);
+    res.status(500).json({ error: 'Could not process signing' });
+  }
+});
+
+app.options('/api/legacy-signing', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://legacy-farm-arnosky.netlify.app');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.sendStatus(204);
+});
+
 app.get('/admin/workshop-interest', requireAdmin, (req, res) => {
   res.json(readWorkshopInterest());
 });

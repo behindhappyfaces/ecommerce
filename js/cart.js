@@ -30,6 +30,8 @@ const PRODUCTS = {
   'addon-chili-crunch':   { name: 'Garlic Chili Crunch — add-on',    price: 1800, subPrice: null, image: null },
   'addon-herb-oil':       { name: 'Tuscany Herb Dipping Oil — add-on', price: 1800, subPrice: null, image: null },
   'addon-whole-chicken':  { name: 'Whole Chicken — add-on',          price: 0,    subPrice: null, image: null },
+  'addon-neckbone':       { name: 'Neckbone',                          price: 200,  subPrice: null, image: null },
+  'addon-chicken-broth':  { name: 'Chicken Bone Broth (16 oz)',         price: 2000, subPrice: null, image: null },
 };
 
 const STORAGE_KEY   = 'hoto-cart';
@@ -2310,11 +2312,10 @@ const BOX_CONTENTS = {
   'sampler-box': {
     label: 'The Farm Sampler Box',
     items: [
-      { id: 'yeast-rolls',        name: 'Yeast Rolls (1 doz)',    swapGroup: null },
-      { id: 'cultured-butter',    name: 'Real Cream Butter (½ lb)', swapGroup: null },
-      { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls (½ doz)', swapGroup: null },
-      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',    swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',     swapGroup: null },
+      { id: 'whole-chicken',      name: 'Whole Chicken — Processed into 10 Cuts', swapGroup: null, subtitle: '2 Boneless/Skinless Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats' },
+      { id: 'farm-eggs',          name: 'Farm Eggs — 1 dozen',           swapGroup: null },
+      { id: 'cultured-butter',    name: 'Real Cream Butter — ½ lb',      swapGroup: null },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch (4oz)',     swapGroup: 'larder' },
     ],
   },
 };
@@ -2350,6 +2351,15 @@ const PRESERVES_FLAVORS = [
   { name: 'Peach',            price: 1800 },
   { name: 'Fig',              price: 1800 },
   { name: 'Orange Marmalade', price: 1800 },
+];
+
+// Per-box add-on overrides (set after PRESERVES_FLAVORS so we can reference it)
+BOX_CONTENTS['sampler-box'].addons = [
+  { id: 'addon-neckbone',      name: 'Neckbone',                    price: 200 },
+  { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 2000 },
+  { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
+  { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3500 },
+  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2400 },
 ];
 
 const ADDON_OPTIONS = [
@@ -2420,10 +2430,19 @@ function openBoxCustomizer(subId, name, price) {
   defaultItems.forEach(item => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--color-cream,#F5F0E8);border-radius:10px;gap:12px;';
+    const nameWrap = document.createElement('div');
+    nameWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:2px;';
     const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);';
     nameSpan.textContent = item.name;
-    row.appendChild(nameSpan);
+    nameWrap.appendChild(nameSpan);
+    if (item.subtitle) {
+      const subSpan = document.createElement('span');
+      subSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);';
+      subSpan.textContent = item.subtitle;
+      nameWrap.appendChild(subSpan);
+    }
+    row.appendChild(nameWrap);
     if (item.swapGroup && SWAP_OPTIONS[item.swapGroup]) {
       const sel = document.createElement('select');
       sel.dataset.originalId = item.id;
@@ -2491,11 +2510,12 @@ function openBoxCustomizer(subId, name, price) {
     itemsEl.appendChild(row);
   });
 
-  // Render add-ons (hide ones already in the box)
+  // Render add-ons (use per-box list if defined, otherwise fall back to global ADDON_OPTIONS)
   const boxItemIds = new Set(defaultItems.map(i => i.id));
   const addonsEl = document.getElementById('bc-addons');
   addonsEl.innerHTML = '';
-  ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-',''))).forEach(addon => {
+  const addonList = (box && box.addons) ? box.addons : ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-','')));
+  addonList.forEach(addon => {
     const wrapper = document.createElement('div');
 
     const label = document.createElement('label');

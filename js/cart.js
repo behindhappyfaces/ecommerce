@@ -344,6 +344,46 @@ function renderCart() {
     item.appendChild(info);
     item.appendChild(removeBtn);
     itemsWrap.appendChild(item);
+
+    // If this is a sampler/box item and we have saved included items, show them as sub-rows
+    if (id === 'sampler-box' && adminSub && adminSub.includedItems && adminSub.includedItems.length) {
+      const subList = document.createElement('div');
+      subList.style.cssText = 'padding:6px 12px 10px 12px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid rgba(44,62,45,0.08);margin-bottom:4px;';
+      const subHeader = document.createElement('p');
+      subHeader.style.cssText = 'font-family:var(--font-sans);font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(44,62,45,0.4);margin:0 0 6px;';
+      subHeader.textContent = "What's Inside";
+      subList.appendChild(subHeader);
+      adminSub.includedItems.forEach(inc => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+        const incName = document.createElement('span');
+        incName.style.cssText = 'font-family:var(--font-sans);font-size:0.8rem;color:var(--color-green,#2C3E2D);';
+        incName.textContent = '· ' + inc.name;
+        const incPrice = document.createElement('span');
+        incPrice.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;color:rgba(44,62,45,0.4);';
+        incPrice.textContent = 'Included';
+        row.appendChild(incName);
+        row.appendChild(incPrice);
+        subList.appendChild(row);
+      });
+      // Also show paid add-ons that came from the customizer
+      if (adminSub.addons && adminSub.addons.length) {
+        adminSub.addons.filter(a => a.price > 0).forEach(addon => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+          const aName = document.createElement('span');
+          aName.style.cssText = 'font-family:var(--font-sans);font-size:0.8rem;color:var(--color-green,#2C3E2D);';
+          aName.textContent = '+ ' + addon.name;
+          const aPrice = document.createElement('span');
+          aPrice.style.cssText = 'font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);';
+          aPrice.textContent = fmt(addon.price);
+          row.appendChild(aName);
+          row.appendChild(aPrice);
+          subList.appendChild(row);
+        });
+      }
+      itemsWrap.appendChild(subList);
+    }
   });
 
   const footer = document.createElement('div');
@@ -2726,9 +2766,27 @@ function openBoxCustomizer(subId, name, price) {
 
     localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
 
+    // Build the final list of included items (applying swaps) for cart itemization display
+    const includedItems = box ? box.items.map(item => {
+      const swap = swaps.find(s => s.from === item.id);
+      const finalId   = swap ? swap.to   : item.id;
+      const finalName = swap ? (PRODUCTS[finalId] ? PRODUCTS[finalId].name : finalId) : item.name;
+      // Append flavor/type notes
+      let displayName = finalName;
+      if (item.id === 'seasonal-preserves') {
+        const flavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
+        if (flavorSel && flavorSel.value) displayName += ' — ' + flavorSel.value;
+      }
+      if (item.id === 'cultured-butter') {
+        const butterSel = document.querySelector('#bc-items select[data-butter-type="included"]');
+        if (butterSel && butterSel.value) displayName += ' — ' + butterSel.value;
+      }
+      return { id: finalId, name: displayName };
+    }) : [];
+
     // Persist subscription metadata (swaps + flavor/type notes carried through to checkout)
     localStorage.setItem('hoto-admin-sub', JSON.stringify({
-      token: subId, subName, subPrice: calculatedTotal, swaps, addons,
+      token: subId, subName, subPrice: calculatedTotal, swaps, addons, includedItems,
     }));
 
     closeBoxCustomizer();

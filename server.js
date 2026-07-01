@@ -1130,7 +1130,6 @@ app.use((req, res, next) => {
 });
 
 // ── RECIPE GUIDE PAYWALL ────────────────────────────────────────────
-const fs = require('fs');
 
 // Block direct .html access — the file must be served through the auth route only
 app.use((req, res, next) => {

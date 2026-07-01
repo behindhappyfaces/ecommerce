@@ -3183,10 +3183,41 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
             checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
             checkoutBtn.id = 'cart-checkout';
             checkoutBtn.textContent = 'Proceed to Checkout';
-            checkoutBtn.addEventListener('click', openOneTimeDeliveryChoice);
-            footer.appendChild(totalRow);
-            footer.appendChild(noteEl);
-            footer.appendChild(checkoutBtn);
+
+            // If sampler box is in the cart, show a customize prompt before checkout
+            var hasSamplerInLink = cartData.items.some(function(i) { return i.id === 'sampler-box'; });
+            if (hasSamplerInLink) {
+              var _samplerCustomized = false;
+
+              var customizeBtn = document.createElement('button');
+              customizeBtn.style.cssText = 'width:100%;padding:12px;background:rgba(139,74,47,0.08);border:1.5px solid rgba(139,74,47,0.35);border-radius:8px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8B4A2F;cursor:pointer;margin-bottom:8px;';
+              customizeBtn.textContent = 'Customize Your Box →';
+              customizeBtn.addEventListener('click', function() {
+                _samplerCustomized = true;
+                if (!document.getElementById('box-customizer-overlay')) injectBoxCustomizer();
+                openBoxCustomizer('sampler-box', 'The Farm Sampler Box', 14900);
+              });
+
+              checkoutBtn.addEventListener('click', function() {
+                if (!_samplerCustomized) {
+                  if (!document.getElementById('box-customizer-overlay')) injectBoxCustomizer();
+                  openBoxCustomizer('sampler-box', 'The Farm Sampler Box', 14900);
+                  _samplerCustomized = true;
+                  return;
+                }
+                openOneTimeDeliveryChoice();
+              });
+
+              footer.appendChild(totalRow);
+              footer.appendChild(noteEl);
+              footer.appendChild(customizeBtn);
+              footer.appendChild(checkoutBtn);
+            } else {
+              checkoutBtn.addEventListener('click', openOneTimeDeliveryChoice);
+              footer.appendChild(totalRow);
+              footer.appendChild(noteEl);
+              footer.appendChild(checkoutBtn);
+            }
             body.appendChild(wrap);
             body.appendChild(footer);
 

@@ -2443,6 +2443,7 @@ function openBoxCustomizer(subId, name, price) {
       nameWrap.appendChild(subSpan);
     }
     row.appendChild(nameWrap);
+    let extraPanel = null;
     if (item.swapGroup && SWAP_OPTIONS[item.swapGroup]) {
       const sel = document.createElement('select');
       sel.dataset.originalId = item.id;
@@ -2454,7 +2455,51 @@ function openBoxCustomizer(subId, name, price) {
         o.selected = opt.id === item.id;
         sel.appendChild(o);
       });
-      sel.onchange = () => { nameSpan.textContent = sel.options[sel.selectedIndex].text.replace(' ✓',''); };
+      // Flavor sub-panel — shown below the row when seasonal-preserves is chosen
+      const swapFlavorPanel = document.createElement('div');
+      swapFlavorPanel.style.cssText = 'display:none;align-items:center;gap:12px;padding:8px 16px 10px;background:rgba(44,62,45,0.04);border-radius:0 0 10px 10px;margin-top:-4px;';
+      const sfLabel = document.createElement('span');
+      sfLabel.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);flex:1;font-style:italic;';
+      sfLabel.textContent = 'other flavors available';
+      const swapFlavorSel = document.createElement('select');
+      swapFlavorSel.dataset.swapPreservesFlavor = 'true';
+      swapFlavorSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
+      [
+        { name: 'Strawberry',       upcharge: 0 },
+        { name: 'Grape',            upcharge: 0 },
+        { name: 'Blackberry',       upcharge: 300 },
+        { name: 'Peach',            upcharge: 300 },
+        { name: 'Fig',              upcharge: 300 },
+        { name: 'Orange Marmalade', upcharge: 300 },
+      ].forEach(function(f) {
+        const o = document.createElement('option');
+        o.value = String(f.upcharge);
+        o.dataset.flavorLabel = f.name;
+        o.textContent = f.upcharge > 0 ? f.name + ' (+$' + (f.upcharge / 100) + ')' : f.name;
+        swapFlavorSel.appendChild(o);
+      });
+      swapFlavorSel.addEventListener('change', function() {
+        const lbl = swapFlavorSel.options[swapFlavorSel.selectedIndex].dataset.flavorLabel;
+        nameSpan.textContent = lbl + ' Preserves';
+        recalcBoxTotal();
+      });
+      swapFlavorPanel.appendChild(sfLabel);
+      swapFlavorPanel.appendChild(swapFlavorSel);
+      extraPanel = swapFlavorPanel;
+
+      sel.onchange = () => {
+        if (sel.value === 'seasonal-preserves') {
+          swapFlavorSel.selectedIndex = 0;
+          nameSpan.textContent = 'Strawberry Preserves';
+          swapFlavorPanel.style.display = 'flex';
+          row.style.borderRadius = '10px 10px 0 0';
+        } else {
+          swapFlavorPanel.style.display = 'none';
+          row.style.borderRadius = '10px';
+          nameSpan.textContent = sel.options[sel.selectedIndex].text.replace(' ✓','');
+        }
+        recalcBoxTotal();
+      };
       const swapWrap = document.createElement('div');
       swapWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
       const swapLabel = document.createElement('span');
@@ -2508,6 +2553,7 @@ function openBoxCustomizer(subId, name, price) {
       row.appendChild(fixed);
     }
     itemsEl.appendChild(row);
+    if (extraPanel) itemsEl.appendChild(extraPanel);
   });
 
   // Render add-ons (use per-box list if defined, otherwise fall back to global ADDON_OPTIONS)
@@ -2706,6 +2752,18 @@ function openBoxCustomizer(subId, name, price) {
       total += 400;
     }
 
+    // Swap-to-preserves flavor upcharge (garlic chili crunch → seasonal preserves)
+    const swapToPreservesSel = document.querySelector('#bc-items select[data-original-id="garlic-chili-crunch"]');
+    const swapFlavorPickerSel = document.querySelector('#bc-items select[data-swap-preserves-flavor]');
+    if (swapToPreservesSel && swapToPreservesSel.value === 'seasonal-preserves' && swapFlavorPickerSel) {
+      const up = parseInt(swapFlavorPickerSel.value, 10) || 0;
+      if (up > 0) {
+        const lbl = swapFlavorPickerSel.options[swapFlavorPickerSel.selectedIndex].dataset.flavorLabel;
+        lines.push({ label: lbl + ' preserves upgrade', amount: up });
+        total += up;
+      }
+    }
+
     // Preserves flavor upcharge
     const flavorSel = document.querySelector('#bc-items select[data-preserves-flavor="included"]');
     if (flavorSel) {
@@ -2809,6 +2867,10 @@ function openBoxCustomizer(subId, name, price) {
       if (item.id === 'cultured-butter') {
         const butterSel = document.querySelector('#bc-items select[data-butter-type="included"]');
         if (butterSel && butterSel.value) displayName += ' — ' + butterSel.value;
+      }
+      if (item.id === 'garlic-chili-crunch' && finalId === 'seasonal-preserves') {
+        const sfSel = document.querySelector('#bc-items select[data-swap-preserves-flavor]');
+        if (sfSel) displayName = sfSel.options[sfSel.selectedIndex].dataset.flavorLabel + ' Preserves';
       }
       return { id: finalId, name: displayName };
     }) : [];

@@ -2356,7 +2356,7 @@ const PRESERVES_FLAVORS = [
 // Per-box add-on overrides (set after PRESERVES_FLAVORS so we can reference it)
 BOX_CONTENTS['sampler-box'].addons = [
   { id: 'addon-neckbone',      name: 'Neckbone',                    price: 200 },
-  { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 2000 },
+  { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
   { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
   { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3500 },
   { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2400 },
@@ -2526,14 +2526,23 @@ function openBoxCustomizer(subId, name, price) {
     cb.dataset.addonName = addon.name;
     cb.dataset.addonPrice = addon.price;
     cb.style.cssText = 'accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;';
+    const nameWrap = document.createElement('div');
+    nameWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:2px;';
     const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    nameSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);';
     nameSpan.textContent = addon.name;
+    nameWrap.appendChild(nameSpan);
+    if (addon.note) {
+      const noteSpan = document.createElement('span');
+      noteSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.7rem;color:rgba(44,62,45,0.45);font-style:italic;';
+      noteSpan.textContent = addon.note;
+      nameWrap.appendChild(noteSpan);
+    }
     const priceSpan = document.createElement('span');
     priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);white-space:nowrap;';
     priceSpan.textContent = addon.priceLabel ? addon.priceLabel : (addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, ''));
     label.appendChild(cb);
-    label.appendChild(nameSpan);
+    label.appendChild(nameWrap);
     label.appendChild(priceSpan);
     wrapper.appendChild(label);
 

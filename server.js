@@ -1783,7 +1783,7 @@ app.post('/create-checkout-session', async (req, res) => {
     // Sales tax — only applied to items the admin/cart marked as taxable;
     // free items already carry unit_amount 0 so they contribute nothing here.
     // Bundle/box products are always tax-exempt regardless of the taxable flag.
-    const BUNDLE_IDS = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july']);
+    const BUNDLE_IDS = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle']);
     const taxPct = parseFloat(tax_rate_pct) || 0;
     if (taxPct > 0) {
       const taxableSubtotal = items.reduce(
@@ -2862,7 +2862,7 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
-    const _bundleIds = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july']);
+    const _bundleIds = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle']);
     const taxableSubtotal = items.reduce((s, i) => s + (i.taxable && !_bundleIds.has(i.id) ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
     const taxPct = parseFloat(taxRate) || 0;
     const taxCents = taxPct > 0 ? Math.round(taxableSubtotal * taxPct / 100) : 0;
@@ -3959,6 +3959,164 @@ app.get('/bundle-qr', async (req, res) => {
     res.send(qr);
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /flyer — printable one-page flyer with QR codes for the chicken bundle & sampler box
+app.get('/flyer', async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const origin = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+    const chickenUrl = `${origin}/?start=chicken-bundle`;
+    const samplerUrl = `${origin}/?start=sampler-box`;
+    const [chickenQR, samplerQR] = await Promise.all([
+      QRCode.toDataURL(chickenUrl, { width: 220, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+      QRCode.toDataURL(samplerUrl, { width: 220, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+    ]);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Heart of Texas Organics — Fresh This Week</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Georgia,serif;background:#fff;color:#2C3E2D;}
+  .page{width:8.5in;min-height:11in;margin:0 auto;display:flex;flex-direction:column;background:#fff;}
+
+  /* Header band */
+  .hdr{background:#2C3E2D;color:#F5F0E8;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .hdr-name{font-size:22px;letter-spacing:0.04em;}
+  .hdr-tag{font-family:'Lato',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;margin-top:4px;}
+  .hdr-right{font-family:'Lato',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.65;text-align:right;}
+
+  /* Rust accent bar */
+  .rust-bar{height:6px;background:#8B3A2A;}
+
+  /* Intro section */
+  .intro{background:#F5F0E8;padding:28px 40px 24px;}
+  .intro-eyebrow{font-family:'Lato',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:10px;}
+  .intro-headline{font-size:30px;line-height:1.15;color:#2C3E2D;margin-bottom:14px;}
+  .intro-headline em{font-style:normal;color:#8B3A2A;}
+  .intro-body{font-family:'Lato',sans-serif;font-size:13.5px;line-height:1.65;color:#3a3a3a;max-width:620px;}
+  .intro-body p{margin-bottom:10px;}
+  .intro-body strong{color:#2C3E2D;}
+
+  /* Cuts row */
+  .cuts{background:#2C3E2D;color:#F5F0E8;padding:10px 40px;font-family:'Lato',sans-serif;font-size:11.5px;letter-spacing:0.05em;text-align:center;}
+
+  /* Product cards */
+  .cards{display:flex;flex-direction:row;gap:0;flex:1;}
+  .card{flex:1;padding:28px 30px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .card:first-child{background:#fff;border-right:2px solid #F5F0E8;}
+  .card:last-child{background:#F5F0E8;}
+
+  .card-eyebrow{font-family:'Lato',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:8px;}
+  .card-title{font-size:19px;color:#2C3E2D;line-height:1.2;margin-bottom:6px;}
+  .card-price{font-family:'Lato',sans-serif;font-size:26px;font-weight:700;color:#8B3A2A;margin-bottom:14px;}
+  .card-includes{font-family:'Lato',sans-serif;font-size:10.5px;color:#2C3E2D;line-height:1.7;margin-bottom:16px;text-align:left;width:100%;}
+  .card-includes li{list-style:none;padding-left:0;}
+  .card-includes li::before{content:'✓  ';color:#8B3A2A;font-weight:700;}
+  .card-addons{font-family:'Lato',sans-serif;font-size:10px;color:rgba(44,62,45,0.55);font-style:italic;margin-bottom:20px;}
+  .card-qr{border:3px solid #2C3E2D;border-radius:10px;padding:8px;background:#fff;}
+  .card-qr img{display:block;width:140px;height:140px;}
+  .card-scan{font-family:'Lato',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8B3A2A;margin-top:8px;}
+
+  /* Footer */
+  .ftr{background:#2C3E2D;color:#F5F0E8;padding:12px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .ftr-left{font-family:'Lato',sans-serif;font-size:11px;line-height:1.7;}
+  .ftr-right{font-family:Georgia,serif;font-size:12px;font-style:italic;opacity:0.8;}
+
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body{margin:0;}
+    .page{width:100%;min-height:100vh;}
+    @page{margin:0;size:8.5in 11in;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-name">Heart of Texas Organics</div>
+      <div class="hdr-tag">Your Local Farm · Dripping Springs, TX</div>
+    </div>
+    <div class="hdr-right">heartoftexasorganics.com</div>
+  </div>
+  <div class="rust-bar"></div>
+
+  <!-- Promo copy -->
+  <div class="intro">
+    <div class="intro-eyebrow">Fresh This Week — Limited Quantity</div>
+    <div class="intro-headline">Good Morning! <em>Limited Batches Ready to Go.</em></div>
+    <div class="intro-body">
+      <p>Starting <strong>next Tuesday</strong>, we have <strong>10 pasture-raised Chicken &amp; Dinner Roll Bundles</strong> ready — and they need to be gone by Friday.</p>
+      <p>Each chicken weighs <strong>8–10 lbs</strong> and is processed into <strong>10 premium cuts</strong>, so it's ready to throw straight on the grill or in the oven. Grab a side, and dinner's done.</p>
+      <p>If you — or someone you know — is always stressing over <em>"What's for dinner?"</em>, <strong>text me today!</strong> I'd love an introduction.</p>
+    </div>
+  </div>
+
+  <!-- Cuts banner -->
+  <div class="cuts">2 Boneless/Skinless Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Drums &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; Straight from pasture to your table</div>
+
+  <!-- Product cards -->
+  <div class="cards">
+
+    <!-- Chicken Bundle -->
+    <div class="card">
+      <div class="card-eyebrow">Limited — 10 Available</div>
+      <div class="card-title">Chicken &amp; Dinner Roll Bundle</div>
+      <div class="card-price">$79</div>
+      <ul class="card-includes">
+        <li>Whole Pasture-Raised Chicken (8–10 lbs)</li>
+        <li>Processed into 10 Premium Cuts</li>
+        <li>1 Dozen Soft Dinner Rolls</li>
+      </ul>
+      <div class="card-addons">+ optional add-ons at checkout: cinnamon rolls, butter, eggs, garlic chili crunch</div>
+      <div class="card-qr"><img src="${chickenQR}" alt="QR code — Chicken Bundle"/></div>
+      <div class="card-scan">Scan to Order</div>
+    </div>
+
+    <!-- Sampler Box -->
+    <div class="card">
+      <div class="card-eyebrow">Customize Your Order</div>
+      <div class="card-title">The Farm Sampler Box</div>
+      <div class="card-price">$149</div>
+      <ul class="card-includes">
+        <li>Whole Chicken — 10 Premium Cuts</li>
+        <li>Farm Eggs — 1 Dozen</li>
+        <li>Real Cream Butter — ½ lb</li>
+        <li>Garlic Chili Crunch or Herb Oil or Preserves</li>
+      </ul>
+      <div class="card-addons">+ customize your box &amp; choose add-ons at checkout</div>
+      <div class="card-qr"><img src="${samplerQR}" alt="QR code — Farm Sampler Box"/></div>
+      <div class="card-scan">Scan to Customize &amp; Order</div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="ftr">
+    <div class="ftr-left">
+      🌐 heartoftexasorganics.com<br>
+      📍 Dripping Springs, TX 78620
+    </div>
+    <div class="ftr-right">~Deborah · Head Hen in Charge · ❤️ of Texas's Organics!</div>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+    res.set('Content-Type', 'text/html');
+    res.send(html);
+  } catch (e) {
+    console.error('[/flyer]', e);
+    res.status(500).send('Error generating flyer: ' + e.message);
   }
 });
 

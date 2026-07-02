@@ -1764,45 +1764,92 @@
       badgeEl.className = 'badge ' + status;
       badgeEl.textContent = status === 'out' ? 'Out of Stock' : status === 'low' ? 'Low Stock' : 'Good';
 
-      // ── Inline price editor ──────────────────────────────────────
+      // ── Inline price / cost editor ────────────────────────────────
+      const pcWrap = document.createElement('div');
+      pcWrap.style.cssText = 'margin:8px 0 4px;background:rgba(0,0,0,0.18);border-radius:7px;padding:8px 10px;';
+
+      // Row 1: Price
       const priceRow = document.createElement('div');
-      priceRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin:6px 0 2px;';
+      priceRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
 
       const priceLbl = document.createElement('span');
-      priceLbl.style.cssText = 'font-size:0.72rem;color:var(--cream-dim);white-space:nowrap;';
+      priceLbl.style.cssText = 'font-size:0.72rem;color:var(--cream-dim);width:40px;';
       priceLbl.textContent = 'Price $';
 
       const priceInp = document.createElement('input');
-      priceInp.type = 'number';
-      priceInp.min = '0';
-      priceInp.step = '0.01';
+      priceInp.type = 'number'; priceInp.min = '0'; priceInp.step = '0.01';
       priceInp.value = ((p.price_cents || 0) / 100).toFixed(2);
-      priceInp.style.cssText = 'width:70px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:0.85rem;padding:3px 6px;outline:none;';
+      priceInp.style.cssText = 'flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:0.85rem;padding:3px 6px;outline:none;';
       priceInp.addEventListener('focus', () => priceInp.style.borderColor = 'var(--terra)');
-      priceInp.addEventListener('blur',  () => priceInp.style.borderColor = 'var(--border)');
-
-      const priceSaveBtn = document.createElement('button');
-      priceSaveBtn.className = 'btn-sm btn-terra';
-      priceSaveBtn.textContent = 'Save';
-      priceSaveBtn.style.cssText = 'padding:3px 10px;font-size:0.75rem;';
-      priceSaveBtn.addEventListener('click', async () => {
-        const newPrice = Math.round(parseFloat(priceInp.value) * 100);
-        if (isNaN(newPrice) || newPrice < 0) { showToast('Invalid price', true); return; }
-        priceSaveBtn.disabled = true; priceSaveBtn.textContent = '...';
-        try {
-          const r = await fetch('/admin/inventory/' + p.id, {
-            method: 'PUT', headers: authHeaders(),
-            body: JSON.stringify({ price_cents: newPrice, reorder_level: p.reorder_level, cost_cents: p.cost_cents || 0, unit: p.unit, allow_preorder: p.allow_preorder }),
-          });
-          if (r.ok) { showToast(p.name + ' price saved'); await loadInventory(); renderStockTab(); }
-          else showToast('Save failed', true);
-        } catch { showToast('Connection error', true); }
-        finally { priceSaveBtn.disabled = false; priceSaveBtn.textContent = 'Save'; }
-      });
+      priceInp.addEventListener('blur',  () => { priceInp.style.borderColor = 'var(--border)'; refreshMargin(); });
 
       priceRow.appendChild(priceLbl);
       priceRow.appendChild(priceInp);
-      priceRow.appendChild(priceSaveBtn);
+
+      // Row 2: Cost
+      const costRow = document.createElement('div');
+      costRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+
+      const costLbl = document.createElement('span');
+      costLbl.style.cssText = 'font-size:0.72rem;color:var(--cream-dim);width:40px;';
+      costLbl.textContent = 'Cost $';
+
+      const costInp = document.createElement('input');
+      costInp.type = 'number'; costInp.min = '0'; costInp.step = '0.01';
+      costInp.value = ((p.cost_cents || 0) / 100).toFixed(2);
+      costInp.style.cssText = 'flex:1;min-width:0;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:0.85rem;padding:3px 6px;outline:none;';
+      costInp.addEventListener('focus', () => costInp.style.borderColor = 'var(--terra)');
+      costInp.addEventListener('blur',  () => { costInp.style.borderColor = 'var(--border)'; refreshMargin(); });
+
+      costRow.appendChild(costLbl);
+      costRow.appendChild(costInp);
+
+      // Row 3: Live margin + Save
+      const marginRow = document.createElement('div');
+      marginRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+      const marginDisp = document.createElement('span');
+      marginDisp.style.cssText = 'font-size:0.78rem;font-weight:700;flex:1;';
+
+      function refreshMargin() {
+        const price = parseFloat(priceInp.value);
+        const cost  = parseFloat(costInp.value);
+        if (!price || isNaN(price) || isNaN(cost)) { marginDisp.textContent = 'Margin: —'; marginDisp.style.color = 'var(--cream-dim)'; return; }
+        const m = Math.round((price - cost) / price * 100);
+        marginDisp.textContent = 'Margin: ' + m + '%';
+        marginDisp.style.color = m >= 30 ? 'var(--green)' : m >= 15 ? 'var(--orange)' : 'var(--red)';
+      }
+      priceInp.addEventListener('input', refreshMargin);
+      costInp.addEventListener('input', refreshMargin);
+      refreshMargin();
+
+      const pcSaveBtn = document.createElement('button');
+      pcSaveBtn.className = 'btn-sm btn-terra';
+      pcSaveBtn.textContent = 'Save';
+      pcSaveBtn.style.cssText = 'padding:3px 10px;font-size:0.75rem;white-space:nowrap;';
+      pcSaveBtn.addEventListener('click', async () => {
+        const newPrice = Math.round(parseFloat(priceInp.value) * 100);
+        const newCost  = Math.round(parseFloat(costInp.value)  * 100);
+        if (isNaN(newPrice) || newPrice < 0) { showToast('Invalid price', true); return; }
+        if (isNaN(newCost)  || newCost  < 0) { showToast('Invalid cost',  true); return; }
+        pcSaveBtn.disabled = true; pcSaveBtn.textContent = '...';
+        try {
+          const r = await fetch('/admin/inventory/' + p.id, {
+            method: 'PUT', headers: authHeaders(),
+            body: JSON.stringify({ price_cents: newPrice, cost_cents: newCost, reorder_level: p.reorder_level, unit: p.unit, allow_preorder: p.allow_preorder }),
+          });
+          if (r.ok) { showToast(p.name + ' saved'); await loadInventory(); renderStockTab(); }
+          else showToast('Save failed', true);
+        } catch { showToast('Connection error', true); }
+        finally { pcSaveBtn.disabled = false; pcSaveBtn.textContent = 'Save'; }
+      });
+
+      marginRow.appendChild(marginDisp);
+      marginRow.appendChild(pcSaveBtn);
+
+      pcWrap.appendChild(priceRow);
+      pcWrap.appendChild(costRow);
+      pcWrap.appendChild(marginRow);
 
       // ── Quick adjust ─────────────────────────────────────────────
       const adjRow = document.createElement('div');
@@ -1833,9 +1880,8 @@
       card.appendChild(stockNum);
       card.appendChild(unitEl);
       card.appendChild(reorderEl);
-      card.appendChild(marginEl);
       card.appendChild(badgeEl);
-      card.appendChild(priceRow);
+      card.appendChild(pcWrap);
       card.appendChild(adjRow);
       grid.appendChild(card);
     }

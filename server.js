@@ -4171,6 +4171,18 @@ app.get('/flyer.pdf', async (req, res) => {
     const doc = new PDFDocument({ size: 'LETTER', margin: 0 });
     doc.pipe(res);
 
+    // Register a Unicode-capable font for star characters
+    const symbolFontPaths = [
+      '/System/Library/Fonts/Apple Symbols.ttf',           // macOS
+      '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',   // Debian/Ubuntu
+      '/usr/share/fonts/dejavu/DejaVuSans.ttf',            // CentOS/RHEL
+    ];
+    let symbolFont = null;
+    for (const fp of symbolFontPaths) {
+      try { require('fs').accessSync(fp); symbolFont = fp; break; } catch {}
+    }
+    if (symbolFont) doc.registerFont('Symbol', symbolFont);
+
     const W = 612, MID = 306;
     const GREEN = '#2C3E2D', RUST = '#8B3A2A', CREAM = '#F5F0E8', DARK = '#2A2A2A';
 
@@ -4243,8 +4255,8 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.fillColor(DARK).font('Helvetica').fontSize(9.5)
        .text('  1 Dozen Soft Dinner Rolls', LX + 4, CY + 146, { width: CW - 4, lineBreak: false });
 
-    doc.fillColor('#666666').font('Helvetica-Oblique').fontSize(8)
-       .text('+ optional add-ons at checkout', LX, CY + 170, { width: CW, align: 'center', lineBreak: false });
+    doc.fillColor(RUST).font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ optional add-ons at checkout', LX, CY + 170, { width: CW, align: 'center', lineBreak: false, link: `${SITE_URL_BASE}/?start=chicken-bundle`, underline: true });
     doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(8.5)
        .text('Bundle members save 10% on every add-on', LX, CY + 184, { width: CW, align: 'center', lineBreak: false });
 
@@ -4280,8 +4292,8 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.fillColor(DARK).font('Helvetica').fontSize(9.5)
        .text('  Garlic Chili Crunch', RX + 4, CY + 178, { width: CW - 4, lineBreak: false });
 
-    doc.fillColor('#666666').font('Helvetica-Oblique').fontSize(8)
-       .text('+ customize your box & add-ons at checkout', RX, CY + 200, { width: CW, align: 'center', lineBreak: false });
+    doc.fillColor(RUST).font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ customize your box & add-ons at checkout', RX, CY + 200, { width: CW, align: 'center', lineBreak: false, link: `${SITE_URL_BASE}/?start=sampler-box`, underline: true });
     doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(8.5)
        .text('Bundle members save 10% on every add-on', RX, CY + 214, { width: CW, align: 'center', lineBreak: false });
 
@@ -4298,8 +4310,15 @@ app.get('/flyer.pdf', async (req, res) => {
        .text('Take a photo of your order & leave us a 5-star Google review', 36, 738, { width: W - 72, align: 'center' });
     doc.fillColor(CREAM).font('Helvetica').fontSize(10)
        .text("You'll be entered to win a FREE Thanksgiving Turkey this year!", 36, 757, { width: W - 72, align: 'center' });
-    doc.fillColor('#D4BA8A').font('Helvetica-Bold').fontSize(10)
-       .text('Leave a Google Review - 5 Stars', 36, 774, { width: W - 72, align: 'center', link: 'https://g.page/r/CUUfyz-9bw9BEAE/review', underline: false });
+    if (symbolFont) {
+      doc.fillColor('#D4BA8A').font('Symbol').fontSize(13)
+         .text('★★★★★', 36, 771, { width: W - 72, align: 'center', link: 'https://g.page/r/CUUfyz-9bw9BEAE/review', underline: false });
+    } else {
+      doc.fillColor('#D4BA8A').font('Helvetica-Bold').fontSize(11)
+         .text('[ 5-STAR GOOGLE REVIEW ]', 36, 773, { width: W - 72, align: 'center', link: 'https://g.page/r/CUUfyz-9bw9BEAE/review', underline: false });
+    }
+    doc.fillColor('#D4BA8A').font('Helvetica-Bold').fontSize(9)
+       .text('Leave a Google Review', 36, 783, { width: W - 72, align: 'center', link: 'https://g.page/r/CUUfyz-9bw9BEAE/review', underline: true });
 
     doc.end();
   } catch (e) {

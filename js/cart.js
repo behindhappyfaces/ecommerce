@@ -1710,10 +1710,17 @@ function openAdminSubDeliveryModal() {
   if (!meta) return openCartDeliveryModal();
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
+  const s1 = document.getElementById('dm-step1'), s2 = document.getElementById('dm-step2');
+  if (s1) s1.style.display = 'block';
+  if (s2) s2.style.display = 'none';
   overlay.classList.add('open');
+  updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick = () => {
     closeDeliveryModal();
     openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, meta.swaps || [], meta.addons || []));
+  };
+  document.getElementById('dm-delivery').onclick = () => {
+    _openDeliveryStep2((addr, fee, delivPromo) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo }));
   };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }

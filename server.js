@@ -4076,7 +4076,7 @@ app.get('/flyer', async (req, res) => {
     <div class="intro-headline"><em>Pasture-Raised &amp; Ready.</em></div>
     <div class="intro-body">
       <p>Available <strong>Tuesday–Friday</strong> · Order before they're gone.</p>
-      <p>🚚 <strong>FREE delivery within 10 miles</strong> of Dripping Springs.</p>
+      <p>🚚 <strong>FREE delivery within 10 miles.</strong></p>
       <p>Know someone always worried about <em>"What's for dinner?"</em> — send them our way.</p>
     </div>
   </div>

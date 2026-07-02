@@ -3299,6 +3299,7 @@ function _openDeliveryStep2(onConfirm) {
         r3fee.style.color  = '#2a7a2a';
       } else if (discountApplied) {
         // >10mi AND ≥$99 — $5 off the fee
+        _fireConfetti();
         r3icon.textContent = '🌟';
         r3head.textContent = 'Your Order Earns $5 Off Delivery!';
         r3msg.innerHTML    = `Your support goes a long way — literally! We're taking <strong>$5 off</strong> your delivery fee as a thank-you for your larger order. Farm-fresh to your door for just <strong>${feeStr}</strong>${milesNote}.`;

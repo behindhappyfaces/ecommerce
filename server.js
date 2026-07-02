@@ -4085,7 +4085,7 @@ app.get('/flyer', async (req, res) => {
   </div>
 
   <!-- Cuts banner -->
-  <div class="cuts">2 Boneless/Skinless Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Drums &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; Straight from pasture to your table</div>
+  <div class="cuts">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes &nbsp;·&nbsp; Straight from pasture to your table</div>
 
   <!-- Product cards -->
   <div class="cards">
@@ -4097,17 +4097,12 @@ app.get('/flyer', async (req, res) => {
       <div class="card-price">$99</div>
       <ul class="card-includes">
         <li>Whole Pasture-Raised Chicken — 10 Premium Cuts</li>
+      </ul>
+      <div style="font-family:'Lato',sans-serif;font-size:9.5px;color:rgba(44,62,45,0.55);line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
+      <ul class="card-includes">
         <li>1 Dozen Soft Dinner Rolls</li>
       </ul>
-      <div style="width:100%;text-align:left;">
-        <div class="addon-excl">★ Bundle Exclusive Add-On Pricing</div>
-        <table class="addon-table">
-          <tr><td class="addon-name">Cinnamon Rolls (½ doz)</td><td class="addon-orig">$35.00</td><td class="addon-sale">$31.50</td></tr>
-          <tr><td class="addon-name">Real Cream Butter (½ lb)</td><td class="addon-orig">$17.00</td><td class="addon-sale">$15.30</td></tr>
-          <tr><td class="addon-name">Farm Eggs (1 doz)</td><td class="addon-orig">$13.00</td><td class="addon-sale">$11.70</td></tr>
-          <tr><td class="addon-name">Garlic Chili Crunch (4 oz)</td><td class="addon-orig">$18.00</td><td class="addon-sale">$16.20</td></tr>
-        </table>
-      </div>
+      <div class="card-addons">+ optional add-ons at checkout — bundle members save 10%</div>
       <div class="card-qr"><img src="${chickenQR}" alt="QR code — Chicken Bundle"/></div>
       <div class="card-scan">Scan to Order</div>
     </div>

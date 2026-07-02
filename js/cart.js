@@ -2344,7 +2344,7 @@ const BOX_CONTENTS = {
   'chicken-dinner-roll-bundle': {
     label: 'Chicken & Dinner Roll Bundle',
     items: [
-      { id: 'whole-chicken', name: 'Pasture-Raised Chicken — 10 Premium Cuts', swapGroup: null, subtitle: '2 Boneless/Skinless Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats' },
+      { id: 'whole-chicken', name: 'Pasture-Raised Chicken — 10 Premium Cuts', swapGroup: null, subtitle: '2 Breasts · 2 Leg Quarters · 2 Tenders · 2 Flats · 2 Drummettes' },
       { id: 'yeast-rolls',   name: 'Dinner Rolls — 1 Dozen',                              swapGroup: null },
     ],
   },
@@ -2391,10 +2391,10 @@ BOX_CONTENTS['sampler-box'].addons = [
 ];
 
 BOX_CONTENTS['chicken-dinner-roll-bundle'].addons = [
-  { id: 'addon-cinnamon-rolls', name: 'Cinnamon Rolls (½ doz)',      price: 3500 },
-  { id: 'addon-butter',         name: 'Real Cream Butter (½ lb)',     price: 1700 },
-  { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',            price: 1300 },
-  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch (4 oz)',  price: 1800 },
+  { id: 'addon-cinnamon-rolls', name: 'Cinnamon Rolls (½ doz)',     price: 3150, regularPrice: 3500 },
+  { id: 'addon-butter',         name: 'Real Cream Butter (½ lb)',    price: 1530, regularPrice: 1700 },
+  { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1170, regularPrice: 1300 },
+  { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch (4 oz)', price: 1620, regularPrice: 1800 },
 ];
 
 const ADDON_OPTIONS = [
@@ -2631,12 +2631,30 @@ function openBoxCustomizer(subId, name, price) {
       noteSpan.textContent = addon.note;
       nameWrap.appendChild(noteSpan);
     }
-    const priceSpan = document.createElement('span');
-    priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);white-space:nowrap;';
-    priceSpan.textContent = addon.priceLabel ? addon.priceLabel : (addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, ''));
+    const priceWrap = document.createElement('div');
+    priceWrap.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap;';
+    if (addon.regularPrice) {
+      const origSpan = document.createElement('span');
+      origSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:#c0392b;text-decoration:line-through;';
+      origSpan.textContent = '$' + (addon.regularPrice / 100).toFixed(2).replace(/\.00$/, '');
+      const saleSpan = document.createElement('span');
+      saleSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);';
+      saleSpan.textContent = '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, '');
+      const exclBadge = document.createElement('span');
+      exclBadge.style.cssText = 'font-family:var(--font-sans);font-size:0.58rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);';
+      exclBadge.textContent = '★ bundle price';
+      priceWrap.appendChild(origSpan);
+      priceWrap.appendChild(saleSpan);
+      priceWrap.appendChild(exclBadge);
+    } else {
+      const priceSpan = document.createElement('span');
+      priceSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);';
+      priceSpan.textContent = addon.priceLabel ? addon.priceLabel : (addon.price === 0 ? '$0' : '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, ''));
+      priceWrap.appendChild(priceSpan);
+    }
     label.appendChild(cb);
     label.appendChild(nameWrap);
-    label.appendChild(priceSpan);
+    label.appendChild(priceWrap);
     wrapper.appendChild(label);
     if (addon.highlight) {
       const hlSpan = document.createElement('p');

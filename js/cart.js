@@ -3170,31 +3170,22 @@ function _openDeliveryStep2(onConfirm) {
     // Capture promo BEFORE closeDeliveryModal resets _validatedDeliveryPromo
     const capturedPromo = _validatedDeliveryPromo || null;
 
-    // Calculate distance-based delivery fee
-    let feeCents = 0;
+    // Calculate distance-based delivery fee; fall back to $15 flat if unreachable
+    let feeCents = 1500;
     try {
       const feeRes = await fetch('/api/sampler-delivery-fee', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ street, city, state, zip }),
       });
       const feeData = await feeRes.json();
-      if (!feeRes.ok) {
-        errEl.textContent = feeData.error || 'Could not calculate delivery fee. Please check your address.';
-        errEl.style.display = 'block';
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Continue to Checkout →';
-        return;
-      }
-      feeCents = feeData.fee_cents || 0;
-      if (feeCents > 0) {
-        confirmBtn.textContent = `Delivery fee: $${(feeCents / 100).toFixed(2)} — Continuing…`;
+      if (feeRes.ok && typeof feeData.fee_cents === 'number') {
+        feeCents = feeData.fee_cents;
       }
     } catch (_) {
-      errEl.textContent = 'Could not calculate delivery fee. Please check your connection.';
-      errEl.style.display = 'block';
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = 'Continue to Checkout →';
-      return;
+      // network error — use flat $15 fallback so checkout is never blocked
+    }
+    if (feeCents > 0) {
+      confirmBtn.textContent = `Delivery fee: $${(feeCents / 100).toFixed(2)} — Continuing…`;
     }
 
     closeDeliveryModal();

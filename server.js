@@ -1610,8 +1610,9 @@ app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
     const feeCents = calcSamplerDeliveryFeeCents(miles);
     res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, free: feeCents === 0 });
   } catch (e) {
-    console.error('[sampler-delivery-fee]', e.message);
-    res.status(422).json({ error: 'Could not verify that address. Please double-check it.' });
+    console.error('[sampler-delivery-fee] geocode failed, using flat fee fallback:', e.message);
+    // Never block checkout on a geocoding failure — apply the standard $15 flat fee
+    res.json({ ok: true, miles: null, fee_cents: 1500, free: false, fallback: true });
   }
 });
 
@@ -1625,8 +1626,8 @@ app.post('/api/bundle-delivery-fee', express.json(), async (req, res) => {
     const feeCents = calcBundleDeliveryFeeCents(miles);
     res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, free: feeCents === 0 });
   } catch (e) {
-    console.error('[bundle-delivery-fee]', e.message);
-    res.status(422).json({ error: 'Could not verify that address. Please double-check it.' });
+    console.error('[bundle-delivery-fee] geocode failed, using flat fee fallback:', e.message);
+    res.json({ ok: true, miles: null, fee_cents: 1500, free: false, fallback: true });
   }
 });
 

@@ -3966,9 +3966,8 @@ app.get('/bundle-qr', async (req, res) => {
 app.get('/flyer', async (req, res) => {
   try {
     const QRCode = require('qrcode');
-    const origin = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
-    const chickenUrl = `${origin}/?start=chicken-bundle`;
-    const samplerUrl = `${origin}/?start=sampler-box`;
+    const chickenUrl = `${SITE_URL_BASE}/?start=chicken-bundle`;
+    const samplerUrl = `${SITE_URL_BASE}/?start=sampler-box`;
     const [chickenQR, samplerQR] = await Promise.all([
       QRCode.toDataURL(chickenUrl, { width: 220, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
       QRCode.toDataURL(samplerUrl, { width: 220, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
@@ -4096,7 +4095,7 @@ app.get('/flyer', async (req, res) => {
       <ul class="card-includes">
         <li>1 Dozen Soft Dinner Rolls</li>
       </ul>
-      <a href="${origin}/?start=chicken-bundle" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ optional add-ons at checkout — bundle members save 10%</a>
+      <a href="${SITE_URL_BASE}/?start=chicken-bundle" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ optional add-ons at checkout — bundle members save 10%</a>
       <div class="card-qr"><img src="${chickenQR}" alt="QR code — Chicken Bundle"/></div>
       <div class="card-scan">Scan to Order</div>
     </div>
@@ -4115,7 +4114,7 @@ app.get('/flyer', async (req, res) => {
         <li>Real Cream Butter — Grass-Fed &amp; Finished · ½ lb</li>
         <li>Garlic Chili Crunch</li>
       </ul>
-      <a href="${origin}/?start=sampler-box" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ customize your box &amp; add-ons — bundle members save 10%</a>
+      <a href="${SITE_URL_BASE}/?start=sampler-box" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ customize your box &amp; add-ons — bundle members save 10%</a>
       <div class="card-qr"><img src="${samplerQR}" alt="QR code — Farm Sampler Box"/></div>
       <div class="card-scan">Scan to Customize &amp; Order</div>
     </div>
@@ -4147,11 +4146,10 @@ app.get('/flyer', async (req, res) => {
 app.get('/flyer.pdf', async (req, res) => {
   try {
     const QRCode = require('qrcode');
-    const origin = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
 
     const [chickenBuf, samplerBuf] = await Promise.all([
-      QRCode.toBuffer(`${origin}/?start=chicken-bundle`, { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
-      QRCode.toBuffer(`${origin}/?start=sampler-box`,    { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+      QRCode.toBuffer(`${SITE_URL_BASE}/?start=chicken-bundle`, { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+      QRCode.toBuffer(`${SITE_URL_BASE}/?start=sampler-box`,    { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
     ]);
 
     res.set({

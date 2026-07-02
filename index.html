@@ -804,7 +804,9 @@
       setInterval(updateCountdown, 30000);
 
       if (!sessionStorage.getItem('turkeyPopupSeen')) {
-        setTimeout(function() { overlay.classList.add('open'); }, 3000);
+        setTimeout(function() {
+          if (!sessionStorage.getItem('turkeyPopupSeen')) overlay.classList.add('open');
+        }, 3000);
       }
 
       document.getElementById('turkey-close').addEventListener('click', closePopup);
@@ -1016,7 +1018,7 @@
       if (sessionStorage.getItem('hoto_refresh_seen')) return;
       const veil = document.getElementById('refresh-veil');
       setTimeout(function () {
-        veil.classList.add('visible');
+        if (!sessionStorage.getItem('hoto_refresh_seen')) veil.classList.add('visible');
       }, 1800);
     })();
 

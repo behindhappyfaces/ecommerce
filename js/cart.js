@@ -150,7 +150,9 @@ function getDiscountedTotal() {
 }
 
 function getMonthlyTotal() {
-  return getTotal() * 4;
+  const sub = getAdminSub();
+  const multiplier = (sub && sub.frequency) ? sub.frequency.multiplier : 4;
+  return getTotal() * multiplier;
 }
 
 // --- DOM Setup ---
@@ -560,7 +562,8 @@ function renderCart() {
 
   const note = document.createElement('p');
   note.className = 'cart-footer__note';
-  note.textContent = subscribing ? 'Charged monthly · cancel anytime' : 'Shipping calculated at checkout';
+  const freqNote = (subscribing && adminSub && adminSub.frequency) ? adminSub.frequency.note + ' · cancel anytime' : 'Charged monthly · cancel anytime';
+  note.textContent = subscribing ? freqNote : 'Shipping calculated at checkout';
 
   const checkoutBtn = document.createElement('button');
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
@@ -2396,6 +2399,12 @@ function injectBoxCustomizer() {
         <div id="bc-items" style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;"></div>
         <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 16px;">Add-Ons <span style="font-weight:400;color:rgba(44,62,45,0.4);font-size:0.7rem;text-transform:none;letter-spacing:0;">(optional — we'll confirm availability)</span></p>
         <div id="bc-addons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;"></div>
+        <!-- Delivery frequency selector — subscription boxes only -->
+        <div id="bc-frequency" style="display:none;margin-bottom:28px;">
+          <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Delivery Frequency</p>
+          <div id="bc-freq-btns" style="display:flex;gap:8px;margin-bottom:10px;"></div>
+          <p id="bc-freq-note" style="font-family:var(--font-sans);font-size:0.75rem;color:rgba(44,62,45,0.5);margin:0;"></p>
+        </div>
         <!-- Live price summary -->
         <div id="bc-price-summary" style="background:var(--color-cream,#F5F0E8);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
           <div id="bc-price-lines" style="font-family:var(--font-sans);font-size:0.78rem;color:rgba(44,62,45,0.6);display:flex;flex-direction:column;gap:4px;margin-bottom:10px;"></div>
@@ -2819,8 +2828,55 @@ function openBoxCustomizer(subId, name, price) {
       linesEl.appendChild(row);
     });
 
-    document.getElementById('bc-price-total').textContent = '$' + (total / 100).toFixed(2).replace(/\.00$/, '');
-    return total;
+    const activeFreqBtn = document.querySelector('#bc-freq-btns button[data-active="true"]');
+    const freqMult = activeFreqBtn ? parseInt(activeFreqBtn.dataset.freq, 10) : 1;
+    const isSubBox = new Set(['bread-box','harvest-subscription','farm-box']).has(_bcPendingArgs ? _bcPendingArgs.subId : '');
+    const displayTotal = isSubBox ? total * freqMult : total;
+    const suffix = isSubBox ? '/mo' : '';
+    document.getElementById('bc-price-total').textContent = '$' + (displayTotal / 100).toFixed(2).replace(/\.00$/, '') + suffix;
+    return total; // always return per-delivery total
+  }
+
+  // Frequency selector — subscription boxes only
+  const freqSection = document.getElementById('bc-frequency');
+  const freqBtnsEl  = document.getElementById('bc-freq-btns');
+  const freqNoteEl  = document.getElementById('bc-freq-note');
+  const FREQ_OPTIONS = [
+    { label: 'Monthly',   freq: 1, note: '1 delivery per month' },
+    { label: 'Bi-Weekly', freq: 2, note: '2 deliveries per month' },
+    { label: 'Weekly',    freq: 4, note: '4 deliveries per month' },
+  ];
+  const SUBSCRIPTION_BOX_IDS_BC = new Set(['bread-box', 'harvest-subscription', 'farm-box']);
+  if (SUBSCRIPTION_BOX_IDS_BC.has(subId)) {
+    freqSection.style.display = 'block';
+    freqBtnsEl.innerHTML = '';
+    FREQ_OPTIONS.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.freq = String(opt.freq);
+      btn.dataset.freqLabel = opt.label;
+      btn.dataset.freqNote  = opt.note;
+      const active = i === 0;
+      btn.style.cssText = 'flex:1;padding:10px 4px;font-family:var(--font-sans);font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:8px;cursor:pointer;transition:background 0.15s,color 0.15s;border:1.5px solid var(--color-green);'
+        + (active ? 'background:var(--color-green);color:var(--color-cream,#F5F0E8);' : 'background:transparent;color:var(--color-green);');
+      btn.textContent = opt.label;
+      if (active) { btn.dataset.active = 'true'; freqNoteEl.textContent = opt.note; }
+      btn.addEventListener('click', () => {
+        freqBtnsEl.querySelectorAll('button').forEach(b => {
+          b.dataset.active = '';
+          b.style.background = 'transparent';
+          b.style.color = 'var(--color-green)';
+        });
+        btn.dataset.active = 'true';
+        btn.style.background = 'var(--color-green)';
+        btn.style.color = 'var(--color-cream,#F5F0E8)';
+        freqNoteEl.textContent = opt.note;
+        recalcBoxTotal();
+      });
+      freqBtnsEl.appendChild(btn);
+    });
+  } else {
+    freqSection.style.display = 'none';
   }
 
   // Wire to all interactive elements
@@ -2856,7 +2912,13 @@ function openBoxCustomizer(subId, name, price) {
     const box = BOX_CONTENTS[subId];
     const subName = box ? box.label : name;
 
-    // Single cart item — full calculated total (add-ons shown as sub-rows via adminSub, not separate items)
+    // Capture delivery frequency (subscription boxes only)
+    const activeFreqBtn2 = document.querySelector('#bc-freq-btns button[data-active="true"]');
+    const frequency = activeFreqBtn2
+      ? { multiplier: parseInt(activeFreqBtn2.dataset.freq, 10), label: activeFreqBtn2.dataset.freqLabel, note: activeFreqBtn2.dataset.freqNote }
+      : null;
+
+    // Single cart item — per-delivery price (frequency tracked in adminSub)
     const cartItems = [{ id: subId, qty: 1, price: calculatedTotal }];
 
     localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
@@ -2885,7 +2947,7 @@ function openBoxCustomizer(subId, name, price) {
 
     // Persist subscription metadata (swaps + flavor/type notes carried through to checkout)
     localStorage.setItem('hoto-admin-sub', JSON.stringify({
-      token: subId, subName, subPrice: calculatedTotal, swaps, addons, includedItems,
+      token: subId, subName, subPrice: calculatedTotal, swaps, addons, includedItems, frequency,
     }));
 
     closeBoxCustomizer();

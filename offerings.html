@@ -265,7 +265,6 @@
           <div class="offering-card__image-wrap">
             <img src="images/focaccia-loaf.jpg"
                  alt="Focaccia Loaf" loading="lazy" />
-            <div class="sold-out-banner">Not Available</div>
           </div>
           <div class="offering-card__body">
             <p class="offering-card__category">Focaccia</p>
@@ -1388,20 +1387,22 @@
         const products = await res.json();
 
         products.forEach(function(p) {
-          // Find the matching Add to Cart button by inventory ID
           var btn = document.querySelector('[data-add-to-cart="' + p.id + '"]');
           if (!btn) return;
+
+          // Skip items already manually marked unavailable (disabled in HTML)
+          if (btn.hasAttribute('disabled') && btn.getAttribute('data-dynamic-disabled') !== 'true') return;
 
           var card = btn.closest('.offering-card');
           if (!card) return;
           var wrap = card.querySelector('.offering-card__image-wrap');
 
-          // Remove any existing dynamic badge
+          // Remove any previous dynamic badge
           var existing = wrap && wrap.querySelector('.low-stock-banner, .dynamic-sold-out');
           if (existing) existing.remove();
 
-          if (p.stock <= 0 && !card.querySelector('.sold-out-banner')) {
-            // Out of stock — add sold out overlay and disable button
+          if (p.stock <= 0) {
+            // Out of stock — overlay + disable button
             if (wrap) {
               var banner = document.createElement('div');
               banner.className = 'sold-out-banner dynamic-sold-out';
@@ -1409,13 +1410,14 @@
               wrap.appendChild(banner);
             }
             btn.disabled = true;
+            btn.setAttribute('data-dynamic-disabled', 'true');
             btn.textContent = 'Sold Out';
             btn.style.opacity = '0.4';
             btn.style.cursor = 'not-allowed';
             btn.style.pointerEvents = 'none';
 
-          } else if (p.stock > 0 && p.stock <= p.reorder_level) {
-            // Low stock — add orange badge
+          } else if (p.stock <= p.reorder_level) {
+            // Low stock — orange badge only, button stays active
             if (wrap) {
               var badge = document.createElement('div');
               badge.className = 'low-stock-banner';

@@ -4084,9 +4084,6 @@ app.get('/flyer', async (req, res) => {
     </div>
   </div>
 
-  <!-- Cuts banner -->
-  <div class="cuts">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes &nbsp;·&nbsp; Straight from pasture to your table</div>
-
   <!-- Product cards -->
   <div class="cards">
 
@@ -4114,9 +4111,12 @@ app.get('/flyer', async (req, res) => {
       <div class="card-price">$149</div>
       <ul class="card-includes">
         <li>Whole Chicken — 10 Premium Cuts</li>
-        <li>Farm Eggs — 1 Dozen</li>
-        <li>Real Cream Butter — ½ lb</li>
-        <li>Garlic Chili Crunch or Herb Oil or Preserves</li>
+      </ul>
+      <div style="font-family:'Lato',sans-serif;font-size:9.5px;color:rgba(44,62,45,0.55);line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
+      <ul class="card-includes">
+        <li>Pasture-Raised Eggs — Non-GMO · Soy-Free · 1 Dozen</li>
+        <li>Real Cream Butter — Grass-Fed &amp; Finished · ½ lb</li>
+        <li>Garlic Chili Crunch</li>
       </ul>
       <div class="card-addons">+ customize your box &amp; choose add-ons at checkout</div>
       <div class="card-qr"><img src="${samplerQR}" alt="QR code — Farm Sampler Box"/></div>

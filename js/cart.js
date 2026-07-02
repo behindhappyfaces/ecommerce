@@ -2383,11 +2383,11 @@ const PRESERVES_FLAVORS = [
 
 // Per-box add-on overrides (set after PRESERVES_FLAVORS so we can reference it)
 BOX_CONTENTS['sampler-box'].addons = [
-  { id: 'addon-neckbone',      name: 'Neckbone',                    price: 200 },
-  { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
-  { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
-  { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3500 },
-  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2400, highlight: 'ADD NOW & SAVE 5% OFF YOUR TOTAL' },
+  { id: 'addon-neckbone',      name: 'Neckbone',                    price: 180,  regularPrice: 200 },
+  { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 1800, regularPrice: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
+  { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1350, regularPrice: 1500, regularPriceLabel: '$15–$18', priceLabel: '$13.50–$16.20', flavors: PRESERVES_FLAVORS },
+  { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3150, regularPrice: 3500 },
+  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2160, regularPrice: 2400, highlight: 'ADD NOW & SAVE 5% OFF YOUR TOTAL' },
 ];
 
 BOX_CONTENTS['chicken-dinner-roll-bundle'].addons = [
@@ -2645,10 +2645,10 @@ function openBoxCustomizer(subId, name, price) {
     if (addon.regularPrice) {
       const origSpan = document.createElement('span');
       origSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.72rem;color:#c0392b;text-decoration:line-through;';
-      origSpan.textContent = '$' + (addon.regularPrice / 100).toFixed(2).replace(/\.00$/, '');
+      origSpan.textContent = addon.regularPriceLabel || ('$' + (addon.regularPrice / 100).toFixed(2).replace(/\.00$/, ''));
       const saleSpan = document.createElement('span');
       saleSpan.style.cssText = 'font-family:var(--font-serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);';
-      saleSpan.textContent = '$' + (addon.price / 100).toFixed(2).replace(/\.00$/, '');
+      saleSpan.textContent = addon.priceLabel || ('$' + (addon.price / 100).toFixed(2).replace(/\.00$/, ''));
       const exclBadge = document.createElement('span');
       exclBadge.style.cssText = 'font-family:var(--font-sans);font-size:0.58rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);';
       exclBadge.textContent = '★ bundle price';

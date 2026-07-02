@@ -4096,7 +4096,7 @@ app.get('/flyer', async (req, res) => {
       <ul class="card-includes">
         <li>1 Dozen Soft Dinner Rolls</li>
       </ul>
-      <div class="card-addons">+ optional add-ons at checkout — bundle members save 10%</div>
+      <a href="${origin}/?start=chicken-bundle" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ optional add-ons at checkout — bundle members save 10%</a>
       <div class="card-qr"><img src="${chickenQR}" alt="QR code — Chicken Bundle"/></div>
       <div class="card-scan">Scan to Order</div>
     </div>
@@ -4115,7 +4115,7 @@ app.get('/flyer', async (req, res) => {
         <li>Real Cream Butter — Grass-Fed &amp; Finished · ½ lb</li>
         <li>Garlic Chili Crunch</li>
       </ul>
-      <div class="card-addons">+ customize your box &amp; choose add-ons at checkout</div>
+      <a href="${origin}/?start=sampler-box" class="card-addons" style="display:block;text-decoration:underline;cursor:pointer;">+ customize your box &amp; add-ons — bundle members save 10%</a>
       <div class="card-qr"><img src="${samplerQR}" alt="QR code — Farm Sampler Box"/></div>
       <div class="card-scan">Scan to Customize &amp; Order</div>
     </div>

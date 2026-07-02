@@ -1197,6 +1197,24 @@ h1, h2, h3, h4 {
   background: rgba(255,255,255,0.18);
 }
 
+.low-stock-banner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #e67e22;
+  color: #fff;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+
 .offering-card__image-wrap img {
   width: 100%;
   height: 100%;

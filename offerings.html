@@ -1379,5 +1379,56 @@
     })();
   </script>
 
+  <!-- Live stock badges: low stock / sold out from inventory system -->
+  <script>
+    (async function applyStockBadges() {
+      try {
+        const res = await fetch('/api/stock');
+        if (!res.ok) return;
+        const products = await res.json();
+
+        products.forEach(function(p) {
+          // Find the matching Add to Cart button by inventory ID
+          var btn = document.querySelector('[data-add-to-cart="' + p.id + '"]');
+          if (!btn) return;
+
+          var card = btn.closest('.offering-card');
+          if (!card) return;
+          var wrap = card.querySelector('.offering-card__image-wrap');
+
+          // Remove any existing dynamic badge
+          var existing = wrap && wrap.querySelector('.low-stock-banner, .dynamic-sold-out');
+          if (existing) existing.remove();
+
+          if (p.stock <= 0 && !card.querySelector('.sold-out-banner')) {
+            // Out of stock — add sold out overlay and disable button
+            if (wrap) {
+              var banner = document.createElement('div');
+              banner.className = 'sold-out-banner dynamic-sold-out';
+              banner.textContent = 'Sold Out';
+              wrap.appendChild(banner);
+            }
+            btn.disabled = true;
+            btn.textContent = 'Sold Out';
+            btn.style.opacity = '0.4';
+            btn.style.cursor = 'not-allowed';
+            btn.style.pointerEvents = 'none';
+
+          } else if (p.stock > 0 && p.stock <= p.reorder_level) {
+            // Low stock — add orange badge
+            if (wrap) {
+              var badge = document.createElement('div');
+              badge.className = 'low-stock-banner';
+              badge.textContent = 'Only ' + p.stock + ' left';
+              wrap.appendChild(badge);
+            }
+          }
+        });
+      } catch(e) {
+        // Silently fail — stock badges are non-critical
+      }
+    })();
+  </script>
+
 </body>
 </html>

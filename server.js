@@ -4123,18 +4123,14 @@ app.get('/flyer', async (req, res) => {
   </div>
 
   <!-- Footer -->
-  <div class="ftr" style="flex-direction:column;gap:10px;padding:16px 40px;">
-    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-      <div class="ftr-left">
-        🌐 heartoftexasorganics.com<br>
-        📍 Dripping Springs, TX 78620
-      </div>
-      <div class="ftr-right"></div>
+  <div class="ftr" style="flex-direction:column;align-items:center;text-align:center;padding:18px 40px;gap:6px;">
+    <div style="font-family:'Lato',sans-serif;font-size:14px;font-weight:700;color:#F5F0E8;line-height:1.6;">
+      📸 Take a photo of your order &amp; leave us a 5-star Google review
     </div>
-    <div style="border-top:1px solid rgba(245,240,232,0.2);padding-top:10px;width:100%;font-family:'Lato',sans-serif;font-size:11.5px;line-height:1.7;color:#F5F0E8;text-align:center;">
-      📸 <strong>Snap a photo of your delivery &amp; upload it to Google with a ⭐⭐⭐⭐⭐ review</strong> — you'll be entered to win your <strong>Thanksgiving Turkey FREE</strong> this year!<br>
-      <a href="https://g.page/r/CUUfyz-9bw9BEAE/review" style="color:#D4BA8A;font-weight:700;letter-spacing:0.04em;">Leave a Google Review →</a>
+    <div style="font-family:'Lato',sans-serif;font-size:13px;color:rgba(245,240,232,0.85);line-height:1.5;">
+      You'll be entered to win a <strong style="color:#D4BA8A;">FREE Thanksgiving Turkey</strong> this year!
     </div>
+    <a href="https://g.page/r/CUUfyz-9bw9BEAE/review" style="margin-top:4px;color:#D4BA8A;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;border:1.5px solid rgba(212,186,138,0.5);padding:6px 18px;border-radius:4px;">⭐ Leave a Google Review</a>
   </div>
 
 </div>

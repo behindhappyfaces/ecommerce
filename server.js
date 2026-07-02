@@ -3995,24 +3995,21 @@ app.get('/flyer', async (req, res) => {
 
   /* Header band */
   .hdr{background:#2C3E2D;color:#F5F0E8;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
-  .hdr-name{font-size:22px;letter-spacing:0.04em;}
-  .hdr-tag{font-family:'Lato',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.7;margin-top:4px;}
-  .hdr-right{font-family:'Lato',sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.65;text-align:right;}
+  .hdr-name{font-size:24px;letter-spacing:0.04em;}
+  .hdr-tag{font-family:'Lato',sans-serif;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.9;margin-top:4px;}
+  .hdr-right{font-family:'Lato',sans-serif;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.9;text-align:right;}
 
   /* Rust accent bar */
   .rust-bar{height:6px;background:#8B3A2A;}
 
   /* Intro section */
   .intro{background:#F5F0E8;padding:28px 40px 24px;}
-  .intro-eyebrow{font-family:'Lato',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:10px;}
-  .intro-headline{font-size:30px;line-height:1.15;color:#2C3E2D;margin-bottom:14px;}
+  .intro-eyebrow{font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:10px;}
+  .intro-headline{font-size:32px;line-height:1.15;color:#2C3E2D;margin-bottom:14px;}
   .intro-headline em{font-style:normal;color:#8B3A2A;}
-  .intro-body{font-family:'Lato',sans-serif;font-size:13.5px;line-height:1.65;color:#3a3a3a;max-width:620px;}
+  .intro-body{font-family:'Lato',sans-serif;font-size:15px;line-height:1.65;color:#2C3E2D;max-width:620px;}
   .intro-body p{margin-bottom:10px;}
   .intro-body strong{color:#2C3E2D;}
-
-  /* Cuts row */
-  .cuts{background:#2C3E2D;color:#F5F0E8;padding:10px 40px;font-family:'Lato',sans-serif;font-size:11.5px;letter-spacing:0.05em;text-align:center;}
 
   /* Product cards */
   .cards{display:flex;flex-direction:row;gap:0;flex:1;}
@@ -4020,21 +4017,21 @@ app.get('/flyer', async (req, res) => {
   .card:first-child{background:#fff;border-right:2px solid #F5F0E8;}
   .card:last-child{background:#F5F0E8;}
 
-  .card-eyebrow{font-family:'Lato',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:8px;}
-  .card-title{font-size:19px;color:#2C3E2D;line-height:1.2;margin-bottom:6px;}
-  .card-price{font-family:'Lato',sans-serif;font-size:26px;font-weight:700;color:#8B3A2A;margin-bottom:14px;}
-  .card-includes{font-family:'Lato',sans-serif;font-size:10.5px;color:#2C3E2D;line-height:1.7;margin-bottom:16px;text-align:left;width:100%;}
+  .card-eyebrow{font-family:'Lato',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#8B3A2A;margin-bottom:8px;}
+  .card-title{font-size:22px;color:#2C3E2D;line-height:1.2;margin-bottom:6px;}
+  .card-price{font-family:'Lato',sans-serif;font-size:30px;font-weight:700;color:#8B3A2A;margin-bottom:14px;}
+  .card-includes{font-family:'Lato',sans-serif;font-size:13px;color:#2C3E2D;line-height:1.8;margin-bottom:16px;text-align:left;width:100%;}
   .card-includes li{list-style:none;padding-left:0;}
   .card-includes li::before{content:'✓  ';color:#8B3A2A;font-weight:700;}
-  .card-addons{font-family:'Lato',sans-serif;font-size:10px;color:rgba(44,62,45,0.55);font-style:italic;margin-bottom:20px;}
+  .card-addons{font-family:'Lato',sans-serif;font-size:12px;color:#4A5E3A;font-style:italic;margin-bottom:20px;}
   .card-qr{border:3px solid #2C3E2D;border-radius:10px;padding:8px;background:#fff;}
   .card-qr img{display:block;width:140px;height:140px;}
-  .card-scan{font-family:'Lato',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8B3A2A;margin-top:8px;}
+  .card-scan{font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8B3A2A;margin-top:8px;}
 
   /* Footer */
   .ftr{background:#2C3E2D;color:#F5F0E8;padding:12px 40px;display:flex;align-items:center;justify-content:space-between;}
-  .ftr-left{font-family:'Lato',sans-serif;font-size:11px;line-height:1.7;}
-  .ftr-right{font-family:Georgia,serif;font-size:12px;font-style:italic;opacity:0.8;}
+  .ftr-left{font-family:'Lato',sans-serif;font-size:13px;line-height:1.7;}
+  .ftr-right{font-family:Georgia,serif;font-size:13px;font-style:italic;opacity:0.9;}
 
   /* Add-on pricing */
   .addon-table{width:100%;border-collapse:collapse;margin-top:10px;margin-bottom:4px;}
@@ -4095,7 +4092,7 @@ app.get('/flyer', async (req, res) => {
       <ul class="card-includes">
         <li>Whole Pasture-Raised Chicken — 10 Premium Cuts</li>
       </ul>
-      <div style="font-family:'Lato',sans-serif;font-size:9.5px;color:rgba(44,62,45,0.55);line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
+      <div style="font-family:'Lato',sans-serif;font-size:12px;color:#4A5E3A;line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
       <ul class="card-includes">
         <li>1 Dozen Soft Dinner Rolls</li>
       </ul>
@@ -4112,7 +4109,7 @@ app.get('/flyer', async (req, res) => {
       <ul class="card-includes">
         <li>Whole Chicken — 10 Premium Cuts</li>
       </ul>
-      <div style="font-family:'Lato',sans-serif;font-size:9.5px;color:rgba(44,62,45,0.55);line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
+      <div style="font-family:'Lato',sans-serif;font-size:12px;color:#4A5E3A;line-height:1.7;margin:-10px 0 12px;text-align:left;padding-left:2px;">2 Breasts &nbsp;·&nbsp; 2 Leg Quarters &nbsp;·&nbsp; 2 Tenders &nbsp;·&nbsp; 2 Flats &nbsp;·&nbsp; 2 Drummettes</div>
       <ul class="card-includes">
         <li>Pasture-Raised Eggs — Non-GMO · Soy-Free · 1 Dozen</li>
         <li>Real Cream Butter — Grass-Fed &amp; Finished · ½ lb</li>

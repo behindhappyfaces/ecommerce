@@ -14,7 +14,7 @@ const PRODUCTS = {
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
   'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
-  'chicken-dinner-roll-bundle': { name: 'Chicken & Dinner Roll Bundle', price: 7900, subPrice: null, image: null },
+  'chicken-dinner-roll-bundle': { name: 'Chicken & Dinner Roll Bundle', price: 9900, subPrice: null, image: null },
   'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 1800, subPrice: null, image: 'images/chili-crunch.jpg' },
   'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 1800, subPrice: null, image: 'images/herb-dipping-oil.jpg' },
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 1500, subPrice: null, image: 'images/preserves.jpg' },
@@ -2344,7 +2344,7 @@ const BOX_CONTENTS = {
   'chicken-dinner-roll-bundle': {
     label: 'Chicken & Dinner Roll Bundle',
     items: [
-      { id: 'whole-chicken', name: 'Pasture-Raised Chicken — 10 Premium Cuts (8–10 lbs)', swapGroup: null, subtitle: '2 Boneless/Skinless Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats' },
+      { id: 'whole-chicken', name: 'Pasture-Raised Chicken — 10 Premium Cuts', swapGroup: null, subtitle: '2 Boneless/Skinless Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats' },
       { id: 'yeast-rolls',   name: 'Dinner Rolls — 1 Dozen',                              swapGroup: null },
     ],
   },
@@ -3683,9 +3683,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auto-open product flow when arriving via QR code scan
   const _qrStart = new URLSearchParams(window.location.search).get('start');
+  if (_qrStart) {
+    // Suppress popup overlays so QR visitors go straight to their box
+    sessionStorage.setItem('turkeyPopupSeen', '1');
+    sessionStorage.setItem('hoto_refresh_seen', '1');
+  }
   if (_qrStart === 'sampler-box') {
     openBoxCustomizer('sampler-box', 'The Farm Sampler Box', 14900);
   } else if (_qrStart === 'chicken-bundle') {
-    openBoxCustomizer('chicken-dinner-roll-bundle', 'Chicken & Dinner Roll Bundle', 7900);
+    openBoxCustomizer('chicken-dinner-roll-bundle', 'Chicken & Dinner Roll Bundle', 9900);
   }
 });

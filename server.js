@@ -4036,6 +4036,14 @@ app.get('/flyer', async (req, res) => {
   .ftr-left{font-family:'Lato',sans-serif;font-size:11px;line-height:1.7;}
   .ftr-right{font-family:Georgia,serif;font-size:12px;font-style:italic;opacity:0.8;}
 
+  /* Add-on pricing */
+  .addon-table{width:100%;border-collapse:collapse;margin-top:10px;margin-bottom:4px;}
+  .addon-table td{font-family:'Lato',sans-serif;font-size:10px;padding:3px 0;color:#2C3E2D;}
+  .addon-table .addon-name{text-align:left;}
+  .addon-table .addon-orig{text-align:right;text-decoration:line-through;color:#c0392b;padding-right:8px;}
+  .addon-table .addon-sale{text-align:right;font-weight:700;color:#2C3E2D;}
+  .addon-excl{font-family:'Lato',sans-serif;font-size:9.5px;color:#8B3A2A;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;}
+
   @media print{
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     body{margin:0;}
@@ -4071,7 +4079,7 @@ app.get('/flyer', async (req, res) => {
     <div class="intro-headline">Good Morning! <em>Limited Batches Ready to Go.</em></div>
     <div class="intro-body">
       <p>Starting <strong>next Tuesday</strong>, we have <strong>10 pasture-raised Chicken &amp; Dinner Roll Bundles</strong> ready — and they need to be gone by Friday.</p>
-      <p>Each chicken weighs <strong>8–10 lbs</strong> and is processed into <strong>10 premium cuts</strong>, so it's ready to throw straight on the grill or in the oven. Grab a side, and dinner's done.</p>
+      <p>Each chicken is processed into <strong>10 premium cuts</strong>, so it's ready to throw straight on the grill or in the oven. Grab a side, and dinner's done.</p>
       <p>If you — or someone you know — is always stressing over <em>"What's for dinner?"</em>, <strong>text me today!</strong> I'd love an introduction.</p>
     </div>
   </div>
@@ -4086,13 +4094,20 @@ app.get('/flyer', async (req, res) => {
     <div class="card">
       <div class="card-eyebrow">Limited — 10 Available</div>
       <div class="card-title">Chicken &amp; Dinner Roll Bundle</div>
-      <div class="card-price">$79</div>
+      <div class="card-price">$99</div>
       <ul class="card-includes">
-        <li>Whole Pasture-Raised Chicken (8–10 lbs)</li>
-        <li>Processed into 10 Premium Cuts</li>
+        <li>Whole Pasture-Raised Chicken — 10 Premium Cuts</li>
         <li>1 Dozen Soft Dinner Rolls</li>
       </ul>
-      <div class="card-addons">+ optional add-ons at checkout: cinnamon rolls, butter, eggs, garlic chili crunch</div>
+      <div style="width:100%;text-align:left;">
+        <div class="addon-excl">★ Bundle Exclusive Add-On Pricing</div>
+        <table class="addon-table">
+          <tr><td class="addon-name">Cinnamon Rolls (½ doz)</td><td class="addon-orig">$35.00</td><td class="addon-sale">$31.50</td></tr>
+          <tr><td class="addon-name">Real Cream Butter (½ lb)</td><td class="addon-orig">$17.00</td><td class="addon-sale">$15.30</td></tr>
+          <tr><td class="addon-name">Farm Eggs (1 doz)</td><td class="addon-orig">$13.00</td><td class="addon-sale">$11.70</td></tr>
+          <tr><td class="addon-name">Garlic Chili Crunch (4 oz)</td><td class="addon-orig">$18.00</td><td class="addon-sale">$16.20</td></tr>
+        </table>
+      </div>
       <div class="card-qr"><img src="${chickenQR}" alt="QR code — Chicken Bundle"/></div>
       <div class="card-scan">Scan to Order</div>
     </div>
@@ -4121,7 +4136,7 @@ app.get('/flyer', async (req, res) => {
       🌐 heartoftexasorganics.com<br>
       📍 Dripping Springs, TX 78620
     </div>
-    <div class="ftr-right">~Deborah · Head Hen in Charge · ❤️ of Texas's Organics!</div>
+    <div class="ftr-right"></div>
   </div>
 
 </div>

@@ -415,6 +415,8 @@
   .ocbadge-COMPLETED        { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
   .ocbadge-IN_PERSON_SALE   { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
   .ocbadge-method           { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
+  select.ocbadge { border: none; cursor: pointer; font-family: inherit; appearance: auto; -webkit-appearance: auto; outline: none; }
+  select.ocbadge:hover { filter: brightness(1.15); }
   .order-card--inperson     { opacity: 0.5; border-color: rgba(245,240,232,0.12); }
   .order-customer { font-size: 0.9rem; font-weight: 600; color: var(--cream); margin-bottom: 2px; }
   .order-date     { font-size: 0.75rem; color: var(--cream-dim); }
@@ -3087,9 +3089,47 @@
       const hdr = document.createElement('div');
       hdr.className = 'order-card-header';
 
-      const sBadge = document.createElement('span');
+      const _editableStatuses = new Set(['READY_TO_SHIP', 'COMPLETED']);
+      const sBadge = _editableStatuses.has(order.status)
+        ? document.createElement('select')
+        : document.createElement('span');
       sBadge.className = 'ocbadge ocbadge-' + order.status;
-      sBadge.textContent = STATUS_LABELS[order.status] || order.status;
+
+      if (sBadge.tagName === 'SELECT') {
+        [
+          { value: 'READY_TO_SHIP', label: 'Ready to Fulfill' },
+          { value: 'COMPLETED',     label: 'Completed' },
+        ].forEach(({ value, label }) => {
+          const opt = document.createElement('option');
+          opt.value = value; opt.textContent = label;
+          if (value === order.status) opt.selected = true;
+          sBadge.appendChild(opt);
+        });
+        sBadge.addEventListener('change', async () => {
+          const newStatus = sBadge.value;
+          const oldStatus = order.status;
+          const endpoint = newStatus === 'COMPLETED' ? 'complete' : 'uncomplete';
+          sBadge.disabled = true;
+          try {
+            const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId) + '/' + endpoint, {
+              method: 'PUT', headers: authHeaders(),
+            });
+            if (!r.ok) throw new Error('Failed');
+            const d = newStatus === 'READY_TO_SHIP' ? await r.json() : {};
+            order.status = newStatus === 'COMPLETED' ? 'COMPLETED' : (d.status || 'READY_TO_SHIP');
+            order.previousStatus = newStatus === 'COMPLETED' ? oldStatus : null;
+            const parent = card.parentNode;
+            if (parent) parent.replaceChild(buildOrderCard(order), card);
+            showToast(newStatus === 'COMPLETED' ? 'Order marked complete' : 'Order reverted to pending');
+          } catch {
+            sBadge.value = oldStatus;
+            sBadge.disabled = false;
+            showToast('Could not update status', true);
+          }
+        });
+      } else {
+        sBadge.textContent = STATUS_LABELS[order.status] || order.status;
+      }
 
       const mBadge = document.createElement('span');
       mBadge.className = 'ocbadge ocbadge-method';
@@ -4371,7 +4411,7 @@
       }
       tbody.innerHTML = links.map(renderCartLinkRow).join('');
       tbody.querySelectorAll('[data-action]').forEach(btn => {
-        btn.addEventListener('click', () => handleCartLinkAction(btn.dataset.action, btn.dataset.token));
+        btn.addEventListener('click', () => handleCartLinkAction(btn.dataset.action, btn.dataset.token, btn));
       });
     } catch (e) {
       tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Failed to load cart links.</td></tr>';
@@ -4423,7 +4463,7 @@
     </tr>`;
   }
 
-  async function handleCartLinkAction(action, token) {
+  async function handleCartLinkAction(action, token, triggerBtn) {
     if (action === 'copy') {
       const btn = document.querySelector(`[data-token="${token}"][data-action="copy"]`);
       const url = btn?.dataset.url;
@@ -4431,9 +4471,8 @@
       return;
     }
     if (action === 'resend') {
-      const btn = e.target.closest('[data-action="resend"]');
-      const sentCount = parseInt(btn?.dataset.sentCount || '1', 10);
-      const custName = btn?.dataset.customerName || 'the customer';
+      const sentCount = parseInt(triggerBtn?.dataset.sentCount || '1', 10);
+      const custName = triggerBtn?.dataset.customerName || 'the customer';
       if (!confirm(`This link has already been sent ${sentCount} time${sentCount !== 1 ? 's' : ''} to ${custName}.\n\nSend again?`)) return;
       try {
         const res = await fetch(`/admin/cart-links/${token}/resend`, { method: 'POST', headers: authHeaders() });

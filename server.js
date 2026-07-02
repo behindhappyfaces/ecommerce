@@ -4123,12 +4123,18 @@ app.get('/flyer', async (req, res) => {
   </div>
 
   <!-- Footer -->
-  <div class="ftr">
-    <div class="ftr-left">
-      🌐 heartoftexasorganics.com<br>
-      📍 Dripping Springs, TX 78620
+  <div class="ftr" style="flex-direction:column;gap:10px;padding:16px 40px;">
+    <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+      <div class="ftr-left">
+        🌐 heartoftexasorganics.com<br>
+        📍 Dripping Springs, TX 78620
+      </div>
+      <div class="ftr-right"></div>
     </div>
-    <div class="ftr-right"></div>
+    <div style="border-top:1px solid rgba(245,240,232,0.2);padding-top:10px;width:100%;font-family:'Lato',sans-serif;font-size:11.5px;line-height:1.7;color:#F5F0E8;text-align:center;">
+      📸 <strong>Snap a photo of your delivery &amp; upload it to Google with a ⭐⭐⭐⭐⭐ review</strong> — you'll be entered to win your <strong>Thanksgiving Turkey FREE</strong> this year!<br>
+      <a href="https://g.page/r/CUUfyz-9bw9BEAE/review" style="color:#D4BA8A;font-weight:700;letter-spacing:0.04em;">Leave a Google Review →</a>
+    </div>
   </div>
 
 </div>

@@ -11,7 +11,6 @@ const SEED = [
   { id:'whole-wheat-loaf',    name:'Whole Wheat Loaf',             category:'Bakery',       stock:8,  reorder_level:3,  unit:'loaf',   price_cents:1400,  cost_cents:400,  allow_preorder:0, active:1 },
   { id:'yeast-rolls',         name:'Yeast Rolls',                  category:'Bakery',       stock:30, reorder_level:10, unit:'roll',   price_cents:300,   cost_cents:80,   allow_preorder:0, active:1 },
   { id:'focaccia-loaf',       name:'Focaccia Loaf',                category:'Bakery',       stock:5,  reorder_level:3,  unit:'loaf',   price_cents:1400,  cost_cents:380,  allow_preorder:0, active:1 },
-  { id:'sourdough',           name:'Sourdough',                    category:'Bakery',       stock:6,  reorder_level:4,  unit:'loaf',   price_cents:1500,  cost_cents:420,  allow_preorder:0, active:1 },
   { id:'challah',             name:'Challah',                      category:'Bakery',       stock:4,  reorder_level:3,  unit:'loaf',   price_cents:1600,  cost_cents:500,  allow_preorder:0, active:1 },
   { id:'farm-eggs',           name:'Pasture-Raised Eggs',          category:'Farm Fresh',   stock:18, reorder_level:10, unit:'dozen',  price_cents:800,   cost_cents:200,  allow_preorder:0, active:1 },
   { id:'whole-chicken',       name:'Whole Chicken',                category:'Farm Fresh',   stock:10, reorder_level:3,  unit:'bird',   price_cents:4900,  cost_cents:0,    allow_preorder:0, active:1 },

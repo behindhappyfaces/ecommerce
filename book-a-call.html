@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Call — Heart of Texas Organics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:       #f7f3ec;
+      --cream-dark:  #ede8df;
+      --sage:        #5a7a5a;
+      --sage-light:  #7a9e7a;
+      --sage-pale:   #e8f0e8;
+      --brown:       #4a3728;
+      --brown-mid:   #6b4f3a;
+      --brown-light: #9a7b62;
+      --gold:        #c9a84c;
+      --text:        #3a2e25;
+      --text-mid:    #6b5c4e;
+      --radius:      14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Nav strip ────────────────────────────────────────────── */
+    .nav {
+      background: var(--brown);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav__brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--cream);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .nav__back {
+      font-size: 0.82rem;
+      color: var(--cream-dark);
+      text-decoration: none;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .nav__back:hover { opacity: 1; }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, var(--brown) 0%, var(--brown-mid) 100%);
+      color: var(--cream);
+      text-align: center;
+      padding: 72px 24px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201,168,76,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(90,122,90,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero__eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+    .hero__headline {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      font-weight: 300;
+      line-height: 1.1;
+      color: var(--cream);
+      margin-bottom: 18px;
+    }
+    .hero__headline em {
+      font-style: italic;
+      color: var(--gold);
+    }
+    .hero__sub {
+      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+      color: rgba(247,243,236,0.78);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .hero__divider {
+      width: 48px;
+      height: 2px;
+      background: var(--gold);
+      margin: 28px auto 0;
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+
+    /* ── Card grid ────────────────────────────────────────────── */
+    .cards-section {
+      flex: 1;
+      padding: 56px 24px 72px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      padding: 36px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 12px rgba(58,46,37,0.07);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .card:nth-child(1)::before { background: var(--sage); }
+    .card:nth-child(2)::before { background: var(--gold); }
+    .card:nth-child(3)::before { background: var(--brown-mid); }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 32px rgba(58,46,37,0.13);
+    }
+
+    .card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+    .card:nth-child(1) .card__icon { background: var(--sage-pale); }
+    .card:nth-child(2) .card__icon { background: #fdf6e3; }
+    .card:nth-child(3) .card__icon { background: #f5ede5; }
+
+    .card__duration {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--brown-light);
+      margin-bottom: 10px;
+    }
+
+    .card__title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--brown);
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .card__desc {
+      font-size: 0.92rem;
+      color: var(--text-mid);
+      line-height: 1.65;
+      flex: 1;
+      margin-bottom: 28px;
+    }
+
+    .card__btn {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 13px 20px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .card:nth-child(1) .card__btn {
+      background: var(--sage);
+      color: #fff;
+    }
+    .card:nth-child(1) .card__btn:hover {
+      background: #496649;
+    }
+    .card:nth-child(2) .card__btn {
+      background: var(--gold);
+      color: var(--brown);
+    }
+    .card:nth-child(2) .card__btn:hover {
+      background: #b8962f;
+      color: #fff;
+    }
+    .card:nth-child(3) .card__btn {
+      background: var(--brown-mid);
+      color: #fff;
+    }
+    .card:nth-child(3) .card__btn:hover {
+      background: var(--brown);
+    }
+    .card__btn:active { transform: scale(0.97); }
+
+    /* ── Trust strip ──────────────────────────────────────────── */
+    .trust {
+      background: var(--cream-dark);
+      border-top: 1px solid #ddd5c8;
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .trust__text {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      justify-content: center;
+      align-items: center;
+    }
+    .trust__item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .trust__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sage);
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      background: var(--brown);
+      color: rgba(247,243,236,0.7);
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+    .footer__brand {
+      font-family: 'Fraunces', serif;
+      font-size: 1rem;
+      color: var(--cream);
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="/" class="nav__brand">Heart of Texas Organics</a>
+    <a href="/" class="nav__back">← Back to shop</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <p class="hero__eyebrow">Schedule a Conversation</p>
+    <h1 class="hero__headline">Let's <em>Connect</em></h1>
+    <p class="hero__sub">Choose the type of conversation that fits you best — we'd love to hear from you.</p>
+    <div class="hero__divider"></div>
+  </section>
+
+  <!-- Cards -->
+  <main class="cards-section">
+    <div class="cards-grid">
+
+      <!-- Card 1: BNI -->
+      <div class="card">
+        <div class="card__icon">🤝</div>
+        <p class="card__duration">15 Minutes</p>
+        <h2 class="card__title">BNI 1:1 Networking</h2>
+        <p class="card__desc">Quick connection calls for relationship building and referrals. A fast and focused way to explore how we can grow together.</p>
+        <a href="YOUR_CAL_COM_BNI_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+      </div>
+
+      <!-- Card 2: CSA -->
+      <div class="card">
+        <div class="card__icon">🌿</div>
+        <p class="card__duration">25 Minutes</p>
+        <h2 class="card__title">Farm Box &amp; CSA Consultation</h2>
+        <p class="card__desc">Get help choosing the right subscription or bundle for your family. We'll walk through options, delivery, and what's in season.</p>
+        <a href="YOUR_CAL_COM_CSA_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+      </div>
+
+      <!-- Card 3: Wholesale -->
+      <div class="card">
+        <div class="card__icon">🏪</div>
+        <p class="card__duration">30 Minutes</p>
+        <h2 class="card__title">Wholesale &amp; Partnership Inquiry</h2>
+        <p class="card__desc">For restaurants, shops, and bulk buyers interested in carrying our products. Let's talk volume, pricing, and logistics.</p>
+        <a href="YOUR_CAL_COM_WHOLESALE_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Trust strip -->
+  <div class="trust">
+    <div class="trust__text">
+      <span class="trust__item"><span class="trust__dot"></span>No commitment required</span>
+      <span class="trust__item"><span class="trust__dot"></span>Calls held via Google Meet or phone</span>
+      <span class="trust__item"><span class="trust__dot"></span>We'll confirm within 24 hours</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p class="footer__brand">Heart of Texas Organics</p>
+    <p>Prefer email? Reach us at <a href="mailto:everypersonempowered@gmail.com">everypersonempowered@gmail.com</a></p>
+  </footer>
+
+</body>
+</html>

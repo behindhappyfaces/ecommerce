@@ -151,6 +151,11 @@ const pgStore = {
     return rows[0];
   },
 
+  async deleteProduct(id) {
+    const { rowCount } = await pool.query(`DELETE FROM products WHERE id = $1`, [id]);
+    return rowCount > 0;
+  },
+
   async deleteTransactionsByNotes(notesValue) {
     // Find net stock impact per product before deleting
     const { rows: impacts } = await pool.query(
@@ -327,6 +332,13 @@ const jsonStore = {
     return tx;
   },
 
+  deleteProduct(id) {
+    const before = _json.products.length;
+    _json.products = _json.products.filter(p => p.id !== id);
+    persistJson(_json);
+    return before !== _json.products.length;
+  },
+
   deleteTransactionsByNotes(notesValue) {
     const toDelete = _json.transactions.filter(t => t.notes === notesValue);
     // Reverse stock changes
@@ -387,6 +399,7 @@ const store = USE_PG ? pgStore : {
   adjustStock:                (...a) => Promise.resolve(jsonStore.adjustStock(...a)),
   hasTransaction:             (...a) => Promise.resolve(jsonStore.hasTransaction(...a)),
   addTransaction:             (...a) => Promise.resolve(jsonStore.addTransaction(...a)),
+  deleteProduct:              (...a) => Promise.resolve(jsonStore.deleteProduct(...a)),
   deleteTransactionsByNotes:  (...a) => Promise.resolve(jsonStore.deleteTransactionsByNotes(...a)),
   getTransactions:            (...a) => Promise.resolve(jsonStore.getTransactions(...a)),
   getSales:                   (...a) => Promise.resolve(jsonStore.getSales(...a)),

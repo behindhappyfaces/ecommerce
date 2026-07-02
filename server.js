@@ -3068,6 +3068,13 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete('/admin/inventory/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const removed = await db.deleteProduct(id);
+  if (!removed) return res.status(404).json({ error: 'Product not found' });
+  res.json({ ok: true });
+});
+
 app.post('/admin/inventory/:id/adjust', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { quantity, notes, channel } = req.body || {};

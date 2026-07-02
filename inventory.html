@@ -166,6 +166,8 @@
   }
   .adj-btn:hover { background: var(--terra); }
   .adj-label { font-size: 0.75rem; color: var(--cream-dim); }
+  .delete-product-btn { margin-top: 8px; width: 100%; background: transparent; border: 1px solid #a03030; color: #c05050; font-size: 0.72rem; font-weight: 600; padding: 5px; border-radius: 6px; cursor: pointer; letter-spacing: 0.05em; }
+  .delete-product-btn:hover { background: #a03030; color: #fff; }
 
   /* ---- FORMS ---- */
   .form-card {
@@ -1875,6 +1877,13 @@
       adjRow.appendChild(adjLbl);
       adjRow.appendChild(plusBtn);
 
+      // ── Delete button ─────────────────────────────────────────────
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-product-btn';
+      delBtn.title = 'Remove this product';
+      delBtn.textContent = 'Remove';
+      delBtn.addEventListener('click', () => deleteProduct(p));
+
       card.appendChild(nameEl);
       card.appendChild(catEl);
       card.appendChild(stockNum);
@@ -1883,6 +1892,7 @@
       card.appendChild(badgeEl);
       card.appendChild(pcWrap);
       card.appendChild(adjRow);
+      card.appendChild(delBtn);
       grid.appendChild(card);
     }
   }
@@ -1897,6 +1907,19 @@
       await loadInventory();
       renderStockTab();
       showToast(product.name + ' updated');
+    } catch { showToast('Connection error', true); }
+  }
+
+  async function deleteProduct(product) {
+    if (!confirm('Remove "' + product.name + '" from inventory? This cannot be undone.')) return;
+    try {
+      const r = await fetch('/admin/inventory/' + product.id, {
+        method: 'DELETE', headers: authHeaders(),
+      });
+      if (!r.ok) { showToast('Delete failed', true); return; }
+      await loadInventory();
+      renderStockTab();
+      showToast(product.name + ' removed');
     } catch { showToast('Connection error', true); }
   }
 

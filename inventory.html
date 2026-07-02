@@ -415,8 +415,14 @@
   .ocbadge-COMPLETED        { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
   .ocbadge-IN_PERSON_SALE   { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
   .ocbadge-method           { background: rgba(245,240,232,0.08); color: var(--cream-dim); }
-  select.ocbadge { border: none; cursor: pointer; font-family: inherit; appearance: auto; -webkit-appearance: auto; outline: none; }
-  select.ocbadge:hover { filter: brightness(1.15); }
+  .status-toggle-btn { border: none; cursor: pointer; font-family: inherit; background: inherit; color: inherit; padding: 0; display: inline-flex; align-items: center; gap: 3px; }
+  .status-toggle-btn:hover { filter: brightness(1.2); }
+  .status-dropdown { position: relative; display: inline-block; }
+  .status-dropdown-menu { display: none; position: absolute; top: calc(100% + 5px); left: 0; background: #1e2820; border: 1px solid #3a4a3c; border-radius: 7px; z-index: 200; min-width: 150px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); overflow: hidden; }
+  .status-dropdown-menu button { display: block; width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-family: inherit; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; }
+  .status-dropdown-menu button:hover { background: rgba(255,255,255,0.07); }
+  .status-dropdown-menu .sopt-complete { color: #6fcf97; }
+  .status-dropdown-menu .sopt-pending  { color: #f2994a; }
   .order-card--inperson     { opacity: 0.5; border-color: rgba(245,240,232,0.12); }
   .order-customer { font-size: 0.9rem; font-weight: 600; color: var(--cream); margin-bottom: 2px; }
   .order-date     { font-size: 0.75rem; color: var(--cream-dim); }
@@ -3090,26 +3096,29 @@
       hdr.className = 'order-card-header';
 
       const _editableStatuses = new Set(['READY_TO_SHIP', 'COMPLETED']);
-      const sBadge = _editableStatuses.has(order.status)
-        ? document.createElement('select')
-        : document.createElement('span');
-      sBadge.className = 'ocbadge ocbadge-' + order.status;
 
-      if (sBadge.tagName === 'SELECT') {
-        [
-          { value: 'READY_TO_SHIP', label: 'Ready to Fulfill' },
-          { value: 'COMPLETED',     label: 'Completed' },
-        ].forEach(({ value, label }) => {
-          const opt = document.createElement('option');
-          opt.value = value; opt.textContent = label;
-          if (value === order.status) opt.selected = true;
-          sBadge.appendChild(opt);
-        });
-        sBadge.addEventListener('change', async () => {
-          const newStatus = sBadge.value;
-          const oldStatus = order.status;
+      // Status badge — editable ones get a custom dropdown, others are plain
+      let sBadge;
+      if (_editableStatuses.has(order.status)) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'status-dropdown';
+
+        const pill = document.createElement('span');
+        pill.className = 'ocbadge ocbadge-' + order.status;
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'status-toggle-btn';
+        toggleBtn.innerHTML = (STATUS_LABELS[order.status] || order.status) + ' <span style="font-size:0.55rem;opacity:0.7;">▾</span>';
+        pill.appendChild(toggleBtn);
+
+        const menu = document.createElement('div');
+        menu.className = 'status-dropdown-menu';
+
+        const changeStatus = async (newStatus) => {
+          menu.style.display = 'none';
+          toggleBtn.disabled = true;
           const endpoint = newStatus === 'COMPLETED' ? 'complete' : 'uncomplete';
-          sBadge.disabled = true;
           try {
             const r = await fetch('/admin/orders/' + encodeURIComponent(order.piId) + '/' + endpoint, {
               method: 'PUT', headers: authHeaders(),
@@ -3117,17 +3126,42 @@
             if (!r.ok) throw new Error('Failed');
             const d = newStatus === 'READY_TO_SHIP' ? await r.json() : {};
             order.status = newStatus === 'COMPLETED' ? 'COMPLETED' : (d.status || 'READY_TO_SHIP');
-            order.previousStatus = newStatus === 'COMPLETED' ? oldStatus : null;
+            order.previousStatus = newStatus === 'COMPLETED' ? order.status : null;
             const parent = card.parentNode;
             if (parent) parent.replaceChild(buildOrderCard(order), card);
-            showToast(newStatus === 'COMPLETED' ? 'Order marked complete' : 'Order reverted to pending');
+            showToast(newStatus === 'COMPLETED' ? 'Marked complete ✓' : 'Reverted to pending');
           } catch {
-            sBadge.value = oldStatus;
-            sBadge.disabled = false;
+            toggleBtn.disabled = false;
             showToast('Could not update status', true);
           }
+        };
+
+        if (order.status === 'READY_TO_SHIP') {
+          const opt = document.createElement('button');
+          opt.type = 'button'; opt.textContent = '✓ Mark Complete'; opt.className = 'sopt-complete';
+          opt.addEventListener('click', () => changeStatus('COMPLETED'));
+          menu.appendChild(opt);
+        } else {
+          const opt = document.createElement('button');
+          opt.type = 'button'; opt.textContent = '↩ Mark Pending'; opt.className = 'sopt-pending';
+          opt.addEventListener('click', () => changeStatus('READY_TO_SHIP'));
+          menu.appendChild(opt);
+        }
+
+        toggleBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const isOpen = menu.style.display === 'block';
+          document.querySelectorAll('.status-dropdown-menu').forEach(m => m.style.display = 'none');
+          menu.style.display = isOpen ? 'none' : 'block';
         });
+        document.addEventListener('click', () => { menu.style.display = 'none'; });
+
+        wrapper.appendChild(pill);
+        wrapper.appendChild(menu);
+        sBadge = wrapper;
       } else {
+        sBadge = document.createElement('span');
+        sBadge.className = 'ocbadge ocbadge-' + order.status;
         sBadge.textContent = STATUS_LABELS[order.status] || order.status;
       }
 

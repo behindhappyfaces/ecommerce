@@ -3974,6 +3974,7 @@ app.get('/flyer', async (req, res) => {
       QRCode.toDataURL(samplerUrl, { width: 220, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
     ]);
 
+    const host = req.get('host');
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3982,8 +3983,15 @@ app.get('/flyer', async (req, res) => {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:Georgia,serif;background:#fff;color:#2C3E2D;}
-  .page{width:8.5in;min-height:11in;margin:0 auto;display:flex;flex-direction:column;background:#fff;}
+  body{font-family:Georgia,serif;background:#eee;color:#2C3E2D;}
+  .toolbar{background:#2C3E2D;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .toolbar-title{color:#F5F0E8;font-family:'Lato',sans-serif;font-size:13px;}
+  .toolbar-btns{display:flex;gap:10px;}
+  .toolbar-btns a{display:inline-block;padding:9px 20px;border-radius:7px;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:0.06em;cursor:pointer;}
+  .btn-pdf{background:#8B3A2A;color:#F5F0E8;}
+  .btn-print{background:transparent;color:#F5F0E8;border:1.5px solid rgba(245,240,232,0.4);}
+  .page{width:8.5in;min-height:11in;margin:0 auto;display:flex;flex-direction:column;background:#fff;box-shadow:0 4px 30px rgba(0,0,0,0.18);}
+  @media print{.toolbar{display:none;}body{background:#fff;}}
 
   /* Header band */
   .hdr{background:#2C3E2D;color:#F5F0E8;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;}
@@ -4037,6 +4045,14 @@ app.get('/flyer', async (req, res) => {
 </style>
 </head>
 <body>
+<!-- Toolbar — hidden on print -->
+<div class="toolbar">
+  <span class="toolbar-title">Heart of Texas Organics Flyer — Preview</span>
+  <div class="toolbar-btns">
+    <a href="/flyer.pdf" class="btn-pdf">Download PDF</a>
+    <a href="#" onclick="window.print();return false;" class="btn-print">Print</a>
+  </div>
+</div>
 <div class="page">
 
   <!-- Header -->
@@ -4117,6 +4133,160 @@ app.get('/flyer', async (req, res) => {
   } catch (e) {
     console.error('[/flyer]', e);
     res.status(500).send('Error generating flyer: ' + e.message);
+  }
+});
+
+// GET /flyer.pdf — downloadable / shareable PDF flyer
+app.get('/flyer.pdf', async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const origin = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+
+    const [chickenBuf, samplerBuf] = await Promise.all([
+      QRCode.toBuffer(`${origin}/?start=chicken-bundle`, { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+      QRCode.toBuffer(`${origin}/?start=sampler-box`,    { width: 240, margin: 1, color: { dark: '#2C3E2D', light: '#FFFFFF' } }),
+    ]);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'inline; filename="hoto-farm-flyer.pdf"',
+    });
+
+    const doc = new PDFDocument({ size: 'LETTER', margin: 0 });
+    doc.pipe(res);
+
+    const W = 612, MID = 306;
+    const GREEN = '#2C3E2D', RUST = '#8B3A2A', CREAM = '#F5F0E8', DARK = '#1E1E1E';
+
+    // ── HEADER (y 0-65) ──────────────────────────────────────────────
+    doc.rect(0, 0, W, 65).fill(GREEN);
+    doc.fillColor(CREAM).font('Times-Bold').fontSize(20)
+       .text('Heart of Texas Organics', 36, 14, { width: 320 });
+    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
+       .text('YOUR LOCAL FARM  -  DRIPPING SPRINGS, TX', 36, 40, { width: 280 });
+    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
+       .text('heartoftexasorganics.com', MID + 10, 40, { width: 160, align: 'right' });
+
+    // ── RUST BAR (y 65-71) ───────────────────────────────────────────
+    doc.rect(0, 65, W, 6).fill(RUST);
+
+    // ── PROMO COPY (y 71-288) ────────────────────────────────────────
+    doc.rect(0, 71, W, 217).fill(CREAM);
+
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
+       .text('FRESH THIS WEEK  -  LIMITED QUANTITY', 36, 84, { width: W - 72, align: 'center' });
+
+    doc.fillColor(GREEN).font('Times-Bold').fontSize(23)
+       .text('Good Morning!', 36, 98, { width: W - 72 });
+    doc.fillColor(RUST).font('Times-Italic').fontSize(17)
+       .text('Fresh Batches Ready to Go.', 36, 126, { width: W - 72 });
+
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5).lineGap(2)
+       .text(
+         'Starting next Tuesday, we have 10 pasture-raised Chicken & Dinner Roll Bundles ready -- and they need to be gone by Friday.',
+         36, 156, { width: W - 72 }
+       );
+    doc.moveDown(0.45);
+    doc.text(
+      'Each chicken weighs 8-10 lbs and is processed into 10 premium cuts, ready to throw straight on the grill or in the oven. Grab a side, and dinner\'s done.',
+      { width: W - 72 }
+    );
+    doc.moveDown(0.45);
+    doc.text(
+      'If you -- or someone you know -- is always stressing over "What\'s for dinner?" text me today! I\'d love an introduction.',
+      { width: W - 72 }
+    );
+
+    // ── CUTS BANNER (y 288-310) ──────────────────────────────────────
+    doc.rect(0, 288, W, 22).fill(GREEN);
+    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
+       .text('2 Boneless/Skinless Breasts  *  2 Leg Quarters  *  2 Tenders  *  2 Drums  *  2 Flats  *  Pasture to table', 0, 296, { width: W, align: 'center' });
+
+    // ── PRODUCT CARDS (y 310-724) ────────────────────────────────────
+    const CARD_Y = 310, CARD_H = 414;
+    doc.rect(0,   CARD_Y, MID, CARD_H).fill('#FFFFFF');
+    doc.rect(MID, CARD_Y, MID, CARD_H).fill(CREAM);
+    doc.rect(MID - 1, CARD_Y, 1.5, CARD_H).fill('#C8BEB2');
+
+    const QR_W = 150;
+
+    // ─ LEFT CARD: Chicken Bundle ─
+    const LX = 20, LW = MID - 40;
+
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
+       .text('LIMITED  -  10 AVAILABLE', LX, CARD_Y + 16, { width: LW, align: 'center' });
+    doc.fillColor(GREEN).font('Times-Bold').fontSize(17)
+       .text('Chicken & Dinner Roll Bundle', LX, CARD_Y + 29, { width: LW, align: 'center' });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(28)
+       .text('$79', LX, CARD_Y + 61, { width: LW, align: 'center' });
+
+    doc.rect(LX + 20, CARD_Y + 96, LW - 40, 0.75).fill('#C8BEB2');
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7)
+       .text("WHAT'S INCLUDED", LX, CARD_Y + 103, { width: LW, align: 'center' });
+
+    const chickenItems = ['Pasture-Raised Chicken (8-10 lbs)', 'Processed into 10 Premium Cuts', '1 Dozen Soft Dinner Rolls'];
+    chickenItems.forEach((item, i) => {
+      doc.fillColor(DARK).font('Helvetica').fontSize(10)
+         .text('•  ' + item, LX + 10, CARD_Y + 115 + i * 16, { width: LW - 10 });
+    });
+
+    doc.fillColor('#666').font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ add-ons at checkout: cinnamon rolls, butter, eggs, garlic chili crunch', LX, CARD_Y + 168, { width: LW, align: 'center' });
+
+    const cQR_X = Math.round((MID - QR_W) / 2);
+    const cQR_Y = CARD_Y + 198;
+    doc.rect(cQR_X - 5, cQR_Y - 5, QR_W + 10, QR_W + 10).fill('#E8E4DE');
+    doc.image(chickenBuf, cQR_X, cQR_Y, { width: QR_W });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9)
+       .text('SCAN TO ORDER', LX, cQR_Y + QR_W + 10, { width: LW, align: 'center' });
+    doc.fillColor('#555').font('Helvetica').fontSize(7.5)
+       .text('heartoftexasorganics.com/?start=chicken-bundle', LX, cQR_Y + QR_W + 24, { width: LW, align: 'center' });
+
+    // ─ RIGHT CARD: Sampler Box ─
+    const RX = MID + 20, RW = MID - 40;
+
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
+       .text('CUSTOMIZE YOUR ORDER', RX, CARD_Y + 16, { width: RW, align: 'center' });
+    doc.fillColor(GREEN).font('Times-Bold').fontSize(17)
+       .text('The Farm Sampler Box', RX, CARD_Y + 29, { width: RW, align: 'center' });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(28)
+       .text('$149', RX, CARD_Y + 61, { width: RW, align: 'center' });
+
+    doc.rect(RX + 20, CARD_Y + 96, RW - 40, 0.75).fill('#B8B0A4');
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7)
+       .text("WHAT'S INCLUDED", RX, CARD_Y + 103, { width: RW, align: 'center' });
+
+    const samplerItems = ['Whole Chicken — 10 Premium Cuts', 'Farm Eggs — 1 Dozen', 'Real Cream Butter — 1/2 lb', 'Garlic Chili Crunch (or swap)'];
+    samplerItems.forEach((item, i) => {
+      doc.fillColor(DARK).font('Helvetica').fontSize(10)
+         .text('•  ' + item, RX + 10, CARD_Y + 115 + i * 16, { width: RW - 10 });
+    });
+
+    doc.fillColor('#666').font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ customize swaps & choose add-ons at checkout', RX, CARD_Y + 184, { width: RW, align: 'center' });
+
+    const sQR_X = MID + Math.round((MID - QR_W) / 2);
+    const sQR_Y = CARD_Y + 198;
+    doc.rect(sQR_X - 5, sQR_Y - 5, QR_W + 10, QR_W + 10).fill('#D4CAC0');
+    doc.image(samplerBuf, sQR_X, sQR_Y, { width: QR_W });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9)
+       .text('SCAN TO CUSTOMIZE & ORDER', RX, sQR_Y + QR_W + 10, { width: RW, align: 'center' });
+    doc.fillColor('#555').font('Helvetica').fontSize(7.5)
+       .text('heartoftexasorganics.com/?start=sampler-box', RX, sQR_Y + QR_W + 24, { width: RW, align: 'center' });
+
+    // ── FOOTER (y 724-792) ───────────────────────────────────────────
+    doc.rect(0, 724, W, 68).fill(GREEN);
+    doc.fillColor(CREAM).font('Helvetica').fontSize(10)
+       .text('Web: heartoftexasorganics.com', 36, 738, { width: 260 });
+    doc.fillColor(CREAM).font('Helvetica').fontSize(10)
+       .text('Location: Dripping Springs, TX 78620', 36, 754, { width: 260 });
+    doc.fillColor(CREAM).font('Times-Italic').fontSize(11)
+       .text("~Deborah  *  Head Hen in Charge  *  of Texas's Organics!", W - 36, 745, { width: 290, align: 'right' });
+
+    doc.end();
+  } catch (e) {
+    console.error('[/flyer.pdf]', e);
+    if (!res.headersSent) res.status(500).send('Error generating PDF: ' + e.message);
   }
 });
 

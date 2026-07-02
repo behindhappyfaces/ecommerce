@@ -4181,7 +4181,7 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.fillColor(CREAM).font('Helvetica').fontSize(8)
        .text('YOUR LOCAL FARM', 36, 38, { width: 200 });
     doc.fillColor(CREAM).font('Helvetica').fontSize(8)
-       .text('heartoftexasorganics.com', 0, 38, { width: W - 36, align: 'right' });
+       .text('heartoftexasorganics.com', 0, 38, { width: W - 36, align: 'right', link: 'https://www.heartoftexasorganics.com', underline: false });
 
     // ── RUST ACCENT  y 62-67 ─────────────────────────────────────────
     doc.rect(0, 62, W, 5).fill(RUST);
@@ -4252,7 +4252,8 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.rect(cQR_X - 4, QR_Y - 4, QR_W + 8, QR_W + 8).fill('#E4DDD6');
     doc.image(chickenBuf, cQR_X, QR_Y, { width: QR_W });
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9.5)
-       .text('SCAN TO ORDER', LX, QR_Y + QR_W + 12, { width: CW, align: 'center', lineBreak: false });
+       .text('SCAN TO ORDER', LX, QR_Y + QR_W + 12, { width: CW, align: 'center', lineBreak: false, link: `${SITE_URL_BASE}/?start=chicken-bundle`, underline: false });
+    doc.link(cQR_X, QR_Y, QR_W, QR_W, `${SITE_URL_BASE}/?start=chicken-bundle`);
 
     // ── RIGHT CARD: The Farm Sampler Box ─────────────────────────────
     const RX = MID + PAD;
@@ -4288,7 +4289,8 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.rect(sQR_X - 4, QR_Y - 4, QR_W + 8, QR_W + 8).fill('#D4CAC0');
     doc.image(samplerBuf, sQR_X, QR_Y, { width: QR_W });
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9.5)
-       .text('SCAN TO CUSTOMIZE & ORDER', RX, QR_Y + QR_W + 12, { width: CW, align: 'center', lineBreak: false });
+       .text('SCAN TO CUSTOMIZE & ORDER', RX, QR_Y + QR_W + 12, { width: CW, align: 'center', lineBreak: false, link: `${SITE_URL_BASE}/?start=sampler-box`, underline: false });
+    doc.link(sQR_X, QR_Y, QR_W, QR_W, `${SITE_URL_BASE}/?start=sampler-box`);
 
     // ── FOOTER  y 726-792 ────────────────────────────────────────────
     doc.rect(0, 726, W, 66).fill(GREEN);
@@ -4297,7 +4299,7 @@ app.get('/flyer.pdf', async (req, res) => {
     doc.fillColor(CREAM).font('Helvetica').fontSize(10)
        .text("You'll be entered to win a FREE Thanksgiving Turkey this year!", 36, 757, { width: W - 72, align: 'center' });
     doc.fillColor('#D4BA8A').font('Helvetica-Bold').fontSize(10)
-       .text('Leave a Google Review - 5 Stars', 36, 774, { width: W - 72, align: 'center' });
+       .text('Leave a Google Review - 5 Stars', 36, 774, { width: W - 72, align: 'center', link: 'https://g.page/r/CUUfyz-9bw9BEAE/review', underline: false });
 
     doc.end();
   } catch (e) {

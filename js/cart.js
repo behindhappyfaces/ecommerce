@@ -2387,6 +2387,11 @@ const ADDON_OPTIONS = [
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];
 
+// Supper Starter Box and Bread & Butter Board: eggs are $11/doz (subscriber price)
+const _eggsAt11 = a => a.id === 'addon-eggs' ? Object.assign({}, a, { price: 1100 }) : a;
+BOX_CONTENTS['harvest-subscription'].addons = ADDON_OPTIONS.map(_eggsAt11);
+BOX_CONTENTS['bread-box'].addons = ADDON_OPTIONS.map(_eggsAt11);
+
 function injectBoxCustomizer() {
   if (document.getElementById('box-customizer-overlay')) return;
   const overlay = document.createElement('div');

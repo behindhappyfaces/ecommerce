@@ -2612,7 +2612,7 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
 // Builds the "your custom order is ready" email shared by send + resend
 function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
-  const noteBlock = note ? `<p style="font-style:italic;color:#5a7a5b;">${note}</p>` : '';
+  const noteBlock = note ? `<p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">${note}</p>` : '';
 
   const itemRows = items.map(r =>
     `<tr>
@@ -2640,10 +2640,10 @@ function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl })
         <!-- Body -->
         <tr><td style="padding:32px 36px;">
           <p style="margin:0 0 16px;font-size:16px;color:#2C3E2D;">${greeting}</p>
-          ${noteBlock}
           <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">
-            We've put together a custom order just for you. Review your items below and click the button to complete your purchase — it only takes a minute!
+            Review your items below and click the button to complete your purchase — it only takes a minute!
           </p>
+          ${noteBlock}
 
           ${items.length ? `
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e2d6;border-radius:10px;overflow:hidden;margin-bottom:24px;">

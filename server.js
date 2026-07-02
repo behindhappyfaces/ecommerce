@@ -2401,6 +2401,8 @@ const PRODUCT_MAP = {
   'Farm Bundle':                    'bundle-farm',
   'Thanksgiving Turkey Bundle':     'bundle-turkey',
   'Farm Sampler Box':               'sampler-box',
+  'Chicken & Dinner Roll Bundle':   'chicken-dinner-roll-bundle',
+  'Chicken and Dinner Roll Bundle': 'chicken-dinner-roll-bundle',
 };
 
 async function deductStockForOrder(lineItems, orderId, orderDate = null) {

@@ -1725,7 +1725,6 @@
           stockNum.style.display = '';
           if (isNaN(newVal) || newVal < 0 || newVal === p.stock) return;
           const delta = newVal - p.stock;
-          if (!confirm('Set ' + p.name + ' to ' + newVal + '? (' + p.stock + ' → ' + newVal + ')')) return;
           try {
             const r = await fetch('/admin/inventory/' + p.id + '/adjust', {
               method: 'POST', headers: authHeaders(),
@@ -1765,6 +1764,47 @@
       badgeEl.className = 'badge ' + status;
       badgeEl.textContent = status === 'out' ? 'Out of Stock' : status === 'low' ? 'Low Stock' : 'Good';
 
+      // ── Inline price editor ──────────────────────────────────────
+      const priceRow = document.createElement('div');
+      priceRow.style.cssText = 'display:flex;align-items:center;gap:6px;margin:6px 0 2px;';
+
+      const priceLbl = document.createElement('span');
+      priceLbl.style.cssText = 'font-size:0.72rem;color:var(--cream-dim);white-space:nowrap;';
+      priceLbl.textContent = 'Price $';
+
+      const priceInp = document.createElement('input');
+      priceInp.type = 'number';
+      priceInp.min = '0';
+      priceInp.step = '0.01';
+      priceInp.value = ((p.price_cents || 0) / 100).toFixed(2);
+      priceInp.style.cssText = 'width:70px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--cream);font-size:0.85rem;padding:3px 6px;outline:none;';
+      priceInp.addEventListener('focus', () => priceInp.style.borderColor = 'var(--terra)');
+      priceInp.addEventListener('blur',  () => priceInp.style.borderColor = 'var(--border)');
+
+      const priceSaveBtn = document.createElement('button');
+      priceSaveBtn.className = 'btn-sm btn-terra';
+      priceSaveBtn.textContent = 'Save';
+      priceSaveBtn.style.cssText = 'padding:3px 10px;font-size:0.75rem;';
+      priceSaveBtn.addEventListener('click', async () => {
+        const newPrice = Math.round(parseFloat(priceInp.value) * 100);
+        if (isNaN(newPrice) || newPrice < 0) { showToast('Invalid price', true); return; }
+        priceSaveBtn.disabled = true; priceSaveBtn.textContent = '...';
+        try {
+          const r = await fetch('/admin/inventory/' + p.id, {
+            method: 'PUT', headers: authHeaders(),
+            body: JSON.stringify({ price_cents: newPrice, reorder_level: p.reorder_level, cost_cents: p.cost_cents || 0, unit: p.unit, allow_preorder: p.allow_preorder }),
+          });
+          if (r.ok) { showToast(p.name + ' price saved'); await loadInventory(); renderStockTab(); }
+          else showToast('Save failed', true);
+        } catch { showToast('Connection error', true); }
+        finally { priceSaveBtn.disabled = false; priceSaveBtn.textContent = 'Save'; }
+      });
+
+      priceRow.appendChild(priceLbl);
+      priceRow.appendChild(priceInp);
+      priceRow.appendChild(priceSaveBtn);
+
+      // ── Quick adjust ─────────────────────────────────────────────
       const adjRow = document.createElement('div');
       adjRow.className = 'quick-adjust';
 
@@ -1795,14 +1835,13 @@
       card.appendChild(reorderEl);
       card.appendChild(marginEl);
       card.appendChild(badgeEl);
+      card.appendChild(priceRow);
       card.appendChild(adjRow);
       grid.appendChild(card);
     }
   }
 
   async function quickAdjust(product, delta) {
-    const verb = delta > 0 ? 'add 1 to' : 'remove 1 from';
-    if (!confirm(verb + ' ' + product.name + '? (' + product.stock + ' → ' + Math.max(0, product.stock + delta) + ')')) return;
     try {
       const r = await fetch('/admin/inventory/' + product.id + '/adjust', {
         method: 'POST', headers: authHeaders(),

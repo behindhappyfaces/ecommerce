@@ -10,17 +10,6 @@
 </head>
 <body>
 
-  <!-- ===================== ANNOUNCEMENT BAR ===================== -->
-  <div class="announce-bar" id="announceBar" style="background:#8B1A1A;">
-    <div class="announce-bar__inner">
-      <span class="announce-bar__text">
-        🇺🇸 &nbsp;<strong>4th of July Homestead Table Bundle</strong> — Only 25 available · Pickup Friday July 3rd, Dripping Springs&nbsp;
-        <a href="bundle.html" style="color:#FFD700;text-decoration:underline;font-weight:600;">Reserve Yours →</a>
-      </span>
-      <button class="announce-bar__close" aria-label="Close announcement" onclick="this.closest('.announce-bar').remove(); document.querySelector('.nav').style.top='0';">✕</button>
-    </div>
-  </div>
-
   <!-- ===================== NAV ===================== -->
   <nav class="nav nav--transparent" aria-label="Main navigation">
     <a class="nav__logo" href="index.html">
@@ -93,25 +82,6 @@
     </div>
   </section>
 
-  <!-- ===================== 4TH OF JULY BUNDLE ===================== -->
-  <section style="background:#2C3E2D;padding:64px 24px;text-align:center;">
-    <div style="max-width:720px;margin:0 auto;">
-      <p style="font-family:'Inter',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#D4BA8A;margin-bottom:14px;">Limited Release · 25 Bundles Only</p>
-      <h2 style="font-family:'Playfair Display',Georgia,serif;color:#F5F0E8;font-size:clamp(28px,5vw,44px);font-weight:400;line-height:1.15;margin-bottom:16px;">The 4th of July<br>Homestead Table</h2>
-      <p style="font-family:'Inter',sans-serif;color:#B89B6E;font-size:15px;line-height:1.7;margin-bottom:28px;max-width:540px;margin-left:auto;margin-right:auto;">
-        Whole Pasture Chicken — processed into 10 cuts · 3-Braided Challah Loaf · Cinnamon Rolls · Garlic Chili Crunch · Seasonal Preserves · Farm to Table Recipe Guide
-      </p>
-      <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:32px;">
-        <span style="font-family:'Playfair Display',Georgia,serif;color:#F5F0E8;font-size:42px;">$199</span>
-        <div style="text-align:left;">
-          <p style="font-family:'Inter',sans-serif;color:#D4BA8A;font-size:13px;">Local Pick-up</p>
-          <p style="font-family:'Inter',sans-serif;color:#B89B6E;font-size:13px;">Friday, July 3rd · Dripping Springs, TX</p>
-        </div>
-      </div>
-      <a href="bundle.html" style="display:inline-block;background:#8B1A1A;color:#F5F0E8;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:16px 36px;border-radius:2px;text-decoration:none;margin-bottom:16px;">Reserve My Bundle →</a>
-      <p style="font-family:'Inter',sans-serif;color:#6B7F5A;font-size:12px;">Presale closes June 28th · <span id="bundleCountHome"></span></p>
-    </div>
-  </section>
   <script>
     fetch('/bundle-availability').then(r=>r.json()).then(d=>{
       const el = document.getElementById('bundleCountHome');

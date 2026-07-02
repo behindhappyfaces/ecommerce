@@ -1337,7 +1337,10 @@ app.delete('/admin/recipe-guide-codes/:code', requireAdmin, async (req, res) => 
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   setHeaders(res, filePath) {
-    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+    } else if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
       res.setHeader('Cache-Control', 'no-store');
     }
   }
@@ -4074,7 +4077,7 @@ app.get('/flyer', async (req, res) => {
     <div class="intro-eyebrow">Fresh This Week · Only 10 Available</div>
     <div class="intro-headline"><em>Pasture-Raised &amp; Ready.</em></div>
     <div class="intro-body">
-      <p>Available <strong>Tuesday–Friday</strong> · Order before they're gone.</p>
+      <p>🗓️ <strong>Delivered Fri (7/10)</strong></p>
       <p>🚚 <strong>FREE delivery within 10 miles.</strong></p>
       <p>Know someone always worried about <em>"What's for dinner?"</em> — send them our way.</p>
       <p><strong>Refer a friend. Earn $5 in Farm Rewards.</strong></p>
@@ -4171,130 +4174,131 @@ app.get('/flyer.pdf', async (req, res) => {
     const W = 612, MID = 306;
     const GREEN = '#2C3E2D', RUST = '#8B3A2A', CREAM = '#F5F0E8', DARK = '#1E1E1E';
 
-    // ── HEADER (y 0-65) ──────────────────────────────────────────────
-    doc.rect(0, 0, W, 65).fill(GREEN);
-    doc.fillColor(CREAM).font('Times-Bold').fontSize(20)
-       .text('Heart of Texas Organics', 36, 14, { width: 320 });
-    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
-       .text('YOUR LOCAL FARM  -  DRIPPING SPRINGS, TX', 36, 40, { width: 280 });
-    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
-       .text('heartoftexasorganics.com', MID + 10, 40, { width: 160, align: 'right' });
+    // ── HEADER (y 0-66) ──────────────────────────────────────────────
+    doc.rect(0, 0, W, 66).fill(GREEN);
+    doc.fillColor(CREAM).font('Times-Bold').fontSize(21)
+       .text('Heart of Texas Organics', 36, 13, { width: 340 });
+    doc.fillColor(CREAM).font('Helvetica').fontSize(8.5)
+       .text('YOUR LOCAL FARM', 36, 40, { width: 200 });
+    doc.fillColor(CREAM).font('Helvetica').fontSize(8.5)
+       .text('heartoftexasorganics.com', 0, 40, { width: W - 36, align: 'right' });
 
-    // ── RUST BAR (y 65-71) ───────────────────────────────────────────
-    doc.rect(0, 65, W, 6).fill(RUST);
+    // ── RUST BAR (y 66-72) ───────────────────────────────────────────
+    doc.rect(0, 66, W, 6).fill(RUST);
 
-    // ── PROMO COPY (y 71-288) ────────────────────────────────────────
-    doc.rect(0, 71, W, 217).fill(CREAM);
+    // ── INTRO (y 72-218) ─────────────────────────────────────────────
+    doc.rect(0, 72, W, 146).fill(CREAM);
 
-    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
-       .text('FRESH THIS WEEK  -  LIMITED QUANTITY', 36, 84, { width: W - 72, align: 'center' });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(8)
+       .text('FRESH THIS WEEK  ·  ONLY 10 AVAILABLE', 36, 86, { width: W - 72, align: 'center' });
 
-    doc.fillColor(GREEN).font('Times-Bold').fontSize(23)
-       .text('Good Morning!', 36, 98, { width: W - 72 });
-    doc.fillColor(RUST).font('Times-Italic').fontSize(17)
-       .text('Fresh Batches Ready to Go.', 36, 126, { width: W - 72 });
+    doc.fillColor(RUST).font('Times-BoldItalic').fontSize(26)
+       .text('Pasture-Raised & Ready.', 36, 103, { width: W - 72, align: 'center' });
 
-    doc.fillColor(DARK).font('Helvetica').fontSize(10.5).lineGap(2)
-       .text(
-         'Starting next Tuesday, we have 10 pasture-raised Chicken & Dinner Roll Bundles ready -- and they need to be gone by Friday.',
-         36, 156, { width: W - 72 }
-       );
-    doc.moveDown(0.45);
-    doc.text(
-      'Each chicken weighs 8-10 lbs and is processed into 10 premium cuts, ready to throw straight on the grill or in the oven. Grab a side, and dinner\'s done.',
-      { width: W - 72 }
-    );
-    doc.moveDown(0.45);
-    doc.text(
-      'If you -- or someone you know -- is always stressing over "What\'s for dinner?" text me today! I\'d love an introduction.',
-      { width: W - 72 }
-    );
+    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(11)
+       .text('Delivered Fri (7/10)', 36, 140, { width: W - 72, align: 'center' });
 
-    // ── CUTS BANNER (y 288-310) ──────────────────────────────────────
-    doc.rect(0, 288, W, 22).fill(GREEN);
-    doc.fillColor(CREAM).font('Helvetica').fontSize(8)
-       .text('2 Boneless/Skinless Breasts  *  2 Leg Quarters  *  2 Tenders  *  2 Drums  *  2 Flats  *  Pasture to table', 0, 296, { width: W, align: 'center' });
+    doc.fillColor(DARK).font('Helvetica').fontSize(11).lineGap(1)
+       .text('FREE delivery within 10 miles.', 36, 161, { width: W - 72, align: 'center' });
 
-    // ── PRODUCT CARDS (y 310-724) ────────────────────────────────────
-    const CARD_Y = 310, CARD_H = 414;
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('Know someone always worried about "What\'s for dinner?" — send them our way.', 36, 178, { width: W - 72, align: 'center' });
+
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(10)
+       .text('Refer a friend. Earn $5 in Farm Rewards.', 36, 200, { width: W - 72, align: 'center' });
+
+    // ── RUST DIVIDER (y 218-236) ─────────────────────────────────────
+    doc.rect(0, 218, W, 18).fill(RUST);
+    doc.fillColor(CREAM).font('Helvetica-Bold').fontSize(8)
+       .text("THIS WEEK'S OFFERINGS", 0, 224, { width: W, align: 'center', characterSpacing: 2 });
+
+    // ── PRODUCT CARDS (y 236-722) ────────────────────────────────────
+    const CARD_Y = 236, CARD_H = 486;
     doc.rect(0,   CARD_Y, MID, CARD_H).fill('#FFFFFF');
     doc.rect(MID, CARD_Y, MID, CARD_H).fill(CREAM);
     doc.rect(MID - 1, CARD_Y, 1.5, CARD_H).fill('#C8BEB2');
 
-    const QR_W = 150;
+    const QR_W = 148;
+    const CUTS = '2 Breasts  ·  2 Leg Quarters  ·  2 Tenders  ·  2 Flats  ·  2 Drummettes';
 
     // ─ LEFT CARD: Chicken Bundle ─
-    const LX = 20, LW = MID - 40;
+    const LX = 18, LW = MID - 36;
 
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
-       .text('LIMITED  -  10 AVAILABLE', LX, CARD_Y + 16, { width: LW, align: 'center' });
-    doc.fillColor(GREEN).font('Times-Bold').fontSize(17)
-       .text('Chicken & Dinner Roll Bundle', LX, CARD_Y + 29, { width: LW, align: 'center' });
-    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(28)
-       .text('$79', LX, CARD_Y + 61, { width: LW, align: 'center' });
+       .text('LIMITED  —  10 AVAILABLE', LX, CARD_Y + 16, { width: LW, align: 'center' });
+    doc.fillColor(GREEN).font('Times-Bold').fontSize(16)
+       .text('Chicken & Dinner Roll Bundle', LX, CARD_Y + 30, { width: LW, align: 'center' });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(30)
+       .text('$99', LX, CARD_Y + 56, { width: LW, align: 'center' });
 
-    doc.rect(LX + 20, CARD_Y + 96, LW - 40, 0.75).fill('#C8BEB2');
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7)
-       .text("WHAT'S INCLUDED", LX, CARD_Y + 103, { width: LW, align: 'center' });
+    doc.rect(LX + 16, CARD_Y + 94, LW - 32, 0.75).fill('#C8BEB2');
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7.5)
+       .text("WHAT'S INCLUDED", LX, CARD_Y + 101, { width: LW, align: 'center' });
 
-    const chickenItems = ['Pasture-Raised Chicken (8-10 lbs)', 'Processed into 10 Premium Cuts', '1 Dozen Soft Dinner Rolls'];
-    chickenItems.forEach((item, i) => {
-      doc.fillColor(DARK).font('Helvetica').fontSize(10)
-         .text('•  ' + item, LX + 10, CARD_Y + 115 + i * 16, { width: LW - 10 });
-    });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  Whole Pasture-Raised Chicken — 10 Premium Cuts', LX + 8, CARD_Y + 116, { width: LW - 8 });
+    doc.fillColor('#4A5E3A').font('Helvetica-Oblique').fontSize(9)
+       .text(CUTS, LX + 18, CARD_Y + 132, { width: LW - 18 });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  1 Dozen Soft Dinner Rolls', LX + 8, CARD_Y + 150, { width: LW - 8 });
 
-    doc.fillColor('#666').font('Helvetica-Oblique').fontSize(8.5)
-       .text('+ add-ons at checkout: cinnamon rolls, butter, eggs, garlic chili crunch', LX, CARD_Y + 168, { width: LW, align: 'center' });
+    doc.fillColor('#777').font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ optional add-ons at checkout — bundle members save 10%', LX, CARD_Y + 174, { width: LW, align: 'center' });
 
     const cQR_X = Math.round((MID - QR_W) / 2);
-    const cQR_Y = CARD_Y + 198;
+    const cQR_Y = CARD_Y + 200;
     doc.rect(cQR_X - 5, cQR_Y - 5, QR_W + 10, QR_W + 10).fill('#E8E4DE');
     doc.image(chickenBuf, cQR_X, cQR_Y, { width: QR_W });
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9)
        .text('SCAN TO ORDER', LX, cQR_Y + QR_W + 10, { width: LW, align: 'center' });
-    doc.fillColor('#555').font('Helvetica').fontSize(7.5)
+    doc.fillColor('#555').font('Helvetica').fontSize(7)
        .text('heartoftexasorganics.com/?start=chicken-bundle', LX, cQR_Y + QR_W + 24, { width: LW, align: 'center' });
 
     // ─ RIGHT CARD: Sampler Box ─
-    const RX = MID + 20, RW = MID - 40;
+    const RX = MID + 18, RW = MID - 36;
 
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(7.5)
        .text('CUSTOMIZE YOUR ORDER', RX, CARD_Y + 16, { width: RW, align: 'center' });
-    doc.fillColor(GREEN).font('Times-Bold').fontSize(17)
-       .text('The Farm Sampler Box', RX, CARD_Y + 29, { width: RW, align: 'center' });
-    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(28)
-       .text('$149', RX, CARD_Y + 61, { width: RW, align: 'center' });
+    doc.fillColor(GREEN).font('Times-Bold').fontSize(16)
+       .text('The Farm Sampler Box', RX, CARD_Y + 30, { width: RW, align: 'center' });
+    doc.fillColor(RUST).font('Helvetica-Bold').fontSize(30)
+       .text('$149', RX, CARD_Y + 56, { width: RW, align: 'center' });
 
-    doc.rect(RX + 20, CARD_Y + 96, RW - 40, 0.75).fill('#B8B0A4');
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7)
-       .text("WHAT'S INCLUDED", RX, CARD_Y + 103, { width: RW, align: 'center' });
+    doc.rect(RX + 16, CARD_Y + 94, RW - 32, 0.75).fill('#B8B0A4');
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(7.5)
+       .text("WHAT'S INCLUDED", RX, CARD_Y + 101, { width: RW, align: 'center' });
 
-    const samplerItems = ['Whole Chicken — 10 Premium Cuts', 'Farm Eggs — 1 Dozen', 'Real Cream Butter — 1/2 lb', 'Garlic Chili Crunch (or swap)'];
-    samplerItems.forEach((item, i) => {
-      doc.fillColor(DARK).font('Helvetica').fontSize(10)
-         .text('•  ' + item, RX + 10, CARD_Y + 115 + i * 16, { width: RW - 10 });
-    });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  Whole Chicken — 10 Premium Cuts', RX + 8, CARD_Y + 116, { width: RW - 8 });
+    doc.fillColor('#4A5E3A').font('Helvetica-Oblique').fontSize(9)
+       .text(CUTS, RX + 18, CARD_Y + 132, { width: RW - 18 });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  Pasture-Raised Eggs — Non-GMO · Soy-Free · 1 Dozen', RX + 8, CARD_Y + 150, { width: RW - 8 });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  Real Cream Butter — Grass-Fed & Finished · ½ lb', RX + 8, CARD_Y + 166, { width: RW - 8 });
+    doc.fillColor(DARK).font('Helvetica').fontSize(10.5)
+       .text('•  Garlic Chili Crunch', RX + 8, CARD_Y + 182, { width: RW - 8 });
 
-    doc.fillColor('#666').font('Helvetica-Oblique').fontSize(8.5)
-       .text('+ customize swaps & choose add-ons at checkout', RX, CARD_Y + 184, { width: RW, align: 'center' });
+    doc.fillColor('#777').font('Helvetica-Oblique').fontSize(8.5)
+       .text('+ customize your box & add-ons — bundle members save 10%', RX, CARD_Y + 202, { width: RW, align: 'center' });
 
     const sQR_X = MID + Math.round((MID - QR_W) / 2);
-    const sQR_Y = CARD_Y + 198;
+    const sQR_Y = CARD_Y + 224;
     doc.rect(sQR_X - 5, sQR_Y - 5, QR_W + 10, QR_W + 10).fill('#D4CAC0');
     doc.image(samplerBuf, sQR_X, sQR_Y, { width: QR_W });
     doc.fillColor(RUST).font('Helvetica-Bold').fontSize(9)
        .text('SCAN TO CUSTOMIZE & ORDER', RX, sQR_Y + QR_W + 10, { width: RW, align: 'center' });
-    doc.fillColor('#555').font('Helvetica').fontSize(7.5)
+    doc.fillColor('#555').font('Helvetica').fontSize(7)
        .text('heartoftexasorganics.com/?start=sampler-box', RX, sQR_Y + QR_W + 24, { width: RW, align: 'center' });
 
-    // ── FOOTER (y 724-792) ───────────────────────────────────────────
-    doc.rect(0, 724, W, 68).fill(GREEN);
+    // ── FOOTER (y 722-792) ───────────────────────────────────────────
+    doc.rect(0, 722, W, 70).fill(GREEN);
+    doc.fillColor(CREAM).font('Helvetica-Bold').fontSize(11.5)
+       .text('📸  Take a photo of your order & leave us a 5-star Google review', 36, 734, { width: W - 72, align: 'center' });
     doc.fillColor(CREAM).font('Helvetica').fontSize(10)
-       .text('Web: heartoftexasorganics.com', 36, 738, { width: 260 });
-    doc.fillColor(CREAM).font('Helvetica').fontSize(10)
-       .text('Location: Dripping Springs, TX 78620', 36, 754, { width: 260 });
-    doc.fillColor(CREAM).font('Times-Italic').fontSize(11)
-       .text("~Deborah  *  Head Hen in Charge  *  of Texas's Organics!", W - 36, 745, { width: 290, align: 'right' });
+       .text("You'll be entered to win a FREE Thanksgiving Turkey this year!", 36, 754, { width: W - 72, align: 'center' });
+    doc.fillColor('#D4BA8A').font('Helvetica-Bold').fontSize(9.5)
+       .text('⭐⭐⭐⭐⭐  Leave a Google Review', 36, 770, { width: W - 72, align: 'center' });
 
     doc.end();
   } catch (e) {

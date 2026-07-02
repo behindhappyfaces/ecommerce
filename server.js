@@ -4075,12 +4075,11 @@ app.get('/flyer', async (req, res) => {
 
   <!-- Promo copy -->
   <div class="intro">
-    <div class="intro-eyebrow">Fresh This Week — Limited Quantity</div>
-    <div class="intro-headline">Good Morning! <em>Limited Batches Ready to Go.</em></div>
+    <div class="intro-eyebrow">Fresh This Week · Only 10 Available</div>
+    <div class="intro-headline"><em>Pasture-Raised &amp; Ready.</em></div>
     <div class="intro-body">
-      <p>Starting <strong>next Tuesday</strong>, we have <strong>10 pasture-raised Chicken &amp; Dinner Roll Bundles</strong> ready — and they need to be gone by Friday.</p>
-      <p>Each chicken is processed into <strong>10 premium cuts</strong>, so it's ready to throw straight on the grill or in the oven. Grab a side, and dinner's done.</p>
-      <p>If you — or someone you know — is always stressing over <em>"What's for dinner?"</em>, <strong>text me today!</strong> I'd love an introduction.</p>
+      <p>Available <strong>Tuesday–Friday</strong> · Order before they're gone.</p>
+      <p>Know someone always asking <em>"What's for dinner?"</em> — send them our way.</p>
     </div>
   </div>
 

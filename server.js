@@ -2644,6 +2644,7 @@ function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl })
             Review your items below and click the button to complete your purchase — it only takes a minute!
           </p>
           ${noteBlock}
+          <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">~Deborah Head Hen in Charge ❤️ of Texas's Organics!</p>
 
           ${items.length ? `
           <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e2d6;border-radius:10px;overflow:hidden;margin-bottom:24px;">

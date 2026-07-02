@@ -4081,6 +4081,11 @@ app.get('/flyer', async (req, res) => {
     </div>
   </div>
 
+  <!-- Section divider -->
+  <div style="background:#8B3A2A;padding:12px 40px;text-align:center;font-family:'Lato',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#F5F0E8;">
+    This Week's Offerings
+  </div>
+
   <!-- Product cards -->
   <div class="cards">
 

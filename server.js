@@ -2712,6 +2712,16 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
   try {
     await sendEmailTo(to, 'Your custom order from Heart of Texas Organics 🌿', html);
 
+    // Send a copy to the admin inbox so it's visible in Outlook
+    const copyHtml = `
+      <div style="background:#2C3E2D;color:#F5F0E8;font-family:Georgia,serif;font-size:12px;padding:10px 18px;margin-bottom:0;">
+        📋 <strong>Copy of cart link email</strong> sent to ${name ? `<strong>${name}</strong> (${to})` : `<strong>${to}</strong>`}
+      </div>
+      ${html}`;
+    sendEmailTo(ADMIN_EMAIL, `📋 Copy: Cart link → ${name || to}`, copyHtml).catch(e =>
+      console.warn('[CartLink copy email]', e.message)
+    );
+
     // Persist customer details + reminder count back onto the saved cart link
     // so it can be found later in the Sent Cart Links list, resent, or duplicated.
     const token = tokenFromCartUrl(cartUrl);

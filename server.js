@@ -4077,6 +4077,7 @@ app.get('/flyer', async (req, res) => {
       <p>Available <strong>Tuesday–Friday</strong> · Order before they're gone.</p>
       <p>🚚 <strong>FREE delivery within 10 miles.</strong></p>
       <p>Know someone always worried about <em>"What's for dinner?"</em> — send them our way.</p>
+      <p><strong>Refer a friend. Earn $5 in Farm Rewards.</strong></p>
     </div>
   </div>
 

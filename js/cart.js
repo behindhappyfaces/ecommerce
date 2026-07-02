@@ -278,7 +278,8 @@ function renderCart() {
 
   // Render known products AND custom items (those with a stored name field)
   const adminSub   = getAdminSub();
-  const subscribing = !!adminSub;
+  const SUBSCRIPTION_BOX_IDS = new Set(['bread-box', 'harvest-subscription', 'farm-box']);
+  const subscribing = !!adminSub && SUBSCRIPTION_BOX_IDS.has(adminSub.token);
 
   cart.items.filter(({ id, name }) => PRODUCTS[id] || name).forEach(({ id, qty, price: itemPrice, name: storedName }) => {
     const p = PRODUCTS[id];
@@ -2855,18 +2856,8 @@ function openBoxCustomizer(subId, name, price) {
     const box = BOX_CONTENTS[subId];
     const subName = box ? box.label : name;
 
-    // Box price = full calculated total minus add-on prices (upcharges stay with the box)
-    let boxOnlyPrice = calculatedTotal;
-    addonInputs.forEach(c => {
-      if (PRODUCTS[c.value]) boxOnlyPrice -= (parseFloat(c.dataset.addonPrice) || 0);
-    });
-
-    // Box as one line item + each checked add-on as its own line item so cart shows itemized pricing
-    const cartItems = [{ id: subId, qty: 1, price: boxOnlyPrice }];
-    addonInputs.forEach(c => {
-      const ap = parseFloat(c.dataset.addonPrice) || 0;
-      if (PRODUCTS[c.value] && ap > 0) cartItems.push({ id: c.value, qty: 1, price: ap });
-    });
+    // Single cart item — full calculated total (add-ons shown as sub-rows via adminSub, not separate items)
+    const cartItems = [{ id: subId, qty: 1, price: calculatedTotal }];
 
     localStorage.setItem('hoto-cart', JSON.stringify({ items: cartItems }));
 

@@ -34,6 +34,8 @@ const PRODUCTS = {
   'addon-chicken-broth':  { name: 'Chicken Bone Broth (16 oz)',         price: 2000, subPrice: null, image: null },
 };
 
+const BUNDLE_IDS = new Set(['sampler-box', 'bread-box', 'harvest-subscription', 'farm-box']);
+
 const STORAGE_KEY   = 'hoto-cart';
 const SHIP_MINIMUM  = 0;
 
@@ -2359,7 +2361,7 @@ BOX_CONTENTS['sampler-box'].addons = [
   { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
   { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
   { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3500 },
-  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2400 },
+  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2400, highlight: 'ADD NOW & SAVE 5% OFF YOUR TOTAL' },
 ];
 
 const ADDON_OPTIONS = [
@@ -2565,7 +2567,9 @@ function openBoxCustomizer(subId, name, price) {
     const wrapper = document.createElement('div');
 
     const label = document.createElement('label');
-    label.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;';
+    label.style.cssText = addon.highlight
+      ? 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1.5px solid var(--color-rust,#8B4A2F);border-radius:10px;cursor:pointer;'
+      : 'display:flex;align-items:center;gap:12px;padding:10px 16px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = addon.id;
@@ -2591,6 +2595,12 @@ function openBoxCustomizer(subId, name, price) {
     label.appendChild(nameWrap);
     label.appendChild(priceSpan);
     wrapper.appendChild(label);
+    if (addon.highlight) {
+      const hlSpan = document.createElement('p');
+      hlSpan.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:4px 0 0 16px;';
+      hlSpan.textContent = addon.highlight;
+      wrapper.appendChild(hlSpan);
+    }
 
     // Weight + processing selector for whole chicken add-on
     if (addon.id === 'addon-whole-chicken') {
@@ -2801,7 +2811,7 @@ function openBoxCustomizer(subId, name, price) {
       linesEl.appendChild(row);
     });
 
-    document.getElementById('bc-price-total').textContent = '$' + (total / 100).toFixed(2).replace(/\.00$/, '') + '/wk';
+    document.getElementById('bc-price-total').textContent = '$' + (total / 100).toFixed(2).replace(/\.00$/, '');
     return total;
   }
 
@@ -3197,7 +3207,8 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
         // Prefer id-based lookup; fall back to name match; keep custom items with stored name
         var pid = (item.id && PRODUCTS[item.id]) ? item.id :
           Object.keys(PRODUCTS).find(function(k) { return PRODUCTS[k].name === item.name; });
-        var cartItem = { id: pid || item.id, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0), taxable: !!item.taxable, free: !!item.free };
+        var itemId = pid || item.id;
+        var cartItem = { id: itemId, qty: item.quantity || item.qty || 1, price: item.price != null ? item.price : (pid ? PRODUCTS[pid].price : 0), taxable: BUNDLE_IDS.has(itemId) ? false : !!item.taxable, free: !!item.free };
         if (!pid && item.name) cartItem.name = item.name;
         cart.items.push(cartItem);
       });

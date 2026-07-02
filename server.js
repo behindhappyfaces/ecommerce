@@ -1753,11 +1753,13 @@ app.post('/create-checkout-session', async (req, res) => {
     cartDiscountCents = Math.min(cartDiscountCents, positiveSubtotal);
 
     // Sales tax — only applied to items the admin/cart marked as taxable;
-    // free items already carry unit_amount 0 so they contribute nothing here
+    // free items already carry unit_amount 0 so they contribute nothing here.
+    // Bundle/box products are always tax-exempt regardless of the taxable flag.
+    const BUNDLE_IDS = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july']);
     const taxPct = parseFloat(tax_rate_pct) || 0;
     if (taxPct > 0) {
       const taxableSubtotal = items.reduce(
-        (s, i) => s + (i.taxable ? (i.price || 0) * (i.quantity || 1) : 0), 0
+        (s, i) => s + (i.taxable && !BUNDLE_IDS.has(i.id) ? (i.price || 0) * (i.quantity || 1) : 0), 0
       );
       const taxCents = Math.round(taxableSubtotal * taxPct / 100);
       if (taxCents > 0) {
@@ -2814,7 +2816,8 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
-    const taxableSubtotal = items.reduce((s, i) => s + (i.taxable ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
+    const _bundleIds = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july']);
+    const taxableSubtotal = items.reduce((s, i) => s + (i.taxable && !_bundleIds.has(i.id) ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
     const taxPct = parseFloat(taxRate) || 0;
     const taxCents = taxPct > 0 ? Math.round(taxableSubtotal * taxPct / 100) : 0;
     const totalCents = subtotalCents + taxCents;

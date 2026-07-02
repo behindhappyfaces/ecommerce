@@ -4130,7 +4130,7 @@ app.get('/flyer', async (req, res) => {
     <div style="font-family:'Lato',sans-serif;font-size:13px;color:rgba(245,240,232,0.85);line-height:1.5;">
       You'll be entered to win a <strong style="color:#D4BA8A;">FREE Thanksgiving Turkey</strong> this year!
     </div>
-    <a href="https://g.page/r/CUUfyz-9bw9BEAE/review" style="margin-top:4px;color:#D4BA8A;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;border:1.5px solid rgba(212,186,138,0.5);padding:6px 18px;border-radius:4px;">⭐ Leave a Google Review</a>
+    <a href="https://g.page/r/CUUfyz-9bw9BEAE/review" style="margin-top:4px;color:#D4BA8A;font-family:'Lato',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;border:1.5px solid rgba(212,186,138,0.5);padding:6px 18px;border-radius:4px;">⭐⭐⭐⭐⭐ Leave a Google Review</a>
   </div>
 
 </div>

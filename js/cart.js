@@ -1710,17 +1710,25 @@ function openAdminSubDeliveryModal() {
   if (!meta) return openCartDeliveryModal();
   const overlay = document.getElementById('delivery-modal-overlay');
   if (!overlay) return;
-  const s1 = document.getElementById('dm-step1'), s2 = document.getElementById('dm-step2');
+  const s1 = document.getElementById('dm-step1'), s2 = document.getElementById('dm-step2'), s3 = document.getElementById('dm-step3');
   if (s1) s1.style.display = 'block';
   if (s2) s2.style.display = 'none';
+  if (s3) s3.style.display = 'none';
   overlay.classList.add('open');
   updateDeliveryMinimumState();
   document.getElementById('dm-pickup').onclick = () => {
     closeDeliveryModal();
     openPickupLocationModal(loc => subscribe(meta.token, meta.subName, meta.subPrice, 'pickup', loc, meta.swaps || [], meta.addons || []));
   };
+  const _adminSubIsSubscription = new Set(['bread-box', 'harvest-subscription', 'farm-box']).has(meta.token);
   document.getElementById('dm-delivery').onclick = () => {
-    _openDeliveryStep2((addr, fee, delivPromo) => checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo }));
+    _openDeliveryStep2((addr, fee, delivPromo) => {
+      if (_adminSubIsSubscription) {
+        checkoutSubscription('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo });
+      } else {
+        checkout('delivery', null, { address: addr, deliveryFeeCents: fee, deliveryPromoCode: delivPromo });
+      }
+    });
   };
   document.getElementById('dm-cancel').onclick = closeDeliveryModal;
 }
@@ -2981,6 +2989,31 @@ function closeBoxCustomizer() {
   _bcPendingArgs = null;
 }
 
+function _fireConfetti() {
+  if (!document.getElementById('_hoto_confetti_style')) {
+    const s = document.createElement('style');
+    s.id = '_hoto_confetti_style';
+    s.textContent = '@keyframes _hcf{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}85%{opacity:1}100%{transform:translateY(110vh) rotate(800deg) scale(0.6);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999;overflow:hidden;';
+  document.body.appendChild(wrap);
+  const colors = ['#e74c3c','#f39c12','#27ae60','#3498db','#9b59b6','#1abc9c','#e67e22','#f1c40f','#c0392b','#16a085'];
+  for (let i = 0; i < 140; i++) {
+    const p = document.createElement('div');
+    const c = colors[i % colors.length];
+    const sz = (Math.random() * 9 + 5).toFixed(1);
+    const left = (Math.random() * 100).toFixed(1);
+    const delay = (Math.random() * 2.2).toFixed(2);
+    const dur = (Math.random() * 2.5 + 2.5).toFixed(2);
+    const isRect = Math.random() > 0.35;
+    p.style.cssText = `position:absolute;width:${sz}px;height:${isRect ? (sz * 0.45).toFixed(1) : sz}px;background:${c};left:${left}%;top:-15px;border-radius:${isRect ? '3px' : '50%'};animation:_hcf ${dur}s ${delay}s ease-in both;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 5800);
+}
+
 function injectDeliveryModal() {
   if (document.getElementById('delivery-modal-overlay')) return;
 
@@ -3120,8 +3153,52 @@ function injectDeliveryModal() {
   step2.appendChild(addrErrMsg);
   step2.appendChild(addrActions);
 
+  // ── Step 3: Delivery fee result ────────────────────────────────────────
+  const step3 = document.createElement('div');
+  step3.id = 'dm-step3';
+  step3.style.cssText = 'display:none;text-align:center;padding:8px 0;';
+
+  const r3icon = document.createElement('div');
+  r3icon.id = 'dm-r3-icon';
+  r3icon.style.cssText = 'font-size:2.6rem;margin-bottom:10px;line-height:1;';
+
+  const r3head = document.createElement('p');
+  r3head.id = 'dm-r3-head';
+  r3head.className = 'sub-prompt__heading';
+  r3head.style.marginBottom = '8px';
+
+  const r3msg = document.createElement('p');
+  r3msg.id = 'dm-r3-msg';
+  r3msg.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:#5a5a5a;margin:0 0 14px;line-height:1.55;';
+
+  const r3fee = document.createElement('div');
+  r3fee.id = 'dm-r3-fee';
+  r3fee.style.cssText = 'font-family:var(--font-sans);font-size:1.15rem;font-weight:700;color:var(--color-green,#2C3E2D);margin-bottom:22px;';
+
+  const r3actions = document.createElement('div');
+  r3actions.style.cssText = 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap;';
+
+  const r3back = document.createElement('button');
+  r3back.className = 'sub-prompt__btn sub-prompt__btn--no';
+  r3back.textContent = '← Edit Address';
+  r3back.onclick = () => { step3.style.display = 'none'; step2.style.display = 'block'; };
+
+  const r3confirm = document.createElement('button');
+  r3confirm.className = 'sub-prompt__btn sub-prompt__btn--yes';
+  r3confirm.id = 'dm-r3-confirm';
+  r3confirm.textContent = 'Continue to Checkout →';
+
+  r3actions.appendChild(r3back);
+  r3actions.appendChild(r3confirm);
+  step3.appendChild(r3icon);
+  step3.appendChild(r3head);
+  step3.appendChild(r3msg);
+  step3.appendChild(r3fee);
+  step3.appendChild(r3actions);
+
   box.appendChild(step1);
   box.appendChild(step2);
+  box.appendChild(step3);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeDeliveryModal(); });
@@ -3172,28 +3249,87 @@ function _openDeliveryStep2(onConfirm) {
 
     // Calculate distance-based delivery fee; fall back to $15 flat if unreachable
     let feeCents = 1500;
+    let feeData = null;
     try {
       const feeRes = await fetch('/api/sampler-delivery-fee', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ street, city, state, zip }),
+        body: JSON.stringify({ street, city, state, zip, order_total_cents: getTotal() }),
       });
-      const feeData = await feeRes.json();
-      if (feeRes.ok && typeof feeData.fee_cents === 'number') {
+      feeData = await feeRes.json();
+      if (feeRes.ok && feeData && typeof feeData.fee_cents === 'number') {
         feeCents = feeData.fee_cents;
       }
     } catch (_) {
-      // network error — use flat $15 fallback so checkout is never blocked
-    }
-    if (feeCents > 0) {
-      confirmBtn.textContent = `Delivery fee: $${(feeCents / 100).toFixed(2)} — Continuing…`;
+      // network error — $15 flat fallback so checkout is never blocked
     }
 
-    closeDeliveryModal();
-    try {
-      await onConfirm(address, feeCents, capturedPromo);
-    } catch (err) {
+    // Show step3 result panel with messaging
+    const step3 = document.getElementById('dm-step3');
+    const r3icon = document.getElementById('dm-r3-icon');
+    const r3head = document.getElementById('dm-r3-head');
+    const r3msg  = document.getElementById('dm-r3-msg');
+    const r3fee  = document.getElementById('dm-r3-fee');
+    const r3confirm = document.getElementById('dm-r3-confirm');
+
+    if (step3 && r3confirm) {
+      const withinZone   = !!(feeData && feeData.within_free_zone);
+      const discountApplied = !!(feeData && feeData.discount_cents > 0);
+      const centsNeeded  = (feeData && feeData.cents_to_threshold) || 0;
+      const miles        = feeData && feeData.miles;
+      const origFee      = (feeData && feeData.original_fee_cents) != null ? feeData.original_fee_cents : feeCents;
+      const feeStr       = `$${(feeCents / 100).toFixed(2)}`;
+      const origStr      = `$${(origFee / 100).toFixed(2)}`;
+      const neededStr    = `$${(centsNeeded / 100).toFixed(2)}`;
+      const milesNote    = miles ? ` (~${miles} mi from the farm)` : '';
+
+      if (feeCents === 0 && withinZone && centsNeeded === 0) {
+        // 🎉 FREE delivery — ≤10mi AND ≥$99
+        r3icon.textContent = '🎉';
+        r3head.textContent = 'You Qualify for FREE Home Delivery!';
+        r3msg.textContent  = "Congratulations! Your order earns FREE home delivery — we're bringing the farm straight to your door. Thank you for being part of the Heart of Texas family!";
+        r3fee.textContent  = 'Delivery: FREE';
+        r3fee.style.color  = '#2a7a2a';
+        _fireConfetti();
+      } else if (withinZone && centsNeeded > 0) {
+        // ≤10mi but under $99 — delivery is still free, nudge toward threshold
+        r3icon.textContent = '🌱';
+        r3head.textContent = 'You\'re in Our Free Delivery Zone!';
+        r3msg.innerHTML    = `You're right in our backyard! Add just <strong>${neededStr}</strong> more to your order and unlock our FREE delivery celebration. Either way, we're delivering to your door for <strong>free</strong> — no fee today.`;
+        r3fee.textContent  = 'Delivery: FREE';
+        r3fee.style.color  = '#2a7a2a';
+      } else if (discountApplied) {
+        // >10mi AND ≥$99 — $5 off the fee
+        r3icon.textContent = '🌟';
+        r3head.textContent = 'Your Order Earns $5 Off Delivery!';
+        r3msg.innerHTML    = `Your support goes a long way — literally! We're taking <strong>$5 off</strong> your delivery fee as a thank-you for your larger order. Farm-fresh to your door for just <strong>${feeStr}</strong>${milesNote}.`;
+        r3fee.innerHTML    = `<span style="text-decoration:line-through;color:#999;font-weight:400;margin-right:6px;">${origStr}</span>${feeStr}`;
+        r3fee.style.color  = 'var(--color-rust,#8B3A2A)';
+      } else {
+        // >10mi AND <$99 — standard fee, nudge to $99 to save $5
+        r3icon.textContent = '🚚';
+        r3head.textContent = 'Delivery to Your Door';
+        r3msg.innerHTML    = `Your delivery fee is <strong>${feeStr}</strong>${milesNote}. Add just <strong>${neededStr}</strong> more to your order and we'll knock <strong>$5 off</strong> that fee — basically a free add-on just for stocking up!`;
+        r3fee.textContent  = `Delivery: ${feeStr}`;
+        r3fee.style.color  = '';
+      }
+
+      step2.style.display = 'none';
+      step3.style.display = 'block';
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Continue to Checkout →';
+
+      r3confirm.onclick = async () => {
+        r3confirm.disabled = true;
+        r3confirm.textContent = 'Going to checkout…';
+        closeDeliveryModal();
+        try { await onConfirm(address, feeCents, capturedPromo); }
+        catch (_) { r3confirm.disabled = false; r3confirm.textContent = 'Continue to Checkout →'; }
+      };
+    } else {
+      // Fallback if step3 missing from DOM
+      closeDeliveryModal();
+      try { await onConfirm(address, feeCents, capturedPromo); }
+      catch (err) { confirmBtn.disabled = false; confirmBtn.textContent = 'Continue to Checkout →'; }
     }
   };
 }

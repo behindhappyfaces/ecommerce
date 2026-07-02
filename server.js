@@ -1573,10 +1573,18 @@ async function geocodeAddress(street, city, state, zip) {
   const q = encodeURIComponent(`${street}, ${city}, ${state} ${zip}, USA`);
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
-    { signal: AbortSignal.timeout(7000), headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (operations@heartoftexasorganics.com)' } }
+    { signal: AbortSignal.timeout(12000), headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (operations@heartoftexasorganics.com)' } }
   );
   const data = await r.json();
   if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  // Retry with ZIP + city only if full address fails
+  const q2 = encodeURIComponent(`${city}, ${state} ${zip}, USA`);
+  const r2 = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${q2}&format=json&limit=1`,
+    { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'HeartOfTexasOrganics/1.0 (operations@heartoftexasorganics.com)' } }
+  );
+  const data2 = await r2.json();
+  if (data2?.[0]) return { lat: parseFloat(data2[0].lat), lng: parseFloat(data2[0].lon) };
   throw new Error('Address not found');
 }
 
@@ -1602,17 +1610,34 @@ function calcSamplerDeliveryFeeCents(miles) {
   return 1500 + Math.round((miles - 20) * 70);
 }
 app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
-  const { street, city, state, zip } = req.body || {};
+  const { street, city, state, zip, order_total_cents } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in all address fields.' });
+  const totalCents = parseInt(order_total_cents, 10) || 0;
+  const FREE_THRESHOLD = 9900; // $99
+  const DISCOUNT_AMT   = 500;  // $5 off when ≥$99 outside free zone
   try {
     const { lat, lng } = await geocodeAddress(street, city, state, zip);
     const miles = haversineMiles(BUNDLE_ORIGIN_LAT, BUNDLE_ORIGIN_LNG, lat, lng);
-    const feeCents = calcSamplerDeliveryFeeCents(miles);
-    res.json({ ok: true, miles: Math.round(miles * 10) / 10, fee_cents: feeCents, free: feeCents === 0 });
+    const roundedMiles = Math.round(miles * 10) / 10;
+    const withinFreeZone = miles <= 10;
+    const baseFee = calcSamplerDeliveryFeeCents(miles);
+    const qualifiesForDiscount = !withinFreeZone && totalCents >= FREE_THRESHOLD;
+    let feeCents = baseFee;
+    let discountCents = 0;
+    if (qualifiesForDiscount) { discountCents = DISCOUNT_AMT; feeCents = Math.max(0, baseFee - discountCents); }
+    const centsToThreshold = Math.max(0, FREE_THRESHOLD - totalCents);
+    console.log(`[sampler-delivery-fee] ${roundedMiles}mi, base $${(baseFee/100).toFixed(2)}, fee $${(feeCents/100).toFixed(2)}, order $${(totalCents/100).toFixed(2)}`);
+    res.json({ ok: true, miles: roundedMiles, fee_cents: feeCents, original_fee_cents: baseFee,
+               discount_cents: discountCents, free: feeCents === 0,
+               within_free_zone: withinFreeZone, cents_to_threshold: centsToThreshold });
   } catch (e) {
     console.error('[sampler-delivery-fee] geocode failed, using flat fee fallback:', e.message);
-    // Never block checkout on a geocoding failure — apply the standard $15 flat fee
-    res.json({ ok: true, miles: null, fee_cents: 1500, free: false, fallback: true });
+    const qualifiesForDiscount = totalCents >= FREE_THRESHOLD;
+    const baseFee = 1500;
+    const feeCents = qualifiesForDiscount ? baseFee - DISCOUNT_AMT : baseFee;
+    res.json({ ok: true, miles: null, fee_cents: feeCents, original_fee_cents: baseFee,
+               discount_cents: qualifiesForDiscount ? DISCOUNT_AMT : 0, free: false,
+               within_free_zone: false, cents_to_threshold: Math.max(0, FREE_THRESHOLD - totalCents), fallback: true });
   }
 });
 

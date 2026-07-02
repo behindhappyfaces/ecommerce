@@ -4069,7 +4069,7 @@ app.get('/flyer', async (req, res) => {
       <div class="hdr-name">Heart of Texas Organics</div>
       <div class="hdr-tag">Your Local Farm · Dripping Springs, TX</div>
     </div>
-    <div class="hdr-right">heartoftexasorganics.com</div>
+    <div class="hdr-right"><a href="https://www.heartoftexasorganics.com" style="color:inherit;text-decoration:none;">heartoftexasorganics.com</a></div>
   </div>
   <div class="rust-bar"></div>
 

@@ -2606,6 +2606,15 @@ function openBoxCustomizer(subId, name, price) {
   const addonsEl = document.getElementById('bc-addons');
   addonsEl.innerHTML = '';
   const addonList = (box && box.addons) ? box.addons : ADDON_OPTIONS.filter(a => !boxItemIds.has(a.id.replace('addon-','')));
+
+  // Show savings banner when this box has exclusive (discounted) add-on pricing
+  if (addonList.length && addonList[0].regularPrice) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#8B4A2F;color:#F5F0E8;border-radius:8px;padding:10px 16px;margin-bottom:10px;text-align:center;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;';
+    banner.textContent = '★  Save 10% on every add-on with this bundle  ★';
+    addonsEl.appendChild(banner);
+  }
+
   addonList.forEach(addon => {
     const wrapper = document.createElement('div');
 

@@ -1594,10 +1594,12 @@ function calcBundleDeliveryFeeCents(distanceMiles) {
 const BUNDLE_ORIGIN_LAT = parseFloat(process.env.BUNDLE_ORIGIN_LAT) || 30.191784;
 const BUNDLE_ORIGIN_LNG = parseFloat(process.env.BUNDLE_ORIGIN_LNG) || -98.084784;
 
-// POST /api/sampler-delivery-fee — Sampler Box: FREE ≤20 mi, $15 flat >20 mi
+// POST /api/sampler-delivery-fee — FREE ≤10 mi, $15 flat 10–20 mi, $15 + $0.70/mi after 20
 // Origin: 100 Commons Rd, Dripping Springs TX 78620
 function calcSamplerDeliveryFeeCents(miles) {
-  return miles <= 20 ? 0 : 1500;
+  if (miles <= 10) return 0;
+  if (miles <= 20) return 1500;
+  return 1500 + Math.round((miles - 20) * 70);
 }
 app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip } = req.body || {};

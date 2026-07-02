@@ -3164,10 +3164,37 @@ function _openDeliveryStep2(onConfirm) {
     localStorage.setItem('hoto-delivery-address', JSON.stringify(address));
     // Capture promo BEFORE closeDeliveryModal resets _validatedDeliveryPromo
     const capturedPromo = _validatedDeliveryPromo || null;
-    console.log('[HOTO] delivery promo captured:', capturedPromo);
+
+    // Calculate distance-based delivery fee
+    let feeCents = 0;
+    try {
+      const feeRes = await fetch('/api/sampler-delivery-fee', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ street, city, state, zip }),
+      });
+      const feeData = await feeRes.json();
+      if (!feeRes.ok) {
+        errEl.textContent = feeData.error || 'Could not calculate delivery fee. Please check your address.';
+        errEl.style.display = 'block';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Continue to Checkout →';
+        return;
+      }
+      feeCents = feeData.fee_cents || 0;
+      if (feeCents > 0) {
+        confirmBtn.textContent = `Delivery fee: $${(feeCents / 100).toFixed(2)} — Continuing…`;
+      }
+    } catch (_) {
+      errEl.textContent = 'Could not calculate delivery fee. Please check your connection.';
+      errEl.style.display = 'block';
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Continue to Checkout →';
+      return;
+    }
+
     closeDeliveryModal();
     try {
-      await onConfirm(address, 0, capturedPromo);
+      await onConfirm(address, feeCents, capturedPromo);
     } catch (err) {
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Continue to Checkout →';

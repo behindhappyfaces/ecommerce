@@ -2337,7 +2337,6 @@ const SWAP_OPTIONS = {
 // Flavors shown in the included preserves picker (upcharge = extra above base box price)
 const INCLUDED_PRESERVES_FLAVORS = [
   { name: 'Strawberry',                           upcharge: 0 },
-  { name: 'Grape',                                upcharge: 0 },
   { name: 'Blackberry (+$3)',                     upcharge: 300 },
   { name: 'Peach (+$3)',                          upcharge: 300 },
   { name: 'Fig (+$3)',                            upcharge: 300 },
@@ -2348,7 +2347,6 @@ const INCLUDED_PRESERVES_FLAVORS = [
 // Flavors for the add-on preserves (standalone purchase)
 const PRESERVES_FLAVORS = [
   { name: 'Strawberry',       price: 1500 },
-  { name: 'Grape',            price: 1500 },
   { name: 'Blackberry',       price: 1800 },
   { name: 'Peach',            price: 1800 },
   { name: 'Fig',              price: 1800 },
@@ -2468,7 +2466,6 @@ function openBoxCustomizer(subId, name, price) {
       swapFlavorSel.style.cssText = 'font-family:var(--font-sans);font-size:0.78rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:5px 8px;background:#fff;color:var(--color-green);cursor:pointer;';
       [
         { name: 'Strawberry',       upcharge: 0 },
-        { name: 'Grape',            upcharge: 0 },
         { name: 'Blackberry',       upcharge: 300 },
         { name: 'Peach',            upcharge: 300 },
         { name: 'Fig',              upcharge: 300 },

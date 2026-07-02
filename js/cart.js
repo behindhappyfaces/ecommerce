@@ -2387,7 +2387,7 @@ BOX_CONTENTS['sampler-box'].addons = [
   { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 1800, regularPrice: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
   { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1350, regularPrice: 1500, regularPriceLabel: '$15–$18', priceLabel: '$13.50–$16.20', flavors: PRESERVES_FLAVORS },
   { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3150, regularPrice: 3500 },
-  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2160, regularPrice: 2400, highlight: 'ADD NOW & SAVE 5% OFF YOUR TOTAL' },
+  { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2160, regularPrice: 2400 },
 ];
 
 BOX_CONTENTS['chicken-dinner-roll-bundle'].addons = [
@@ -2611,7 +2611,7 @@ function openBoxCustomizer(subId, name, price) {
   if (addonList.length && addonList[0].regularPrice) {
     const banner = document.createElement('div');
     banner.style.cssText = 'background:#8B4A2F;color:#F5F0E8;border-radius:8px;padding:10px 16px;margin-bottom:10px;text-align:center;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;';
-    banner.textContent = '★  Save 10% on every add-on with this bundle  ★';
+    banner.textContent = '★  Save 10% on every add-on with this bundle thru 7/31  ★';
     addonsEl.appendChild(banner);
   }
 

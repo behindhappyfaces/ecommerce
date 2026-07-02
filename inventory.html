@@ -4271,6 +4271,12 @@
       }
       if (!cartUrl) { alert('Generate the cart link first.'); return; }
 
+      // Guard against accidental duplicate sends
+      const _prevSentUrl = document.getElementById('cl-send-email').dataset.lastSentUrl;
+      if (_prevSentUrl === cartUrl) {
+        if (!confirm(`This link was already sent to ${custEmail || custName || 'this customer'}.\n\nSend it again?`)) return;
+      }
+
       const sendBtn = document.getElementById('cl-send-email');
       sendBtn.textContent = 'Sending…'; sendBtn.disabled = true;
       msgEl.style.display = 'none';
@@ -4295,6 +4301,7 @@
         if (!data.ok) throw new Error(data.error || 'Failed to send');
         msgEl.textContent = '✓ Email sent' + (data.sheetRecorded ? ' & recorded in spreadsheet' : '');
         msgEl.style.cssText = 'font-size:0.75rem;color:#6fcf97;display:inline;';
+        document.getElementById('cl-send-email').dataset.lastSentUrl = cartUrl;
       } catch(e) {
         msgEl.textContent = '✗ ' + e.message;
         msgEl.style.cssText = 'font-size:0.75rem;color:#e07a5f;display:inline;';
@@ -4409,7 +4416,7 @@
       <td>${statusBadge}</td>
       <td style="white-space:nowrap;">
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy</button>
-        <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" ${c.email ? '' : 'disabled title="No email on file"'}>Resend</button>
+        <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" data-sent-count="${c.remindersSent || 1}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" ${c.email ? '' : 'disabled title="No email on file"'}>Resend</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
         <button class="btn-sm" style="background:#5a1a1a;color:#f4a261;border:1px solid #8b2222;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.75rem;" data-action="delete" data-token="${c.token}">Delete</button>
       </td>
@@ -4424,7 +4431,10 @@
       return;
     }
     if (action === 'resend') {
-      if (!confirm('Resend this order email to the customer?')) return;
+      const btn = e.target.closest('[data-action="resend"]');
+      const sentCount = parseInt(btn?.dataset.sentCount || '1', 10);
+      const custName = btn?.dataset.customerName || 'the customer';
+      if (!confirm(`This link has already been sent ${sentCount} time${sentCount !== 1 ? 's' : ''} to ${custName}.\n\nSend again?`)) return;
       try {
         const res = await fetch(`/admin/cart-links/${token}/resend`, { method: 'POST', headers: authHeaders() });
         const data = await res.json();

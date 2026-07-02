@@ -2793,6 +2793,14 @@ function openBoxCustomizer(subId, name, price) {
       }
     });
 
+    // 5% discount when Yeast Rolls is added
+    const yeastCb = document.querySelector('#bc-addons input[value="addon-yeast-rolls"]');
+    if (yeastCb && yeastCb.checked) {
+      const discountCents = Math.round(total * 0.05);
+      lines.push({ label: '5% discount (Yeast Rolls promo)', amount: -discountCents });
+      total -= discountCents;
+    }
+
     // Render lines (safe DOM — no innerHTML with user data)
     const linesEl = document.getElementById('bc-price-lines');
     while (linesEl.firstChild) linesEl.removeChild(linesEl.firstChild);
@@ -2802,7 +2810,9 @@ function openBoxCustomizer(subId, name, price) {
       const labelSpan = document.createElement('span');
       labelSpan.textContent = l.label;
       const amountSpan = document.createElement('span');
-      amountSpan.textContent = '$' + (l.amount / 100).toFixed(2).replace(/\.00$/, '');
+      amountSpan.textContent = l.amount < 0
+        ? '-$' + (Math.abs(l.amount) / 100).toFixed(2).replace(/\.00$/, '')
+        : '$' + (l.amount / 100).toFixed(2).replace(/\.00$/, '');
       row.appendChild(labelSpan);
       row.appendChild(amountSpan);
       linesEl.appendChild(row);

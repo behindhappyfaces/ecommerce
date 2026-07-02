@@ -1805,62 +1805,63 @@ app.post('/create-checkout-session', async (req, res) => {
     // HOTO- welcome codes are subscription-only — reject silently on one-time checkout
     const isWelcomeCode = (promo_code || '').toUpperCase().startsWith('HOTO-');
 
-    // Add local delivery fee — fee is always recalculated server-side from the
-    // submitted address; client-supplied delivery_fee_cents is intentionally ignored
-    // to prevent price tampering.
+    // Add local delivery fee — always recalculated server-side to prevent tampering.
+    // Fee structure: free ≤10mi, $15 flat 10–20mi, $15+$0.70/mi >20mi.
+    // Orders ≥$99 earn a $5 delivery discount, shown as a separate coupon line.
+    let deliveryDiscountCents = 0;
     if (delivery_method === 'delivery' && delivery_address?.street) {
       const originLat = 30.191784; // 100 Commons Rd, Dripping Springs TX 78620
       const originLng = -98.084784;
-      if (originLat && originLng) {
-        try {
-          const { lat, lng } = await geocodeAddress(
-            delivery_address.street, delivery_address.city,
-            delivery_address.state,  delivery_address.zip
-          );
-          const miles = haversineMiles(originLat, originLng, lat, lng);
-          const milesRounded = Math.round(miles * 10) / 10;
-          const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-          const authoritative_fee = calcDeliveryFeeCents(miles, orderTotal);
+      try {
+        const { lat, lng } = await geocodeAddress(
+          delivery_address.street, delivery_address.city,
+          delivery_address.state,  delivery_address.zip
+        );
+        const miles = haversineMiles(originLat, originLng, lat, lng);
+        const milesRounded = Math.round(miles * 10) / 10;
+        const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
+        const authoritative_fee = calcSamplerDeliveryFeeCents(miles);
 
-          // Delivery promo: compute discount in cents so it rolls into the
-          // combined Stripe coupon alongside loyalty/cart discounts.
-          // Keep the fee line item at full price so both savings are visible.
-          if (delivery_promo_code && authoritative_fee > 0) {
-            const pg = getPcPool();
-            if (pg) {
-              const { rows: promoRows } = await pg.query(
-                'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
-                [delivery_promo_code.trim().toUpperCase()]
-              );
-              if (promoRows[0]) {
-                const pct = promoRows[0].pct_off;
-                cartDiscountCents += Math.round(authoritative_fee * pct / 100);
-              }
+        // $5 delivery discount for orders ≥$99 outside the free zone
+        if (orderTotal >= 9900 && miles > 10 && authoritative_fee > 0) {
+          deliveryDiscountCents = Math.min(500, authoritative_fee);
+          cartDiscountCents += deliveryDiscountCents;
+        }
+
+        // Delivery promo code: stacks on top of the $5 discount
+        if (delivery_promo_code && authoritative_fee > 0) {
+          const pg = getPcPool();
+          if (pg) {
+            const { rows: promoRows } = await pg.query(
+              'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
+              [delivery_promo_code.trim().toUpperCase()]
+            );
+            if (promoRows[0]) {
+              cartDiscountCents += Math.round(authoritative_fee * promoRows[0].pct_off / 100);
             }
           }
+        }
 
-          if (authoritative_fee > 0) {
-            lineItems.push({
-              price_data: {
-                currency: 'usd',
-                product_data: { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
-                unit_amount: authoritative_fee,
-              },
-              quantity: 1,
-            });
-          }
-        } catch (geoErr) {
-          console.error('[checkout] delivery geocode failed:', geoErr.message);
-          // Still add a fallback flat fee so the order isn't free of delivery cost
+        if (authoritative_fee > 0) {
           lineItems.push({
             price_data: {
               currency: 'usd',
-              product_data: { name: 'Local Delivery Fee' },
-              unit_amount: 1500,
+              product_data: { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
+              unit_amount: authoritative_fee,
             },
             quantity: 1,
           });
         }
+      } catch (geoErr) {
+        console.error('[checkout] delivery geocode failed:', geoErr.message);
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Local Delivery Fee' },
+            unit_amount: 1500,
+          },
+          quantity: 1,
+        });
       }
     }
 
@@ -1955,6 +1956,8 @@ app.post('/create-checkout-session', async (req, res) => {
         labelParts.push(`${promo_code} (loyalty)`);
       if (delivery_promo_code)
         labelParts.push(`${delivery_promo_code} (delivery)`);
+      if (deliveryDiscountCents > 0)
+        labelParts.push('$5 Delivery Discount');
       if (!labelParts.length) labelParts.push('Savings');
       const coupon = await stripe.coupons.create({
         amount_off: totalDiscountCents,

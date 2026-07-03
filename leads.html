@@ -198,10 +198,13 @@
   }
 
   function loadLeads() {
+    var grid = document.getElementById('leadsGrid');
+    grid.innerHTML = '<div class="loading">Loading leads...</div>';
     var url = '/admin/leads' + (currentFilter ? '?type=' + currentFilter : '');
     fetch(url, { headers: authHeaders() })
       .then(function(r) {
         if (r.status === 401) { window.location.href = '/inventory.html?next=leads'; return null; }
+        if (!r.ok) throw new Error('Server error ' + r.status);
         return r.json();
       })
       .then(function(leads) {
@@ -209,6 +212,9 @@
         ALL_LEADS = leads;
         renderStats(leads);
         renderLeads(leads);
+      })
+      .catch(function(err) {
+        grid.innerHTML = '<div class="empty-state"><h2>Could not load leads</h2><p>' + err.message + '</p><p style="margin-top:8px;font-size:0.8rem;">Check that Render has deployed the latest version.</p></div>';
       });
   }
 

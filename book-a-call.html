@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Book a Call — Heart of Texas Organics</title>
+  <meta name="description" content="Schedule a call with Heart of Texas Organics — BNI networking, farm box consultations, and wholesale inquiries." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -14,12 +15,13 @@
       --cream:       #f7f3ec;
       --cream-dark:  #ede8df;
       --sage:        #5a7a5a;
-      --sage-light:  #7a9e7a;
+      --sage-hover:  #496649;
       --sage-pale:   #e8f0e8;
       --brown:       #4a3728;
       --brown-mid:   #6b4f3a;
       --brown-light: #9a7b62;
       --gold:        #c9a84c;
+      --gold-hover:  #b8962f;
       --text:        #3a2e25;
       --text-mid:    #6b5c4e;
       --radius:      14px;
@@ -36,7 +38,7 @@
       flex-direction: column;
     }
 
-    /* ── Nav strip ────────────────────────────────────────────── */
+    /* ── Nav ─────────────────────────────────────────────────── */
     .nav {
       background: var(--brown);
       padding: 14px 24px;
@@ -46,7 +48,7 @@
     }
     .nav__brand {
       font-family: 'Fraunces', serif;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--cream);
       text-decoration: none;
@@ -54,19 +56,18 @@
     }
     .nav__back {
       font-size: 0.82rem;
-      color: var(--cream-dark);
+      color: rgba(247,243,236,0.7);
       text-decoration: none;
-      opacity: 0.75;
-      transition: opacity 0.2s;
+      transition: color 0.2s;
     }
-    .nav__back:hover { opacity: 1; }
+    .nav__back:hover { color: var(--cream); }
 
     /* ── Hero ─────────────────────────────────────────────────── */
     .hero {
       background: linear-gradient(160deg, var(--brown) 0%, var(--brown-mid) 100%);
       color: var(--cream);
       text-align: center;
-      padding: 72px 24px 64px;
+      padding: 72px 24px 60px;
       position: relative;
       overflow: hidden;
     }
@@ -75,51 +76,67 @@
       position: absolute;
       inset: 0;
       background-image:
-        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201,168,76,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(90,122,90,0.2) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 50% at 20% 80%, rgba(201,168,76,0.16) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(90,122,90,0.18) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero__eyebrow {
       font-family: 'Inter', sans-serif;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--gold);
       margin-bottom: 16px;
     }
     .hero__headline {
       font-family: 'Fraunces', serif;
-      font-size: clamp(2.4rem, 7vw, 4rem);
+      font-size: clamp(2.6rem, 8vw, 4.2rem);
       font-weight: 300;
-      line-height: 1.1;
+      line-height: 1.08;
       color: var(--cream);
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
     .hero__headline em {
       font-style: italic;
       color: var(--gold);
     }
     .hero__sub {
-      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-      color: rgba(247,243,236,0.78);
-      max-width: 520px;
+      font-size: clamp(1rem, 2.8vw, 1.2rem);
+      color: rgba(247,243,236,0.82);
+      max-width: 540px;
+      margin: 0 auto 14px;
+      line-height: 1.6;
+    }
+    .hero__support {
+      font-size: 0.92rem;
+      color: rgba(247,243,236,0.55);
+      max-width: 420px;
       margin: 0 auto;
       line-height: 1.6;
     }
     .hero__divider {
-      width: 48px;
+      width: 44px;
       height: 2px;
       background: var(--gold);
       margin: 28px auto 0;
       border-radius: 2px;
-      opacity: 0.6;
+      opacity: 0.55;
     }
 
-    /* ── Card grid ────────────────────────────────────────────── */
+    /* ── SVG leaf divider ─────────────────────────────────────── */
+    .section-divider {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+      color: var(--cream);
+    }
+
+    /* ── Cards section ────────────────────────────────────────── */
     .cards-section {
       flex: 1;
-      padding: 56px 24px 72px;
+      padding: 52px 20px 68px;
       max-width: 1100px;
       margin: 0 auto;
       width: 100%;
@@ -128,10 +145,10 @@
     .cards-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 24px;
+      gap: 22px;
     }
 
-    @media (min-width: 768px) {
+    @media (min-width: 900px) {
       .cards-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 28px;
@@ -142,10 +159,10 @@
       background: #fff;
       border-radius: var(--radius);
       border: 1px solid var(--cream-dark);
-      padding: 36px 28px 32px;
+      padding: 34px 26px 30px;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 2px 12px rgba(58,46,37,0.07);
+      box-shadow: 0 2px 14px rgba(58,46,37,0.07);
       transition: transform 0.22s ease, box-shadow 0.22s ease;
       position: relative;
       overflow: hidden;
@@ -157,33 +174,34 @@
       height: 4px;
       border-radius: var(--radius) var(--radius) 0 0;
     }
-    .card:nth-child(1)::before { background: var(--sage); }
-    .card:nth-child(2)::before { background: var(--gold); }
-    .card:nth-child(3)::before { background: var(--brown-mid); }
+    .card--bni::before    { background: var(--sage); }
+    .card--csa::before    { background: var(--gold); }
+    .card--wholesale::before { background: var(--brown-mid); }
 
     .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 32px rgba(58,46,37,0.13);
+      transform: translateY(-5px);
+      box-shadow: 0 12px 36px rgba(58,46,37,0.13);
     }
 
     .card__icon {
-      width: 48px;
-      height: 48px;
+      width: 50px;
+      height: 50px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 20px;
       font-size: 1.5rem;
+      flex-shrink: 0;
     }
-    .card:nth-child(1) .card__icon { background: var(--sage-pale); }
-    .card:nth-child(2) .card__icon { background: #fdf6e3; }
-    .card:nth-child(3) .card__icon { background: #f5ede5; }
+    .card--bni .card__icon       { background: var(--sage-pale); }
+    .card--csa .card__icon       { background: #fdf6e3; }
+    .card--wholesale .card__icon { background: #f5ede5; }
 
     .card__duration {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--brown-light);
       margin-bottom: 10px;
@@ -191,7 +209,7 @@
 
     .card__title {
       font-family: 'Fraunces', serif;
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 600;
       color: var(--brown);
       line-height: 1.25;
@@ -199,11 +217,11 @@
     }
 
     .card__desc {
-      font-size: 0.92rem;
+      font-size: 0.91rem;
       color: var(--text-mid);
-      line-height: 1.65;
+      line-height: 1.68;
       flex: 1;
-      margin-bottom: 28px;
+      margin-bottom: 26px;
     }
 
     .card__btn {
@@ -211,34 +229,31 @@
       text-align: center;
       text-decoration: none;
       font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       padding: 13px 20px;
       border-radius: 8px;
       transition: background 0.2s, color 0.2s, transform 0.15s;
       letter-spacing: 0.02em;
     }
-    .card:nth-child(1) .card__btn {
+    .card--bni .card__btn {
       background: var(--sage);
       color: #fff;
     }
-    .card:nth-child(1) .card__btn:hover {
-      background: #496649;
-    }
-    .card:nth-child(2) .card__btn {
+    .card--bni .card__btn:hover        { background: var(--sage-hover); }
+    .card--csa .card__btn {
       background: var(--gold);
       color: var(--brown);
     }
-    .card:nth-child(2) .card__btn:hover {
-      background: #b8962f;
-      color: #fff;
-    }
-    .card:nth-child(3) .card__btn {
+    .card--csa .card__btn:hover        { background: var(--gold-hover); color: #fff; }
+    .card--wholesale .card__btn {
       background: var(--brown-mid);
       color: #fff;
     }
-    .card:nth-child(3) .card__btn:hover {
-      background: var(--brown);
+    .card--wholesale .card__btn:hover  { background: var(--brown); }
+    .card__btn:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
     }
     .card__btn:active { transform: scale(0.97); }
 
@@ -246,52 +261,49 @@
     .trust {
       background: var(--cream-dark);
       border-top: 1px solid #ddd5c8;
-      padding: 28px 24px;
-      text-align: center;
+      padding: 22px 24px;
     }
-    .trust__text {
-      font-size: 0.85rem;
-      color: var(--text-mid);
+    .trust__inner {
+      max-width: 800px;
+      margin: 0 auto;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px 24px;
+      gap: 10px 32px;
       justify-content: center;
       align-items: center;
     }
     .trust__item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-mid);
     }
-    .trust__dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--sage);
+    .trust__item svg {
       flex-shrink: 0;
+      color: var(--sage);
     }
 
     /* ── Footer ───────────────────────────────────────────────── */
     footer {
       background: var(--brown);
-      color: rgba(247,243,236,0.7);
+      color: rgba(247,243,236,0.65);
       text-align: center;
-      padding: 32px 24px;
-      font-size: 0.88rem;
+      padding: 30px 24px;
+      font-size: 0.87rem;
       line-height: 1.7;
     }
     footer a {
       color: var(--gold);
       text-decoration: none;
     }
-    footer a:hover {
-      text-decoration: underline;
-    }
+    footer a:hover { text-decoration: underline; }
     .footer__brand {
       font-family: 'Fraunces', serif;
       font-size: 1rem;
       color: var(--cream);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-weight: 400;
     }
   </style>
@@ -308,43 +320,79 @@
   <section class="hero">
     <p class="hero__eyebrow">Schedule a Conversation</p>
     <h1 class="hero__headline">Let's <em>Connect</em></h1>
-    <p class="hero__sub">Choose the type of conversation that fits you best — we'd love to hear from you.</p>
+    <p class="hero__sub">Choose the type of conversation that fits you best.</p>
+    <p class="hero__support">Every call is a real conversation — no scripts, no sales pressure. Just two people talking about food, community, and what grows next.</p>
     <div class="hero__divider"></div>
   </section>
+
+  <!-- SVG wave divider -->
+  <span class="section-divider" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 54" preserveAspectRatio="none" style="display:block;width:100%;height:54px;">
+      <path fill="#4a3728" d="M0,32 C240,56 480,8 720,28 C960,48 1200,12 1440,32 L1440,0 L0,0 Z"/>
+    </svg>
+  </span>
 
   <!-- Cards -->
   <main class="cards-section">
     <div class="cards-grid">
 
-      <!-- Card 1: BNI -->
-      <div class="card">
-        <div class="card__icon">🤝</div>
+      <!-- BNI 1:1 Networking -->
+      <div class="card card--bni">
+        <div class="card__icon" aria-hidden="true">🤝</div>
         <p class="card__duration">45 Minutes</p>
         <h2 class="card__title">BNI 1:1 Networking</h2>
-        <p class="card__desc">Quick connection calls for relationship building and referrals. A fast and focused way to explore how we can grow together.</p>
-        <a href="YOUR_CAL_COM_BNI_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+        <p class="card__desc">Quick connection calls for relationship building and referrals. A focused way to explore how we can refer and grow together.</p>
+        <!-- Replace YOUR_BNI_CALENDLY_LINK with your real Calendly URL -->
+        <a href="YOUR_BNI_CALENDLY_LINK" target="_blank" rel="noopener" class="card__btn">Book a 1:1 Call</a>
       </div>
 
-      <!-- Card 2: CSA -->
-      <div class="card">
-        <div class="card__icon">🌿</div>
+      <!-- Farm Box & CSA Consultation -->
+      <div class="card card--csa">
+        <div class="card__icon" aria-hidden="true">🌿</div>
         <p class="card__duration">30 Minutes</p>
         <h2 class="card__title">Farm Box &amp; CSA Consultation</h2>
         <p class="card__desc">Get help choosing the right subscription or bundle for your family. We'll walk through options, delivery, and what's in season.</p>
-        <a href="YOUR_CAL_COM_CSA_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+        <!-- Replace YOUR_CSA_CALENDLY_LINK with your real Calendly URL -->
+        <a href="YOUR_CSA_CALENDLY_LINK" target="_blank" rel="noopener" class="card__btn">Schedule a Farm Consultation</a>
       </div>
 
-      <!-- Card 3: Wholesale -->
-      <div class="card">
-        <div class="card__icon">🏪</div>
+      <!-- Wholesale & Partnership Inquiry -->
+      <div class="card card--wholesale">
+        <div class="card__icon" aria-hidden="true">🏪</div>
         <p class="card__duration">30 Minutes</p>
         <h2 class="card__title">Wholesale &amp; Partnership Inquiry</h2>
         <p class="card__desc">For restaurants, shops, and bulk buyers interested in carrying our products. Let's talk volume, pricing, and logistics.</p>
-        <a href="YOUR_CAL_COM_WHOLESALE_LINK_HERE" target="_blank" rel="noopener" class="card__btn">Book This Call →</a>
+        <!-- Replace YOUR_WHOLESALE_CALENDLY_LINK with your real Calendly URL -->
+        <a href="YOUR_WHOLESALE_CALENDLY_LINK" target="_blank" rel="noopener" class="card__btn">Book Partnership Call</a>
       </div>
 
     </div>
   </main>
+
+  <!-- SVG leaf divider -->
+  <span class="section-divider" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 40" preserveAspectRatio="none" style="display:block;width:100%;height:40px;">
+      <path fill="#ede8df" d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"/>
+    </svg>
+  </span>
+
+  <!-- Trust strip -->
+  <div class="trust">
+    <div class="trust__inner">
+      <span class="trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2C8 2 4 6 4 10c0 6 8 12 8 12s8-6 8-12c0-4-4-8-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+        Small family farm in Texas
+      </span>
+      <span class="trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg>
+        Pasture-raised, handcrafted, real food
+      </span>
+      <span class="trust__item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Food is medicine
+      </span>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer>

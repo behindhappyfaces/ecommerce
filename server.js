@@ -3068,6 +3068,35 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/wholesale-inquiry', async (req, res) => {
+  const { bizName, bizType, products, volume, location, notes } = req.body || {};
+  if (!bizName || !bizType || !volume || !location) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  const productList = Array.isArray(products) && products.length
+    ? products.map(p => `<li>${p}</li>`).join('')
+    : '<li>Not specified</li>';
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#4a3728;">New Wholesale Inquiry</h2>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:180px;"><strong>Business Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${bizName}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Business Type</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${bizType}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Products Interested In</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><ul style="margin:0;padding-left:18px;">${productList}</ul></td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Monthly Volume</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${volume}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>City / Area</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${location}</td></tr>
+      <tr><td style="padding:10px;color:#9a7b62;"><strong>Additional Notes</strong></td><td style="padding:10px;">${notes || '—'}</td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
+  `;
+  try {
+    await sendEmail('New Wholesale Inquiry — Heart of Texas Organics', html);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Wholesale inquiry email error]', err.message);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
 app.delete('/admin/inventory/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const removed = await db.deleteProduct(id);

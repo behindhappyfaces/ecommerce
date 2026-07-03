@@ -651,29 +651,39 @@
       if (e.key === 'Escape') closeWholesaleModal();
     });
 
-    document.getElementById('wholesaleForm').addEventListener('submit', function(e) {
+    document.getElementById('wholesaleForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      // Validate required fields
       var name   = document.getElementById('biz-name').value.trim();
       var type   = document.getElementById('biz-type').value;
       var volume = document.getElementById('volume').value;
       var loc    = document.getElementById('location').value.trim();
+      var notes  = document.getElementById('notes').value.trim();
+      var products = Array.from(document.querySelectorAll('#wholesaleForm input[type="checkbox"]:checked')).map(function(c){ return c.value; });
 
       if (!name || !type || !volume || !loc) {
-        var first = !name   ? 'biz-name'
-                  : !type   ? 'biz-type'
-                  : !volume ? 'volume'
-                  : 'location';
+        var first = !name ? 'biz-name' : !type ? 'biz-type' : !volume ? 'volume' : 'location';
         document.getElementById(first).focus();
         document.getElementById(first).style.borderColor = '#c05050';
-        setTimeout(function() {
-          document.getElementById(first).style.borderColor = '';
-        }, 2000);
+        setTimeout(function() { document.getElementById(first).style.borderColor = ''; }, 2000);
         return;
       }
 
-      // Show success
+      var submitBtn = document.querySelector('.modal__submit');
+      submitBtn.textContent = 'Sending…';
+      submitBtn.disabled = true;
+
+      try {
+        await fetch('/api/wholesale-inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bizName: name, bizType: type, products: products, volume: volume, location: loc, notes: notes })
+        });
+      } catch(err) {
+        console.warn('Email notification failed:', err);
+      }
+
+      // Show success regardless — don't block booking on email failure
       document.getElementById('modalForm').style.display = 'none';
       document.getElementById('modalSuccess').classList.add('show');
     });

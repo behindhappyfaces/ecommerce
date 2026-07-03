@@ -257,6 +257,155 @@
     }
     .card__btn:active { transform: scale(0.97); }
 
+    /* ── Wholesale questionnaire modal ───────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(58,46,37,0.55);
+      backdrop-filter: blur(3px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--cream);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(58,46,37,0.28);
+      position: relative;
+      animation: modalIn 0.28s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(18px) scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+    .modal__head {
+      background: linear-gradient(135deg, var(--brown) 0%, var(--brown-mid) 100%);
+      padding: 28px 28px 24px;
+      border-radius: 18px 18px 0 0;
+      position: relative;
+    }
+    .modal__close {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: var(--cream);
+      font-size: 1.1rem;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal__close:hover { background: rgba(255,255,255,0.22); }
+    .modal__eyebrow {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .modal__title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.25;
+    }
+    .modal__sub {
+      font-size: 0.83rem;
+      color: rgba(247,243,236,0.65);
+      margin-top: 6px;
+    }
+    .modal__body { padding: 26px 28px 28px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--brown);
+      margin-bottom: 6px;
+    }
+    .form-label span { color: var(--brown-mid); font-weight: 400; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d8cfc4;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--sage);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b5c4e' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+    .form-checks { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+    .form-check { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.88rem; color: var(--text-mid); }
+    .form-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--sage); cursor: pointer; flex-shrink: 0; }
+
+    .modal__submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--brown-mid);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .modal__submit:hover { background: var(--brown); }
+
+    /* success state */
+    .modal__success {
+      display: none;
+      text-align: center;
+      padding: 40px 28px;
+    }
+    .modal__success.show { display: block; }
+    .modal__success-icon { font-size: 2.8rem; margin-bottom: 16px; }
+    .modal__success h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--brown);
+      margin-bottom: 10px;
+    }
+    .modal__success p { font-size: 0.9rem; color: var(--text-mid); line-height: 1.6; margin-bottom: 24px; }
+    .modal__book-btn {
+      display: inline-block;
+      padding: 13px 32px;
+      background: var(--sage);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      transition: background 0.2s;
+    }
+    .modal__book-btn:hover { background: var(--sage-hover); }
+
     /* ── Trust strip ──────────────────────────────────────────── */
     .trust {
       background: var(--cream-dark);
@@ -362,8 +511,7 @@
         <p class="card__duration">30 Minutes</p>
         <h2 class="card__title">Wholesale &amp; Partnership Inquiry</h2>
         <p class="card__desc">For restaurants, shops, and bulk buyers interested in carrying our products. Let's talk volume, pricing, and logistics.</p>
-        <!-- Replace YOUR_WHOLESALE_CALENDLY_LINK with your real Calendly URL -->
-        <a href="YOUR_WHOLESALE_CALENDLY_LINK" target="_blank" rel="noopener" class="card__btn">Book Partnership Call</a>
+        <button type="button" class="card__btn" onclick="openWholesaleModal()">Book Partnership Call</button>
       </div>
 
     </div>
@@ -394,11 +542,143 @@
     </div>
   </div>
 
+  <!-- Wholesale Questionnaire Modal -->
+  <div class="modal-overlay" id="wholesaleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+
+      <div class="modal__head">
+        <button class="modal__close" onclick="closeWholesaleModal()" aria-label="Close">✕</button>
+        <p class="modal__eyebrow">Before You Book</p>
+        <h2 class="modal__title" id="modalTitle">Tell us about your business</h2>
+        <p class="modal__sub">A few quick questions so we can make the most of our time together.</p>
+      </div>
+
+      <!-- Form -->
+      <div class="modal__body" id="modalForm">
+        <form id="wholesaleForm" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="biz-name">Business name <span>(required)</span></label>
+            <input class="form-input" id="biz-name" type="text" placeholder="e.g. Rosewood Kitchen" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="biz-type">Type of business <span>(required)</span></label>
+            <select class="form-select" id="biz-type" required>
+              <option value="">Select one…</option>
+              <option>Restaurant or café</option>
+              <option>Retail grocery or specialty shop</option>
+              <option>Food co-op or buying club</option>
+              <option>Farmers market vendor</option>
+              <option>Meal prep or catering company</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Products you're interested in</label>
+            <div class="form-checks">
+              <label class="form-check"><input type="checkbox" value="Pasture-raised eggs" /> Pasture-raised eggs</label>
+              <label class="form-check"><input type="checkbox" value="Artisan breads & bakery" /> Artisan breads &amp; bakery</label>
+              <label class="form-check"><input type="checkbox" value="Cultured butter" /> Cultured butter</label>
+              <label class="form-check"><input type="checkbox" value="Seasonal preserves & pantry" /> Seasonal preserves &amp; pantry</label>
+              <label class="form-check"><input type="checkbox" value="Whole chickens" /> Whole chickens</label>
+              <label class="form-check"><input type="checkbox" value="Mixed / not sure yet" /> Mixed / not sure yet</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="volume">Estimated monthly volume <span>(required)</span></label>
+            <select class="form-select" id="volume" required>
+              <option value="">Select a range…</option>
+              <option>Under $500/month</option>
+              <option>$500 – $1,500/month</option>
+              <option>$1,500 – $5,000/month</option>
+              <option>Over $5,000/month</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="location">City / area you serve <span>(required)</span></label>
+            <input class="form-input" id="location" type="text" placeholder="e.g. Austin, TX" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes">Anything else we should know? <span>(optional)</span></label>
+            <textarea class="form-textarea" id="notes" placeholder="Tell us a bit about your business or what you're looking for…"></textarea>
+          </div>
+
+          <button type="submit" class="modal__submit">Continue to Book My Call →</button>
+        </form>
+      </div>
+
+      <!-- Success state -->
+      <div class="modal__success" id="modalSuccess">
+        <div class="modal__success-icon">🌿</div>
+        <h3>You're all set!</h3>
+        <p>Thanks for sharing a bit about your business. Click below to pick a time that works for you — we're looking forward to the conversation.</p>
+        <a href="YOUR_WHOLESALE_CALENDLY_LINK" target="_blank" rel="noopener" class="modal__book-btn" id="wholesaleCalendlyBtn">Book Partnership Call →</a>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer>
     <p class="footer__brand">Heart of Texas Organics</p>
     <p>Prefer email? Reach us at <a href="mailto:operations@heartoftexasorganics.com">operations@heartoftexasorganics.com</a></p>
   </footer>
 
+  <script>
+    var modal = document.getElementById('wholesaleModal');
+
+    function openWholesaleModal() {
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeWholesaleModal() {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) closeWholesaleModal();
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeWholesaleModal();
+    });
+
+    document.getElementById('wholesaleForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Validate required fields
+      var name   = document.getElementById('biz-name').value.trim();
+      var type   = document.getElementById('biz-type').value;
+      var volume = document.getElementById('volume').value;
+      var loc    = document.getElementById('location').value.trim();
+
+      if (!name || !type || !volume || !loc) {
+        var first = !name   ? 'biz-name'
+                  : !type   ? 'biz-type'
+                  : !volume ? 'volume'
+                  : 'location';
+        document.getElementById(first).focus();
+        document.getElementById(first).style.borderColor = '#c05050';
+        setTimeout(function() {
+          document.getElementById(first).style.borderColor = '';
+        }, 2000);
+        return;
+      }
+
+      // Show success
+      document.getElementById('modalForm').style.display = 'none';
+      document.getElementById('modalSuccess').classList.add('show');
+    });
+  </script>
 </body>
 </html>

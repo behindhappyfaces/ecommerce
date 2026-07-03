@@ -295,6 +295,19 @@
       color: #fff;
     }
     .card--bni .card__btn:hover        { background: var(--sage-hover); }
+    .card__availability-note {
+      font-size: 0.75rem;
+      color: var(--brown-light);
+      line-height: 1.5;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .card__availability-note a {
+      color: var(--sage);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .card__availability-note a:hover { color: var(--sage-hover); }
     .card--csa .card__btn {
       background: var(--gold);
       color: var(--brown);
@@ -720,6 +733,7 @@
         <h2 class="card__title">BNI 1:1 Networking</h2>
         <p class="card__desc">I'd rather know your why than your logo. Let's talk about what you actually love doing and who needs to hear about it, so I know exactly who to send your way.</p>
         <button type="button" class="card__btn" onclick="openBniModal()">Book a 1:1 Call</button>
+        <p class="card__availability-note">If nothing on the calendar fits your schedule, <a href="mailto:operations@heartoftexasorganics.com">reach out directly</a> and I'll see what else I can make work.</p>
       </div>
 
       <!-- Farm Box & CSA Consultation -->

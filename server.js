@@ -3069,8 +3069,8 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
 });
 
 app.post('/api/bni-inquiry', async (req, res) => {
-  const { fullName, chapter, location } = req.body || {};
-  if (!fullName || !chapter || !location) {
+  const { fullName, chapter, location, email } = req.body || {};
+  if (!fullName || !chapter || !location || !email) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
   const esc = s => String(s).slice(0, 500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -3078,6 +3078,7 @@ app.post('/api/bni-inquiry', async (req, res) => {
     <h2 style="font-family:Georgia,serif;color:#4a3728;">New BNI 1:1 Booking Request</h2>
     <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
       <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:180px;"><strong>Full Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(fullName)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Email</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
       <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>BNI Chapter</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(chapter)}</td></tr>
       <tr><td style="padding:10px;color:#9a7b62;"><strong>BNI Location</strong></td><td style="padding:10px;">${esc(location)}</td></tr>
     </table>

@@ -785,6 +785,11 @@
             <input class="form-input" id="bni-location" type="text" placeholder="e.g. Austin, TX" required />
           </div>
 
+          <div class="form-group">
+            <label class="form-label" for="bni-email">Email address <span>(required)</span></label>
+            <input class="form-input" id="bni-email" type="email" placeholder="e.g. jamie@example.com" required />
+          </div>
+
           <button type="submit" class="modal__submit">Continue to Book My Call &#x2192;</button>
         </form>
       </div>
@@ -911,8 +916,9 @@
       var fullName = document.getElementById('bni-full-name').value.trim();
       var chapter  = document.getElementById('bni-chapter').value.trim();
       var location = document.getElementById('bni-location').value.trim();
+      var email    = document.getElementById('bni-email').value.trim();
 
-      var missing = !fullName ? 'bni-full-name' : !chapter ? 'bni-chapter' : !location ? 'bni-location' : null;
+      var missing = !fullName ? 'bni-full-name' : !chapter ? 'bni-chapter' : !location ? 'bni-location' : !email ? 'bni-email' : null;
       if (missing) {
         var el = document.getElementById(missing);
         el.focus();
@@ -929,7 +935,7 @@
         await fetch('/api/bni-inquiry', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName: fullName, chapter: chapter, location: location })
+          body: JSON.stringify({ fullName: fullName, chapter: chapter, location: location, email: email })
         });
       } catch(err) {
         console.warn('BNI email notification failed:', err);

@@ -41,6 +41,16 @@ if (USE_PG) {
 
 async function initPg() {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS leads (
+      id         SERIAL PRIMARY KEY,
+      type       TEXT NOT NULL,
+      data       JSONB NOT NULL DEFAULT '{}',
+      contacted  BOOLEAN NOT NULL DEFAULT false,
+      notes      TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS products (
       id             TEXT PRIMARY KEY,
       name           TEXT NOT NULL,
@@ -248,6 +258,32 @@ const pgStore = {
     `);
     return { products, transactions: txns };
   },
+
+  async createLead(type, data) {
+    const { rows } = await pool.query(
+      `INSERT INTO leads (type, data) VALUES ($1, $2) RETURNING *`,
+      [type, JSON.stringify(data)]
+    );
+    return rows[0];
+  },
+
+  async getLeads(type = null) {
+    const where = type ? `WHERE type = $1` : '';
+    const vals  = type ? [type] : [];
+    const { rows } = await pool.query(
+      `SELECT * FROM leads ${where} ORDER BY created_at DESC`, vals
+    );
+    return rows;
+  },
+
+  async updateLead(id, fields) {
+    const allowed = ['contacted', 'notes'];
+    const keys = Object.keys(fields).filter(k => allowed.includes(k));
+    if (!keys.length) return false;
+    const sets = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
+    await pool.query(`UPDATE leads SET ${sets} WHERE id = $1`, [id, ...keys.map(k => fields[k])]);
+    return true;
+  },
 };
 
 // ─── JSON fallback store (local dev) ─────────────────────────────────────────
@@ -264,9 +300,10 @@ function loadJson() {
         p.cost_cents = s ? s.cost_cents : 0;
       }
     }
+    if (!raw.leads)     { raw.leads = []; raw.nextLeadId = 1; }
     return raw;
   } catch {
-    return { products: SEED.map(p => ({ ...p, created_at: new Date().toISOString() })), transactions: [], nextTxId: 1 };
+    return { products: SEED.map(p => ({ ...p, created_at: new Date().toISOString() })), transactions: [], nextTxId: 1, leads: [], nextLeadId: 1 };
   }
 }
 
@@ -385,6 +422,27 @@ const jsonStore = {
     const nameMap = Object.fromEntries(_json.products.map(p => [p.id, p.name]));
     return { products: this.getAll(), transactions: _json.transactions.slice().reverse().map(t => ({ ...t, product_name: nameMap[t.product_id] || t.product_id })) };
   },
+
+  createLead(type, data) {
+    const lead = { id: _json.nextLeadId++, type, data, contacted: false, notes: null, created_at: new Date().toISOString() };
+    _json.leads.push(lead);
+    persistJson(_json);
+    return lead;
+  },
+
+  getLeads(type = null) {
+    const list = _json.leads.slice().reverse();
+    return type ? list.filter(l => l.type === type) : list;
+  },
+
+  updateLead(id, fields) {
+    const lead = _json.leads.find(l => l.id === parseInt(id));
+    if (!lead) return false;
+    if ('contacted' in fields) lead.contacted = fields.contacted;
+    if ('notes' in fields)     lead.notes     = fields.notes;
+    persistJson(_json);
+    return true;
+  },
 };
 
 // ─── Unified async wrapper ────────────────────────────────────────────────────
@@ -404,6 +462,9 @@ const store = USE_PG ? pgStore : {
   getTransactions:            (...a) => Promise.resolve(jsonStore.getTransactions(...a)),
   getSales:                   (...a) => Promise.resolve(jsonStore.getSales(...a)),
   getAllForCSV:                (...a) => Promise.resolve(jsonStore.getAllForCSV(...a)),
+  createLead:                 (...a) => Promise.resolve(jsonStore.createLead(...a)),
+  getLeads:                   (...a) => Promise.resolve(jsonStore.getLeads(...a)),
+  updateLead:                 (...a) => Promise.resolve(jsonStore.updateLead(...a)),
 };
 
 store.init = init;

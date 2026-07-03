@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Leads | Heart of Texas Organics</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brown:      #4a3728;
+      --brown-mid:  #6b4f3a;
+      --cream:      #f7f3ec;
+      --cream-dark: #ede8df;
+      --sage:       #5a7a5a;
+      --sage-pale:  #e8f0e8;
+      --gold:       #c9a84c;
+      --rust:       #c05050;
+      --text:       #3a2e25;
+      --text-mid:   #6b5c4e;
+      --radius:     10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+    /* ── Login ── */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+    }
+    .login-box {
+      background: #fff; border-radius: 16px; padding: 40px 36px;
+      box-shadow: 0 8px 40px rgba(58,46,37,0.14); width: 100%; max-width: 360px; text-align: center;
+    }
+    .login-box h1 { font-size: 1.4rem; color: var(--brown); margin-bottom: 6px; }
+    .login-box p  { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 24px; }
+    .login-box input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #d8cfc4; border-radius: 8px;
+      font-size: 0.95rem; margin-bottom: 14px;
+    }
+    .login-box input:focus { outline: none; border-color: var(--sage); }
+    .login-box button {
+      width: 100%; padding: 13px; background: var(--brown); color: #fff; border: none;
+      border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .login-box button:hover { background: var(--brown-mid); }
+    .login-error { color: var(--rust); font-size: 0.82rem; margin-top: 10px; }
+
+    /* ── App ── */
+    #app { display: none; }
+
+    header {
+      background: var(--brown); color: #fff;
+      padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn-outline {
+      padding: 7px 16px; border: 1.5px solid rgba(255,255,255,0.35); background: transparent;
+      color: #fff; border-radius: 7px; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      text-decoration: none; transition: background 0.18s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.12); }
+
+    .toolbar {
+      background: #fff; border-bottom: 1px solid var(--cream-dark);
+      padding: 14px 28px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--cream-dark);
+      background: #fff; color: var(--text-mid); font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .filter-btn.active { background: var(--brown); border-color: var(--brown); color: #fff; }
+    .filter-btn:hover:not(.active) { border-color: var(--brown-mid); color: var(--brown); }
+
+    .stats-bar {
+      display: flex; gap: 20px; padding: 14px 28px;
+      background: var(--cream-dark); flex-wrap: wrap;
+    }
+    .stat { font-size: 0.82rem; color: var(--text-mid); }
+    .stat strong { color: var(--text); font-size: 1rem; }
+
+    .leads-grid {
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    .lead-card {
+      background: #fff; border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      box-shadow: 0 2px 10px rgba(58,46,37,0.06);
+      overflow: hidden; transition: box-shadow 0.2s;
+    }
+    .lead-card:hover { box-shadow: 0 6px 24px rgba(58,46,37,0.12); }
+    .lead-card.is-contacted { opacity: 0.6; }
+
+    .lead-card__head {
+      padding: 14px 16px 10px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    }
+    .lead-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .badge-bni       { background: var(--sage-pale); color: var(--sage); }
+    .badge-csa       { background: #fdf6e3; color: #8a6a10; }
+    .badge-wholesale { background: #f5ede5; color: var(--brown-mid); }
+
+    .lead-date { font-size: 0.72rem; color: var(--text-mid); white-space: nowrap; }
+
+    .lead-name { font-size: 1rem; font-weight: 600; color: var(--brown); padding: 0 16px 4px; }
+
+    .lead-fields { padding: 8px 16px 12px; }
+    .lead-field  { display: flex; gap: 8px; font-size: 0.82rem; margin-bottom: 5px; }
+    .lead-field__label { color: var(--text-mid); min-width: 120px; flex-shrink: 0; }
+    .lead-field__value { color: var(--text); }
+
+    .lead-card__foot {
+      border-top: 1px solid var(--cream-dark);
+      padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .contact-toggle {
+      display: flex; align-items: center; gap: 10px; font-size: 0.82rem; cursor: pointer;
+    }
+    .toggle-switch {
+      position: relative; width: 38px; height: 22px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: #d8cfc4; border-radius: 22px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; height: 16px; width: 16px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--sage); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    .notes-input {
+      width: 100%; padding: 8px 10px; border: 1.5px solid var(--cream-dark); border-radius: 7px;
+      font-size: 0.82rem; font-family: inherit; resize: none; min-height: 60px;
+      color: var(--text); transition: border-color 0.2s;
+    }
+    .notes-input:focus { outline: none; border-color: var(--sage); }
+    .notes-save {
+      align-self: flex-end; padding: 5px 14px; background: var(--sage); color: #fff;
+      border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    }
+    .notes-save:hover { background: #496649; }
+
+    .empty-state {
+      text-align: center; padding: 80px 24px; color: var(--text-mid);
+    }
+    .empty-state h2 { font-size: 1.2rem; margin-bottom: 8px; color: var(--brown); }
+
+    .loading { text-align: center; padding: 60px; color: var(--text-mid); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>&#x1F331; Customer Leads</h1>
+    <p>Heart of Texas Organics</p>
+    <input type="password" id="pwInput" placeholder="Admin password" />
+    <button onclick="login()">Sign In</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <h1>&#x1F331; Customer Leads</h1>
+    <div class="header-actions">
+      <a class="btn-outline" href="/inventory.html">&#x2190; Inventory</a>
+      <button class="btn-outline" onclick="exportCSV()">&#x2193; Export CSV</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button class="filter-btn active" data-type="">All</button>
+    <button class="filter-btn" data-type="bni">BNI Networking</button>
+    <button class="filter-btn" data-type="csa">Farm Box / CSA</button>
+    <button class="filter-btn" data-type="wholesale">Wholesale</button>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="leads-grid" id="leadsGrid">
+    <div class="loading">Loading leads...</div>
+  </div>
+</div>
+
+<script>
+  var TOKEN = '';
+  var ALL_LEADS = [];
+  var currentFilter = '';
+
+  function login() {
+    var pw = document.getElementById('pwInput').value;
+    fetch('/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.token) {
+        TOKEN = d.token;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadLeads();
+      } else {
+        document.getElementById('loginError').textContent = 'Incorrect password.';
+      }
+    })
+    .catch(() => { document.getElementById('loginError').textContent = 'Connection error.'; });
+  }
+
+  document.getElementById('pwInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') login();
+  });
+
+  function authHeaders() {
+    return { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' };
+  }
+
+  function loadLeads() {
+    var url = '/admin/leads' + (currentFilter ? '?type=' + currentFilter : '');
+    fetch(url, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(leads => {
+        ALL_LEADS = leads;
+        renderStats(leads);
+        renderLeads(leads);
+      });
+  }
+
+  function renderStats(leads) {
+    var total     = leads.length;
+    var contacted = leads.filter(l => l.contacted).length;
+    var pending   = total - contacted;
+    var bni       = leads.filter(l => l.type === 'bni').length;
+    var csa       = leads.filter(l => l.type === 'csa').length;
+    var ws        = leads.filter(l => l.type === 'wholesale').length;
+    var el        = document.getElementById('statsBar');
+    el.innerHTML = [
+      stat(total,     'Total Leads'),
+      stat(pending,   'Needs Follow-Up'),
+      stat(contacted, 'Contacted'),
+      stat(bni,       'BNI'),
+      stat(csa,       'CSA'),
+      stat(ws,        'Wholesale'),
+    ].join('');
+  }
+
+  function stat(n, label) {
+    return '<div class="stat"><strong>' + n + '</strong><br>' + label + '</div>';
+  }
+
+  function renderLeads(leads) {
+    var grid = document.getElementById('leadsGrid');
+    var visible = leads.filter(l => !l.notes || l.notes !== '__deleted__');
+    if (!visible.length) {
+      grid.innerHTML = '<div class="empty-state"><h2>No leads yet</h2><p>Submissions from your booking forms will appear here.</p></div>';
+      return;
+    }
+    grid.innerHTML = visible.map(leadCard).join('');
+  }
+
+  function fmt(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+           ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function badgeClass(type) {
+    return type === 'bni' ? 'badge-bni' : type === 'csa' ? 'badge-csa' : 'badge-wholesale';
+  }
+
+  function badgeLabel(type) {
+    return type === 'bni' ? 'BNI Networking' : type === 'csa' ? 'Farm Box / CSA' : 'Wholesale';
+  }
+
+  function dataFields(lead) {
+    var d = lead.data || {};
+    var rows = [];
+    if (lead.type === 'bni') {
+      if (d.fullName)  rows.push(['Full Name',    d.fullName]);
+      if (d.email)     rows.push(['Email',        '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
+      if (d.chapter)   rows.push(['Chapter',      d.chapter]);
+      if (d.location)  rows.push(['Location',     d.location]);
+    } else if (lead.type === 'csa') {
+      if (d.fullName)     rows.push(['Full Name',       d.fullName]);
+      if (d.city)         rows.push(['City',            d.city]);
+      if (d.household)    rows.push(['Household Size',  d.household]);
+      if (d.frustrations && d.frustrations.length)
+        rows.push(['Frustrations', d.frustrations.join(', ')]);
+    } else {
+      if (d.bizName)   rows.push(['Business',     d.bizName]);
+      if (d.bizType)   rows.push(['Type',         d.bizType]);
+      if (d.volume)    rows.push(['Volume',       d.volume]);
+      if (d.location)  rows.push(['Area',         d.location]);
+      if (d.products && d.products.length)
+        rows.push(['Products', d.products.join(', ')]);
+      if (d.notes)     rows.push(['Notes',        d.notes]);
+    }
+    return rows.map(function(r) {
+      return '<div class="lead-field"><span class="lead-field__label">' + r[0] + '</span><span class="lead-field__value">' + r[1] + '</span></div>';
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function getName(lead) {
+    var d = lead.data || {};
+    return d.fullName || d.bizName || 'Unknown';
+  }
+
+  function leadCard(lead) {
+    var checked   = lead.contacted ? 'checked' : '';
+    var cardClass = lead.contacted ? 'lead-card is-contacted' : 'lead-card';
+    var notes     = lead.notes && lead.notes !== '__deleted__' ? esc(lead.notes) : '';
+    return '<div class="' + cardClass + '" id="card-' + lead.id + '">' +
+      '<div class="lead-card__head">' +
+        '<span class="lead-badge ' + badgeClass(lead.type) + '">' + badgeLabel(lead.type) + '</span>' +
+        '<span class="lead-date">' + fmt(lead.created_at) + '</span>' +
+      '</div>' +
+      '<div class="lead-name">' + esc(getName(lead)) + '</div>' +
+      '<div class="lead-fields">' + dataFields(lead) + '</div>' +
+      '<div class="lead-card__foot">' +
+        '<label class="contact-toggle">' +
+          '<span class="toggle-switch"><input type="checkbox" ' + checked + ' onchange="toggleContacted(' + lead.id + ', this.checked)" /><span class="toggle-slider"></span></span>' +
+          'Marked as contacted' +
+        '</label>' +
+        '<textarea class="notes-input" id="notes-' + lead.id + '" placeholder="Add notes...">' + notes + '</textarea>' +
+        '<button class="notes-save" onclick="saveNotes(' + lead.id + ')">Save Notes</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function toggleContacted(id, contacted) {
+    fetch('/admin/leads/' + id, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ contacted: contacted })
+    }).then(() => {
+      var card = document.getElementById('card-' + id);
+      if (card) card.className = contacted ? 'lead-card is-contacted' : 'lead-card';
+      var lead = ALL_LEADS.find(l => l.id === id);
+      if (lead) lead.contacted = contacted;
+      renderStats(ALL_LEADS);
+    });
+  }
+
+  function saveNotes(id) {
+    var notes = document.getElementById('notes-' + id).value;
+    fetch('/admin/leads/' + id, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ notes: notes })
+    }).then(() => {
+      var btn = document.querySelector('#card-' + id + ' .notes-save');
+      if (btn) { btn.textContent = 'Saved!'; setTimeout(function() { btn.textContent = 'Save Notes'; }, 1500); }
+    });
+  }
+
+  function exportCSV() {
+    window.location.href = '/admin/leads/export.csv?token=' + TOKEN;
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentFilter = btn.dataset.type;
+      loadLeads();
+    });
+  });
+
+  // Export needs token in header not query string — use a quick fetch+blob trick
+  function exportCSV() {
+    fetch('/admin/leads/export.csv', { headers: authHeaders() })
+      .then(r => r.blob())
+      .then(blob => {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'hoto-leads.csv';
+        a.click();
+      });
+  }
+</script>
+</body>
+</html>

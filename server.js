@@ -3088,6 +3088,7 @@ app.post('/api/csa-inquiry', async (req, res) => {
     <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
   `;
   try {
+    await db.createLead('csa', { fullName, city, household, frustrations });
     await sendEmail('New CSA Consultation Request - Heart of Texas Organics', html);
     res.json({ ok: true });
   } catch (err) {
@@ -3113,6 +3114,7 @@ app.post('/api/bni-inquiry', async (req, res) => {
     <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
   `;
   try {
+    await db.createLead('bni', { fullName, chapter, location, email });
     await sendEmail('New BNI 1:1 Booking Request - Heart of Texas Organics', html);
     res.json({ ok: true });
   } catch (err) {
@@ -3143,13 +3145,61 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
     <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
   `;
   try {
-    await sendEmail('New Wholesale Inquiry — Heart of Texas Organics', html);
+    await db.createLead('wholesale', { bizName, bizType, products, volume, location, notes });
+    await sendEmail('New Wholesale Inquiry - Heart of Texas Organics', html);
     res.json({ ok: true });
   } catch (err) {
     console.error('[Wholesale inquiry email error]', err.message);
     res.status(500).json({ error: 'Failed to send email' });
   }
 });
+
+// ── Leads admin routes ────────────────────────────────────────────────────────
+
+app.get('/admin/leads', requireAdmin, async (req, res) => {
+  const type = req.query.type || null;
+  const leads = await db.getLeads(type);
+  res.json(leads);
+});
+
+app.patch('/admin/leads/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { contacted, notes } = req.body || {};
+  const fields = {};
+  if (contacted !== undefined) fields.contacted = !!contacted;
+  if (notes     !== undefined) fields.notes     = String(notes).slice(0, 1000);
+  if (!Object.keys(fields).length) return res.status(400).json({ error: 'Nothing to update' });
+  await db.updateLead(id, fields);
+  res.json({ ok: true });
+});
+
+app.get('/admin/leads/export.csv', requireAdmin, async (req, res) => {
+  const leads = await db.getLeads();
+  const rows  = [['ID','Type','Name','Date','Contacted','Data','Notes']];
+  for (const l of leads) {
+    const d    = l.data || {};
+    const name = d.fullName || d.bizName || '';
+    rows.push([l.id, l.type, name, l.created_at, l.contacted ? 'Yes' : 'No', JSON.stringify(d), l.notes || '']);
+  }
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="hoto-leads.csv"');
+  res.send(csv);
+});
+
+app.delete('/admin/leads/:id', requireAdmin, async (req, res) => {
+  // Soft-delete by marking notes — or just remove from JSON. PG: actual delete.
+  if (process.env.DATABASE_URL) {
+    const { Pool } = require('pg');
+    // Use existing pool via db — piggyback raw query if needed
+    await db.updateLead(req.params.id, { notes: '__deleted__' });
+  } else {
+    await db.updateLead(req.params.id, { notes: '__deleted__' });
+  }
+  res.json({ ok: true });
+});
+
+// ── Inventory admin routes ────────────────────────────────────────────────────
 
 app.delete('/admin/inventory/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;

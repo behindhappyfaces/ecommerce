@@ -186,16 +186,26 @@
 <script>
   var ALL_LEADS = [];
   var currentFilter = '';
+  var TOKEN = localStorage.getItem('inv_token') || '';
+
+  // If not logged in, send to inventory to authenticate first
+  if (!TOKEN) {
+    window.location.href = '/inventory.html?next=leads';
+  }
 
   function authHeaders() {
-    return { 'Content-Type': 'application/json' };
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
   }
 
   function loadLeads() {
     var url = '/admin/leads' + (currentFilter ? '?type=' + currentFilter : '');
     fetch(url, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(leads => {
+      .then(function(r) {
+        if (r.status === 401) { window.location.href = '/inventory.html?next=leads'; return null; }
+        return r.json();
+      })
+      .then(function(leads) {
+        if (!leads) return;
         ALL_LEADS = leads;
         renderStats(leads);
         renderLeads(leads);

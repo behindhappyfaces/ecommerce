@@ -3068,6 +3068,30 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/bni-inquiry', async (req, res) => {
+  const { fullName, chapter, location } = req.body || {};
+  if (!fullName || !chapter || !location) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  const esc = s => String(s).slice(0, 500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#4a3728;">New BNI 1:1 Booking Request</h2>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:180px;"><strong>Full Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(fullName)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>BNI Chapter</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(chapter)}</td></tr>
+      <tr><td style="padding:10px;color:#9a7b62;"><strong>BNI Location</strong></td><td style="padding:10px;">${esc(location)}</td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
+  `;
+  try {
+    await sendEmail('New BNI 1:1 Booking Request - Heart of Texas Organics', html);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[BNI inquiry email error]', err.message);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
 app.post('/api/wholesale-inquiry', async (req, res) => {
   const { bizName, bizType, products, volume, location, notes } = req.body || {};
   if (!bizName || !bizType || !volume || !location) {

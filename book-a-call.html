@@ -460,6 +460,14 @@
     }
     .modal__book-btn:hover { background: var(--sage-hover); }
 
+    /* ── BNI modal header (sage green) ──────────────────────────── */
+    .modal--bni .modal__head {
+      background: linear-gradient(135deg, #2e4e2e 0%, var(--sage) 100%);
+    }
+    .modal--bni .modal__eyebrow { color: #b8e0b8; }
+    .modal--bni .modal__submit  { background: var(--sage); }
+    .modal--bni .modal__submit:hover { background: var(--sage-hover); }
+
     /* ── Trust strip ──────────────────────────────────────────── */
     .trust {
       background: var(--cream-dark);
@@ -711,7 +719,7 @@
         <p class="card__duration">45 Minutes</p>
         <h2 class="card__title">BNI 1:1 Networking</h2>
         <p class="card__desc">I'd rather know your why than your logo. Let's talk about what you actually love doing and who needs to hear about it, so I know exactly who to send your way.</p>
-        <a href="https://cal.com/heartoftexasorganics/bni-1-1" target="_blank" rel="noopener" class="card__btn">Book a 1:1 Call</a>
+        <button type="button" class="card__btn" onclick="openBniModal()">Book a 1:1 Call</button>
       </div>
 
       <!-- Farm Box & CSA Consultation -->
@@ -734,6 +742,49 @@
 
     </div>
   </main>
+
+  <!-- BNI Pre-Booking Modal -->
+  <div class="modal-overlay" id="bniModal" role="dialog" aria-modal="true" aria-labelledby="bniModalTitle">
+    <div class="modal modal--bni">
+
+      <div class="modal__head">
+        <button class="modal__close" onclick="closeBniModal()" aria-label="Close">&#x2715;</button>
+        <p class="modal__eyebrow">Before You Book</p>
+        <h2 class="modal__title" id="bniModalTitle">Quick intro</h2>
+        <p class="modal__sub">Just 3 questions so we can make the most of our time together.</p>
+      </div>
+
+      <div class="modal__body" id="bniModalForm">
+        <form id="bniForm" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="bni-full-name">Full name <span>(required)</span></label>
+            <input class="form-input" id="bni-full-name" type="text" placeholder="e.g. Jamie Rodriguez" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bni-chapter">BNI chapter name <span>(required)</span></label>
+            <input class="form-input" id="bni-chapter" type="text" placeholder="e.g. BNI Champions" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="bni-location">BNI location <span>(required)</span></label>
+            <input class="form-input" id="bni-location" type="text" placeholder="e.g. Austin, TX" required />
+          </div>
+
+          <button type="submit" class="modal__submit">Continue to Book My Call &#x2192;</button>
+        </form>
+      </div>
+
+      <div class="modal__success" id="bniModalSuccess">
+        <div class="modal__success-icon">&#x1F91D;</div>
+        <h3>Great, see you soon!</h3>
+        <p>Thanks for sharing a bit about yourself. Pick a time that works for you and let's connect.</p>
+        <a href="https://cal.com/heartoftexasorganics/bni-1-1" target="_blank" rel="noopener" class="modal__book-btn" style="background:var(--sage);">Book a 1:1 Call &#x2192;</a>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Wholesale Questionnaire Modal -->
   <div class="modal-overlay" id="wholesaleModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -824,6 +875,58 @@
   </footer>
 
   <script>
+    /* ── BNI modal ──────────────────────────────────────────────── */
+    var bniModal = document.getElementById('bniModal');
+
+    function openBniModal() {
+      bniModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeBniModal() {
+      bniModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    bniModal.addEventListener('click', function(e) {
+      if (e.target === bniModal) closeBniModal();
+    });
+
+    document.getElementById('bniForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      var fullName = document.getElementById('bni-full-name').value.trim();
+      var chapter  = document.getElementById('bni-chapter').value.trim();
+      var location = document.getElementById('bni-location').value.trim();
+
+      var missing = !fullName ? 'bni-full-name' : !chapter ? 'bni-chapter' : !location ? 'bni-location' : null;
+      if (missing) {
+        var el = document.getElementById(missing);
+        el.focus();
+        el.style.borderColor = '#c05050';
+        setTimeout(function() { el.style.borderColor = ''; }, 2000);
+        return;
+      }
+
+      var submitBtn = document.querySelector('#bniForm .modal__submit');
+      submitBtn.textContent = 'Sending…';
+      submitBtn.disabled = true;
+
+      try {
+        await fetch('/api/bni-inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName: fullName, chapter: chapter, location: location })
+        });
+      } catch(err) {
+        console.warn('BNI email notification failed:', err);
+      }
+
+      document.getElementById('bniModalForm').style.display = 'none';
+      document.getElementById('bniModalSuccess').classList.add('show');
+    });
+
+    /* ── Wholesale modal ────────────────────────────────────────── */
     var modal = document.getElementById('wholesaleModal');
 
     function openWholesaleModal() {
@@ -841,9 +944,9 @@
       if (e.target === modal) closeWholesaleModal();
     });
 
-    // Close on Escape key
+    // Escape closes whichever modal is open
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeWholesaleModal();
+      if (e.key === 'Escape') { closeBniModal(); closeWholesaleModal(); }
     });
 
     document.getElementById('wholesaleForm').addEventListener('submit', async function(e) {

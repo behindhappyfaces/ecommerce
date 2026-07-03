@@ -150,6 +150,16 @@
     }
     .notes-save:hover { background: #496649; }
 
+    .card-foot-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .btn-delete {
+      padding: 5px 12px; background: transparent; color: var(--rust);
+      border: 1.5px solid var(--rust); border-radius: 6px; font-size: 0.76rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-delete:hover { background: var(--rust); color: #fff; }
+
     .empty-state {
       text-align: center; padding: 80px 24px; color: var(--text-mid);
     }
@@ -322,7 +332,10 @@
           'Marked as contacted' +
         '</label>' +
         '<textarea class="notes-input" id="notes-' + lead.id + '" placeholder="Add notes...">' + notes + '</textarea>' +
-        '<button class="notes-save" onclick="saveNotes(' + lead.id + ')">Save Notes</button>' +
+        '<div class="card-foot-row">' +
+          '<button class="btn-delete" onclick="deleteLead(' + lead.id + ', \'' + esc(getName(lead)).replace(/'/g, "\\'") + '\')">Delete</button>' +
+          '<button class="notes-save" onclick="saveNotes(' + lead.id + ')">Save Notes</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }
@@ -355,6 +368,23 @@
 
   function exportCSV() {
     window.location.href = '/admin/leads/export.csv?token=' + TOKEN;
+  }
+
+  function deleteLead(id, name) {
+    if (!confirm('Delete lead for "' + name + '"? This cannot be undone.')) return;
+    fetch('/admin/leads/' + id, { method: 'DELETE', headers: authHeaders() })
+      .then(function(r) {
+        if (!r.ok) throw new Error('Delete failed');
+        var card = document.getElementById('card-' + id);
+        if (card) card.remove();
+        ALL_LEADS = ALL_LEADS.filter(function(l) { return l.id !== id; });
+        renderStats(ALL_LEADS);
+        var grid = document.getElementById('leadsGrid');
+        if (!grid.querySelector('.lead-card')) {
+          grid.innerHTML = '<div class="empty-state"><h2>No leads yet</h2><p>Submissions from your booking forms will appear here.</p></div>';
+        }
+      })
+      .catch(function(err) { alert('Could not delete lead: ' + err.message); });
   }
 
   // Filter buttons

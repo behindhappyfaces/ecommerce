@@ -3167,10 +3167,11 @@ app.get('/admin/leads', requireAdmin, async (req, res) => {
 
 app.patch('/admin/leads/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const { contacted, notes } = req.body || {};
+  const { contacted, notes, data } = req.body || {};
   const fields = {};
   if (contacted !== undefined) fields.contacted = !!contacted;
   if (notes     !== undefined) fields.notes     = String(notes).slice(0, 1000);
+  if (data      !== undefined && typeof data === 'object' && !Array.isArray(data)) fields.data = data;
   if (!Object.keys(fields).length) return res.status(400).json({ error: 'Nothing to update' });
   await db.updateLead(id, fields);
   res.json({ ok: true });

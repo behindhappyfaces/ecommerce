@@ -45,7 +45,7 @@
     .login-error { color: var(--rust); font-size: 0.82rem; margin-top: 10px; }
 
     /* ── App ── */
-    #app { display: none; }
+    #app { display: block; }
 
     header {
       background: var(--brown); color: #fff;
@@ -160,18 +160,6 @@
 </head>
 <body>
 
-<!-- Login -->
-<div id="loginScreen">
-  <div class="login-box">
-    <h1>&#x1F331; Customer Leads</h1>
-    <p>Heart of Texas Organics</p>
-    <input type="password" id="pwInput" placeholder="Admin password" />
-    <button onclick="login()">Sign In</button>
-    <p class="login-error" id="loginError"></p>
-  </div>
-</div>
-
-<!-- App -->
 <div id="app">
   <header>
     <h1>&#x1F331; Customer Leads</h1>
@@ -196,37 +184,11 @@
 </div>
 
 <script>
-  var TOKEN = '';
   var ALL_LEADS = [];
   var currentFilter = '';
 
-  function login() {
-    var pw = document.getElementById('pwInput').value;
-    fetch('/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
-    })
-    .then(r => r.json())
-    .then(d => {
-      if (d.token) {
-        TOKEN = d.token;
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        loadLeads();
-      } else {
-        document.getElementById('loginError').textContent = 'Incorrect password.';
-      }
-    })
-    .catch(() => { document.getElementById('loginError').textContent = 'Connection error.'; });
-  }
-
-  document.getElementById('pwInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') login();
-  });
-
   function authHeaders() {
-    return { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' };
+    return { 'Content-Type': 'application/json' };
   }
 
   function loadLeads() {
@@ -239,6 +201,9 @@
         renderLeads(leads);
       });
   }
+
+  // Load immediately on page open
+  loadLeads();
 
   function renderStats(leads) {
     var total     = leads.length;

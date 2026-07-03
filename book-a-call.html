@@ -816,12 +816,16 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Biggest frustration with grocery shopping <span>(select all that apply)</span></label>
+            <label class="form-label">Biggest frustration <span>(select all that apply)</span></label>
             <div class="form-checks">
               <label class="form-check"><input type="checkbox" name="csa-frustration" value="Cost of organic foods" /> Cost of organic foods</label>
               <label class="form-check"><input type="checkbox" name="csa-frustration" value="Ideas of what to cook for dinner" /> Ideas of what to cook for dinner</label>
               <label class="form-check"><input type="checkbox" name="csa-frustration" value="Time" /> Time</label>
               <label class="form-check"><input type="checkbox" name="csa-frustration" value="Kids eat one thing, parents eat another" /> Kids eat one thing, parents eat another</label>
+              <label class="form-check">
+                <input type="checkbox" name="csa-frustration" value="Food allergies" id="csa-allergy-check" /> Food allergies
+              </label>
+              <input class="form-other-input" id="csa-allergy-text" type="text" placeholder="List any food allergies or sensitivities..." />
               <label class="form-check">
                 <input type="checkbox" name="csa-frustration" value="Other" id="csa-other-check" /> Other
               </label>
@@ -997,6 +1001,13 @@
       if (e.target === csaModal) closeCsaModal();
     });
 
+    // Show/hide "Food allergies" write-in field
+    document.getElementById('csa-allergy-check').addEventListener('change', function() {
+      var allergyInput = document.getElementById('csa-allergy-text');
+      allergyInput.style.display = this.checked ? 'block' : 'none';
+      if (this.checked) allergyInput.focus();
+    });
+
     // Show/hide "Other" write-in field
     document.getElementById('csa-other-check').addEventListener('change', function() {
       var otherInput = document.getElementById('csa-other-text');
@@ -1021,6 +1032,10 @@
       }
 
       var frustrations = Array.from(document.querySelectorAll('input[name="csa-frustration"]:checked')).map(function(c) {
+        if (c.value === 'Food allergies') {
+          var txt = document.getElementById('csa-allergy-text').value.trim();
+          return txt ? 'Food allergies: ' + txt : 'Food allergies';
+        }
         if (c.value === 'Other') {
           var txt = document.getElementById('csa-other-text').value.trim();
           return txt ? 'Other: ' + txt : 'Other';

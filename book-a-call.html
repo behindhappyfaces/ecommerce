@@ -472,6 +472,29 @@
     }
     .modal__book-btn:hover { background: var(--sage-hover); }
 
+    /* ── CSA modal header (gold) ────────────────────────────────── */
+    .modal--csa .modal__head {
+      background: linear-gradient(135deg, #6b4a10 0%, #c9a84c 100%);
+    }
+    .modal--csa .modal__eyebrow { color: #fff3cc; }
+    .modal--csa .modal__submit  { background: var(--gold); color: var(--brown); }
+    .modal--csa .modal__submit:hover { background: var(--gold-hover); color: #fff; }
+    .modal--csa .modal__book-btn { background: var(--gold); color: var(--brown); }
+    .modal--csa .modal__book-btn:hover { background: var(--gold-hover); color: #fff; }
+    .form-other-input {
+      display: none;
+      margin-top: 8px;
+      width: 100%;
+      padding: 9px 13px;
+      border: 1.5px solid #d8cfc4;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text);
+      background: #fff;
+    }
+    .form-other-input:focus { outline: none; border-color: var(--gold); }
+
     /* ── BNI modal header (sage green) ──────────────────────────── */
     .modal--bni .modal__head {
       background: linear-gradient(135deg, #2e4e2e 0%, var(--sage) 100%);
@@ -741,7 +764,7 @@
         <p class="card__duration">15 Minutes</p>
         <h2 class="card__title">Farm Box &amp; CSA Consultation</h2>
         <p class="card__desc">Get help choosing the right subscription or bundle for your family. We'll walk through options, delivery, and understand your why, and we can even send customized cart links to build out your box exactly the way you want it!</p>
-        <a href="https://cal.com/heartoftexasorganics/subscription" target="_blank" rel="noopener" class="card__btn">Schedule Consultation</a>
+        <button type="button" class="card__btn" onclick="openCsaModal()">Schedule Consultation</button>
       </div>
 
       <!-- Wholesale & Partnership Inquiry -->
@@ -755,6 +778,70 @@
 
     </div>
   </main>
+
+  <!-- CSA Pre-Booking Modal -->
+  <div class="modal-overlay" id="csaModal" role="dialog" aria-modal="true" aria-labelledby="csaModalTitle">
+    <div class="modal modal--csa">
+
+      <div class="modal__head">
+        <button class="modal__close" onclick="closeCsaModal()" aria-label="Close">&#x2715;</button>
+        <p class="modal__eyebrow">Before You Book</p>
+        <h2 class="modal__title" id="csaModalTitle">Tell us about your household</h2>
+        <p class="modal__sub">A few quick questions so we can find the right fit for your family.</p>
+      </div>
+
+      <div class="modal__body" id="csaModalForm">
+        <form id="csaForm" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="csa-full-name">Full name <span>(required)</span></label>
+            <input class="form-input" id="csa-full-name" type="text" placeholder="e.g. Taylor Nguyen" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="csa-city">City <span>(required)</span></label>
+            <input class="form-input" id="csa-city" type="text" placeholder="e.g. Austin, TX" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="csa-household">Household size <span>(required)</span></label>
+            <select class="form-select" id="csa-household" required>
+              <option value="">Select one...</option>
+              <option>Just me (1 person)</option>
+              <option>2 people</option>
+              <option>3 to 4 people</option>
+              <option>5 to 6 people</option>
+              <option>7 or more people</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Biggest frustration with grocery shopping <span>(select all that apply)</span></label>
+            <div class="form-checks">
+              <label class="form-check"><input type="checkbox" name="csa-frustration" value="Cost of organic foods" /> Cost of organic foods</label>
+              <label class="form-check"><input type="checkbox" name="csa-frustration" value="Ideas of what to cook for dinner" /> Ideas of what to cook for dinner</label>
+              <label class="form-check"><input type="checkbox" name="csa-frustration" value="Time" /> Time</label>
+              <label class="form-check"><input type="checkbox" name="csa-frustration" value="Kids eat one thing, parents eat another" /> Kids eat one thing, parents eat another</label>
+              <label class="form-check">
+                <input type="checkbox" name="csa-frustration" value="Other" id="csa-other-check" /> Other
+              </label>
+              <input class="form-other-input" id="csa-other-text" type="text" placeholder="Tell us more..." />
+            </div>
+          </div>
+
+          <button type="submit" class="modal__submit">Continue to Book My Consultation &#x2192;</button>
+        </form>
+      </div>
+
+      <div class="modal__success" id="csaModalSuccess">
+        <div class="modal__success-icon">&#x1F33F;</div>
+        <h3>You're all set!</h3>
+        <p>Thanks for sharing a bit about your household. Click below to pick a time that works for you.</p>
+        <a href="https://cal.com/heartoftexasorganics/subscription" target="_blank" rel="noopener" class="modal__book-btn">Schedule Consultation &#x2192;</a>
+      </div>
+
+    </div>
+  </div>
 
   <!-- BNI Pre-Booking Modal -->
   <div class="modal-overlay" id="bniModal" role="dialog" aria-modal="true" aria-labelledby="bniModalTitle">
@@ -893,6 +980,72 @@
   </footer>
 
   <script>
+    /* ── CSA modal ──────────────────────────────────────────────── */
+    var csaModal = document.getElementById('csaModal');
+
+    function openCsaModal() {
+      csaModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCsaModal() {
+      csaModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    csaModal.addEventListener('click', function(e) {
+      if (e.target === csaModal) closeCsaModal();
+    });
+
+    // Show/hide "Other" write-in field
+    document.getElementById('csa-other-check').addEventListener('change', function() {
+      var otherInput = document.getElementById('csa-other-text');
+      otherInput.style.display = this.checked ? 'block' : 'none';
+      if (this.checked) otherInput.focus();
+    });
+
+    document.getElementById('csaForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      var fullName  = document.getElementById('csa-full-name').value.trim();
+      var city      = document.getElementById('csa-city').value.trim();
+      var household = document.getElementById('csa-household').value;
+
+      var missing = !fullName ? 'csa-full-name' : !city ? 'csa-city' : !household ? 'csa-household' : null;
+      if (missing) {
+        var el = document.getElementById(missing);
+        el.focus();
+        el.style.borderColor = '#c05050';
+        setTimeout(function() { el.style.borderColor = ''; }, 2000);
+        return;
+      }
+
+      var frustrations = Array.from(document.querySelectorAll('input[name="csa-frustration"]:checked')).map(function(c) {
+        if (c.value === 'Other') {
+          var txt = document.getElementById('csa-other-text').value.trim();
+          return txt ? 'Other: ' + txt : 'Other';
+        }
+        return c.value;
+      });
+
+      var submitBtn = document.querySelector('#csaForm .modal__submit');
+      submitBtn.textContent = 'Sending...';
+      submitBtn.disabled = true;
+
+      try {
+        await fetch('/api/csa-inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName: fullName, city: city, household: household, frustrations: frustrations })
+        });
+      } catch(err) {
+        console.warn('CSA email notification failed:', err);
+      }
+
+      document.getElementById('csaModalForm').style.display = 'none';
+      document.getElementById('csaModalSuccess').classList.add('show');
+    });
+
     /* ── BNI modal ──────────────────────────────────────────────── */
     var bniModal = document.getElementById('bniModal');
 
@@ -965,7 +1118,7 @@
 
     // Escape closes whichever modal is open
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { closeBniModal(); closeWholesaleModal(); }
+      if (e.key === 'Escape') { closeCsaModal(); closeBniModal(); closeWholesaleModal(); }
     });
 
     document.getElementById('wholesaleForm').addEventListener('submit', async function(e) {

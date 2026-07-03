@@ -3068,6 +3068,34 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/csa-inquiry', async (req, res) => {
+  const { fullName, city, household, frustrations } = req.body || {};
+  if (!fullName || !city || !household) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  const esc = s => String(s).slice(0, 500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const frustrationList = Array.isArray(frustrations) && frustrations.length
+    ? frustrations.filter(f => typeof f === 'string').map(f => `<li>${esc(f)}</li>`).join('')
+    : '<li>None selected</li>';
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#4a3728;">New Farm Box &amp; CSA Consultation Request</h2>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:200px;"><strong>Full Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(fullName)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>City</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(city)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Household Size</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(household)}</td></tr>
+      <tr><td style="padding:10px;color:#9a7b62;vertical-align:top;"><strong>Biggest Frustrations</strong></td><td style="padding:10px;"><ul style="margin:0;padding-left:18px;">${frustrationList}</ul></td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
+  `;
+  try {
+    await sendEmail('New CSA Consultation Request - Heart of Texas Organics', html);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[CSA inquiry email error]', err.message);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
 app.post('/api/bni-inquiry', async (req, res) => {
   const { fullName, chapter, location, email } = req.body || {};
   if (!fullName || !chapter || !location || !email) {

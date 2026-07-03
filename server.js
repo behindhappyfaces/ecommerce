@@ -3073,18 +3073,19 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
   if (!bizName || !bizType || !volume || !location) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
+  const esc = s => String(s).slice(0, 500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const productList = Array.isArray(products) && products.length
-    ? products.map(p => `<li>${p}</li>`).join('')
+    ? products.filter(p => typeof p === 'string').map(p => `<li>${esc(p)}</li>`).join('')
     : '<li>Not specified</li>';
   const html = `
     <h2 style="font-family:Georgia,serif;color:#4a3728;">New Wholesale Inquiry</h2>
     <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
-      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:180px;"><strong>Business Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${bizName}</td></tr>
-      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Business Type</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${bizType}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:180px;"><strong>Business Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(bizName)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Business Type</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(bizType)}</td></tr>
       <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Products Interested In</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><ul style="margin:0;padding-left:18px;">${productList}</ul></td></tr>
-      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Monthly Volume</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${volume}</td></tr>
-      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>City / Area</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${location}</td></tr>
-      <tr><td style="padding:10px;color:#9a7b62;"><strong>Additional Notes</strong></td><td style="padding:10px;">${notes || '—'}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Monthly Volume</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(volume)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>City / Area</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(location)}</td></tr>
+      <tr><td style="padding:10px;color:#9a7b62;"><strong>Additional Notes</strong></td><td style="padding:10px;">${esc(notes || '—')}</td></tr>
     </table>
     <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from heartoftexasorganics.com/book-a-call.html</p>
   `;

@@ -82,13 +82,17 @@
       85%  { opacity: 0.65; }
       100% { transform: translateY(320px); opacity: 0; }
     }
-    @keyframes grassSway {
-      0%, 100% { transform-origin: bottom center; transform: rotate(-4deg) scaleY(1); }
-      50%       { transform-origin: bottom center; transform: rotate(4deg) scaleY(1.02); }
+    @keyframes drawStem {
+      to { stroke-dashoffset: 0; }
     }
-    @keyframes grassSway2 {
-      0%, 100% { transform-origin: bottom center; transform: rotate(3deg); }
-      50%       { transform-origin: bottom center; transform: rotate(-3deg); }
+    @keyframes bloomIn {
+      0%   { transform: scale(0); opacity: 0; }
+      65%  { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes gentleBob {
+      0%, 100% { transform: scale(1) rotate(-3deg); }
+      50%       { transform: scale(1.04) rotate(3deg); }
     }
 
     /* ── Hero ─────────────────────────────────────────────────── */
@@ -122,10 +126,8 @@
     .drop:nth-child(8)  { animation-delay: 0.4s; }
     .drop:nth-child(9)  { animation-delay: 2.0s; }
     .drop:nth-child(10) { animation-delay: 1.3s; }
-    /* Grass sway alternating */
-    .blade-a { animation: grassSway  2.8s ease-in-out infinite; }
-    .blade-b { animation: grassSway2 2.4s ease-in-out infinite; }
-    .blade-c { animation: grassSway  3.2s ease-in-out infinite 0.4s; }
+    /* Grass is static — no animation */
+    .blade-a, .blade-b, .blade-c { /* intentionally still */ }
 
     .hero__eyebrow {
       font-family: 'Inter', sans-serif;
@@ -554,45 +556,122 @@
         <ellipse class="drop" cx="1050" cy="60"  rx="3" ry="7"/>
       </g>
 
-      <!-- 🌱 Grass blades on top of the dirt strip (y≈345) -->
+      <!-- 🌱 Grass blades on top of the dirt strip (y≈370) — kept short to stay below text -->
       <!-- Left cluster -->
       <g fill="#4a8c4a">
-        <path class="blade-a" d="M60,350 Q58,320 62,295 Q66,320 64,350Z" opacity="0.85"/>
-        <path class="blade-b" d="M75,350 Q70,310 78,280 Q84,312 80,350Z" opacity="0.9"/>
-        <path class="blade-a" d="M90,350 Q88,325 94,300 Q98,326 94,350Z" opacity="0.8"/>
-        <path class="blade-c" d="M45,350 Q42,330 48,308 Q52,331 50,350Z" opacity="0.75"/>
-        <path class="blade-b" d="M108,350 Q104,318 112,292 Q118,320 114,350Z" opacity="0.85"/>
+        <path class="blade-a" d="M60,374 Q58,362 62,354 Q66,362 64,374Z" opacity="0.85"/>
+        <path class="blade-b" d="M75,374 Q70,360 78,350 Q84,360 80,374Z" opacity="0.9"/>
+        <path class="blade-a" d="M90,374 Q88,364 94,356 Q98,364 94,374Z" opacity="0.8"/>
+        <path class="blade-c" d="M45,374 Q42,365 48,358 Q52,365 50,374Z" opacity="0.75"/>
+        <path class="blade-b" d="M108,374 Q104,362 112,352 Q118,362 114,374Z" opacity="0.85"/>
       </g>
       <!-- Center-left cluster -->
       <g fill="#5a9e5a">
-        <path class="blade-b" d="M320,350 Q318,322 324,298 Q328,323 326,350Z" opacity="0.8"/>
-        <path class="blade-a" d="M336,350 Q332,315 340,288 Q346,317 342,350Z" opacity="0.85"/>
-        <path class="blade-c" d="M350,350 Q348,328 354,306 Q358,329 356,350Z" opacity="0.75"/>
+        <path class="blade-b" d="M320,374 Q318,363 324,354 Q328,363 326,374Z" opacity="0.8"/>
+        <path class="blade-a" d="M336,374 Q332,361 340,351 Q346,361 342,374Z" opacity="0.85"/>
+        <path class="blade-c" d="M350,374 Q348,365 354,357 Q358,365 356,374Z" opacity="0.75"/>
       </g>
       <!-- Center cluster -->
       <g fill="#4a8c4a">
-        <path class="blade-a" d="M690,350 Q688,318 694,292 Q698,320 696,350Z" opacity="0.88"/>
-        <path class="blade-b" d="M706,350 Q702,310 710,282 Q716,312 712,350Z" opacity="0.82"/>
-        <path class="blade-c" d="M720,350 Q718,324 724,300 Q728,325 726,350Z" opacity="0.78"/>
-        <path class="blade-a" d="M675,350 Q672,330 678,308 Q682,331 680,350Z" opacity="0.72"/>
+        <path class="blade-a" d="M690,374 Q688,362 694,353 Q698,362 696,374Z" opacity="0.88"/>
+        <path class="blade-b" d="M706,374 Q702,360 710,350 Q716,360 712,374Z" opacity="0.82"/>
+        <path class="blade-c" d="M720,374 Q718,363 724,355 Q728,363 726,374Z" opacity="0.78"/>
+        <path class="blade-a" d="M675,374 Q672,365 678,357 Q682,365 680,374Z" opacity="0.72"/>
       </g>
       <!-- Right cluster -->
       <g fill="#5a9e5a">
-        <path class="blade-b" d="M1340,350 Q1338,320 1344,295 Q1348,322 1346,350Z" opacity="0.85"/>
-        <path class="blade-a" d="M1356,350 Q1352,312 1360,284 Q1366,314 1362,350Z" opacity="0.9"/>
-        <path class="blade-c" d="M1370,350 Q1368,326 1374,302 Q1378,327 1376,350Z" opacity="0.8"/>
-        <path class="blade-b" d="M1325,350 Q1322,332 1328,310 Q1332,333 1330,350Z" opacity="0.75"/>
-        <path class="blade-a" d="M1388,350 Q1386,322 1392,298 Q1396,323 1394,350Z" opacity="0.82"/>
+        <path class="blade-b" d="M1340,374 Q1338,362 1344,353 Q1348,362 1346,374Z" opacity="0.85"/>
+        <path class="blade-a" d="M1356,374 Q1352,360 1360,350 Q1366,360 1362,374Z" opacity="0.9"/>
+        <path class="blade-c" d="M1370,374 Q1368,363 1374,355 Q1378,363 1376,374Z" opacity="0.8"/>
+        <path class="blade-b" d="M1325,374 Q1322,366 1328,358 Q1332,366 1330,374Z" opacity="0.75"/>
+        <path class="blade-a" d="M1388,374 Q1386,363 1392,353 Q1396,363 1394,374Z" opacity="0.82"/>
       </g>
       <!-- Far right edge -->
       <g fill="#4a8c4a">
-        <path class="blade-c" d="M1420,350 Q1418,325 1424,302 Q1428,326 1426,350Z" opacity="0.78"/>
-        <path class="blade-b" d="M1435,350 Q1432,315 1438,290 Q1442,317 1440,350Z" opacity="0.85"/>
+        <path class="blade-c" d="M1420,374 Q1418,364 1424,355 Q1428,364 1426,374Z" opacity="0.78"/>
+        <path class="blade-b" d="M1435,374 Q1432,362 1438,351 Q1442,362 1440,374Z" opacity="0.85"/>
       </g>
+
+      <!-- 🌸 Animated flowers growing from the dirt -->
+
+      <!-- Pink Daisy — x=145 -->
+      <g transform="translate(145,358)">
+        <path d="M0,0 L0,-58" stroke="#4a7a3a" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="58" stroke-dashoffset="58" style="animation:drawStem 0.9s ease-out 0.1s both"/>
+        <ellipse cx="10" cy="-32" rx="11" ry="5" fill="#5a8c3a" transform="rotate(28,10,-32)" style="animation:drawStem 0.6s ease-out 0.5s both"/>
+        <g transform="translate(0,-68)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.45s ease-out 1.1s both, gentleBob 3.5s ease-in-out 1.7s infinite">
+          <ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f2a8c8" transform="rotate(0)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f0b0d0" transform="rotate(45)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f2a8c8" transform="rotate(90)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f0b0d0" transform="rotate(135)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f2a8c8" transform="rotate(180)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f0b0d0" transform="rotate(225)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f2a8c8" transform="rotate(270)"/><ellipse cx="0" cy="-11" rx="4" ry="9" fill="#f0b0d0" transform="rotate(315)"/>
+          <circle r="8" fill="#f5d020"/><circle r="4" fill="#d4a800" opacity="0.7"/>
+        </g>
+      </g>
+
+      <!-- Lavender — x=305 -->
+      <g transform="translate(305,358)">
+        <path d="M0,0 L0,-65" stroke="#5a7a3a" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="65" stroke-dashoffset="65" style="animation:drawStem 1s ease-out 0.4s both"/>
+        <ellipse cx="-8" cy="-38" rx="10" ry="5" fill="#4a8c3a" transform="rotate(-25,-8,-38)" style="animation:drawStem 0.5s ease-out 0.8s both"/>
+        <g transform="translate(0,-75)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.4s ease-out 1.5s both, gentleBob 4s ease-in-out 2s infinite">
+          <ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#9b7fd4" transform="rotate(0)"/><ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#b090e0" transform="rotate(60)"/><ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#9b7fd4" transform="rotate(120)"/><ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#b090e0" transform="rotate(180)"/><ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#9b7fd4" transform="rotate(240)"/><ellipse cx="0" cy="-12" rx="3.5" ry="7" fill="#b090e0" transform="rotate(300)"/>
+          <circle r="6" fill="#7b5fb0"/><circle r="3" fill="#d4c0f0" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- Sunflower — x=530 -->
+      <g transform="translate(530,358)">
+        <path d="M0,0 Q4,-40 0,-78" stroke="#4a7a2a" stroke-width="3" stroke-linecap="round" fill="none" stroke-dasharray="80" stroke-dashoffset="80" style="animation:drawStem 1.1s ease-out 0.7s both"/>
+        <ellipse cx="12" cy="-42" rx="14" ry="6" fill="#5a8c3a" transform="rotate(30,12,-42)" style="animation:drawStem 0.5s ease-out 1.1s both"/>
+        <g transform="translate(0,-92)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.5s ease-out 1.9s both, gentleBob 3s ease-in-out 2.5s infinite">
+          <ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(0)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(30)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(60)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(90)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(120)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(150)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(180)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(210)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(240)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(270)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#f5c800" transform="rotate(300)"/><ellipse cx="0" cy="-14" rx="5" ry="13" fill="#e8b800" transform="rotate(330)"/>
+          <circle r="13" fill="#6b3a1a"/><circle r="9" fill="#8b4a2a" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- Coral Poppy — x=720 -->
+      <g transform="translate(720,358)">
+        <path d="M0,0 Q-5,-30 0,-62" stroke="#4a7a3a" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="65" stroke-dashoffset="65" style="animation:drawStem 1s ease-out 1.0s both"/>
+        <g transform="translate(0,-72)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.45s ease-out 2.1s both, gentleBob 4.2s ease-in-out 2.6s infinite">
+          <ellipse cx="0" cy="-12" rx="10" ry="13" fill="#e8826a" transform="rotate(0)" opacity="0.9"/><ellipse cx="0" cy="-12" rx="10" ry="13" fill="#f09070" transform="rotate(60)" opacity="0.9"/><ellipse cx="0" cy="-12" rx="10" ry="13" fill="#e8826a" transform="rotate(120)" opacity="0.9"/><ellipse cx="0" cy="-12" rx="10" ry="13" fill="#f09070" transform="rotate(180)" opacity="0.9"/><ellipse cx="0" cy="-12" rx="10" ry="13" fill="#e8826a" transform="rotate(240)" opacity="0.9"/><ellipse cx="0" cy="-12" rx="10" ry="13" fill="#f09070" transform="rotate(300)" opacity="0.9"/>
+          <circle r="9" fill="#2a1a0a"/><circle r="5" fill="#4a3020" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- White Chamomile — x=900 -->
+      <g transform="translate(900,358)">
+        <path d="M0,0 L0,-50" stroke="#5a8a3a" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="50" stroke-dashoffset="50" style="animation:drawStem 0.8s ease-out 1.3s both"/>
+        <ellipse cx="-9" cy="-28" rx="9" ry="4.5" fill="#5a8c3a" transform="rotate(-30,-9,-28)" style="animation:drawStem 0.4s ease-out 1.6s both"/>
+        <g transform="translate(0,-60)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.4s ease-out 2.2s both, gentleBob 3.2s ease-in-out 2.7s infinite">
+          <ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#f5f5f5" transform="rotate(0)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#eee" transform="rotate(36)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#f5f5f5" transform="rotate(72)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#eee" transform="rotate(108)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#f5f5f5" transform="rotate(144)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#eee" transform="rotate(180)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#f5f5f5" transform="rotate(216)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#eee" transform="rotate(252)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#f5f5f5" transform="rotate(288)"/><ellipse cx="0" cy="-10" rx="3.5" ry="9" fill="#eee" transform="rotate(324)"/>
+          <circle r="8" fill="#f5c800"/><circle r="4.5" fill="#e0a800"/>
+        </g>
+      </g>
+
+      <!-- Purple Wildflower — x=1110 -->
+      <g transform="translate(1110,358)">
+        <path d="M0,0 L0,-60" stroke="#4a7a3a" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="60" stroke-dashoffset="60" style="animation:drawStem 0.9s ease-out 0.6s both"/>
+        <ellipse cx="9" cy="-35" rx="10" ry="5" fill="#5a8c3a" transform="rotate(25,9,-35)" style="animation:drawStem 0.4s ease-out 1.0s both"/>
+        <g transform="translate(0,-70)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.45s ease-out 1.6s both, gentleBob 3.8s ease-in-out 2.1s infinite">
+          <ellipse cx="0" cy="-11" rx="5" ry="11" fill="#a06ec8" transform="rotate(0)"/><ellipse cx="0" cy="-11" rx="5" ry="11" fill="#b880e0" transform="rotate(72)"/><ellipse cx="0" cy="-11" rx="5" ry="11" fill="#a06ec8" transform="rotate(144)"/><ellipse cx="0" cy="-11" rx="5" ry="11" fill="#b880e0" transform="rotate(216)"/><ellipse cx="0" cy="-11" rx="5" ry="11" fill="#a06ec8" transform="rotate(288)"/>
+          <circle r="7" fill="#f5e030"/><circle r="3.5" fill="#d4bc20" opacity="0.9"/>
+        </g>
+      </g>
+
+      <!-- Herb/Basil — x=1300 -->
+      <g transform="translate(1300,358)">
+        <path d="M0,0 L0,-70" stroke="#3a6a2a" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="70" stroke-dashoffset="70" style="animation:drawStem 1s ease-out 0.9s both"/>
+        <path d="M0,-30 L-18,-50" stroke="#3a6a2a" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="28" stroke-dashoffset="28" style="animation:drawStem 0.5s ease-out 1.3s both"/>
+        <path d="M0,-30 L18,-50" stroke="#3a6a2a" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="28" stroke-dashoffset="28" style="animation:drawStem 0.5s ease-out 1.4s both"/>
+        <ellipse cx="-22" cy="-54" rx="9" ry="5" fill="#4a8a2a" transform="rotate(-20,-22,-54)" style="animation:drawStem 0.4s ease-out 1.7s both"/>
+        <ellipse cx="22" cy="-54" rx="9" ry="5" fill="#4a8a2a" transform="rotate(20,22,-54)" style="animation:drawStem 0.4s ease-out 1.8s both"/>
+        <g transform="translate(0,-82)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.4s ease-out 2.0s both, gentleBob 3.6s ease-in-out 2.5s infinite">
+          <ellipse cx="0" cy="-8" rx="3" ry="7" fill="#c8a0e0" transform="rotate(0)"/><ellipse cx="0" cy="-8" rx="3" ry="7" fill="#d8b0f0" transform="rotate(60)"/><ellipse cx="0" cy="-8" rx="3" ry="7" fill="#c8a0e0" transform="rotate(120)"/><ellipse cx="0" cy="-8" rx="3" ry="7" fill="#d8b0f0" transform="rotate(180)"/><ellipse cx="0" cy="-8" rx="3" ry="7" fill="#c8a0e0" transform="rotate(240)"/><ellipse cx="0" cy="-8" rx="3" ry="7" fill="#d8b0f0" transform="rotate(300)"/>
+          <circle r="5" fill="#f0f0c0"/>
+        </g>
+        <g transform="translate(-20,-58)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.35s ease-out 2.1s both"><circle r="4" fill="#e8d040"/></g>
+        <g transform="translate(20,-58)" style="transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:bloomIn 0.35s ease-out 2.2s both"><circle r="4" fill="#e8d040"/></g>
+      </g>
+
     </svg>
     <p class="hero__eyebrow">Schedule a Conversation</p>
     <h1 class="hero__headline">Let's <em>Connect</em></h1>
-    <p class="hero__sub">Choose the type of conversation that fits you best.</p>
+    <p class="hero__sub">Choose the type of growth conversation that you want to have.</p>
     <p class="hero__support">Every call is a real conversation — no scripts, no sales pressure. Just two people talking about food, community, and what grows next.</p>
     <div class="hero__divider"></div>
   </section>
@@ -622,7 +701,7 @@
         <div class="card__icon" aria-hidden="true">🌿</div>
         <p class="card__duration">15 Minutes</p>
         <h2 class="card__title">Farm Box &amp; CSA Consultation</h2>
-        <p class="card__desc">Get help choosing the right subscription or bundle for your family. We'll walk through options, delivery, and understand your why.</p>
+        <p class="card__desc">Get help choosing the right subscription or bundle for your family. We'll walk through options, delivery, and understand your why — and can send you customized cart links to build out your box exactly the way you want it.</p>
         <a href="https://cal.com/heartoftexasorganics/subscription" target="_blank" rel="noopener" class="card__btn">Schedule Consultation</a>
       </div>
 
@@ -630,8 +709,8 @@
       <div class="card card--wholesale">
         <div class="card__icon" aria-hidden="true">🏪</div>
         <p class="card__duration">20 Minutes</p>
-        <h2 class="card__title">Wholesale &amp; Partnership Inquiry</h2>
-        <p class="card__desc">For restaurants, shops, and bulk buyers interested in carrying our products. Let's talk volume, pricing, and logistics.</p>
+        <h2 class="card__title">Let's Stock Your Shelves</h2>
+        <p class="card__desc">For restaurants, shops, and bulk buyers ready to carry the real thing.</p>
         <button type="button" class="card__btn" onclick="openWholesaleModal()">Book Partnership Call</button>
       </div>
 

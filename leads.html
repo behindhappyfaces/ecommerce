@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customer Leads | Heart of Texas Organics</title>
+  <title>CRM | Heart of Texas Organics</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -21,32 +21,6 @@
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
 
-    /* ── Login ── */
-    #loginScreen {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 24px;
-    }
-    .login-box {
-      background: #fff; border-radius: 16px; padding: 40px 36px;
-      box-shadow: 0 8px 40px rgba(58,46,37,0.14); width: 100%; max-width: 360px; text-align: center;
-    }
-    .login-box h1 { font-size: 1.4rem; color: var(--brown); margin-bottom: 6px; }
-    .login-box p  { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 24px; }
-    .login-box input {
-      width: 100%; padding: 11px 14px; border: 1.5px solid #d8cfc4; border-radius: 8px;
-      font-size: 0.95rem; margin-bottom: 14px;
-    }
-    .login-box input:focus { outline: none; border-color: var(--sage); }
-    .login-box button {
-      width: 100%; padding: 13px; background: var(--brown); color: #fff; border: none;
-      border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
-    }
-    .login-box button:hover { background: var(--brown-mid); }
-    .login-error { color: var(--rust); font-size: 0.82rem; margin-top: 10px; }
-
-    /* ── App ── */
-    #app { display: block; }
-
     header {
       background: var(--brown); color: #fff;
       padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
@@ -60,32 +34,49 @@
     }
     .btn-outline:hover { background: rgba(255,255,255,0.12); }
 
+    /* ── Tab bar ── */
+    .tab-bar {
+      background: #fff; border-bottom: 2px solid var(--cream-dark);
+      display: flex; padding: 0 28px;
+    }
+    .tab-btn {
+      padding: 14px 22px; border: none; background: none; font-size: 0.88rem; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--brown); border-bottom-color: var(--brown); }
+    .tab-btn:hover:not(.active) { color: var(--brown); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
     .toolbar {
       background: #fff; border-bottom: 1px solid var(--cream-dark);
-      padding: 14px 28px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 12px 28px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     }
     .filter-btn {
-      padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--cream-dark);
-      background: #fff; color: var(--text-mid); font-size: 0.82rem; font-weight: 500;
+      padding: 5px 15px; border-radius: 20px; border: 1.5px solid var(--cream-dark);
+      background: #fff; color: var(--text-mid); font-size: 0.8rem; font-weight: 500;
       cursor: pointer; transition: all 0.15s;
     }
     .filter-btn.active { background: var(--brown); border-color: var(--brown); color: #fff; }
     .filter-btn:hover:not(.active) { border-color: var(--brown-mid); color: var(--brown); }
 
     .stats-bar {
-      display: flex; gap: 20px; padding: 14px 28px;
+      display: flex; gap: 20px; padding: 12px 28px;
       background: var(--cream-dark); flex-wrap: wrap;
     }
-    .stat { font-size: 0.82rem; color: var(--text-mid); }
-    .stat strong { color: var(--text); font-size: 1rem; }
+    .stat { font-size: 0.8rem; color: var(--text-mid); }
+    .stat strong { color: var(--text); font-size: 0.98rem; }
 
-    .leads-grid {
+    .grid {
       padding: 24px 28px;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 18px;
     }
 
+    /* ── Lead cards ── */
     .lead-card {
       background: #fff; border-radius: var(--radius);
       border: 1px solid var(--cream-dark);
@@ -94,10 +85,11 @@
     }
     .lead-card:hover { box-shadow: 0 6px 24px rgba(58,46,37,0.12); }
     .lead-card.is-contacted { opacity: 0.6; }
+    .lead-card.is-converted { border-color: #b8d4b8; }
 
     .lead-card__head {
-      padding: 14px 16px 10px;
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      padding: 12px 16px 8px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
     }
     .lead-badge {
       display: inline-block; padding: 3px 10px; border-radius: 20px;
@@ -106,26 +98,25 @@
     .badge-bni       { background: var(--sage-pale); color: var(--sage); }
     .badge-csa       { background: #fdf6e3; color: #8a6a10; }
     .badge-wholesale { background: #f5ede5; color: var(--brown-mid); }
+    .badge-converted { background: #e6f4e6; color: #3a6e3a; font-size: 0.68rem; padding: 2px 8px; }
 
-    .lead-date { font-size: 0.72rem; color: var(--text-mid); white-space: nowrap; }
-
+    .lead-date { font-size: 0.7rem; color: var(--text-mid); white-space: nowrap; }
     .lead-name { font-size: 1rem; font-weight: 600; color: var(--brown); padding: 0 16px 4px; }
-
-    .lead-fields { padding: 8px 16px 12px; }
-    .lead-field  { display: flex; gap: 8px; font-size: 0.82rem; margin-bottom: 5px; }
-    .lead-field__label { color: var(--text-mid); min-width: 120px; flex-shrink: 0; }
+    .lead-fields { padding: 6px 16px 10px; }
+    .lead-field  { display: flex; gap: 8px; font-size: 0.81rem; margin-bottom: 4px; }
+    .lead-field__label { color: var(--text-mid); min-width: 110px; flex-shrink: 0; }
     .lead-field__value { color: var(--text); }
+    .lead-field__value a { color: var(--sage); text-decoration: none; }
+    .lead-field__value a:hover { text-decoration: underline; }
 
     .lead-card__foot {
       border-top: 1px solid var(--cream-dark);
-      padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;
+      padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
     }
     .contact-toggle {
       display: flex; align-items: center; gap: 10px; font-size: 0.82rem; cursor: pointer;
     }
-    .toggle-switch {
-      position: relative; width: 38px; height: 22px; flex-shrink: 0;
-    }
+    .toggle-switch { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .toggle-slider {
       position: absolute; inset: 0; background: #d8cfc4; border-radius: 22px; cursor: pointer;
@@ -139,67 +130,101 @@
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
 
     .notes-input {
-      width: 100%; padding: 8px 10px; border: 1.5px solid var(--cream-dark); border-radius: 7px;
-      font-size: 0.82rem; font-family: inherit; resize: none; min-height: 60px;
+      width: 100%; padding: 7px 10px; border: 1.5px solid var(--cream-dark); border-radius: 7px;
+      font-size: 0.81rem; font-family: inherit; resize: none; min-height: 54px;
       color: var(--text); transition: border-color 0.2s;
     }
     .notes-input:focus { outline: none; border-color: var(--sage); }
+
+    .card-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .btn-delete {
+      padding: 5px 11px; background: transparent; color: var(--rust);
+      border: 1.5px solid var(--rust); border-radius: 6px; font-size: 0.74rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-delete:hover { background: var(--rust); color: #fff; }
+    .btn-convert {
+      padding: 5px 11px; background: transparent; color: var(--sage);
+      border: 1.5px solid var(--sage); border-radius: 6px; font-size: 0.74rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-convert:hover { background: var(--sage); color: #fff; }
     .notes-save {
-      align-self: flex-end; padding: 5px 14px; background: var(--sage); color: #fff;
-      border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      padding: 5px 13px; background: var(--sage); color: #fff;
+      border: none; border-radius: 6px; font-size: 0.76rem; font-weight: 600; cursor: pointer;
     }
     .notes-save:hover { background: #496649; }
 
-    .card-foot-row {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    /* ── Customer cards ── */
+    .customer-card {
+      background: #fff; border-radius: var(--radius);
+      border: 1px solid var(--cream-dark);
+      box-shadow: 0 2px 10px rgba(58,46,37,0.06);
+      overflow: hidden; transition: box-shadow 0.2s;
     }
-    .btn-delete {
-      padding: 5px 12px; background: transparent; color: var(--rust);
-      border: 1.5px solid var(--rust); border-radius: 6px; font-size: 0.76rem;
-      font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap;
-    }
-    .btn-delete:hover { background: var(--rust); color: #fff; }
+    .customer-card:hover { box-shadow: 0 6px 24px rgba(58,46,37,0.12); }
 
-    .empty-state {
-      text-align: center; padding: 80px 24px; color: var(--text-mid);
+    .customer-card__head {
+      padding: 12px 16px 0;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
     }
+    .customer-name { font-size: 1.05rem; font-weight: 700; color: var(--brown); padding: 6px 16px 4px; }
+    .customer-fields { padding: 4px 16px 10px; }
+
+    .tags-row { padding: 6px 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-chip {
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .tag-active-csa        { background: #fdf6e3; color: #8a6a10; }
+    .tag-bni-contact       { background: var(--sage-pale); color: var(--sage); }
+    .tag-wholesale-partner { background: #f5ede5; color: var(--brown-mid); }
+    .tag-past-customer     { background: #edf2f7; color: #4a5568; }
+    .tag-vip               { background: #f3effe; color: #6b46c1; }
+    .tag-farm-box          { background: #e6f4e6; color: #276727; }
+    .tag-default           { background: var(--cream-dark); color: var(--text-mid); }
+
+    .customer-card__foot {
+      border-top: 1px solid var(--cream-dark);
+      padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
+    }
+
+    /* ── Shared empty / loading ── */
+    .empty-state { text-align: center; padding: 80px 24px; color: var(--text-mid); }
     .empty-state h2 { font-size: 1.2rem; margin-bottom: 8px; color: var(--brown); }
-
     .loading { text-align: center; padding: 60px; color: var(--text-mid); font-size: 0.9rem; }
 
-    /* ── Edit modal ── */
-    .edit-overlay {
+    /* ── Edit / Add modal ── */
+    .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(40,28,20,0.55);
       z-index: 200; align-items: center; justify-content: center; padding: 20px;
     }
-    .edit-overlay.open { display: flex; }
-    .edit-box {
+    .modal-overlay.open { display: flex; }
+    .modal-box {
       background: #fff; border-radius: 14px; width: 100%; max-width: 480px;
       box-shadow: 0 12px 50px rgba(40,28,20,0.22); overflow: hidden;
     }
-    .edit-head {
-      background: linear-gradient(135deg, #4a3728 0%, #6b5c4e 100%);
+    .modal-head {
       color: #fff; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
     }
-    .edit-head h2 { font-size: 1rem; font-weight: 600; }
-    .edit-close {
+    .modal-head--brown { background: linear-gradient(135deg, #4a3728 0%, #6b5c4e 100%); }
+    .modal-head--sage  { background: linear-gradient(135deg, #2e4e2e 0%, #5a7a5a 100%); }
+    .modal-head h2 { font-size: 1rem; font-weight: 600; }
+    .modal-close {
       background: none; border: none; color: rgba(255,255,255,0.7); font-size: 1.1rem;
       cursor: pointer; padding: 2px 6px; line-height: 1;
     }
-    .edit-close:hover { color: #fff; }
-    .edit-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; }
-    .edit-field { display: flex; flex-direction: column; gap: 5px; }
-    .edit-label { font-size: 0.78rem; color: var(--text-mid); font-weight: 500; }
-    .edit-input {
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 13px; max-height: 62vh; overflow-y: auto; }
+    .modal-field { display: flex; flex-direction: column; gap: 4px; }
+    .modal-label { font-size: 0.77rem; color: var(--text-mid); font-weight: 500; }
+    .modal-input, .modal-select {
       padding: 9px 12px; border: 1.5px solid var(--cream-dark); border-radius: 8px;
-      font-size: 0.9rem; color: var(--text); font-family: inherit;
+      font-size: 0.9rem; color: var(--text); font-family: inherit; background: #fff;
     }
-    .edit-input:focus { outline: none; border-color: var(--sage); }
-    .edit-section-label {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-mid); padding-bottom: 6px; border-bottom: 1px solid var(--cream-dark);
-    }
-    .edit-foot {
+    .modal-input:focus, .modal-select:focus { outline: none; border-color: var(--sage); }
+    .modal-section { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); padding-bottom: 4px; border-bottom: 1px solid var(--cream-dark); }
+    .modal-foot {
       padding: 14px 22px; border-top: 1px solid var(--cream-dark);
       display: flex; justify-content: flex-end; gap: 10px;
     }
@@ -208,72 +233,249 @@
       border-radius: 7px; font-size: 0.85rem; font-weight: 500; color: var(--text-mid); cursor: pointer;
     }
     .btn-cancel:hover { border-color: var(--brown-mid); color: var(--brown); }
-    .btn-save-edit {
+    .btn-save {
       padding: 8px 22px; background: var(--brown); color: #fff; border: none;
       border-radius: 7px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
     }
-    .btn-save-edit:hover { background: var(--brown-mid); }
-    .btn-save-edit:disabled { opacity: 0.6; cursor: default; }
+    .btn-save:hover { background: var(--brown-mid); }
+    .btn-save:disabled { opacity: 0.6; cursor: default; }
+    .btn-sage { background: var(--sage); }
+    .btn-sage:hover { background: #496649; }
+
+    /* Tag picker in modal */
+    .tag-picker { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tag-option {
+      padding: 4px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 600;
+      cursor: pointer; border: 2px solid transparent; transition: all 0.15s; user-select: none;
+    }
+    .tag-option.selected { border-color: var(--brown); }
+
+    /* Add customer FAB */
+    .fab {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--sage); color: #fff; border: none; border-radius: 50px;
+      padding: 13px 22px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(58,46,37,0.25); display: none; transition: background 0.18s;
+      z-index: 10;
+    }
+    .fab:hover { background: #496649; }
+    .fab.visible { display: flex; align-items: center; gap: 8px; }
   </style>
 </head>
 <body>
 
 <div id="app">
   <header>
-    <h1>&#x1F331; Customer Leads</h1>
+    <h1>&#x1F331; CRM</h1>
     <div class="header-actions">
       <a class="btn-outline" href="/inventory.html">&#x2190; Inventory</a>
-      <button class="btn-outline" onclick="exportCSV()">&#x2193; Export CSV</button>
+      <button class="btn-outline" id="exportBtn" onclick="exportCSV()">&#x2193; Export CSV</button>
     </div>
   </header>
 
-  <div class="toolbar">
-    <button class="filter-btn active" data-type="">All</button>
-    <button class="filter-btn" data-type="bni">BNI Networking</button>
-    <button class="filter-btn" data-type="csa">Farm Box / CSA</button>
-    <button class="filter-btn" data-type="wholesale">Wholesale</button>
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="leads">Leads</button>
+    <button class="tab-btn" data-tab="customers">Customers</button>
   </div>
 
-  <div class="stats-bar" id="statsBar"></div>
+  <!-- LEADS PANEL -->
+  <div class="tab-panel active" id="panel-leads">
+    <div class="toolbar" id="leadsToolbar">
+      <button class="filter-btn active" data-type="">All</button>
+      <button class="filter-btn" data-type="bni">BNI Networking</button>
+      <button class="filter-btn" data-type="csa">Farm Box / CSA</button>
+      <button class="filter-btn" data-type="wholesale">Wholesale</button>
+    </div>
+    <div class="stats-bar" id="leadsStats"></div>
+    <div class="grid" id="leadsGrid"><div class="loading">Loading leads...</div></div>
+  </div>
 
-  <div class="leads-grid" id="leadsGrid">
-    <div class="loading">Loading leads...</div>
+  <!-- CUSTOMERS PANEL -->
+  <div class="tab-panel" id="panel-customers">
+    <div class="toolbar" id="customersToolbar">
+      <button class="filter-btn active" data-tag="">All Customers</button>
+      <button class="filter-btn" data-tag="Active CSA">Active CSA</button>
+      <button class="filter-btn" data-tag="BNI Contact">BNI Contact</button>
+      <button class="filter-btn" data-tag="Wholesale Partner">Wholesale Partner</button>
+      <button class="filter-btn" data-tag="VIP">VIP</button>
+      <button class="filter-btn" data-tag="Past Customer">Past Customer</button>
+    </div>
+    <div class="stats-bar" id="customersStats"></div>
+    <div class="grid" id="customersGrid"><div class="loading">Loading customers...</div></div>
   </div>
 </div>
 
+<!-- FAB: Add Customer (only visible on customers tab) -->
+<button class="fab" id="addCustomerFab" onclick="openAddCustomer()">+ Add Customer</button>
+
 <!-- Edit Lead Modal -->
-<div class="edit-overlay" id="editModal">
-  <div class="edit-box">
-    <div class="edit-head">
-      <h2 id="editModalTitle">Edit Lead</h2>
-      <button class="edit-close" onclick="closeEditModal()">&#x2715;</button>
+<div class="modal-overlay" id="editLeadModal">
+  <div class="modal-box">
+    <div class="modal-head modal-head--brown">
+      <h2 id="editLeadTitle">Edit Lead</h2>
+      <button class="modal-close" onclick="closeModal('editLeadModal')">&#x2715;</button>
     </div>
-    <div class="edit-body" id="editModalBody"></div>
-    <div class="edit-foot">
-      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
-      <button class="btn-save-edit" id="editSaveBtn" onclick="saveEditModal()">Save Changes</button>
+    <div class="modal-body" id="editLeadBody"></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal('editLeadModal')">Cancel</button>
+      <button class="btn-save" id="editLeadSaveBtn" onclick="saveEditLead()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Convert Lead → Customer Modal -->
+<div class="modal-overlay" id="convertModal">
+  <div class="modal-box">
+    <div class="modal-head modal-head--sage">
+      <h2>Convert to Customer</h2>
+      <button class="modal-close" onclick="closeModal('convertModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.82rem;color:var(--text-mid);">Confirm their contact info and they'll appear in your Customers tab.</p>
+      <div class="modal-field"><label class="modal-label">Full Name *</label><input class="modal-input" id="conv-name" type="text"></div>
+      <div class="modal-field"><label class="modal-label">Email</label><input class="modal-input" id="conv-email" type="email"></div>
+      <div class="modal-field"><label class="modal-label">Phone</label><input class="modal-input" id="conv-phone" type="tel"></div>
+      <div class="modal-field">
+        <label class="modal-label">Source</label>
+        <select class="modal-select" id="conv-source">
+          <option value="">— How they found you —</option>
+          <option value="BNI">BNI</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Farmers Market">Farmers Market</option>
+          <option value="Word of Mouth">Word of Mouth</option>
+          <option value="Website">Website</option>
+          <option value="Email / Newsletter">Email / Newsletter</option>
+          <option value="Referral">Referral / Friend</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal('convertModal')">Cancel</button>
+      <button class="btn-save btn-sage" id="convertSaveBtn" onclick="saveConvert()">Convert to Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Customer Modal -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal-box">
+    <div class="modal-head modal-head--sage">
+      <h2 id="customerModalTitle">Add Customer</h2>
+      <button class="modal-close" onclick="closeModal('customerModal')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">Contact Info</div>
+      <div class="modal-field"><label class="modal-label">Full Name *</label><input class="modal-input" id="cm-name" type="text" placeholder="Jane Smith"></div>
+      <div class="modal-field"><label class="modal-label">Email</label><input class="modal-input" id="cm-email" type="email" placeholder="jane@email.com"></div>
+      <div class="modal-field"><label class="modal-label">Phone</label><input class="modal-input" id="cm-phone" type="tel" placeholder="512-555-0100"></div>
+      <div class="modal-field">
+        <label class="modal-label">Source</label>
+        <select class="modal-select" id="cm-source">
+          <option value="">— How they found you —</option>
+          <option value="BNI">BNI</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Farmers Market">Farmers Market</option>
+          <option value="Word of Mouth">Word of Mouth</option>
+          <option value="Website">Website</option>
+          <option value="Email / Newsletter">Email / Newsletter</option>
+          <option value="Referral">Referral / Friend</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-section" style="margin-top:4px;">Tags</div>
+      <div class="tag-picker" id="cm-tags">
+        <span class="tag-option tag-active-csa"        data-tag="Active CSA">Active CSA</span>
+        <span class="tag-option tag-bni-contact"       data-tag="BNI Contact">BNI Contact</span>
+        <span class="tag-option tag-wholesale-partner" data-tag="Wholesale Partner">Wholesale Partner</span>
+        <span class="tag-option tag-farm-box"          data-tag="Farm Box">Farm Box</span>
+        <span class="tag-option tag-vip"               data-tag="VIP">VIP</span>
+        <span class="tag-option tag-past-customer"     data-tag="Past Customer">Past Customer</span>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Notes</label>
+        <textarea class="modal-input" id="cm-notes" rows="3" placeholder="Any notes about this customer..." style="resize:none;"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal('customerModal')">Cancel</button>
+      <button class="btn-save btn-sage" id="customerSaveBtn" onclick="saveCustomer()">Save Customer</button>
     </div>
   </div>
 </div>
 
 <script>
-  var ALL_LEADS = [];
-  var currentFilter = '';
+  var ALL_LEADS     = [];
+  var ALL_CUSTOMERS = [];
+  var currentLeadFilter     = '';
+  var currentCustomerFilter = '';
+  var editingLeadId     = null;
+  var editingCustomerId = null;
+  var convertingLeadId  = null;
   var TOKEN = localStorage.getItem('inv_token') || '';
 
-  // If not logged in, send to inventory to authenticate first
-  if (!TOKEN) {
-    window.location.href = '/inventory.html?next=leads';
-  }
+  if (!TOKEN) { window.location.href = '/inventory.html?next=leads'; }
 
   function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
   }
 
+  /* ── Tab switching ─────────────────────────────────────────────────── */
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      var panel = document.getElementById('panel-' + btn.dataset.tab);
+      if (panel) panel.classList.add('active');
+      var fab = document.getElementById('addCustomerFab');
+      if (btn.dataset.tab === 'customers') {
+        fab.classList.add('visible');
+        loadCustomers();
+      } else {
+        fab.classList.remove('visible');
+      }
+      document.getElementById('exportBtn').style.display = btn.dataset.tab === 'leads' ? 'inline-block' : 'none';
+    });
+  });
+
+  /* ── Utility ──────────────────────────────────────────────────────── */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function fmt(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) +
+           ' ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  document.querySelectorAll('.modal-overlay').forEach(function(el) {
+    el.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      ['editLeadModal','convertModal','customerModal'].forEach(function(id) { closeModal(id); });
+    }
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     LEADS
+  ══════════════════════════════════════════════════════════════════ */
   function loadLeads() {
     var grid = document.getElementById('leadsGrid');
     grid.innerHTML = '<div class="loading">Loading leads...</div>';
-    var url = '/admin/leads' + (currentFilter ? '?type=' + currentFilter : '');
+    var url = '/admin/leads' + (currentLeadFilter ? '?type=' + currentLeadFilter : '');
     fetch(url, { headers: authHeaders() })
       .then(function(r) {
         if (r.status === 401) { window.location.href = '/inventory.html?next=leads'; return null; }
@@ -283,32 +485,26 @@
       .then(function(leads) {
         if (!leads) return;
         ALL_LEADS = leads;
-        renderStats(leads);
+        renderLeadStats(leads);
         renderLeads(leads);
       })
       .catch(function(err) {
         grid.innerHTML = '<div class="empty-state"><h2>Could not load leads</h2><p>' + err.message + '</p><p style="margin-top:8px;font-size:0.8rem;">Check that Render has deployed the latest version.</p></div>';
       });
   }
-
-  // Load immediately on page open
   loadLeads();
 
-  function renderStats(leads) {
-    var total     = leads.length;
-    var contacted = leads.filter(l => l.contacted).length;
-    var pending   = total - contacted;
-    var bni       = leads.filter(l => l.type === 'bni').length;
-    var csa       = leads.filter(l => l.type === 'csa').length;
-    var ws        = leads.filter(l => l.type === 'wholesale').length;
-    var el        = document.getElementById('statsBar');
-    el.innerHTML = [
-      stat(total,     'Total Leads'),
+  function renderLeadStats(leads) {
+    var visible    = leads.filter(function(l) { return !l.notes || l.notes !== '__deleted__'; });
+    var total      = visible.length;
+    var contacted  = visible.filter(function(l) { return l.contacted; }).length;
+    var converted  = visible.filter(function(l) { return l.data && l.data.converted; }).length;
+    var pending    = total - contacted - converted;
+    document.getElementById('leadsStats').innerHTML = [
+      stat(total,     'Total'),
       stat(pending,   'Needs Follow-Up'),
       stat(contacted, 'Contacted'),
-      stat(bni,       'BNI'),
-      stat(csa,       'CSA'),
-      stat(ws,        'Wholesale'),
+      stat(converted, 'Converted'),
     ].join('');
   }
 
@@ -318,7 +514,7 @@
 
   function renderLeads(leads) {
     var grid = document.getElementById('leadsGrid');
-    var visible = leads.filter(l => !l.notes || l.notes !== '__deleted__');
+    var visible = leads.filter(function(l) { return !l.notes || l.notes !== '__deleted__'; });
     if (!visible.length) {
       grid.innerHTML = '<div class="empty-state"><h2>No leads yet</h2><p>Submissions from your booking forms will appear here.</p></div>';
       return;
@@ -326,85 +522,74 @@
     grid.innerHTML = visible.map(leadCard).join('');
   }
 
-  function fmt(iso) {
-    if (!iso) return '';
-    var d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-           ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  }
-
-  function badgeClass(type) {
-    return type === 'bni' ? 'badge-bni' : type === 'csa' ? 'badge-csa' : 'badge-wholesale';
-  }
-
-  function badgeLabel(type) {
-    return type === 'bni' ? 'BNI Networking' : type === 'csa' ? 'Farm Box / CSA' : 'Wholesale';
-  }
-
-  function dataFields(lead) {
-    var d = lead.data || {};
-    var rows = [];
-    if (lead.type === 'bni') {
-      if (d.fullName)  rows.push(['Full Name',    esc(d.fullName)]);
-      if (d.email)     rows.push(['Email',        '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
-      if (d.phone)     rows.push(['Phone',        '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
-      if (d.chapter)   rows.push(['Chapter',      esc(d.chapter)]);
-      if (d.location)  rows.push(['Location',     esc(d.location)]);
-    } else if (lead.type === 'csa') {
-      if (d.fullName)     rows.push(['Full Name',       esc(d.fullName)]);
-      if (d.email)        rows.push(['Email',           '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
-      if (d.phone)        rows.push(['Phone',           '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
-      if (d.city)         rows.push(['City',            esc(d.city)]);
-      if (d.household)    rows.push(['Household Size',  esc(d.household)]);
-      if (d.frustrations && d.frustrations.length)
-        rows.push(['Frustrations', esc(d.frustrations.join(', '))]);
-    } else {
-      if (d.bizName)   rows.push(['Business',     esc(d.bizName)]);
-      if (d.email)     rows.push(['Email',        '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
-      if (d.phone)     rows.push(['Phone',        '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
-      if (d.bizType)   rows.push(['Type',         esc(d.bizType)]);
-      if (d.volume)    rows.push(['Volume',       esc(d.volume)]);
-      if (d.location)  rows.push(['Area',         esc(d.location)]);
-      if (d.products && d.products.length)
-        rows.push(['Products', esc(d.products.join(', '))]);
-      if (d.notes)     rows.push(['Notes',        esc(d.notes)]);
-    }
-    return rows.map(function(r) {
-      return '<div class="lead-field"><span class="lead-field__label">' + r[0] + '</span><span class="lead-field__value">' + r[1] + '</span></div>';
-    }).join('');
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  function badgeClass(type) { return type === 'bni' ? 'badge-bni' : type === 'csa' ? 'badge-csa' : 'badge-wholesale'; }
+  function badgeLabel(type) { return type === 'bni' ? 'BNI Networking' : type === 'csa' ? 'Farm Box / CSA' : 'Wholesale'; }
 
   function getName(lead) {
     var d = lead.data || {};
     return d.fullName || d.bizName || 'Unknown';
   }
 
+  function leadDataFields(lead) {
+    var d = lead.data || {};
+    var rows = [];
+    if (lead.type === 'bni') {
+      if (d.fullName)  rows.push(['Full Name', esc(d.fullName)]);
+      if (d.email)     rows.push(['Email',     '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
+      if (d.phone)     rows.push(['Phone',     '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
+      if (d.chapter)   rows.push(['Chapter',   esc(d.chapter)]);
+      if (d.location)  rows.push(['Location',  esc(d.location)]);
+    } else if (lead.type === 'csa') {
+      if (d.fullName)  rows.push(['Full Name',       esc(d.fullName)]);
+      if (d.email)     rows.push(['Email',           '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
+      if (d.phone)     rows.push(['Phone',           '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
+      if (d.city)      rows.push(['City',            esc(d.city)]);
+      if (d.household) rows.push(['Household Size',  esc(d.household)]);
+      if (d.frustrations && d.frustrations.length)
+        rows.push(['Frustrations', esc(d.frustrations.join(', '))]);
+    } else {
+      if (d.bizName)  rows.push(['Business', esc(d.bizName)]);
+      if (d.email)    rows.push(['Email',    '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
+      if (d.phone)    rows.push(['Phone',    '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
+      if (d.bizType)  rows.push(['Type',     esc(d.bizType)]);
+      if (d.volume)   rows.push(['Volume',   esc(d.volume)]);
+      if (d.location) rows.push(['Area',     esc(d.location)]);
+      if (d.products && d.products.length) rows.push(['Products', esc(d.products.join(', '))]);
+    }
+    return rows.map(function(r) {
+      return '<div class="lead-field"><span class="lead-field__label">' + r[0] + '</span><span class="lead-field__value">' + r[1] + '</span></div>';
+    }).join('');
+  }
+
   function leadCard(lead) {
-    var checked   = lead.contacted ? 'checked' : '';
-    var cardClass = lead.contacted ? 'lead-card is-contacted' : 'lead-card';
-    var notes     = lead.notes && lead.notes !== '__deleted__' ? esc(lead.notes) : '';
+    var isConverted = lead.data && lead.data.converted;
+    var checked     = lead.contacted ? 'checked' : '';
+    var cardClass   = 'lead-card' + (lead.contacted ? ' is-contacted' : '') + (isConverted ? ' is-converted' : '');
+    var notes       = lead.notes && lead.notes !== '__deleted__' ? esc(lead.notes) : '';
+    var convertedBadge = isConverted ? '<span class="lead-badge badge-converted">Converted ✓</span>' : '';
+
     return '<div class="' + cardClass + '" id="card-' + lead.id + '">' +
       '<div class="lead-card__head">' +
-        '<span class="lead-badge ' + badgeClass(lead.type) + '">' + badgeLabel(lead.type) + '</span>' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+          '<span class="lead-badge ' + badgeClass(lead.type) + '">' + badgeLabel(lead.type) + '</span>' +
+          convertedBadge +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
           '<span class="lead-date">' + fmt(lead.created_at) + '</span>' +
-          '<button style="background:none;border:1px solid var(--cream-dark);border-radius:5px;font-size:0.72rem;padding:2px 9px;color:var(--text-mid);cursor:pointer;" onclick="openEditModal(' + lead.id + ')">Edit</button>' +
+          '<button style="background:none;border:1px solid var(--cream-dark);border-radius:5px;font-size:0.7rem;padding:2px 8px;color:var(--text-mid);cursor:pointer;" onclick="openEditLead(' + lead.id + ')">Edit</button>' +
         '</div>' +
       '</div>' +
       '<div class="lead-name">' + esc(getName(lead)) + '</div>' +
-      '<div class="lead-fields">' + dataFields(lead) + '</div>' +
+      '<div class="lead-fields">' + leadDataFields(lead) + '</div>' +
       '<div class="lead-card__foot">' +
         '<label class="contact-toggle">' +
-          '<span class="toggle-switch"><input type="checkbox" ' + checked + ' onchange="toggleContacted(' + lead.id + ', this.checked)" /><span class="toggle-slider"></span></span>' +
+          '<span class="toggle-switch"><input type="checkbox" ' + checked + ' onchange="toggleContacted(' + lead.id + ', this.checked)"><span class="toggle-slider"></span></span>' +
           'Marked as contacted' +
         '</label>' +
         '<textarea class="notes-input" id="notes-' + lead.id + '" placeholder="Add notes...">' + notes + '</textarea>' +
         '<div class="card-foot-row">' +
-          '<button class="btn-delete" onclick="deleteLead(' + lead.id + ', \'' + esc(getName(lead)).replace(/'/g, "\\'") + '\')">Delete</button>' +
+          '<button class="btn-delete" onclick="deleteLead(' + lead.id + ', \'' + esc(getName(lead)).replace(/'/g,"\\'") + '\')">Delete</button>' +
+          (!isConverted ? '<button class="btn-convert" onclick="openConvert(' + lead.id + ')">Convert to Customer</button>' : '<span style="font-size:0.75rem;color:#3a6e3a;">In Customers tab</span>') +
           '<button class="notes-save" onclick="saveNotes(' + lead.id + ')">Save Notes</button>' +
         '</div>' +
       '</div>' +
@@ -412,171 +597,338 @@
   }
 
   function toggleContacted(id, contacted) {
-    fetch('/admin/leads/' + id, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify({ contacted: contacted })
-    }).then(() => {
-      var card = document.getElementById('card-' + id);
-      if (card) card.className = contacted ? 'lead-card is-contacted' : 'lead-card';
-      var lead = ALL_LEADS.find(l => l.id === id);
-      if (lead) lead.contacted = contacted;
-      renderStats(ALL_LEADS);
-    });
+    fetch('/admin/leads/' + id, { method:'PATCH', headers:authHeaders(), body:JSON.stringify({ contacted:contacted }) })
+      .then(function() {
+        var card = document.getElementById('card-' + id);
+        if (card) { var lead = ALL_LEADS.find(function(l){return l.id===id;}); if(lead){lead.contacted=contacted;card.outerHTML=leadCard(lead);} }
+        renderLeadStats(ALL_LEADS);
+      });
   }
 
   function saveNotes(id) {
     var notes = document.getElementById('notes-' + id).value;
-    fetch('/admin/leads/' + id, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify({ notes: notes })
-    }).then(() => {
-      var btn = document.querySelector('#card-' + id + ' .notes-save');
-      if (btn) { btn.textContent = 'Saved!'; setTimeout(function() { btn.textContent = 'Save Notes'; }, 1500); }
-    });
-  }
-
-  function exportCSV() {
-    window.location.href = '/admin/leads/export.csv?token=' + TOKEN;
-  }
-
-  /* ── Edit modal ─────────────────────────────────────────────────────── */
-  var editingLeadId = null;
-
-  function ef(id, label, value, type) {
-    return '<div class="edit-field">' +
-      '<label class="edit-label">' + label + '</label>' +
-      '<input class="edit-input" id="' + id + '" type="' + (type || 'text') + '" value="' + esc(value || '') + '">' +
-      '</div>';
-  }
-
-  function openEditModal(id) {
-    var lead = ALL_LEADS.find(function(l) { return l.id === id; });
-    if (!lead) return;
-    editingLeadId = id;
-    var d = lead.data || {};
-    var html = '<div class="edit-section-label">Contact Info</div>';
-    if (lead.type === 'wholesale') {
-      html += ef('em-bizname', 'Business Name', d.bizName);
-    } else {
-      html += ef('em-name', 'Full Name', d.fullName);
-    }
-    html += ef('em-email', 'Email', d.email, 'email');
-    html += ef('em-phone', 'Phone', d.phone, 'tel');
-    if (lead.type === 'bni') {
-      html += '<div class="edit-section-label" style="margin-top:4px;">BNI Details</div>';
-      html += ef('em-chapter',  'BNI Chapter',  d.chapter);
-      html += ef('em-location', 'BNI Location', d.location);
-    } else if (lead.type === 'csa') {
-      html += '<div class="edit-section-label" style="margin-top:4px;">Farm Box Details</div>';
-      html += ef('em-city',      'City',           d.city);
-      html += ef('em-household', 'Household Size', d.household);
-    } else {
-      html += '<div class="edit-section-label" style="margin-top:4px;">Wholesale Details</div>';
-      html += ef('em-biztype',  'Business Type',  d.bizType);
-      html += ef('em-location', 'City / Area',    d.location);
-      html += ef('em-volume',   'Monthly Volume', d.volume);
-    }
-    document.getElementById('editModalBody').innerHTML = html;
-    document.getElementById('editModalTitle').textContent = 'Edit — ' + (d.fullName || d.bizName || 'Lead');
-    document.getElementById('editSaveBtn').textContent = 'Save Changes';
-    document.getElementById('editSaveBtn').disabled = false;
-    document.getElementById('editModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeEditModal() {
-    document.getElementById('editModal').classList.remove('open');
-    document.body.style.overflow = '';
-    editingLeadId = null;
-  }
-
-  document.getElementById('editModal').addEventListener('click', function(e) {
-    if (e.target === this) closeEditModal();
-  });
-
-  function saveEditModal() {
-    var lead = ALL_LEADS.find(function(l) { return l.id === editingLeadId; });
-    if (!lead) return;
-    var d = Object.assign({}, lead.data || {});
-    var g = function(id) { var el = document.getElementById(id); return el ? el.value.trim() : null; };
-
-    if (lead.type === 'wholesale') {
-      d.bizName  = g('em-bizname')  || d.bizName;
-      d.bizType  = g('em-biztype')  || d.bizType;
-      d.location = g('em-location') || d.location;
-      d.volume   = g('em-volume')   || d.volume;
-    } else if (lead.type === 'bni') {
-      d.fullName = g('em-name')     || d.fullName;
-      d.chapter  = g('em-chapter')  || d.chapter;
-      d.location = g('em-location') || d.location;
-    } else {
-      d.fullName  = g('em-name')      || d.fullName;
-      d.city      = g('em-city')      || d.city;
-      d.household = g('em-household') || d.household;
-    }
-    var email = g('em-email'); if (email !== null) d.email = email;
-    var phone = g('em-phone'); if (phone !== null) d.phone = phone;
-
-    var btn = document.getElementById('editSaveBtn');
-    btn.textContent = 'Saving...';
-    btn.disabled = true;
-
-    fetch('/admin/leads/' + editingLeadId, {
-      method: 'PATCH',
-      headers: authHeaders(),
-      body: JSON.stringify({ data: d })
-    }).then(function(r) {
-      if (!r.ok) throw new Error('Save failed');
-      lead.data = d;
-      var oldCard = document.getElementById('card-' + editingLeadId);
-      if (oldCard) oldCard.outerHTML = leadCard(lead);
-      closeEditModal();
-    }).catch(function(err) {
-      btn.textContent = 'Save Changes';
-      btn.disabled = false;
-      alert('Could not save: ' + err.message);
-    });
+    fetch('/admin/leads/' + id, { method:'PATCH', headers:authHeaders(), body:JSON.stringify({ notes:notes }) })
+      .then(function() {
+        var btn = document.querySelector('#card-' + id + ' .notes-save');
+        if (btn) { btn.textContent = 'Saved!'; setTimeout(function(){btn.textContent='Save Notes';},1500); }
+        var lead = ALL_LEADS.find(function(l){return l.id===id;}); if(lead) lead.notes=notes;
+      });
   }
 
   function deleteLead(id, name) {
     if (!confirm('Delete lead for "' + name + '"? This cannot be undone.')) return;
-    fetch('/admin/leads/' + id, { method: 'DELETE', headers: authHeaders() })
+    fetch('/admin/leads/' + id, { method:'DELETE', headers:authHeaders() })
       .then(function(r) {
         if (!r.ok) throw new Error('Delete failed');
         var card = document.getElementById('card-' + id);
         if (card) card.remove();
-        ALL_LEADS = ALL_LEADS.filter(function(l) { return l.id !== id; });
-        renderStats(ALL_LEADS);
-        var grid = document.getElementById('leadsGrid');
-        if (!grid.querySelector('.lead-card')) {
-          grid.innerHTML = '<div class="empty-state"><h2>No leads yet</h2><p>Submissions from your booking forms will appear here.</p></div>';
-        }
+        ALL_LEADS = ALL_LEADS.filter(function(l){return l.id!==id;});
+        renderLeadStats(ALL_LEADS);
+        if (!document.getElementById('leadsGrid').querySelector('.lead-card'))
+          document.getElementById('leadsGrid').innerHTML = '<div class="empty-state"><h2>No leads yet</h2><p>Submissions from your booking forms will appear here.</p></div>';
       })
-      .catch(function(err) { alert('Could not delete lead: ' + err.message); });
+      .catch(function(err){ alert('Could not delete: ' + err.message); });
   }
 
-  // Filter buttons
-  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+  /* Lead filter buttons */
+  document.getElementById('leadsToolbar').querySelectorAll('.filter-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.getElementById('leadsToolbar').querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
       btn.classList.add('active');
-      currentFilter = btn.dataset.type;
+      currentLeadFilter = btn.dataset.type;
       loadLeads();
     });
   });
 
-  // Export needs token in header not query string — use a quick fetch+blob trick
+  /* Export CSV */
   function exportCSV() {
     fetch('/admin/leads/export.csv', { headers: authHeaders() })
-      .then(r => r.blob())
-      .then(blob => {
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'hoto-leads.csv';
-        a.click();
+      .then(function(r){return r.blob();})
+      .then(function(blob){
+        var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='hoto-leads.csv'; a.click();
       });
+  }
+
+  /* ── Edit Lead Modal ─────────────────────────────────────────────── */
+  function ef(id, label, value, type) {
+    return '<div class="modal-field"><label class="modal-label">' + label + '</label>' +
+      '<input class="modal-input" id="' + id + '" type="' + (type||'text') + '" value="' + esc(value||'') + '"></div>';
+  }
+
+  function openEditLead(id) {
+    var lead = ALL_LEADS.find(function(l){return l.id===id;});
+    if (!lead) return;
+    editingLeadId = id;
+    var d = lead.data || {};
+    var html = '<div class="modal-section">Contact Info</div>';
+    if (lead.type === 'wholesale') html += ef('em-bizname','Business Name',d.bizName);
+    else                           html += ef('em-name','Full Name',d.fullName);
+    html += ef('em-email','Email',d.email,'email');
+    html += ef('em-phone','Phone',d.phone,'tel');
+    if (lead.type === 'bni') {
+      html += '<div class="modal-section" style="margin-top:4px;">BNI Details</div>';
+      html += ef('em-chapter','BNI Chapter',d.chapter);
+      html += ef('em-location','BNI Location',d.location);
+    } else if (lead.type === 'csa') {
+      html += '<div class="modal-section" style="margin-top:4px;">Farm Box Details</div>';
+      html += ef('em-city','City',d.city);
+      html += ef('em-household','Household Size',d.household);
+    } else {
+      html += '<div class="modal-section" style="margin-top:4px;">Wholesale Details</div>';
+      html += ef('em-biztype','Business Type',d.bizType);
+      html += ef('em-location','City / Area',d.location);
+      html += ef('em-volume','Monthly Volume',d.volume);
+    }
+    document.getElementById('editLeadBody').innerHTML = html;
+    document.getElementById('editLeadTitle').textContent = 'Edit — ' + (d.fullName || d.bizName || 'Lead');
+    var btn = document.getElementById('editLeadSaveBtn'); btn.textContent='Save Changes'; btn.disabled=false;
+    openModal('editLeadModal');
+  }
+
+  function saveEditLead() {
+    var lead = ALL_LEADS.find(function(l){return l.id===editingLeadId;});
+    if (!lead) return;
+    var d = Object.assign({}, lead.data || {});
+    var g = function(id){var el=document.getElementById(id);return el?el.value.trim():null;};
+    if (lead.type==='wholesale') { d.bizName=g('em-bizname')||d.bizName; d.bizType=g('em-biztype')||d.bizType; d.location=g('em-location')||d.location; d.volume=g('em-volume')||d.volume; }
+    else if (lead.type==='bni')  { d.fullName=g('em-name')||d.fullName; d.chapter=g('em-chapter')||d.chapter; d.location=g('em-location')||d.location; }
+    else                          { d.fullName=g('em-name')||d.fullName; d.city=g('em-city')||d.city; d.household=g('em-household')||d.household; }
+    var email=g('em-email'); if(email!==null) d.email=email;
+    var phone=g('em-phone'); if(phone!==null) d.phone=phone;
+    var btn=document.getElementById('editLeadSaveBtn'); btn.textContent='Saving...'; btn.disabled=true;
+    fetch('/admin/leads/'+editingLeadId,{method:'PATCH',headers:authHeaders(),body:JSON.stringify({data:d})})
+      .then(function(r){if(!r.ok)throw new Error('Save failed'); lead.data=d; var old=document.getElementById('card-'+editingLeadId); if(old)old.outerHTML=leadCard(lead); closeModal('editLeadModal');})
+      .catch(function(err){btn.textContent='Save Changes';btn.disabled=false;alert('Could not save: '+err.message);});
+  }
+
+  /* ── Convert Modal ───────────────────────────────────────────────── */
+  function openConvert(id) {
+    var lead = ALL_LEADS.find(function(l){return l.id===id;});
+    if (!lead) return;
+    convertingLeadId = id;
+    var d = lead.data || {};
+    document.getElementById('conv-name').value   = d.fullName || d.bizName || '';
+    document.getElementById('conv-email').value  = d.email    || '';
+    document.getElementById('conv-phone').value  = d.phone    || '';
+    document.getElementById('conv-source').value = lead.type === 'bni' ? 'BNI' : '';
+    var btn=document.getElementById('convertSaveBtn'); btn.textContent='Convert to Customer'; btn.disabled=false;
+    openModal('convertModal');
+  }
+
+  function saveConvert() {
+    var name  = document.getElementById('conv-name').value.trim();
+    var email = document.getElementById('conv-email').value.trim();
+    var phone = document.getElementById('conv-phone').value.trim();
+    var source= document.getElementById('conv-source').value;
+    if (!name) { document.getElementById('conv-name').focus(); return; }
+    var btn=document.getElementById('convertSaveBtn'); btn.textContent='Converting...'; btn.disabled=true;
+    fetch('/admin/leads/'+convertingLeadId+'/convert',{method:'POST',headers:authHeaders(),body:JSON.stringify({name:name,email:email,phone:phone,source:source})})
+      .then(function(r){if(!r.ok)throw new Error('Conversion failed'); return r.json();})
+      .then(function(customer){
+        ALL_CUSTOMERS.push(customer);
+        var lead=ALL_LEADS.find(function(l){return l.id===convertingLeadId;});
+        if(lead){lead.data=Object.assign({},lead.data||{},{converted:true,customer_id:customer.id}); var old=document.getElementById('card-'+convertingLeadId); if(old)old.outerHTML=leadCard(lead);}
+        renderLeadStats(ALL_LEADS);
+        closeModal('convertModal');
+        alert(name + ' has been added to your Customers tab.');
+      })
+      .catch(function(err){btn.textContent='Convert to Customer';btn.disabled=false;alert('Could not convert: '+err.message);});
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     CUSTOMERS
+  ══════════════════════════════════════════════════════════════════ */
+  function loadCustomers() {
+    var grid = document.getElementById('customersGrid');
+    grid.innerHTML = '<div class="loading">Loading customers...</div>';
+    fetch('/admin/customers', { headers: authHeaders() })
+      .then(function(r){if(r.status===401){window.location.href='/inventory.html?next=leads';return null;} if(!r.ok)throw new Error('Server error '+r.status); return r.json();})
+      .then(function(customers){
+        if(!customers)return;
+        ALL_CUSTOMERS=customers;
+        renderCustomerStats(customers);
+        renderCustomers(customers);
+      })
+      .catch(function(err){
+        grid.innerHTML='<div class="empty-state"><h2>Could not load customers</h2><p>'+err.message+'</p></div>';
+      });
+  }
+
+  function renderCustomerStats(customers) {
+    var total = customers.length;
+    var active = customers.filter(function(c){return (c.tags||[]).includes('Active CSA');}).length;
+    var bni    = customers.filter(function(c){return (c.tags||[]).includes('BNI Contact');}).length;
+    var ws     = customers.filter(function(c){return (c.tags||[]).includes('Wholesale Partner');}).length;
+    var vip    = customers.filter(function(c){return (c.tags||[]).includes('VIP');}).length;
+    document.getElementById('customersStats').innerHTML = [
+      stat(total,  'Total Customers'),
+      stat(active, 'Active CSA'),
+      stat(bni,    'BNI Contacts'),
+      stat(ws,     'Wholesale'),
+      stat(vip,    'VIP'),
+    ].join('');
+  }
+
+  function renderCustomers(customers) {
+    var grid = document.getElementById('customersGrid');
+    var visible = customers.filter(function(c){ return !currentCustomerFilter || (c.tags||[]).includes(currentCustomerFilter); });
+    if (!visible.length) {
+      grid.innerHTML = '<div class="empty-state"><h2>No customers yet</h2><p>Convert a lead or click "Add Customer" to get started.</p></div>';
+      return;
+    }
+    grid.innerHTML = visible.map(customerCard).join('');
+  }
+
+  var TAG_CLASSES = {
+    'Active CSA':        'tag-active-csa',
+    'BNI Contact':       'tag-bni-contact',
+    'Wholesale Partner': 'tag-wholesale-partner',
+    'Past Customer':     'tag-past-customer',
+    'VIP':               'tag-vip',
+    'Farm Box':          'tag-farm-box',
+  };
+
+  function tagChip(tag) {
+    var cls = TAG_CLASSES[tag] || 'tag-default';
+    return '<span class="tag-chip ' + cls + '">' + esc(tag) + '</span>';
+  }
+
+  function customerCard(c) {
+    var tags   = (c.tags || []).map(tagChip).join('');
+    var notes  = c.notes && c.notes !== '__deleted__' ? esc(c.notes) : '';
+    var source = c.source ? '<div class="lead-field"><span class="lead-field__label">Source</span><span class="lead-field__value">' + esc(c.source) + '</span></div>' : '';
+    var fromLead = c.lead_id ? '<div style="font-size:0.72rem;color:var(--text-mid);padding:0 16px 6px;">Converted from lead</div>' : '';
+    return '<div class="customer-card" id="cust-' + c.id + '">' +
+      '<div class="customer-card__head">' +
+        '<span class="lead-date">' + fmt(c.created_at) + '</span>' +
+        '<button style="background:none;border:1px solid var(--cream-dark);border-radius:5px;font-size:0.7rem;padding:2px 8px;color:var(--text-mid);cursor:pointer;" onclick="openEditCustomer(' + c.id + ')">Edit</button>' +
+      '</div>' +
+      '<div class="customer-name">' + esc(c.name) + '</div>' +
+      (tags ? '<div class="tags-row">' + tags + '</div>' : '') +
+      fromLead +
+      '<div class="customer-fields">' +
+        (c.email ? '<div class="lead-field"><span class="lead-field__label">Email</span><span class="lead-field__value"><a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a></span></div>' : '') +
+        (c.phone ? '<div class="lead-field"><span class="lead-field__label">Phone</span><span class="lead-field__value"><a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a></span></div>' : '') +
+        source +
+      '</div>' +
+      '<div class="customer-card__foot">' +
+        '<textarea class="notes-input" id="cnotes-' + c.id + '" placeholder="Add notes...">' + notes + '</textarea>' +
+        '<div class="card-foot-row">' +
+          '<button class="btn-delete" onclick="deleteCustomer(' + c.id + ', \'' + esc(c.name).replace(/'/g,"\\'") + '\')">Delete</button>' +
+          '<button class="notes-save" onclick="saveCustomerNotes(' + c.id + ')">Save Notes</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function saveCustomerNotes(id) {
+    var notes=document.getElementById('cnotes-'+id).value;
+    fetch('/admin/customers/'+id,{method:'PATCH',headers:authHeaders(),body:JSON.stringify({notes:notes})})
+      .then(function(){
+        var btn=document.querySelector('#cust-'+id+' .notes-save');
+        if(btn){btn.textContent='Saved!';setTimeout(function(){btn.textContent='Save Notes';},1500);}
+        var c=ALL_CUSTOMERS.find(function(x){return x.id===id;}); if(c) c.notes=notes;
+      });
+  }
+
+  function deleteCustomer(id, name) {
+    if (!confirm('Delete customer "' + name + '"?')) return;
+    fetch('/admin/customers/'+id,{method:'DELETE',headers:authHeaders()})
+      .then(function(r){if(!r.ok)throw new Error('Delete failed');
+        var card=document.getElementById('cust-'+id); if(card)card.remove();
+        ALL_CUSTOMERS=ALL_CUSTOMERS.filter(function(c){return c.id!==id;});
+        renderCustomerStats(ALL_CUSTOMERS);
+        if(!document.getElementById('customersGrid').querySelector('.customer-card'))
+          document.getElementById('customersGrid').innerHTML='<div class="empty-state"><h2>No customers yet</h2><p>Convert a lead or click "Add Customer" to get started.</p></div>';
+      })
+      .catch(function(err){alert('Could not delete: '+err.message);});
+  }
+
+  /* Customer filter buttons */
+  document.getElementById('customersToolbar').querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('customersToolbar').querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      currentCustomerFilter = btn.dataset.tag;
+      renderCustomers(ALL_CUSTOMERS);
+    });
+  });
+
+  /* ── Add / Edit Customer Modal ───────────────────────────────────── */
+  function getSelectedTags() {
+    return Array.from(document.querySelectorAll('#cm-tags .tag-option.selected')).map(function(el){return el.dataset.tag;});
+  }
+
+  function setSelectedTags(tags) {
+    document.querySelectorAll('#cm-tags .tag-option').forEach(function(el){
+      el.classList.toggle('selected', tags.includes(el.dataset.tag));
+    });
+  }
+
+  document.querySelectorAll('#cm-tags .tag-option').forEach(function(el) {
+    el.addEventListener('click', function(){ this.classList.toggle('selected'); });
+  });
+
+  function openAddCustomer() {
+    editingCustomerId = null;
+    document.getElementById('customerModalTitle').textContent = 'Add Customer';
+    document.getElementById('cm-name').value   = '';
+    document.getElementById('cm-email').value  = '';
+    document.getElementById('cm-phone').value  = '';
+    document.getElementById('cm-source').value = '';
+    document.getElementById('cm-notes').value  = '';
+    setSelectedTags([]);
+    var btn=document.getElementById('customerSaveBtn'); btn.textContent='Save Customer'; btn.disabled=false;
+    openModal('customerModal');
+  }
+
+  function openEditCustomer(id) {
+    var c = ALL_CUSTOMERS.find(function(x){return x.id===id;});
+    if (!c) return;
+    editingCustomerId = id;
+    document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+    document.getElementById('cm-name').value   = c.name   || '';
+    document.getElementById('cm-email').value  = c.email  || '';
+    document.getElementById('cm-phone').value  = c.phone  || '';
+    document.getElementById('cm-source').value = c.source || '';
+    document.getElementById('cm-notes').value  = (c.notes && c.notes !== '__deleted__') ? c.notes : '';
+    setSelectedTags(c.tags || []);
+    var btn=document.getElementById('customerSaveBtn'); btn.textContent='Save Changes'; btn.disabled=false;
+    openModal('customerModal');
+  }
+
+  function saveCustomer() {
+    var name   = document.getElementById('cm-name').value.trim();
+    var email  = document.getElementById('cm-email').value.trim();
+    var phone  = document.getElementById('cm-phone').value.trim();
+    var source = document.getElementById('cm-source').value;
+    var notes  = document.getElementById('cm-notes').value.trim();
+    var tags   = getSelectedTags();
+    if (!name) { document.getElementById('cm-name').focus(); return; }
+    var btn=document.getElementById('customerSaveBtn'); btn.textContent='Saving...'; btn.disabled=true;
+    var payload = { name:name, email:email, phone:phone, source:source, tags:tags, notes:notes };
+    if (editingCustomerId !== null) {
+      fetch('/admin/customers/'+editingCustomerId,{method:'PATCH',headers:authHeaders(),body:JSON.stringify(payload)})
+        .then(function(r){if(!r.ok)throw new Error('Save failed');
+          var c=ALL_CUSTOMERS.find(function(x){return x.id===editingCustomerId;});
+          if(c){Object.assign(c,payload); var old=document.getElementById('cust-'+editingCustomerId); if(old)old.outerHTML=customerCard(c);}
+          renderCustomerStats(ALL_CUSTOMERS);
+          closeModal('customerModal');
+        })
+        .catch(function(err){btn.textContent='Save Changes';btn.disabled=false;alert('Could not save: '+err.message);});
+    } else {
+      fetch('/admin/customers',{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)})
+        .then(function(r){if(!r.ok)throw new Error('Save failed'); return r.json();})
+        .then(function(c){
+          ALL_CUSTOMERS.unshift(c);
+          var grid=document.getElementById('customersGrid');
+          if(grid.querySelector('.empty-state')) grid.innerHTML='';
+          grid.insertAdjacentHTML('afterbegin',customerCard(c));
+          renderCustomerStats(ALL_CUSTOMERS);
+          closeModal('customerModal');
+        })
+        .catch(function(err){btn.textContent='Save Customer';btn.disabled=false;alert('Could not save: '+err.message);});
+    }
   }
 </script>
 </body>

@@ -3197,14 +3197,63 @@ app.get('/admin/leads/export.csv', requireAdmin, async (req, res) => {
 });
 
 app.delete('/admin/leads/:id', requireAdmin, async (req, res) => {
-  // Soft-delete by marking notes — or just remove from JSON. PG: actual delete.
-  if (process.env.DATABASE_URL) {
-    const { Pool } = require('pg');
-    // Use existing pool via db — piggyback raw query if needed
-    await db.updateLead(req.params.id, { notes: '__deleted__' });
-  } else {
-    await db.updateLead(req.params.id, { notes: '__deleted__' });
+  await db.updateLead(req.params.id, { notes: '__deleted__' });
+  res.json({ ok: true });
+});
+
+// Convert lead → customer
+app.post('/admin/leads/:id/convert', requireAdmin, express.json(), async (req, res) => {
+  const { name, email, phone, source } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  try {
+    const customer = await db.createCustomer({ name, email, phone, source, tags: [], notes: null, lead_id: parseInt(req.params.id) });
+    const lead = await db.getLead(req.params.id);
+    if (lead) {
+      const newData = Object.assign({}, lead.data || {}, { converted: true, customer_id: customer.id });
+      await db.updateLead(req.params.id, { data: newData });
+    }
+    res.json(customer);
+  } catch (err) {
+    console.error('[convert lead error]', err.message);
+    res.status(500).json({ error: 'Failed to convert lead' });
   }
+});
+
+// ── Customer CRM routes ───────────────────────────────────────────────────────
+
+app.post('/admin/customers', requireAdmin, express.json(), async (req, res) => {
+  const { name, email, phone, source, tags, notes } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  try {
+    const customer = await db.createCustomer({ name, email, phone, source, tags: tags || [], notes, lead_id: null });
+    res.json(customer);
+  } catch (err) {
+    console.error('[createCustomer error]', err.message);
+    res.status(500).json({ error: 'Failed to create customer' });
+  }
+});
+
+app.get('/admin/customers', requireAdmin, async (req, res) => {
+  const customers = await db.getCustomers();
+  res.json(customers);
+});
+
+app.patch('/admin/customers/:id', requireAdmin, express.json(), async (req, res) => {
+  const { name, email, phone, source, tags, notes } = req.body || {};
+  const fields = {};
+  if (name   !== undefined) fields.name   = String(name).slice(0, 200);
+  if (email  !== undefined) fields.email  = email  || null;
+  if (phone  !== undefined) fields.phone  = phone  || null;
+  if (source !== undefined) fields.source = source || null;
+  if (tags   !== undefined && Array.isArray(tags)) fields.tags = tags;
+  if (notes  !== undefined) fields.notes  = String(notes).slice(0, 2000);
+  if (!Object.keys(fields).length) return res.status(400).json({ error: 'Nothing to update' });
+  await db.updateCustomer(req.params.id, fields);
+  res.json({ ok: true });
+});
+
+app.delete('/admin/customers/:id', requireAdmin, async (req, res) => {
+  await db.updateCustomer(req.params.id, { notes: '__deleted__' });
   res.json({ ok: true });
 });
 

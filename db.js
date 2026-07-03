@@ -51,6 +51,19 @@ async function initPg() {
     )
   `);
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS customers (
+      id         SERIAL PRIMARY KEY,
+      name       TEXT NOT NULL DEFAULT '',
+      email      TEXT,
+      phone      TEXT,
+      source     TEXT,
+      tags       JSONB NOT NULL DEFAULT '[]',
+      notes      TEXT,
+      lead_id    INTEGER,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS products (
       id             TEXT PRIMARY KEY,
       name           TEXT NOT NULL,
@@ -267,6 +280,11 @@ const pgStore = {
     return rows[0];
   },
 
+  async getLead(id) {
+    const { rows } = await pool.query(`SELECT * FROM leads WHERE id = $1`, [id]);
+    return rows[0] || null;
+  },
+
   async getLeads(type = null) {
     const where = type ? `WHERE type = $1` : '';
     const vals  = type ? [type] : [];
@@ -277,11 +295,40 @@ const pgStore = {
   },
 
   async updateLead(id, fields) {
-    const allowed = ['contacted', 'notes'];
+    const allowed = ['contacted', 'notes', 'data'];
     const keys = Object.keys(fields).filter(k => allowed.includes(k));
     if (!keys.length) return false;
+    const vals = keys.map(k => k === 'data' ? JSON.stringify(fields[k]) : fields[k]);
     const sets = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
-    await pool.query(`UPDATE leads SET ${sets} WHERE id = $1`, [id, ...keys.map(k => fields[k])]);
+    await pool.query(`UPDATE leads SET ${sets} WHERE id = $1`, [id, ...vals]);
+    return true;
+  },
+
+  async createCustomer(fields) {
+    const { name, email, phone, source, tags, notes, lead_id } = fields;
+    const { rows } = await pool.query(
+      `INSERT INTO customers (name, email, phone, source, tags, notes, lead_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [name || '', email || null, phone || null, source || null,
+       JSON.stringify(tags || []), notes || null, lead_id || null]
+    );
+    return rows[0];
+  },
+
+  async getCustomers() {
+    const { rows } = await pool.query(
+      `SELECT * FROM customers WHERE (notes IS NULL OR notes != '__deleted__') ORDER BY created_at DESC`
+    );
+    return rows;
+  },
+
+  async updateCustomer(id, fields) {
+    const allowed = ['name', 'email', 'phone', 'source', 'tags', 'notes'];
+    const keys = Object.keys(fields).filter(k => allowed.includes(k));
+    if (!keys.length) return false;
+    const vals = keys.map(k => k === 'tags' ? JSON.stringify(fields[k]) : fields[k]);
+    const sets = keys.map((k, i) => `${k} = $${i + 2}`).join(', ');
+    await pool.query(`UPDATE customers SET ${sets} WHERE id = $1`, [id, ...vals]);
     return true;
   },
 };
@@ -301,9 +348,10 @@ function loadJson() {
       }
     }
     if (!raw.leads)     { raw.leads = []; raw.nextLeadId = 1; }
+    if (!raw.customers) { raw.customers = []; raw.nextCustomerId = 1; }
     return raw;
   } catch {
-    return { products: SEED.map(p => ({ ...p, created_at: new Date().toISOString() })), transactions: [], nextTxId: 1, leads: [], nextLeadId: 1 };
+    return { products: SEED.map(p => ({ ...p, created_at: new Date().toISOString() })), transactions: [], nextTxId: 1, leads: [], nextLeadId: 1, customers: [], nextCustomerId: 1 };
   }
 }
 
@@ -430,6 +478,10 @@ const jsonStore = {
     return lead;
   },
 
+  getLead(id) {
+    return _json.leads.find(l => l.id === parseInt(id)) || null;
+  },
+
   getLeads(type = null) {
     const list = _json.leads.slice().reverse();
     return type ? list.filter(l => l.type === type) : list;
@@ -439,7 +491,33 @@ const jsonStore = {
     const lead = _json.leads.find(l => l.id === parseInt(id));
     if (!lead) return false;
     if ('contacted' in fields) lead.contacted = fields.contacted;
-    if ('notes' in fields)     lead.notes     = fields.notes;
+    if ('notes'     in fields) lead.notes     = fields.notes;
+    if ('data'      in fields) lead.data      = fields.data;
+    persistJson(_json);
+    return true;
+  },
+
+  createCustomer(fields) {
+    const { name, email, phone, source, tags, notes, lead_id } = fields;
+    const customer = {
+      id: _json.nextCustomerId++, name: name || '', email: email || null,
+      phone: phone || null, source: source || null, tags: tags || [],
+      notes: notes || null, lead_id: lead_id || null,
+      created_at: new Date().toISOString()
+    };
+    _json.customers.push(customer);
+    persistJson(_json);
+    return customer;
+  },
+
+  getCustomers() {
+    return _json.customers.filter(c => c.notes !== '__deleted__').slice().reverse();
+  },
+
+  updateCustomer(id, fields) {
+    const customer = _json.customers.find(c => c.id === parseInt(id));
+    if (!customer) return false;
+    Object.assign(customer, fields);
     persistJson(_json);
     return true;
   },
@@ -463,8 +541,12 @@ const store = USE_PG ? pgStore : {
   getSales:                   (...a) => Promise.resolve(jsonStore.getSales(...a)),
   getAllForCSV:                (...a) => Promise.resolve(jsonStore.getAllForCSV(...a)),
   createLead:                 (...a) => Promise.resolve(jsonStore.createLead(...a)),
+  getLead:                    (...a) => Promise.resolve(jsonStore.getLead(...a)),
   getLeads:                   (...a) => Promise.resolve(jsonStore.getLeads(...a)),
   updateLead:                 (...a) => Promise.resolve(jsonStore.updateLead(...a)),
+  createCustomer:             (...a) => Promise.resolve(jsonStore.createCustomer(...a)),
+  getCustomers:               (...a) => Promise.resolve(jsonStore.getCustomers(...a)),
+  updateCustomer:             (...a) => Promise.resolve(jsonStore.updateCustomer(...a)),
 };
 
 store.init = init;

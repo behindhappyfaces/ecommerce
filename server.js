@@ -3089,12 +3089,13 @@ app.post('/api/csa-inquiry', async (req, res) => {
   `;
   try {
     await db.createLead('csa', { fullName, city, household, frustrations });
-    await sendEmail('New CSA Consultation Request - Heart of Texas Organics', html);
-    res.json({ ok: true });
   } catch (err) {
-    console.error('[CSA inquiry email error]', err.message);
-    res.status(500).json({ error: 'Failed to send email' });
+    console.error('[CSA createLead error]', err.message);
+    return res.status(500).json({ error: 'Failed to save lead' });
   }
+  sendEmail('New CSA Consultation Request - Heart of Texas Organics', html)
+    .catch(err => console.error('[CSA email error]', err.message));
+  res.json({ ok: true });
 });
 
 app.post('/api/bni-inquiry', async (req, res) => {
@@ -3115,12 +3116,13 @@ app.post('/api/bni-inquiry', async (req, res) => {
   `;
   try {
     await db.createLead('bni', { fullName, chapter, location, email });
-    await sendEmail('New BNI 1:1 Booking Request - Heart of Texas Organics', html);
-    res.json({ ok: true });
   } catch (err) {
-    console.error('[BNI inquiry email error]', err.message);
-    res.status(500).json({ error: 'Failed to send email' });
+    console.error('[BNI createLead error]', err.message);
+    return res.status(500).json({ error: 'Failed to save lead' });
   }
+  sendEmail('New BNI 1:1 Booking Request - Heart of Texas Organics', html)
+    .catch(err => console.error('[BNI email error]', err.message));
+  res.json({ ok: true });
 });
 
 app.post('/api/wholesale-inquiry', async (req, res) => {
@@ -3146,12 +3148,13 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
   `;
   try {
     await db.createLead('wholesale', { bizName, bizType, products, volume, location, notes });
-    await sendEmail('New Wholesale Inquiry - Heart of Texas Organics', html);
-    res.json({ ok: true });
   } catch (err) {
-    console.error('[Wholesale inquiry email error]', err.message);
-    res.status(500).json({ error: 'Failed to send email' });
+    console.error('[Wholesale createLead error]', err.message);
+    return res.status(500).json({ error: 'Failed to save lead' });
   }
+  sendEmail('New Wholesale Inquiry - Heart of Texas Organics', html)
+    .catch(err => console.error('[Wholesale email error]', err.message));
+  res.json({ ok: true });
 });
 
 // ── Leads admin routes ────────────────────────────────────────────────────────

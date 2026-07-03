@@ -291,24 +291,24 @@
     var d = lead.data || {};
     var rows = [];
     if (lead.type === 'bni') {
-      if (d.fullName)  rows.push(['Full Name',    d.fullName]);
+      if (d.fullName)  rows.push(['Full Name',    esc(d.fullName)]);
       if (d.email)     rows.push(['Email',        '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
-      if (d.chapter)   rows.push(['Chapter',      d.chapter]);
-      if (d.location)  rows.push(['Location',     d.location]);
+      if (d.chapter)   rows.push(['Chapter',      esc(d.chapter)]);
+      if (d.location)  rows.push(['Location',     esc(d.location)]);
     } else if (lead.type === 'csa') {
-      if (d.fullName)     rows.push(['Full Name',       d.fullName]);
-      if (d.city)         rows.push(['City',            d.city]);
-      if (d.household)    rows.push(['Household Size',  d.household]);
+      if (d.fullName)     rows.push(['Full Name',       esc(d.fullName)]);
+      if (d.city)         rows.push(['City',            esc(d.city)]);
+      if (d.household)    rows.push(['Household Size',  esc(d.household)]);
       if (d.frustrations && d.frustrations.length)
-        rows.push(['Frustrations', d.frustrations.join(', ')]);
+        rows.push(['Frustrations', esc(d.frustrations.join(', '))]);
     } else {
-      if (d.bizName)   rows.push(['Business',     d.bizName]);
-      if (d.bizType)   rows.push(['Type',         d.bizType]);
-      if (d.volume)    rows.push(['Volume',       d.volume]);
-      if (d.location)  rows.push(['Area',         d.location]);
+      if (d.bizName)   rows.push(['Business',     esc(d.bizName)]);
+      if (d.bizType)   rows.push(['Type',         esc(d.bizType)]);
+      if (d.volume)    rows.push(['Volume',       esc(d.volume)]);
+      if (d.location)  rows.push(['Area',         esc(d.location)]);
       if (d.products && d.products.length)
-        rows.push(['Products', d.products.join(', ')]);
-      if (d.notes)     rows.push(['Notes',        d.notes]);
+        rows.push(['Products', esc(d.products.join(', '))]);
+      if (d.notes)     rows.push(['Notes',        esc(d.notes)]);
     }
     return rows.map(function(r) {
       return '<div class="lead-field"><span class="lead-field__label">' + r[0] + '</span><span class="lead-field__value">' + r[1] + '</span></div>';

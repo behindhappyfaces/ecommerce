@@ -3175,13 +3175,18 @@ app.patch('/admin/leads/:id', requireAdmin, async (req, res) => {
 
 app.get('/admin/leads/export.csv', requireAdmin, async (req, res) => {
   const leads = await db.getLeads();
+  const safeCell = c => {
+    const s = String(c == null ? '' : c);
+    const escaped = s.replace(/"/g, '""');
+    return /^[=+\-@\t\r]/.test(s) ? `"'${escaped}"` : `"${escaped}"`;
+  };
   const rows  = [['ID','Type','Name','Date','Contacted','Data','Notes']];
   for (const l of leads) {
     const d    = l.data || {};
     const name = d.fullName || d.bizName || '';
     rows.push([l.id, l.type, name, l.created_at, l.contacted ? 'Yes' : 'No', JSON.stringify(d), l.notes || '']);
   }
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const csv = rows.map(r => r.map(safeCell).join(',')).join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="hoto-leads.csv"');
   res.send(csv);

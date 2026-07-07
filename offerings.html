@@ -136,7 +136,7 @@
             <p class="sub-card__price">$149</p>
             <p class="sub-card__billing">one-time purchase</p>
             <button type="button" id="sampler-whats-inside" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
-            <button type="button" class="sub-card__btn" id="sampler-card-add">Add to Cart</button>
+            <button type="button" class="sub-card__btn" id="sampler-card-add" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out — Chicken Unavailable</button>
           </div>
         </article>
         <article class="sub-card sub-card--featured" data-fade>
@@ -146,7 +146,7 @@
             <p class="sub-card__price">from $150</p>
             <p class="sub-card__billing">per week</p>
             <button type="button" data-sub-id="harvest-subscription" data-sub-name="Monthly Harvest Subscription" data-sub-price="0" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
-            <button class="sub-card__btn" data-sub-id="harvest-subscription" data-sub-name="Monthly Harvest Subscription" data-sub-price="0">Subscribe</button>
+            <button class="sub-card__btn" data-sub-id="harvest-subscription" data-sub-name="Monthly Harvest Subscription" data-sub-price="0" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out — Chicken Unavailable</button>
           </div>
         </article>
         <!-- Removed for now — uncomment this article block to bring the Monthly Farm Butcher's Box back
@@ -297,7 +297,7 @@
             </p>
             <p class="offering-card__price">$7 / lb</p>
             <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="whole-chicken">Choose Options</button>
+              <button class="offering-card__add" data-add-to-cart="whole-chicken" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out</button>
             </div>
           </div>
         </article>

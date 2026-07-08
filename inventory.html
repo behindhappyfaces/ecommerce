@@ -503,6 +503,7 @@
     <button class="tab-btn" data-tab="cart-links">Cart Links</button>
     <button class="tab-btn" data-tab="delivery-promos">🚚 Delivery Promos</button>
     <button class="tab-btn" data-tab="recipe-codes">📖 Recipe Guide</button>
+    <button class="tab-btn" data-tab="waitlist">🐔 Waitlist</button>
     <button class="tab-btn" data-tab="charge">📞 Charge Customer</button>
   </div>
 
@@ -1277,6 +1278,18 @@
     </div>
   </div>
 
+  <!-- TAB: PRODUCT WAITLIST (sold-out sign-ups) -->
+  <div class="panel" id="panel-waitlist">
+    <div class="section-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+        <p class="section-title" style="margin:0;">Sold-Out Waitlist</p>
+        <button class="btn-sm btn-ghost" id="wl-refresh-btn">&#8635; Refresh</button>
+      </div>
+      <p style="font-size:0.82rem;color:#666;margin:0 0 16px;">Everyone who signed up on a "Add Me to the Waitlist" button, grouped by product so you know exactly who is waiting for what.</p>
+      <div id="wl-body"><p style="padding:12px 8px;color:#999;">Loading…</p></div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-charge">
     <p class="section-title">Charge a Customer by Phone</p>
     <p style="font-size:0.82rem;color:#aaa;margin:-10px 0 18px;max-width:560px;">
@@ -1577,6 +1590,7 @@
       if (btn.dataset.tab === 'cart-links') loadCartLinks();
       if (btn.dataset.tab === 'delivery-promos') loadDeliveryPromos();
       if (btn.dataset.tab === 'recipe-codes') loadRecipeCodes();
+      if (btn.dataset.tab === 'waitlist') loadWaitlist();
       if (btn.dataset.tab === 'charge') initChargeTab();
     });
   });
@@ -4918,6 +4932,54 @@
       } else { msg.style.color='#c0392b'; msg.textContent=d.error||'Error'; msg.style.display='block'; }
     };
   }
+  async function loadWaitlist() {
+    const wrap = document.getElementById('wl-body');
+    if (!wrap) return;
+    const res = await fetch('/admin/waitlist', { headers: authHeaders() });
+    const rows = await res.json();
+    if (!rows.length) { wrap.innerHTML = '<p style="padding:12px 8px;color:#999;">No waitlist sign-ups yet.</p>'; return; }
+
+    const groups = {};
+    rows.forEach(r => {
+      if (!groups[r.product_name]) groups[r.product_name] = [];
+      groups[r.product_name].push(r);
+    });
+
+    wrap.innerHTML = Object.keys(groups).sort().map(productName => {
+      const entries = groups[productName];
+      return `
+        <div style="margin-bottom:22px;">
+          <p style="font-size:0.85rem;font-weight:700;color:#5a2a1a;margin:0 0 8px;">${escHtml(productName)} <span style="font-weight:400;color:#999;">(${entries.length} waiting)</span></p>
+          <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+            <thead><tr style="border-bottom:2px solid #e8e0d6;">
+              <th style="text-align:left;padding:6px 8px;">Name</th>
+              <th style="text-align:left;padding:6px 8px;">Email</th>
+              <th style="text-align:left;padding:6px 8px;">Phone</th>
+              <th style="text-align:left;padding:6px 8px;">Date</th>
+              <th style="padding:6px 8px;"></th>
+            </tr></thead>
+            <tbody>
+              ${entries.map(r => `<tr style="border-bottom:1px solid #e8e0d6;">
+                <td style="padding:6px 8px;">${escHtml(r.name)}</td>
+                <td style="padding:6px 8px;">${escHtml(r.email)}</td>
+                <td style="padding:6px 8px;">${escHtml(r.phone || '—')}</td>
+                <td style="padding:6px 8px;font-size:0.78rem;color:#888;">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</td>
+                <td style="padding:6px 8px;">
+                  <button onclick="removeWaitlistEntry(${r.id})" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Remove</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('wl-refresh-btn')?.addEventListener('click', loadWaitlist);
+  async function removeWaitlistEntry(id) {
+    if (!confirm('Remove this person from the waitlist?')) return;
+    await fetch(`/admin/waitlist/${id}`, { method:'DELETE', headers: authHeaders() });
+    loadWaitlist();
+  }
+
   async function revokeRecipeCode(code) {
     if (!confirm(`Revoke code "${code}"? The customer will lose access.`)) return;
     await fetch(`/admin/recipe-guide-codes/${encodeURIComponent(code)}`, { method:'DELETE', headers: authHeaders() });

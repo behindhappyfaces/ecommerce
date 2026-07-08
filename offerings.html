@@ -136,7 +136,7 @@
             <p class="sub-card__price">$149</p>
             <p class="sub-card__billing">one-time purchase</p>
             <button type="button" id="sampler-whats-inside" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
-            <button type="button" class="sub-card__btn" id="sampler-card-add" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out — Chicken Unavailable</button>
+            <button type="button" class="sub-card__btn waitlist-btn" id="sampler-card-add" data-waitlist-id="sampler-box" data-waitlist-name="The Farm Sampler Box">Add Me to the Waitlist</button>
           </div>
         </article>
         <article class="sub-card sub-card--featured" data-fade>
@@ -146,7 +146,7 @@
             <p class="sub-card__price">from $150</p>
             <p class="sub-card__billing">per week</p>
             <button type="button" data-sub-id="harvest-subscription" data-sub-name="Monthly Harvest Subscription" data-sub-price="0" style="background:none;border:none;padding:0;font-family:var(--font-sans);font-size:0.75rem;color:var(--color-rust,#8B4A2F);text-decoration:underline;cursor:pointer;margin-bottom:10px;display:block;">See what's inside →</button>
-            <button class="sub-card__btn" data-sub-id="harvest-subscription" data-sub-name="Monthly Harvest Subscription" data-sub-price="0" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out — Chicken Unavailable</button>
+            <button class="sub-card__btn waitlist-btn" data-waitlist-id="harvest-subscription" data-waitlist-name="The Supper Starter Box">Add Me to the Waitlist</button>
           </div>
         </article>
         <!-- Removed for now — uncomment this article block to bring the Monthly Farm Butcher's Box back
@@ -297,7 +297,7 @@
             </p>
             <p class="offering-card__price">$7 / lb</p>
             <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="whole-chicken" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Sold Out</button>
+              <button class="offering-card__add waitlist-btn" data-waitlist-id="whole-chicken" data-waitlist-name="Whole Chicken">Add Me to the Waitlist</button>
             </div>
           </div>
         </article>
@@ -1290,7 +1290,6 @@
       function openSampler()  { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; recalc(); }
       function closeSampler() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
       document.getElementById('sampler-whats-inside').addEventListener('click', openSampler);
-      document.getElementById('sampler-card-add').addEventListener('click', openSampler);
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);
       overlay.addEventListener('click', function(e) { if (e.target === overlay) closeSampler(); });
 
@@ -1423,6 +1422,86 @@
         // Silently fail — stock badges are non-critical
       }
     })();
+  </script>
+
+  <!-- ══════════════ WAITLIST MODAL (sold-out items) ══════════════ -->
+  <script>
+    function openWaitlistModal(productId, productName) {
+      var overlay = document.getElementById('waitlist-overlay');
+      var fieldStyle = 'width:100%;padding:12px 14px;border:1.5px solid #DDD8CE;border-radius:4px;font-family:var(--font-sans);font-size:0.95rem;box-sizing:border-box;';
+
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'waitlist-overlay';
+        overlay.className = 'sub-prompt-overlay';
+        overlay.innerHTML =
+          '<div class="sub-prompt">' +
+            '<h2 class="sub-prompt__heading" id="waitlist-heading"></h2>' +
+            '<p class="sub-prompt__body">No payment now &mdash; we will email you the moment it is back in stock.</p>' +
+            '<form id="waitlist-form">' +
+              '<div style="margin-bottom:14px;"><input type="text" id="waitlist-name" placeholder="Your name" required style="' + fieldStyle + '" /></div>' +
+              '<div style="margin-bottom:14px;"><input type="email" id="waitlist-email" placeholder="Email address" required style="' + fieldStyle + '" /></div>' +
+              '<div style="margin-bottom:14px;"><input type="tel" id="waitlist-phone" placeholder="Phone (optional)" style="' + fieldStyle + '" /></div>' +
+              '<button type="submit" class="sub-card__btn" id="waitlist-submit" style="width:100%;">Join the Waitlist</button>' +
+              '<p id="waitlist-msg" style="margin-top:12px;font-size:0.85rem;text-align:center;"></p>' +
+            '</form>' +
+          '</div>';
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.remove('open'); });
+
+        document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          var submitBtn = document.getElementById('waitlist-submit');
+          var msg = document.getElementById('waitlist-msg');
+          var name = document.getElementById('waitlist-name').value.trim();
+          var email = document.getElementById('waitlist-email').value.trim();
+          var phone = document.getElementById('waitlist-phone').value.trim();
+          if (!name || !email) return;
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Joining…';
+          msg.textContent = '';
+
+          try {
+            var r = await fetch('/api/waitlist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                productId: overlay.dataset.productId,
+                productName: overlay.dataset.productName,
+                name: name, email: email, phone: phone
+              })
+            });
+            if (!r.ok) throw new Error();
+            document.getElementById('waitlist-form').querySelectorAll('input, button[type="submit"]').forEach(function(el) { el.style.display = 'none'; });
+            msg.style.color = 'var(--color-green)';
+            msg.textContent = "You're on the list! We'll email you the moment it's back in stock.";
+          } catch (err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Join the Waitlist';
+            msg.style.color = 'var(--color-rust)';
+            msg.textContent = 'Something went wrong. Please try again.';
+          }
+        });
+      }
+
+      overlay.dataset.productId = productId;
+      overlay.dataset.productName = productName;
+      document.getElementById('waitlist-heading').textContent = productName + ' — Waitlist';
+      document.getElementById('waitlist-form').reset();
+      document.getElementById('waitlist-form').querySelectorAll('input, button[type="submit"]').forEach(function(el) { el.style.display = ''; });
+      document.getElementById('waitlist-msg').textContent = '';
+      document.getElementById('waitlist-submit').disabled = false;
+      document.getElementById('waitlist-submit').textContent = 'Join the Waitlist';
+      overlay.classList.add('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.waitlist-btn');
+      if (!btn) return;
+      openWaitlistModal(btn.dataset.waitlistId, btn.dataset.waitlistName);
+    });
   </script>
 
 </body>

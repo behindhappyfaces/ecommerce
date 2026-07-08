@@ -381,6 +381,21 @@ async function ensureRecipeAccessCodesTable() {
 }
 ensureRecipeAccessCodesTable().catch(e => console.warn('[RecipeCodes] table init failed:', e.message));
 
+async function ensureWaitlistTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS product_waitlist (
+    id           SERIAL PRIMARY KEY,
+    product_id   TEXT NOT NULL,
+    product_name TEXT NOT NULL,
+    name         TEXT NOT NULL,
+    email        TEXT NOT NULL,
+    phone        TEXT,
+    created_at   TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensureWaitlistTable().catch(e => console.warn('[Waitlist] table init failed:', e.message));
+
 async function readPendingCartsDB() {
   const pg = getPcPool();
   if (!pg) return readPendingCarts(); // fallback to file
@@ -1331,6 +1346,44 @@ app.delete('/admin/recipe-guide-codes/:code', requireAdmin, async (req, res) => 
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ error: 'DB unavailable' });
   await pg.query('DELETE FROM recipe_access_codes WHERE code = $1', [req.params.code]);
+  res.json({ ok: true });
+});
+
+// --- Product waitlist (sold-out items) ---
+app.post('/api/waitlist', express.json(), async (req, res) => {
+  const { productId = '', productName = '', name = '', email = '', phone = '' } = req.body || {};
+  if (!productId || !productName || !name.trim() || !email.trim() || !email.includes('@')) {
+    return res.status(400).json({ error: 'Name, valid email, and product are required' });
+  }
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query(
+    'INSERT INTO product_waitlist (product_id, product_name, name, email, phone) VALUES ($1,$2,$3,$4,$5)',
+    [productId, productName, name.trim(), email.trim(), phone.trim()]
+  );
+  sendEmail(
+    `Waitlist signup: ${productName}`,
+    `<p><strong>${name.trim()}</strong> joined the waitlist for <strong>${productName}</strong>.</p>
+     <p>Email: ${email.trim()}${phone.trim() ? '<br>Phone: ' + phone.trim() : ''}</p>`
+  ).catch(e => console.warn('[Waitlist] admin email failed:', e.message));
+  res.json({ ok: true });
+});
+
+// Admin: list waitlist entries, grouped by product
+app.get('/admin/waitlist', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.json([]);
+  const { rows } = await pg.query(
+    'SELECT id, product_id, product_name, name, email, phone, created_at FROM product_waitlist ORDER BY product_name, created_at DESC'
+  );
+  res.json(rows);
+});
+
+// Admin: remove a waitlist entry (e.g. after contacting them)
+app.delete('/admin/waitlist/:id', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query('DELETE FROM product_waitlist WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
 

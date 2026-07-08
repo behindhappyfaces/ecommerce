@@ -1283,7 +1283,10 @@
     <div class="section-card">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
         <p class="section-title" style="margin:0;">Sold-Out Waitlist</p>
-        <button class="btn-sm btn-ghost" id="wl-refresh-btn">&#8635; Refresh</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-sm btn-ghost" id="wl-refresh-btn">&#8635; Refresh</button>
+          <button class="btn" id="wl-csv-btn" style="font-size:0.78rem;padding:7px 16px;">&#8595; Download CSV</button>
+        </div>
       </div>
       <p style="font-size:0.82rem;color:#666;margin:0 0 16px;">Everyone who signed up on a "Add Me to the Waitlist" button, grouped by product so you know exactly who is waiting for what.</p>
       <div id="wl-body"><p style="padding:12px 8px;color:#999;">Loading…</p></div>
@@ -4932,11 +4935,13 @@
       } else { msg.style.color='#c0392b'; msg.textContent=d.error||'Error'; msg.style.display='block'; }
     };
   }
+  let allWaitlist = [];
   async function loadWaitlist() {
     const wrap = document.getElementById('wl-body');
     if (!wrap) return;
     const res = await fetch('/admin/waitlist', { headers: authHeaders() });
     const rows = await res.json();
+    allWaitlist = rows;
     if (!rows.length) { wrap.innerHTML = '<p style="padding:12px 8px;color:#999;">No waitlist sign-ups yet.</p>'; return; }
 
     const groups = {};
@@ -4952,7 +4957,7 @@
           <p style="font-size:0.85rem;font-weight:700;color:#5a2a1a;margin:0 0 8px;">${escHtml(productName)} <span style="font-weight:400;color:#999;">(${entries.length} waiting)</span></p>
           <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
             <thead><tr style="border-bottom:2px solid #e8e0d6;">
-              <th style="text-align:left;padding:6px 8px;">Name</th>
+              <th style="text-align:left;padding:6px 8px;">Full Name</th>
               <th style="text-align:left;padding:6px 8px;">Email</th>
               <th style="text-align:left;padding:6px 8px;">Phone</th>
               <th style="text-align:left;padding:6px 8px;">Date</th>
@@ -4974,6 +4979,23 @@
     }).join('');
   }
   document.getElementById('wl-refresh-btn')?.addEventListener('click', loadWaitlist);
+  document.getElementById('wl-csv-btn')?.addEventListener('click', function () {
+    const header = ['Product', 'Full Name', 'Email', 'Phone', 'Signed Up'];
+    const dataRows = allWaitlist.map(r => [
+      r.product_name, r.name, r.email, r.phone || '',
+      r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+    ]);
+    const csv = [header, ...dataRows]
+      .map(row => row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))
+      .join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'waitlist-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
   async function removeWaitlistEntry(id) {
     if (!confirm('Remove this person from the waitlist?')) return;
     await fetch(`/admin/waitlist/${id}`, { method:'DELETE', headers: authHeaders() });

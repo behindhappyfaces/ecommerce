@@ -1358,8 +1358,8 @@ const WAITLIST_PRODUCTS = {
 app.post('/api/waitlist', express.json(), async (req, res) => {
   const { productId = '', name = '', email = '', phone = '' } = req.body || {};
   const productName = WAITLIST_PRODUCTS[productId];
-  if (!productName || !name.trim() || !email.trim() || !email.includes('@')) {
-    return res.status(400).json({ error: 'Name, valid email, and a recognized product are required' });
+  if (!productName || !name.trim() || !email.trim() || !email.includes('@') || !phone.trim()) {
+    return res.status(400).json({ error: 'Full name, valid email, phone number, and a recognized product are required' });
   }
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ error: 'DB unavailable' });

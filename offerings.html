@@ -1439,9 +1439,9 @@
             '<h2 class="sub-prompt__heading" id="waitlist-heading"></h2>' +
             '<p class="sub-prompt__body">No payment now &mdash; we will email you the moment it is back in stock.</p>' +
             '<form id="waitlist-form">' +
-              '<div style="margin-bottom:14px;"><input type="text" id="waitlist-name" placeholder="Your name" required style="' + fieldStyle + '" /></div>' +
+              '<div style="margin-bottom:14px;"><input type="text" id="waitlist-name" placeholder="Full Name" required style="' + fieldStyle + '" /></div>' +
               '<div style="margin-bottom:14px;"><input type="email" id="waitlist-email" placeholder="Email address" required style="' + fieldStyle + '" /></div>' +
-              '<div style="margin-bottom:14px;"><input type="tel" id="waitlist-phone" placeholder="Phone (optional)" style="' + fieldStyle + '" /></div>' +
+              '<div style="margin-bottom:14px;"><input type="tel" id="waitlist-phone" placeholder="Phone Number" required style="' + fieldStyle + '" /></div>' +
               '<button type="submit" class="sub-card__btn" id="waitlist-submit" style="width:100%;">Join the Waitlist</button>' +
               '<p id="waitlist-msg" style="margin-top:12px;font-size:0.85rem;text-align:center;"></p>' +
             '</form>' +
@@ -1457,7 +1457,7 @@
           var name = document.getElementById('waitlist-name').value.trim();
           var email = document.getElementById('waitlist-email').value.trim();
           var phone = document.getElementById('waitlist-phone').value.trim();
-          if (!name || !email) return;
+          if (!name || !email || !phone) return;
 
           submitBtn.disabled = true;
           submitBtn.textContent = 'Joining…';

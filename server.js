@@ -391,8 +391,11 @@ async function ensureWaitlistTable() {
     name         TEXT NOT NULL,
     email        TEXT NOT NULL,
     phone        TEXT,
+    contacted    BOOLEAN NOT NULL DEFAULT FALSE,
     created_at   TIMESTAMPTZ DEFAULT NOW()
   )`);
+  // Table may already exist from before the `contacted` column was added
+  await pg.query(`ALTER TABLE product_waitlist ADD COLUMN IF NOT EXISTS contacted BOOLEAN NOT NULL DEFAULT FALSE`);
 }
 ensureWaitlistTable().catch(e => console.warn('[Waitlist] table init failed:', e.message));
 
@@ -1380,7 +1383,7 @@ app.get('/admin/waitlist', requireAdmin, async (req, res) => {
   const pg = getPcPool();
   if (!pg) return res.json([]);
   const { rows } = await pg.query(
-    'SELECT id, product_id, product_name, name, email, phone, created_at FROM product_waitlist ORDER BY product_name, created_at DESC'
+    'SELECT id, product_id, product_name, name, email, phone, contacted, created_at FROM product_waitlist ORDER BY product_name, created_at DESC'
   );
   res.json(rows);
 });
@@ -1391,6 +1394,32 @@ app.delete('/admin/waitlist/:id', requireAdmin, async (req, res) => {
   if (!pg) return res.status(503).json({ error: 'DB unavailable' });
   await pg.query('DELETE FROM product_waitlist WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
+});
+
+function parseWaitlistIds(body) {
+  const ids = Array.isArray(body?.ids) ? body.ids.map(n => parseInt(n, 10)).filter(Number.isInteger) : [];
+  return ids;
+}
+
+// Admin: bulk delete waitlist entries
+app.post('/admin/waitlist/bulk-delete', requireAdmin, express.json(), async (req, res) => {
+  const ids = parseWaitlistIds(req.body);
+  if (!ids.length) return res.status(400).json({ error: 'ids array required' });
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query('DELETE FROM product_waitlist WHERE id = ANY($1::int[])', [ids]);
+  res.json({ ok: true, count: ids.length });
+});
+
+// Admin: bulk mark waitlist entries contacted/uncontacted
+app.post('/admin/waitlist/bulk-contacted', requireAdmin, express.json(), async (req, res) => {
+  const ids = parseWaitlistIds(req.body);
+  const contacted = !!req.body?.contacted;
+  if (!ids.length) return res.status(400).json({ error: 'ids array required' });
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query('UPDATE product_waitlist SET contacted = $2 WHERE id = ANY($1::int[])', [ids, contacted]);
+  res.json({ ok: true, count: ids.length });
 });
 
 app.use(express.static(path.join(__dirname), {

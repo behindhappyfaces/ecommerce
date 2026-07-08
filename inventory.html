@@ -1289,6 +1289,15 @@
         </div>
       </div>
       <p style="font-size:0.82rem;color:#666;margin:0 0 16px;">Everyone who signed up on a "Add Me to the Waitlist" button, grouped by product so you know exactly who is waiting for what.</p>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:10px 12px;background:#f7f2ea;border-radius:6px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#555;cursor:pointer;">
+          <input type="checkbox" id="wl-select-all"> Select All
+        </label>
+        <span id="wl-selected-count" style="font-size:0.8rem;color:#999;">0 selected</span>
+        <button class="btn-sm" id="wl-mark-contacted-btn" disabled style="background:#3a6b3a;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.78rem;">Mark Contacted</button>
+        <button class="btn-sm" id="wl-mark-uncontacted-btn" disabled style="background:#8a8a6a;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.78rem;">Mark Uncontacted</button>
+        <button class="btn-sm" id="wl-delete-selected-btn" disabled style="background:#5a1a1a;color:#f4a261;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.78rem;">Delete Selected</button>
+      </div>
       <div id="wl-body"><p style="padding:12px 8px;color:#999;">Loading…</p></div>
     </div>
   </div>
@@ -4936,13 +4945,26 @@
     };
   }
   let allWaitlist = [];
+  let wlSelected = new Set();
+
+  function wlUpdateToolbar() {
+    const count = wlSelected.size;
+    document.getElementById('wl-selected-count').textContent = count + ' selected';
+    document.getElementById('wl-mark-contacted-btn').disabled = count === 0;
+    document.getElementById('wl-mark-uncontacted-btn').disabled = count === 0;
+    document.getElementById('wl-delete-selected-btn').disabled = count === 0;
+    const allBoxes = Array.from(document.querySelectorAll('.wl-row-check'));
+    document.getElementById('wl-select-all').checked = allBoxes.length > 0 && allBoxes.every(b => b.checked);
+  }
+
   async function loadWaitlist() {
     const wrap = document.getElementById('wl-body');
     if (!wrap) return;
     const res = await fetch('/admin/waitlist', { headers: authHeaders() });
     const rows = await res.json();
     allWaitlist = rows;
-    if (!rows.length) { wrap.innerHTML = '<p style="padding:12px 8px;color:#999;">No waitlist sign-ups yet.</p>'; return; }
+    wlSelected = new Set();
+    if (!rows.length) { wrap.innerHTML = '<p style="padding:12px 8px;color:#999;">No waitlist sign-ups yet.</p>'; wlUpdateToolbar(); return; }
 
     const groups = {};
     rows.forEach(r => {
@@ -4957,18 +4979,22 @@
           <p style="font-size:0.85rem;font-weight:700;color:#5a2a1a;margin:0 0 8px;">${escHtml(productName)} <span style="font-weight:400;color:#999;">(${entries.length} waiting)</span></p>
           <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
             <thead><tr style="border-bottom:2px solid #e8e0d6;">
+              <th style="padding:6px 8px;"></th>
               <th style="text-align:left;padding:6px 8px;">Full Name</th>
               <th style="text-align:left;padding:6px 8px;">Email</th>
               <th style="text-align:left;padding:6px 8px;">Phone</th>
               <th style="text-align:left;padding:6px 8px;">Date</th>
+              <th style="text-align:left;padding:6px 8px;">Status</th>
               <th style="padding:6px 8px;"></th>
             </tr></thead>
             <tbody>
-              ${entries.map(r => `<tr style="border-bottom:1px solid #e8e0d6;">
+              ${entries.map(r => `<tr style="border-bottom:1px solid #e8e0d6;${r.contacted ? 'opacity:0.55;' : ''}">
+                <td style="padding:6px 8px;"><input type="checkbox" class="wl-row-check" data-id="${r.id}"></td>
                 <td style="padding:6px 8px;">${escHtml(r.name)}</td>
                 <td style="padding:6px 8px;">${escHtml(r.email)}</td>
                 <td style="padding:6px 8px;">${escHtml(r.phone || '—')}</td>
                 <td style="padding:6px 8px;font-size:0.78rem;color:#888;">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</td>
+                <td style="padding:6px 8px;">${r.contacted ? '<span style="color:#2a7a2a;">&#10003; Contacted</span>' : '<span style="color:#888;">Waiting</span>'}</td>
                 <td style="padding:6px 8px;">
                   <button onclick="removeWaitlistEntry(${r.id})" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Remove</button>
                 </td>
@@ -4977,13 +5003,63 @@
           </table>
         </div>`;
     }).join('');
+
+    document.querySelectorAll('.wl-row-check').forEach(box => {
+      box.addEventListener('change', function () {
+        const id = parseInt(this.dataset.id, 10);
+        if (this.checked) wlSelected.add(id); else wlSelected.delete(id);
+        wlUpdateToolbar();
+      });
+    });
+    wlUpdateToolbar();
   }
+
   document.getElementById('wl-refresh-btn')?.addEventListener('click', loadWaitlist);
+
+  document.getElementById('wl-select-all')?.addEventListener('change', function () {
+    const checked = this.checked;
+    document.querySelectorAll('.wl-row-check').forEach(box => {
+      box.checked = checked;
+      const id = parseInt(box.dataset.id, 10);
+      if (checked) wlSelected.add(id); else wlSelected.delete(id);
+    });
+    wlUpdateToolbar();
+  });
+
+  document.getElementById('wl-delete-selected-btn')?.addEventListener('click', async function () {
+    if (!wlSelected.size) return;
+    if (!confirm(`Remove ${wlSelected.size} selected sign-up(s) from the waitlist?`)) return;
+    await fetch('/admin/waitlist/bulk-delete', {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: Array.from(wlSelected) })
+    });
+    loadWaitlist();
+  });
+
+  document.getElementById('wl-mark-contacted-btn')?.addEventListener('click', async function () {
+    if (!wlSelected.size) return;
+    await fetch('/admin/waitlist/bulk-contacted', {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: Array.from(wlSelected), contacted: true })
+    });
+    loadWaitlist();
+  });
+
+  document.getElementById('wl-mark-uncontacted-btn')?.addEventListener('click', async function () {
+    if (!wlSelected.size) return;
+    await fetch('/admin/waitlist/bulk-contacted', {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: Array.from(wlSelected), contacted: false })
+    });
+    loadWaitlist();
+  });
+
   document.getElementById('wl-csv-btn')?.addEventListener('click', function () {
-    const header = ['Product', 'Full Name', 'Email', 'Phone', 'Signed Up'];
+    const header = ['Product', 'Full Name', 'Email', 'Phone', 'Signed Up', 'Status'];
     const dataRows = allWaitlist.map(r => [
       r.product_name, r.name, r.email, r.phone || '',
-      r.created_at ? new Date(r.created_at).toLocaleDateString() : ''
+      r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
+      r.contacted ? 'Contacted' : 'Waiting'
     ]);
     const csv = [header, ...dataRows]
       .map(row => row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))

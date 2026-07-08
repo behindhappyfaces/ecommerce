@@ -4996,11 +4996,11 @@
     a.click();
     URL.revokeObjectURL(url);
   });
-  async function removeWaitlistEntry(id) {
+  window.removeWaitlistEntry = async function (id) {
     if (!confirm('Remove this person from the waitlist?')) return;
     await fetch(`/admin/waitlist/${id}`, { method:'DELETE', headers: authHeaders() });
     loadWaitlist();
-  }
+  };
 
   async function revokeRecipeCode(code) {
     if (!confirm(`Revoke code "${code}"? The customer will lose access.`)) return;

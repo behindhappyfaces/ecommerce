@@ -1350,10 +1350,16 @@ app.delete('/admin/recipe-guide-codes/:code', requireAdmin, async (req, res) => 
 });
 
 // --- Product waitlist (sold-out items) ---
+const WAITLIST_PRODUCTS = {
+  'sampler-box':           'The Farm Sampler Box',
+  'harvest-subscription':  'The Supper Starter Box',
+  'whole-chicken':         'Whole Chicken',
+};
 app.post('/api/waitlist', express.json(), async (req, res) => {
-  const { productId = '', productName = '', name = '', email = '', phone = '' } = req.body || {};
-  if (!productId || !productName || !name.trim() || !email.trim() || !email.includes('@')) {
-    return res.status(400).json({ error: 'Name, valid email, and product are required' });
+  const { productId = '', name = '', email = '', phone = '' } = req.body || {};
+  const productName = WAITLIST_PRODUCTS[productId];
+  if (!productName || !name.trim() || !email.trim() || !email.includes('@')) {
+    return res.status(400).json({ error: 'Name, valid email, and a recognized product are required' });
   }
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ error: 'DB unavailable' });
@@ -1363,8 +1369,8 @@ app.post('/api/waitlist', express.json(), async (req, res) => {
   );
   sendEmail(
     `Waitlist signup: ${productName}`,
-    `<p><strong>${name.trim()}</strong> joined the waitlist for <strong>${productName}</strong>.</p>
-     <p>Email: ${email.trim()}${phone.trim() ? '<br>Phone: ' + phone.trim() : ''}</p>`
+    `<p><strong>${escHtml(name.trim())}</strong> joined the waitlist for <strong>${escHtml(productName)}</strong>.</p>
+     <p>Email: ${escHtml(email.trim())}${phone.trim() ? '<br>Phone: ' + escHtml(phone.trim()) : ''}</p>`
   ).catch(e => console.warn('[Waitlist] admin email failed:', e.message));
   res.json({ ok: true });
 });

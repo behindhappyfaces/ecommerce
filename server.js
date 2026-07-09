@@ -399,6 +399,75 @@ async function ensureWaitlistTable() {
 }
 ensureWaitlistTable().catch(e => console.warn('[Waitlist] table init failed:', e.message));
 
+// --- Social media content calendar ---
+const SOCIAL_PLATFORMS = ['instagram', 'facebook', 'tiktok', 'substack'];
+
+async function ensureSocialPostsTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS social_posts (
+    id            SERIAL PRIMARY KEY,
+    platforms     TEXT[] NOT NULL,
+    caption       TEXT NOT NULL,
+    image_url     TEXT,
+    scheduled_at  TIMESTAMPTZ NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'scheduled',
+    posted_at     TIMESTAMPTZ,
+    error         TEXT,
+    created_at    TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensureSocialPostsTable().catch(e => console.warn('[SocialPosts] table init failed:', e.message));
+
+// No platform has an approved auto-posting integration yet (Meta App Review /
+// TikTok audit pending, Substack has no official API). Until credentials for a
+// given platform are wired in below, every post falls back to emailing the
+// admin the ready-to-publish content so nothing blocks on that approval.
+// When a platform's API access comes through, add a real branch here (e.g.
+// call the Instagram Graph API) and only fall back to email for the rest.
+async function publishSocialPost(post) {
+  const platformList = post.platforms.join(', ');
+  await sendEmail(
+    `Ready to post: ${post.caption.slice(0, 60)}${post.caption.length > 60 ? '…' : ''}`,
+    `<p><strong>Scheduled for:</strong> ${new Date(post.scheduled_at).toLocaleString()}</p>
+     <p><strong>Platforms:</strong> ${escHtml(platformList)}</p>
+     ${post.image_url ? `<p><img src="${escHtml(post.image_url)}" style="max-width:400px;display:block;margin:8px 0;" /></p>` : ''}
+     <p><strong>Caption:</strong></p>
+     <p style="white-space:pre-wrap;">${escHtml(post.caption)}</p>
+     <p style="color:#888;font-size:0.85rem;">Copy this into each platform above to publish it &mdash; auto-posting isn't live yet for any of them.</p>`
+  );
+  return { ok: true, mode: 'email_fallback' };
+}
+
+if (cron) {
+  // Every 15 minutes — send any due social posts for manual publishing
+  cron.schedule('*/15 * * * *', async () => {
+    const pg = getPcPool();
+    if (!pg) return;
+    try {
+      const { rows } = await pg.query(
+        `SELECT * FROM social_posts WHERE status = 'scheduled' AND scheduled_at <= NOW()`
+      );
+      for (const post of rows) {
+        try {
+          await publishSocialPost(post);
+          await pg.query(
+            `UPDATE social_posts SET status = 'sent_for_review', posted_at = NOW() WHERE id = $1`,
+            [post.id]
+          );
+        } catch (e) {
+          await pg.query(
+            `UPDATE social_posts SET status = 'failed', error = $2 WHERE id = $1`,
+            [post.id, e.message]
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('[SocialPosts] cron check failed:', e.message);
+    }
+  });
+}
+
 async function readPendingCartsDB() {
   const pg = getPcPool();
   if (!pg) return readPendingCarts(); // fallback to file
@@ -1420,6 +1489,71 @@ app.post('/admin/waitlist/bulk-contacted', requireAdmin, express.json(), async (
   if (!pg) return res.status(503).json({ error: 'DB unavailable' });
   await pg.query('UPDATE product_waitlist SET contacted = $2 WHERE id = ANY($1::int[])', [ids, contacted]);
   res.json({ ok: true, count: ids.length });
+});
+
+// --- Social media content calendar (admin) ---
+app.get('/admin/social-posts', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.json([]);
+  const { rows } = await pg.query('SELECT * FROM social_posts ORDER BY scheduled_at DESC');
+  res.json(rows);
+});
+
+app.post('/admin/social-posts', requireAdmin, express.json(), async (req, res) => {
+  const { platforms = [], caption = '', imageUrl = '', scheduledAt = '' } = req.body || {};
+  const cleanPlatforms = Array.isArray(platforms) ? platforms.filter(p => SOCIAL_PLATFORMS.includes(p)) : [];
+  const when = new Date(scheduledAt);
+  if (!cleanPlatforms.length || !caption.trim() || isNaN(when.getTime())) {
+    return res.status(400).json({ error: 'At least one platform, a caption, and a valid scheduled date/time are required' });
+  }
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  const { rows } = await pg.query(
+    `INSERT INTO social_posts (platforms, caption, image_url, scheduled_at) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [cleanPlatforms, caption.trim(), imageUrl.trim() || null, when]
+  );
+  res.json(rows[0]);
+});
+
+app.put('/admin/social-posts/:id', requireAdmin, express.json(), async (req, res) => {
+  const { platforms = [], caption = '', imageUrl = '', scheduledAt = '' } = req.body || {};
+  const cleanPlatforms = Array.isArray(platforms) ? platforms.filter(p => SOCIAL_PLATFORMS.includes(p)) : [];
+  const when = new Date(scheduledAt);
+  if (!cleanPlatforms.length || !caption.trim() || isNaN(when.getTime())) {
+    return res.status(400).json({ error: 'At least one platform, a caption, and a valid scheduled date/time are required' });
+  }
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  const { rows } = await pg.query(
+    `UPDATE social_posts SET platforms = $2, caption = $3, image_url = $4, scheduled_at = $5, status = 'scheduled', error = NULL
+     WHERE id = $1 RETURNING *`,
+    [req.params.id, cleanPlatforms, caption.trim(), imageUrl.trim() || null, when]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'Not found' });
+  res.json(rows[0]);
+});
+
+app.delete('/admin/social-posts/:id', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  await pg.query('DELETE FROM social_posts WHERE id = $1', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// Manually fire the "ready to post" email right now, regardless of scheduled_at
+app.post('/admin/social-posts/:id/send-now', requireAdmin, async (req, res) => {
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'DB unavailable' });
+  const { rows } = await pg.query('SELECT * FROM social_posts WHERE id = $1', [req.params.id]);
+  if (!rows.length) return res.status(404).json({ error: 'Not found' });
+  try {
+    await publishSocialPost(rows[0]);
+    await pg.query(`UPDATE social_posts SET status = 'sent_for_review', posted_at = NOW(), error = NULL WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    await pg.query(`UPDATE social_posts SET status = 'failed', error = $2 WHERE id = $1`, [req.params.id, e.message]);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.use(express.static(path.join(__dirname), {

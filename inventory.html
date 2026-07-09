@@ -86,9 +86,16 @@
 
   /* ---- TABS ---- */
   .tabs {
-    display: flex; flex-wrap: wrap; background: var(--card2);
+    display: flex; flex-direction: column; background: var(--card2);
     border-bottom: 1px solid var(--border);
   }
+  .tab-group { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .tab-group:last-child { border-bottom: none; }
+  .tab-group__label {
+    display: block; padding: 9px 16px 0; font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-dim); opacity: 0.55;
+  }
+  .tab-group__row { display: flex; flex-wrap: wrap; }
   .tab-btn {
     flex: 1 1 auto; background: none; border: none; color: var(--cream-dim);
     padding: 12px 16px; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.04em;
@@ -489,23 +496,38 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="stock">Stock</button>
-    <button class="tab-btn" data-tab="restock">Restock</button>
-    <button class="tab-btn" data-tab="history">History</button>
-    <button class="tab-btn" data-tab="reports">Reports</button>
-    <button class="tab-btn" data-tab="settings">Settings</button>
-    <button class="tab-btn" data-tab="shipping">Shipping</button>
-    <button class="tab-btn" data-tab="orders">Orders</button>
-    <button class="tab-btn" data-tab="bundles">🛒 Bundles</button>
-    <button class="tab-btn" data-tab="subscribers">Magazine Subscribers</button>
-    <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
-    <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
-    <button class="tab-btn" data-tab="cart-links">Cart Links</button>
-    <button class="tab-btn" data-tab="delivery-promos">🚚 Delivery Promos</button>
-    <button class="tab-btn" data-tab="recipe-codes">📖 Recipe Guide</button>
-    <button class="tab-btn" data-tab="waitlist">🐔 Waitlist</button>
-    <button class="tab-btn" data-tab="social-posts">📱 Social Posts</button>
-    <button class="tab-btn" data-tab="charge">📞 Charge Customer</button>
+    <div class="tab-group">
+      <span class="tab-group__label">Inventory &amp; Orders</span>
+      <div class="tab-group__row">
+        <button class="tab-btn active" data-tab="stock">Stock</button>
+        <button class="tab-btn" data-tab="restock">Restock</button>
+        <button class="tab-btn" data-tab="history">History</button>
+        <button class="tab-btn" data-tab="shipping">Shipping</button>
+        <button class="tab-btn" data-tab="orders">Orders</button>
+        <button class="tab-btn" data-tab="bundles">🛒 Bundles</button>
+        <button class="tab-btn" data-tab="charge">📞 Charge Customer</button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <span class="tab-group__label">Marketing &amp; Audience</span>
+      <div class="tab-group__row">
+        <button class="tab-btn" data-tab="social-posts">📱 Social Posts</button>
+        <button class="tab-btn" data-tab="waitlist">🐔 Waitlist</button>
+        <button class="tab-btn" data-tab="subscribers">Magazine Subscribers</button>
+        <button class="tab-btn" data-tab="staples">Staples Box Subscribers</button>
+        <button class="tab-btn" data-tab="workshop-interest">Workshop Interest</button>
+        <button class="tab-btn" data-tab="recipe-codes">📖 Recipe Guide</button>
+        <button class="tab-btn" data-tab="delivery-promos">🚚 Delivery Promos</button>
+        <button class="tab-btn" data-tab="cart-links">Cart Links</button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <span class="tab-group__label">Reports &amp; Settings</span>
+      <div class="tab-group__row">
+        <button class="tab-btn" data-tab="reports">Reports</button>
+        <button class="tab-btn" data-tab="settings">Settings</button>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: STOCK -->

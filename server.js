@@ -3290,6 +3290,40 @@ app.put('/admin/inventory/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Legacy link expiry contact form (legacy-farm-arnosky.netlify.app)
+app.post('/api/legacy-contact', async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://legacy-farm-arnosky.netlify.app');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  const { name, email, phone } = req.body || {};
+  if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#4a3728;">New Link Request — Legacy Farm Arnosky</h2>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:160px;"><strong>Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(name)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Email</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
+      <tr><td style="padding:10px;color:#9a7b62;"><strong>Phone</strong></td><td style="padding:10px;">${esc(phone) || 'Not provided'}</td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from legacy-farm-arnosky.netlify.app</p>
+  `;
+  try {
+    await sendEmail('New Link Request — Legacy Farm Arnosky', html);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[legacy-contact error]', err.message);
+    res.status(500).json({ error: 'Failed to send' });
+  }
+});
+
+app.options('/api/legacy-contact', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://legacy-farm-arnosky.netlify.app');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
 app.post('/api/csa-inquiry', async (req, res) => {
   const { fullName, city, household, frustrations } = req.body || {};
   if (!fullName || !city || !household) {

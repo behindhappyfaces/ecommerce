@@ -3298,12 +3298,14 @@ app.post('/api/legacy-contact', async (req, res) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   const { name, email, phone } = req.body || {};
   if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
-  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email' });
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const safeMailto = 'mailto:' + encodeURIComponent(email);
   const html = `
     <h2 style="font-family:Georgia,serif;color:#4a3728;">New Link Request — Legacy Farm Arnosky</h2>
     <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
       <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;width:160px;"><strong>Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(name)}</td></tr>
-      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Email</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#9a7b62;"><strong>Email</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><a href="${safeMailto}">${esc(email)}</a></td></tr>
       <tr><td style="padding:10px;color:#9a7b62;"><strong>Phone</strong></td><td style="padding:10px;">${esc(phone) || 'Not provided'}</td></tr>
     </table>
     <p style="margin-top:20px;font-size:12px;color:#9a7b62;">Submitted from legacy-farm-arnosky.netlify.app</p>

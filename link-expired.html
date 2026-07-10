@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Expired | Heart of Texas Organics</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f7f3ec;
+      color: #3a2e25;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 48px rgba(58,46,37,0.12);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+    }
+
+    .card__top {
+      background: linear-gradient(135deg, #4a3728 0%, #6b5c4e 100%);
+      padding: 36px 36px 28px;
+      text-align: center;
+    }
+
+    .icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 1.5rem;
+    }
+
+    .card__top h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f5f0e8;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card__top p {
+      font-size: 0.88rem;
+      color: rgba(245,240,232,0.65);
+      line-height: 1.6;
+    }
+
+    .card__body {
+      padding: 32px 36px 36px;
+    }
+
+    .card__body h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #4a3728;
+      margin-bottom: 6px;
+    }
+
+    .card__body p {
+      font-size: 0.84rem;
+      color: #6b5c4e;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+
+    .form-field label {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #6b5c4e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .form-field input {
+      padding: 11px 14px;
+      border: 1.5px solid #ede8df;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      color: #3a2e25;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: #fff;
+    }
+
+    .form-field input:focus {
+      outline: none;
+      border-color: #5a7a5a;
+    }
+
+    .form-field input.error {
+      border-color: #c05050;
+    }
+
+    .optional {
+      font-size: 0.7rem;
+      color: #9a8c80;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 4px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: #4a3728;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.18s;
+      font-family: inherit;
+    }
+
+    .submit-btn:hover:not(:disabled) { background: #6b5c4e; }
+    .submit-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* Success state */
+    .success-state {
+      display: none;
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+
+    .success-state .checkmark {
+      width: 56px;
+      height: 56px;
+      background: #e6f4e6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin: 0 auto 16px;
+    }
+
+    .success-state h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #4a3728;
+      margin-bottom: 8px;
+    }
+
+    .success-state p {
+      font-size: 0.85rem;
+      color: #6b5c4e;
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    .error-msg {
+      display: none;
+      background: #fdf0f0;
+      border: 1px solid #e8c0c0;
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #c05050;
+      margin-top: 12px;
+    }
+
+    .brand-footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #9a8c80;
+    }
+
+    .brand-footer a {
+      color: #5a7a5a;
+      text-decoration: none;
+    }
+
+    .brand-footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 520px) {
+      .card__top { padding: 28px 24px 22px; }
+      .card__body { padding: 24px 24px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card__top">
+    <div class="icon">&#x23F0;</div>
+    <h1>This Link Has Expired</h1>
+    <p>The page you're looking for is no longer available at this address. Fill out the form below and we'll send you an updated link.</p>
+  </div>
+
+  <div class="card__body">
+    <div id="formSection">
+      <h2>Request a New Link</h2>
+      <p>We'll get back to you as quickly as possible.</p>
+
+      <form id="contactForm" novalidate>
+        <div class="form-field">
+          <label for="req-name">Full Name</label>
+          <input type="text" id="req-name" name="name" placeholder="Jane Smith" autocomplete="name" />
+        </div>
+
+        <div class="form-field">
+          <label for="req-email">Email Address</label>
+          <input type="email" id="req-email" name="email" placeholder="jane@email.com" autocomplete="email" />
+        </div>
+
+        <div class="form-field">
+          <label for="req-phone">Phone <span class="optional">optional</span></label>
+          <input type="tel" id="req-phone" name="phone" placeholder="512-555-0100" autocomplete="tel" />
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Send Request</button>
+        <div class="error-msg" id="errorMsg">Something went wrong. Please try again or email us directly at <a href="mailto:operations@heartoftexasorganics.com">operations@heartoftexasorganics.com</a>.</div>
+      </form>
+    </div>
+
+    <div class="success-state" id="successSection">
+      <div class="checkmark">&#x2713;</div>
+      <h3>Request Sent!</h3>
+      <p>We received your message and will send you an updated link at <strong id="confirmEmail"></strong> shortly.</p>
+    </div>
+  </div>
+</div>
+
+<div class="brand-footer">
+  <a href="https://www.heartoftexasorganics.com">heartoftexasorganics.com</a>
+  &nbsp;&middot;&nbsp;
+  <a href="mailto:operations@heartoftexasorganics.com">operations@heartoftexasorganics.com</a>
+</div>
+
+<script>
+  document.getElementById('contactForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    var name  = document.getElementById('req-name').value.trim();
+    var email = document.getElementById('req-email').value.trim();
+    var phone = document.getElementById('req-phone').value.trim();
+    var errorEl = document.getElementById('errorMsg');
+    errorEl.style.display = 'none';
+
+    // Validate
+    var valid = true;
+    [['req-name', !name], ['req-email', !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)]].forEach(function(pair) {
+      var el = document.getElementById(pair[0]);
+      if (pair[1]) { el.classList.add('error'); valid = false; }
+      else el.classList.remove('error');
+    });
+    if (!valid) return;
+
+    var btn = document.getElementById('submitBtn');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/legacy-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, phone: phone })
+      });
+
+      if (!res.ok) throw new Error('Server error');
+
+      document.getElementById('confirmEmail').textContent = email;
+      document.getElementById('formSection').style.display = 'none';
+      document.getElementById('successSection').style.display = 'block';
+
+    } catch (err) {
+      btn.textContent = 'Send Request';
+      btn.disabled = false;
+      errorEl.style.display = 'block';
+    }
+  });
+
+  // Clear error highlight on input
+  ['req-name','req-email'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() {
+      this.classList.remove('error');
+    });
+  });
+</script>
+
+</body>
+</html>

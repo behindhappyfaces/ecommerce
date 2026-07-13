@@ -3089,6 +3089,35 @@ app.get('/admin/cart-links/:token/preview', requireAdmin, async (req, res) => {
   }
 });
 
+// Manually mark a cart link as paid (when Stripe webhook didn't fire)
+app.post('/admin/cart-links/:token/mark-paid', requireAdmin, async (req, res) => {
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).json({ error: 'Cart link not found' });
+    await updatePendingCartDB(req.params.token, { completed: true, completedAt: new Date().toISOString() });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[cart-link mark-paid]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Update note/email on an existing cart link before sending
+app.patch('/admin/cart-links/:token', requireAdmin, express.json(), async (req, res) => {
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).json({ error: 'Cart link not found' });
+    const allowed = ['note', 'email', 'name', 'phone', 'source'];
+    const updates = {};
+    allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+    await updatePendingCartDB(req.params.token, updates);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[cart-link patch]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Duplicate an existing cart link into a brand-new link (same items/customer, fresh token)
 app.post('/admin/cart-links/:token/duplicate', requireAdmin, async (req, res) => {
   try {

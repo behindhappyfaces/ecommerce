@@ -4786,10 +4786,6 @@
     _clSendToken = null;
   }
 
-  document.getElementById('clSendModal').addEventListener('click', function(e) {
-    if (e.target === this) clCloseSendModal();
-  });
-
   function clSchedulePreviewRefresh() {
     const statusEl = document.getElementById('clPreviewStatus');
     statusEl.textContent = 'updating…';
@@ -4850,6 +4846,14 @@
   }
 
   async function clDoPreview() { clRefreshPreview(); }
+
+  // Wire modal buttons — must be after all function declarations
+  document.getElementById('clSendModal').addEventListener('click', function(e) {
+    if (e.target === this) clCloseSendModal();
+  });
+  document.getElementById('clSendModalClose').addEventListener('click', clCloseSendModal);
+  document.getElementById('clSendModalBtn').addEventListener('click', clDoSendEmail);
+  document.getElementById('clSendModalNote').addEventListener('input', clSchedulePreviewRefresh);
 
   // ── CHARGE CUSTOMER (phone / MOTO payments) ─────────────────────────────
   let chStripe = null, chCard = null, chReady = false, chInitialized = false;
@@ -5373,7 +5377,7 @@
         <p style="font-size:1rem;font-weight:700;color:#f0ebe4;margin:0;">&#9993; Compose &amp; Preview Email</p>
         <p id="clSendModalSubtitle" style="font-size:0.75rem;color:#8db88f;margin:2px 0 0;"></p>
       </div>
-      <button onclick="clCloseSendModal()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#f0ebe4;font-size:1rem;cursor:pointer;padding:5px 11px;border-radius:7px;flex-shrink:0;">&#x2715; Close</button>
+      <button id="clSendModalClose" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#f0ebe4;font-size:1rem;cursor:pointer;padding:5px 11px;border-radius:7px;flex-shrink:0;">&#x2715; Close</button>
     </div>
     <!-- Two-column layout: compose left, preview right -->
     <div style="display:flex;gap:0;min-height:520px;">
@@ -5390,8 +5394,7 @@
             <span style="color:#555;font-weight:400;text-transform:none;letter-spacing:0;"> — optional, shown in email</span>
           </label>
           <textarea id="clSendModalNote" rows="8" placeholder="e.g. Hi Ashlan! Everything is fresh from this week's harvest. So excited for you to try the sourdough!"
-            oninput="clSchedulePreviewRefresh()"
-            style="flex:1;width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;resize:vertical;box-sizing:border-box;font-family:inherit;min-height:160px;"></textarea>
+              style="flex:1;width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;resize:vertical;box-sizing:border-box;font-family:inherit;min-height:160px;"></textarea>
           <p style="font-size:0.7rem;color:#555;margin:5px 0 0;">Preview updates as you type</p>
         </div>
         <div style="border-top:1px solid #222;padding-top:14px;">
@@ -5399,7 +5402,7 @@
             <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#666;">To:</span><span id="clSendModalTo" style="color:#f0ebe4;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:170px;"></span></div>
             <div style="display:flex;justify-content:space-between;gap:8px;"><span style="color:#666;flex-shrink:0;">Subject:</span><span style="color:#aaa;text-align:right;font-size:0.73rem;">Your custom order from Heart of Texas Organics 🌿</span></div>
           </div>
-          <button id="clSendModalBtn" onclick="clDoSendEmail()"
+          <button id="clSendModalBtn"
             style="width:100%;padding:11px;background:#2C3E2D;color:#f0ebe4;border:1px solid #3a5a3c;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;">
             &#9993; Send Email
           </button>

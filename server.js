@@ -3019,7 +3019,8 @@ app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async 
       total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
     });
 
-    await sendEmailTo(cart.email, 'Your custom order from Heart of Texas Organics 🌿', html);
+    const subject = (req.body?.subject || '').trim() || cart.subject || 'Your custom order from Heart of Texas Organics 🌿';
+    await sendEmailTo(cart.email, subject, html);
     await updatePendingCartDB(cart.token, {
       remindersSent:  (cart.remindersSent || 0) + 1,
       lastReminderAt: new Date().toISOString(),
@@ -3129,7 +3130,7 @@ app.patch('/admin/cart-links/:token', requireAdmin, express.json(), async (req, 
   try {
     const cart = await getPendingCartDB(req.params.token);
     if (!cart) return res.status(404).json({ error: 'Cart link not found' });
-    const allowed = ['note', 'email', 'name', 'phone', 'source'];
+    const allowed = ['note', 'email', 'name', 'phone', 'source', 'subject'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     await updatePendingCartDB(req.params.token, updates);

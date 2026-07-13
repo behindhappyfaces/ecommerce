@@ -4691,7 +4691,7 @@
       <td style="white-space:nowrap;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy Link</button>
         <a class="btn-sm btn-ghost" href="${escCartLink(c.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">View Cart</a>
-        <button class="btn-sm btn-ghost" data-action="send-modal" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" data-customer-email="${(c.email || '').replace(/"/g,'&quot;')}" data-note="${(c.note || '').replace(/"/g,'&quot;')}">${c.remindersSent ? 'Resend' : 'Send Email'}</button>
+        <button class="btn-sm btn-ghost" data-action="send-modal" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" data-customer-email="${(c.email || '').replace(/"/g,'&quot;')}" data-note="${(c.note || '').replace(/"/g,'&quot;')}" data-subject="${(c.subject || '').replace(/"/g,'&quot;')}">${c.remindersSent ? 'Resend' : 'Send Email'}</button>
         <button class="btn-sm btn-ghost" data-action="preview" data-token="${c.token}" title="Preview email">Preview</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
         ${markPaidBtn}
@@ -4725,7 +4725,8 @@
       const custName  = triggerBtn?.dataset.customerName || '';
       const custEmail = triggerBtn?.dataset.customerEmail || '';
       const note      = triggerBtn?.dataset.note || '';
-      clOpenSendModal(token, custName, custEmail, note, sentCount);
+      const subject   = triggerBtn?.dataset.subject || '';
+      clOpenSendModal(token, custName, custEmail, note, sentCount, subject);
       return;
     }
     if (action === 'mark-paid') {
@@ -4766,13 +4767,16 @@
   let _clSendToken = null;
   let _clPreviewTimer = null;
 
-  function clOpenSendModal(token, name, email, note, sentCount) {
+  const DEFAULT_SUBJECT = 'Your custom order from Heart of Texas Organics 🌿';
+
+  function clOpenSendModal(token, name, email, note, sentCount, subject) {
     _clSendToken = token;
     document.getElementById('clSendModalSubtitle').textContent =
       sentCount ? `Resending to ${name || email} · sent ${sentCount}x before` : `Draft for ${name || email || 'customer'}`;
     document.getElementById('clSendModalTo').textContent = email || '(no email on file)';
     document.getElementById('clSendModalEmail').value = email || '';
     document.getElementById('clSendModalNote').value = note || '';
+    document.getElementById('clSendModalSubject').value = subject || DEFAULT_SUBJECT;
     document.getElementById('clSendModalMsg').style.display = 'none';
     document.getElementById('clSendModalBtn').disabled = false;
     document.getElementById('clSendModalBtn').textContent = '✉ Send Email';
@@ -4815,10 +4819,11 @@
 
   async function clDoSendEmail() {
     if (!_clSendToken) return;
-    const email = document.getElementById('clSendModalEmail').value.trim();
-    const note  = document.getElementById('clSendModalNote').value.trim();
-    const msgEl = document.getElementById('clSendModalMsg');
-    const btn   = document.getElementById('clSendModalBtn');
+    const email   = document.getElementById('clSendModalEmail').value.trim();
+    const note    = document.getElementById('clSendModalNote').value.trim();
+    const subject = document.getElementById('clSendModalSubject').value.trim() || DEFAULT_SUBJECT;
+    const msgEl   = document.getElementById('clSendModalMsg');
+    const btn     = document.getElementById('clSendModalBtn');
     if (!email) {
       msgEl.style.cssText = 'display:block;color:#e07a5f;font-size:0.78rem;margin:10px 0 0;text-align:center;';
       msgEl.textContent = '⚠ Enter a customer email first.';
@@ -4829,9 +4834,13 @@
     try {
       await fetch(`/admin/cart-links/${_clSendToken}`, {
         method: 'PATCH', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, note }),
+        body: JSON.stringify({ email, note, subject }),
       });
-      const res  = await fetch(`/admin/cart-links/${_clSendToken}/resend`, { method: 'POST', headers: authHeaders() });
+      const res  = await fetch(`/admin/cart-links/${_clSendToken}/resend`, {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject }),
+      });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Send failed');
       msgEl.style.cssText = 'display:block;color:#6fcf97;font-size:0.82rem;margin:10px 0 0;text-align:center;';
@@ -5402,8 +5411,15 @@
         </div>
         <div style="border-top:1px solid #222;padding-top:14px;">
           <div style="background:#111;border:1px solid #222;border-radius:7px;padding:10px;font-size:0.77rem;margin-bottom:14px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#666;">To:</span><span id="clSendModalTo" style="color:#f0ebe4;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:170px;"></span></div>
-            <div style="display:flex;justify-content:space-between;gap:8px;"><span style="color:#666;flex-shrink:0;">Subject:</span><span style="color:#aaa;text-align:right;font-size:0.73rem;">Your custom order from Heart of Texas Organics 🌿</span></div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span style="color:#666;flex-shrink:0;">To:</span>
+              <span id="clSendModalTo" style="color:#f0ebe4;font-weight:600;overflow:hidden;text-overflow:ellipsis;"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="color:#666;flex-shrink:0;">Subject:</span>
+              <input id="clSendModalSubject" type="text"
+                style="flex:1;padding:4px 7px;background:#1a1a1a;border:1px solid #333;border-radius:5px;color:#f0ebe4;font-size:0.77rem;font-family:inherit;min-width:0;">
+            </div>
           </div>
           <button id="clSendModalBtn"
             style="width:100%;padding:11px;background:#2C3E2D;color:#f0ebe4;border:1px solid #3a5a3c;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;">

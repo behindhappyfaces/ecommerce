@@ -3137,7 +3137,7 @@ app.patch('/admin/cart-links/:token', requireAdmin, express.json(), async (req, 
   try {
     const cart = await getPendingCartDB(req.params.token);
     if (!cart) return res.status(404).json({ error: 'Cart link not found' });
-    const allowed = ['note', 'email', 'name', 'phone', 'source', 'subject'];
+    const allowed = ['note', 'email', 'name', 'phone', 'source', 'subject', 'items', 'discount'];
     const updates = {};
     allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
     await updatePendingCartDB(req.params.token, updates);

@@ -4391,6 +4391,84 @@
     document.getElementById('panel-cart-links').addEventListener('change', saveDraft);
     loadDraft();
 
+    // ── Edit existing cart link ─────────────────────────────────────────────
+    let _editingCartToken = null;
+
+    window._clLoadCartIntoForm = function(cart) {
+      _editingCartToken = cart.token;
+
+      // Uncheck all standard rows and reset to defaults
+      [...tbody.querySelectorAll('tr')].forEach(tr => {
+        const id = tr.dataset.rowId;
+        if (!id) return;
+        const cb = tr.querySelector('[data-id]');
+        if (cb) cb.checked = false;
+      });
+
+      // Remove any existing custom rows (not saved rows)
+      [...tbody.querySelectorAll('tr[data-row-id^="custom-"]')].forEach(tr => tr.remove());
+
+      // Apply each item from the cart
+      (cart.items || []).forEach(item => {
+        const cb = tbody.querySelector(`[data-id="${item.id}"]`);
+        if (cb) {
+          cb.checked = true;
+          const tr = cb.closest('tr');
+          const nameInp = tr.querySelector(`[data-name-for="${item.id}"]`);
+          const qtyInp  = tr.querySelector(`[data-qty-for="${item.id}"]`);
+          const priceInp= tr.querySelector(`[data-price-for="${item.id}"]`);
+          const freeCb  = tr.querySelector(`[data-free-for="${item.id}"]`);
+          const taxCb   = tr.querySelector(`[data-taxable-for="${item.id}"]`);
+          if (nameInp)  nameInp.value  = item.name || nameInp.value;
+          if (qtyInp)   qtyInp.value   = item.quantity || 1;
+          if (priceInp) priceInp.value = item.price ? (item.price / 100).toFixed(2) : '';
+          if (freeCb)   freeCb.checked = !!item.free;
+          if (taxCb)    taxCb.checked  = !!item.taxable;
+        } else {
+          // Custom item — add a new row pre-checked
+          customCounter++;
+          const newId = 'custom-' + customCounter;
+          addRow(newId, item.name, item.price || 0, true);
+          const newCb = tbody.querySelector(`[data-id="${newId}"]`);
+          if (newCb) {
+            newCb.checked = true;
+            const newTr   = newCb.closest('tr');
+            const qtyInp  = newTr.querySelector(`[data-qty-for="${newId}"]`);
+            const freeCb  = newTr.querySelector(`[data-free-for="${newId}"]`);
+            const taxCb   = newTr.querySelector(`[data-taxable-for="${newId}"]`);
+            if (qtyInp)  qtyInp.value  = item.quantity || 1;
+            if (freeCb)  freeCb.checked = !!item.free;
+            if (taxCb)   taxCb.checked  = !!item.taxable;
+          }
+        }
+      });
+
+      // Discount
+      const d = cart.discount;
+      document.getElementById('cl-discount-amount').value = d ? d.amount : '';
+      document.getElementById('cl-discount-type').value   = d ? (d.type || 'percent') : 'percent';
+      document.getElementById('cl-discount-label').value  = d ? (d.label || '') : '';
+
+      // Customer info + note
+      document.getElementById('cl-cust-name').value  = cart.name  || '';
+      document.getElementById('cl-cust-email').value = cart.email || '';
+      document.getElementById('cl-cust-phone').value = cart.phone || '';
+      document.getElementById('cl-source').value     = cart.source || '';
+      document.getElementById('cl-note').value       = cart.note  || '';
+
+      // Update button label and show an editing banner
+      const genBtn = document.getElementById('cl-generate');
+      genBtn.textContent = 'Save Changes to Cart Link';
+      genBtn.style.background = '#7a5a2a';
+
+      document.getElementById('cl-result').style.display = 'none';
+
+      // Scroll to form
+      document.getElementById('cl-generate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const panel = document.getElementById('panel-cart-links');
+      panel.scrollTop = 0;
+    };
+
     document.getElementById('cl-generate').addEventListener('click', async () => {
       const checked = [...document.querySelectorAll('#cl-product-rows input[type=checkbox][data-id]:checked')];
       if (!checked.length) { alert('Select at least one item.'); return; }
@@ -4428,6 +4506,29 @@
       const custEmail  = document.getElementById('cl-cust-email').value.trim();
       const custPhone  = document.getElementById('cl-cust-phone').value.trim();
       const custSource = document.getElementById('cl-source').value;
+
+      // If editing an existing cart link, PATCH it instead of creating a new one
+      if (_editingCartToken) {
+        try {
+          const res = await fetch(`/admin/cart-links/${_editingCartToken}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
+            body: JSON.stringify({ items, note, discount, name: custName, email: custEmail, phone: custPhone, source: custSource }),
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || 'Failed');
+          _editingCartToken = null;
+          btn.textContent = 'Generate Cart Link'; btn.disabled = false;
+          btn.style.background = '';
+          loadCartLinks();
+          showToast('Cart link updated!');
+          document.getElementById('cl-result').style.display = 'none';
+        } catch (e) {
+          btn.textContent = 'Save Changes to Cart Link'; btn.disabled = false;
+          showToast('Update failed: ' + e.message, true);
+        }
+        return;
+      }
 
       try {
         const body = { items, note, subscription: isSub, subPrice, discount, taxRate, custName, custEmail, custPhone, custSource };
@@ -4627,12 +4728,15 @@
   // ── SENT CART LINKS — view, resend, duplicate ───────────────────────────────
   function escCartLink(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  let _cartLinkCache = {};
+
   async function loadCartLinks() {
     const tbody = document.getElementById('cl-list-body');
     tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Loading…</td></tr>';
     try {
       const res = await fetch('/admin/cart-links', { headers: authHeaders() });
       const links = await res.json();
+      links.forEach(c => { _cartLinkCache[c.token] = c; });
       if (!Array.isArray(links) || !links.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No cart links sent yet.</td></tr>';
         return;
@@ -4718,6 +4822,7 @@
       <td style="white-space:nowrap;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy Link</button>
         <a class="btn-sm btn-ghost" href="${escCartLink(c.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">View Cart</a>
+        <button class="btn-sm btn-ghost" data-action="edit-cart" data-token="${c.token}" title="Edit items and discount">&#9998; Edit Cart</button>
         <button class="btn-sm btn-ghost" data-action="send-modal" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" data-customer-email="${(c.email || '').replace(/"/g,'&quot;')}" data-note="${(c.note || '').replace(/"/g,'&quot;')}" data-subject="${(c.subject || '').replace(/"/g,'&quot;')}" title="Open email composer — no email sent until you click Send inside">&#9998; Compose</button>
         <button class="btn-sm btn-ghost" data-action="preview" data-token="${c.token}" title="Preview email">Preview</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
@@ -4747,6 +4852,12 @@
         if (win) setTimeout(() => URL.revokeObjectURL(url), 5000);
         else showToast('Allow popups to preview the email', true);
       } catch (e) { showToast('Preview failed', true); }
+      return;
+    }
+    if (action === 'edit-cart') {
+      const cart = _cartLinkCache[token];
+      if (!cart) { showToast('Could not load cart data — try refreshing', true); return; }
+      if (window._clLoadCartIntoForm) window._clLoadCartIntoForm(cart);
       return;
     }
     if (action === 'toggle-history') {

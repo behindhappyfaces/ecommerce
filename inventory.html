@@ -4161,12 +4161,25 @@
       freeTd.appendChild(freeCb);
 
       const removeTd = document.createElement('td');
+      removeTd.style.cssText = 'white-space:nowrap;';
       if (isCustom) {
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = '💾';
+        saveBtn.title = 'Save this item for future cart links';
+        saveBtn.style.cssText = 'background:none;border:none;color:#8db88f;font-size:0.85rem;cursor:pointer;padding:2px 4px;';
+        saveBtn.onclick = () => {
+          const name  = tr.querySelector(`[data-name-for="${id}"]`)?.value.trim();
+          const price = parseFloat(tr.querySelector(`[data-price-for="${id}"]`)?.value || '0');
+          if (!name) { showToast('Enter an item name first', true); return; }
+          clSaveCustomProduct(name, Math.round(price * 100));
+          showToast(`"${name}" saved — it will appear next time you open this page`);
+        };
         const removeBtn = document.createElement('button');
         removeBtn.textContent = '×';
         removeBtn.title = 'Remove row';
         removeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:2px 6px;';
         removeBtn.onclick = () => { tr.remove(); saveDraft(); };
+        removeTd.appendChild(saveBtn);
         removeTd.appendChild(removeBtn);
       }
 
@@ -4180,6 +4193,84 @@
     }
 
     CART_PRODUCTS.forEach(p => addRow(p.id, p.name, p.price, false));
+
+    // Saved custom products — persisted in localStorage
+    function clGetSavedProducts() {
+      try { return JSON.parse(localStorage.getItem('cl_saved_products') || '[]'); } catch { return []; }
+    }
+    function clSetSavedProducts(arr) {
+      localStorage.setItem('cl_saved_products', JSON.stringify(arr));
+    }
+    function clSaveCustomProduct(name, priceCents) {
+      const saved = clGetSavedProducts();
+      if (saved.find(p => p.name.toLowerCase() === name.toLowerCase())) return; // no dupe
+      saved.push({ id: 'saved-' + Date.now(), name, price: priceCents });
+      clSetSavedProducts(saved);
+    }
+    function clDeleteSavedProduct(id) {
+      clSetSavedProducts(clGetSavedProducts().filter(p => p.id !== id));
+    }
+
+    function addSavedRow(p) {
+      const tr = document.createElement('tr');
+      tr.dataset.rowId = p.id;
+      const nameInp = document.createElement('input');
+      nameInp.type = 'text'; nameInp.value = p.name; nameInp.placeholder = 'Item name';
+      nameInp.style.cssText = INP + 'width:100%;min-width:140px;';
+      nameInp.dataset.nameFor = p.id;
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.dataset.id = p.id;
+      cb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);flex-shrink:0;';
+
+      const badge = document.createElement('span');
+      badge.textContent = '★';
+      badge.title = 'Saved item';
+      badge.style.cssText = 'color:#d4a96a;font-size:0.7rem;flex-shrink:0;';
+
+      const nameTd = document.createElement('td');
+      nameTd.style.cssText = 'display:flex;align-items:center;gap:6px;';
+      nameTd.appendChild(cb); nameTd.appendChild(badge); nameTd.appendChild(nameInp);
+
+      const qtyInp = document.createElement('input');
+      qtyInp.type = 'number'; qtyInp.min = 1; qtyInp.max = 99; qtyInp.value = 1;
+      qtyInp.dataset.qtyFor = p.id; qtyInp.style.cssText = INP + 'width:56px;';
+      const qtyTd = document.createElement('td'); qtyTd.appendChild(qtyInp);
+
+      const priceInp = document.createElement('input');
+      priceInp.type = 'number'; priceInp.min = 0; priceInp.step = '0.01';
+      priceInp.value = p.price ? (p.price / 100).toFixed(2) : '';
+      priceInp.placeholder = 'e.g. 25.00'; priceInp.dataset.priceFor = p.id;
+      priceInp.style.cssText = INP + 'width:90px;';
+      const priceTd = document.createElement('td'); priceTd.appendChild(priceInp);
+
+      const taxCb = document.createElement('input');
+      taxCb.type = 'checkbox'; taxCb.dataset.taxableFor = p.id;
+      taxCb.checked = !!document.getElementById('cl-tax-enable')?.checked;
+      taxCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
+      const taxTd = document.createElement('td'); taxTd.style.cssText = 'text-align:center;'; taxTd.appendChild(taxCb);
+
+      const freeCb = document.createElement('input');
+      freeCb.type = 'checkbox'; freeCb.dataset.freeFor = p.id;
+      freeCb.style.cssText = 'width:16px;height:16px;accent-color:var(--terra);';
+      const freeTd = document.createElement('td'); freeTd.style.cssText = 'text-align:center;'; freeTd.appendChild(freeCb);
+
+      const removeTd = document.createElement('td');
+      removeTd.style.cssText = 'white-space:nowrap;';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '🗑';
+      deleteBtn.title = 'Remove from saved items';
+      deleteBtn.style.cssText = 'background:none;border:none;color:#c05050;font-size:0.85rem;cursor:pointer;padding:2px 6px;';
+      deleteBtn.onclick = () => { clDeleteSavedProduct(p.id); tr.remove(); saveDraft(); };
+      removeTd.appendChild(deleteBtn);
+
+      tr.appendChild(nameTd); tr.appendChild(qtyTd); tr.appendChild(priceTd);
+      tr.appendChild(taxTd); tr.appendChild(freeTd); tr.appendChild(removeTd);
+      tbody.appendChild(tr);
+    }
+
+    // Load saved products into the table
+    clGetSavedProducts().forEach(p => addSavedRow(p));
 
     let customCounter = 0;
     document.getElementById('cl-add-custom').addEventListener('click', () => {

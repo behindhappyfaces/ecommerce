@@ -2956,13 +2956,16 @@ app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req
       try {
         const existing = await getPendingCartDB(token);
         if (existing) {
+          const sentAt2 = new Date().toISOString();
+          const histEntry = { sentAt: sentAt2, subject: 'Your custom order from Heart of Texas Organics 🌿', note: note || '', toEmail: to };
           await updatePendingCartDB(token, {
             name:           name  || existing.name  || '',
             email:          to,
             phone:          phone || existing.phone || null,
             source:         source || existing.source || '',
             remindersSent:  (existing.remindersSent || 0) + 1,
-            lastReminderAt: new Date().toISOString(),
+            lastReminderAt: sentAt2,
+            sentHistory:    [...(existing.sentHistory || []), histEntry],
           });
         }
       } catch (pcErr) {
@@ -3020,10 +3023,14 @@ app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async 
     });
 
     const subject = (req.body?.subject || '').trim() || cart.subject || 'Your custom order from Heart of Texas Organics 🌿';
+    const sentAt  = new Date().toISOString();
     await sendEmailTo(cart.email, subject, html);
+
+    const historyEntry = { sentAt, subject, note: cart.note || '', toEmail: cart.email };
     await updatePendingCartDB(cart.token, {
       remindersSent:  (cart.remindersSent || 0) + 1,
-      lastReminderAt: new Date().toISOString(),
+      lastReminderAt: sentAt,
+      sentHistory:    [...(cart.sentHistory || []), historyEntry],
     });
     res.json({ ok: true });
   } catch (e) {

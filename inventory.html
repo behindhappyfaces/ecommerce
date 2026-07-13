@@ -4681,6 +4681,33 @@
     const markPaidBtn = !c.completed
       ? `<button class="btn-sm" style="background:#1a3a1a;color:#6fcf97;border:1px solid #2a5a2a;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.75rem;" data-action="mark-paid" data-token="${c.token}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}">&#10003; Mark Paid</button>`
       : '';
+
+    const history = c.sentHistory || [];
+    const historyId = 'cl-hist-' + c.token;
+    const histBtn = history.length
+      ? `<button class="btn-sm btn-ghost" data-action="toggle-history" data-target="${historyId}" title="View sent copies">&#128203; History (${history.length})</button>`
+      : '';
+    const histRows = history.map((h, idx) => {
+      const dt = h.sentAt ? new Date(h.sentAt).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true }) : '—';
+      const notePreview = h.note ? escCartLink(h.note).substring(0, 80) + (h.note.length > 80 ? '…' : '') : '<em style="color:#555;">No personal note</em>';
+      return `<div style="padding:10px 14px;border-bottom:1px solid #1a1a1a;display:flex;gap:14px;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.76rem;color:#8db88f;font-weight:700;margin-bottom:2px;">&#10003; Sent ${dt}</div>
+          <div style="font-size:0.73rem;color:#888;margin-bottom:2px;">To: ${escCartLink(h.toEmail || '—')} &nbsp;·&nbsp; Subject: <em>${escCartLink(h.subject || 'Your custom order…')}</em></div>
+          <div style="font-size:0.73rem;color:#aaa;">${notePreview}</div>
+        </div>
+        <button class="btn-sm btn-ghost" style="flex-shrink:0;font-size:0.72rem;" data-action="preview-history" data-token="${c.token}" data-note="${(h.note||'').replace(/"/g,'&quot;')}" data-subject="${(h.subject||'').replace(/"/g,'&quot;')}">Preview</button>
+      </div>`;
+    }).join('');
+    const historyPanel = history.length ? `<tr id="${historyId}" style="display:none;">
+      <td colspan="7" style="padding:0;background:#111;border-top:1px solid #2a3a2a;">
+        <div style="border-left:3px solid #3a5a3c;">
+          <div style="padding:8px 14px;background:#0d1a0e;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5a8a5c;">Send History</div>
+          ${histRows}
+        </div>
+      </td>
+    </tr>` : '';
+
     return `<tr>
       <td><input type="checkbox" class="cl-row-cb" data-token="${c.token}" style="cursor:pointer;accent-color:var(--terra);"></td>
       <td>${custLine}</td>
@@ -4695,9 +4722,11 @@
         <button class="btn-sm btn-ghost" data-action="preview" data-token="${c.token}" title="Preview email">Preview</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
         ${markPaidBtn}
+        ${histBtn}
         <button class="btn-sm" style="background:#5a1a1a;color:#f4a261;border:1px solid #8b2222;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.75rem;" data-action="delete" data-token="${c.token}">Delete</button>
       </td>
-    </tr>`;
+    </tr>
+    ${historyPanel}`;
   }
 
   async function handleCartLinkAction(action, token, triggerBtn) {
@@ -4717,6 +4746,35 @@
         const win = window.open(url, '_blank');
         if (win) setTimeout(() => URL.revokeObjectURL(url), 5000);
         else showToast('Allow popups to preview the email', true);
+      } catch (e) { showToast('Preview failed', true); }
+      return;
+    }
+    if (action === 'toggle-history') {
+      const row = document.getElementById(triggerBtn.dataset.target);
+      if (!row) return;
+      const isOpen = row.style.display !== 'none';
+      row.style.display = isOpen ? 'none' : 'table-row';
+      triggerBtn.style.color = isOpen ? '' : '#6fcf97';
+      return;
+    }
+    if (action === 'preview-history') {
+      const note    = triggerBtn.dataset.note    || '';
+      const subject = triggerBtn.dataset.subject || '';
+      try {
+        const res = await fetch(`/admin/cart-links/${token}/preview`, {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note }),
+        });
+        if (!res.ok) { showToast('Preview failed', true); return; }
+        const html = await res.text();
+        const label = `<div style="background:#2C3E2D;color:#F5F0E8;padding:10px 16px;font-size:13px;font-family:sans-serif;">
+          &#128203; <strong>Sent copy</strong> &mdash; Subject: <em>${subject.replace(/</g,'&lt;')}</em></div>`;
+        const blob = new Blob([label + html], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const win  = window.open(url, '_blank');
+        if (win) setTimeout(() => URL.revokeObjectURL(url), 5000);
+        else showToast('Allow popups to preview', true);
       } catch (e) { showToast('Preview failed', true); }
       return;
     }

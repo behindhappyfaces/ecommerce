@@ -4691,7 +4691,7 @@
       <td style="white-space:nowrap;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy Link</button>
         <a class="btn-sm btn-ghost" href="${escCartLink(c.url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">View Cart</a>
-        <button class="btn-sm btn-ghost" data-action="send-modal" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" data-customer-email="${(c.email || '').replace(/"/g,'&quot;')}" data-note="${(c.note || '').replace(/"/g,'&quot;')}" data-subject="${(c.subject || '').replace(/"/g,'&quot;')}">${c.remindersSent ? 'Resend' : 'Send Email'}</button>
+        <button class="btn-sm btn-ghost" data-action="send-modal" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" data-customer-email="${(c.email || '').replace(/"/g,'&quot;')}" data-note="${(c.note || '').replace(/"/g,'&quot;')}" data-subject="${(c.subject || '').replace(/"/g,'&quot;')}" title="Open email composer — no email sent until you click Send inside">&#9998; Compose</button>
         <button class="btn-sm btn-ghost" data-action="preview" data-token="${c.token}" title="Preview email">Preview</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
         ${markPaidBtn}
@@ -5386,8 +5386,9 @@
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#1e2e1f,#2C3E2D);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
-        <p style="font-size:1rem;font-weight:700;color:#f0ebe4;margin:0;">&#9993; Compose &amp; Preview Email</p>
+        <p style="font-size:1rem;font-weight:700;color:#f0ebe4;margin:0;">&#9998; Compose Email</p>
         <p id="clSendModalSubtitle" style="font-size:0.75rem;color:#8db88f;margin:2px 0 0;"></p>
+        <p style="font-size:0.72rem;color:#f2994a;margin:4px 0 0;font-weight:600;">&#9888; No email sent yet &mdash; review below, then click Send Email to deliver.</p>
       </div>
       <button id="clSendModalClose" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#f0ebe4;font-size:1rem;cursor:pointer;padding:5px 11px;border-radius:7px;flex-shrink:0;">&#x2715; Close</button>
     </div>
@@ -5422,8 +5423,8 @@
             </div>
           </div>
           <button id="clSendModalBtn"
-            style="width:100%;padding:11px;background:#2C3E2D;color:#f0ebe4;border:1px solid #3a5a3c;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;">
-            &#9993; Send Email
+            style="width:100%;padding:11px;background:#8B4A2F;color:#fff;border:1px solid #a05030;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;">
+            &#9993; Send Email to Customer
           </button>
           <p id="clSendModalMsg" style="font-size:0.78rem;margin:10px 0 0;display:none;text-align:center;"></p>
         </div>

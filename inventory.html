@@ -4847,13 +4847,16 @@
 
   async function clDoPreview() { clRefreshPreview(); }
 
-  // Wire modal buttons — must be after all function declarations
-  document.getElementById('clSendModal').addEventListener('click', function(e) {
-    if (e.target === this) clCloseSendModal();
+  // Wire modal via event delegation — modal HTML lives after the script tag so
+  // getElementById returns null during IIFE execution; delegation on document works.
+  document.addEventListener('click', function(e) {
+    if (e.target.id === 'clSendModalClose' || e.target.closest?.('#clSendModalClose')) { clCloseSendModal(); return; }
+    if (e.target.id === 'clSendModalBtn'   || e.target.closest?.('#clSendModalBtn'))   { clDoSendEmail();   return; }
+    if (e.target.id === 'clSendModal') { clCloseSendModal(); return; }
   });
-  document.getElementById('clSendModalClose').addEventListener('click', clCloseSendModal);
-  document.getElementById('clSendModalBtn').addEventListener('click', clDoSendEmail);
-  document.getElementById('clSendModalNote').addEventListener('input', clSchedulePreviewRefresh);
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'clSendModalNote') clSchedulePreviewRefresh();
+  });
 
   // ── CHARGE CUSTOMER (phone / MOTO payments) ─────────────────────────────
   let chStripe = null, chCard = null, chReady = false, chInitialized = false;

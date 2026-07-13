@@ -2867,10 +2867,10 @@ function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl })
         <!-- Body -->
         <tr><td style="padding:32px 36px;">
           <p style="margin:0 0 16px;font-size:16px;color:#2C3E2D;">${greeting}</p>
+          ${noteBlock}
           <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">
             Review your items below and click the button to complete your purchase — it only takes a minute!
           </p>
-          ${noteBlock}
           <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.8;">
             ~Deborah<br>
             Head Hen in Charge<br>

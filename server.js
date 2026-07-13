@@ -3016,10 +3016,11 @@ app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async 
       qty: 'x' + (i.quantity || 1),
       price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
     }));
-    const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+    const subtotal = cartSubtotalCents(cart.items);
+    const total    = applyCartDiscount(subtotal, cart.discount);
     const html = cartLinkEmailHtml({
       name: cart.name, note: cart.note, items: itemRows,
-      total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
+      total: '$' + (total / 100).toFixed(2), discount: cart.discount, cartUrl,
     });
 
     const subject = (req.body?.subject || '').trim() || cart.subject || 'Your custom order from Heart of Texas Organics 🌿';
@@ -3057,9 +3058,19 @@ app.delete('/admin/cart-links/:token', requireAdmin, async (req, res) => {
   }
 });
 
+function cartSubtotalCents(items) {
+  return (items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+}
+
+function applyCartDiscount(subtotalCents, discount) {
+  if (!discount || !discount.amount) return subtotalCents;
+  if (discount.type === 'percent') return Math.round(subtotalCents * (1 - discount.amount / 100));
+  if (discount.type === 'fixed')   return Math.max(0, subtotalCents - Math.round(discount.amount * 100));
+  return subtotalCents;
+}
+
 // Preview the email HTML for a cart link — auth via Authorization header only (no query param)
 function buildCartPreviewHtml(cart, noteOverride) {
-  const escHtml = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
   const cartUrl = `${siteUrl}/offerings.html?rc=${cart.token}`;
   const itemRows = (cart.items || []).map(i => ({
@@ -3067,11 +3078,12 @@ function buildCartPreviewHtml(cart, noteOverride) {
     qty: 'x' + (i.quantity || 1),
     price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
   }));
-  const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+  const subtotal = cartSubtotalCents(cart.items);
+  const total    = applyCartDiscount(subtotal, cart.discount);
   const note = noteOverride !== undefined ? noteOverride : cart.note;
   const emailHtml = cartLinkEmailHtml({
     name: cart.name, note, items: itemRows,
-    total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
+    total: '$' + (total / 100).toFixed(2), discount: cart.discount, cartUrl,
   });
   return emailHtml;
 }

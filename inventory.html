@@ -4671,13 +4671,14 @@
     }
   }
 
-  // ── CART LINK SEND MODAL ────────────────────────────────────────────────
+  // ── CART LINK COMPOSE + PREVIEW MODAL ───────────────────────────────────
   let _clSendToken = null;
+  let _clPreviewTimer = null;
 
   function clOpenSendModal(token, name, email, note, sentCount) {
     _clSendToken = token;
     document.getElementById('clSendModalSubtitle').textContent =
-      sentCount ? `Sending to ${name || email} · sent ${sentCount}x already` : `First send to ${name || email || 'customer'}`;
+      sentCount ? `Resending to ${name || email} · sent ${sentCount}x before` : `Draft for ${name || email || 'customer'}`;
     document.getElementById('clSendModalTo').textContent = email || '(no email on file)';
     document.getElementById('clSendModalEmail').value = email || '';
     document.getElementById('clSendModalNote').value = note || '';
@@ -4685,10 +4686,12 @@
     document.getElementById('clSendModalBtn').disabled = false;
     document.getElementById('clSendModalBtn').textContent = '✉ Send Email';
     document.getElementById('clSendModal').style.display = 'flex';
+    clRefreshPreview();
   }
 
   function clCloseSendModal() {
     document.getElementById('clSendModal').style.display = 'none';
+    clearTimeout(_clPreviewTimer);
     _clSendToken = null;
   }
 
@@ -4696,58 +4699,66 @@
     if (e.target === this) clCloseSendModal();
   });
 
+  function clSchedulePreviewRefresh() {
+    const statusEl = document.getElementById('clPreviewStatus');
+    statusEl.textContent = 'updating…';
+    clearTimeout(_clPreviewTimer);
+    _clPreviewTimer = setTimeout(clRefreshPreview, 700);
+  }
+
+  async function clRefreshPreview() {
+    if (!_clSendToken) return;
+    const note = document.getElementById('clSendModalNote').value;
+    const statusEl = document.getElementById('clPreviewStatus');
+    statusEl.textContent = 'loading…';
+    try {
+      const res = await fetch(`/admin/cart-links/${_clSendToken}/preview`, {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note }),
+      });
+      if (!res.ok) { statusEl.textContent = 'preview error'; return; }
+      const html = await res.text();
+      const frame = document.getElementById('clPreviewFrame');
+      frame.srcdoc = html;
+      statusEl.textContent = 'up to date';
+      setTimeout(() => { if (statusEl.textContent === 'up to date') statusEl.textContent = ''; }, 2000);
+    } catch (e) { statusEl.textContent = 'preview error'; }
+  }
+
   async function clDoSendEmail() {
     if (!_clSendToken) return;
     const email = document.getElementById('clSendModalEmail').value.trim();
     const note  = document.getElementById('clSendModalNote').value.trim();
     const msgEl = document.getElementById('clSendModalMsg');
     const btn   = document.getElementById('clSendModalBtn');
-    if (!email) { msgEl.style.cssText = 'display:block;color:#e07a5f;font-size:0.78rem;margin:10px 0 0;'; msgEl.textContent = '⚠ Enter a customer email first.'; return; }
+    if (!email) {
+      msgEl.style.cssText = 'display:block;color:#e07a5f;font-size:0.78rem;margin:10px 0 0;text-align:center;';
+      msgEl.textContent = '⚠ Enter a customer email first.';
+      return;
+    }
     btn.disabled = true; btn.textContent = 'Sending…';
     msgEl.style.display = 'none';
     try {
-      // Save any note/email edits back to the cart record first
       await fetch(`/admin/cart-links/${_clSendToken}`, {
         method: 'PATCH', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, note }),
       });
-      // Now resend (which uses the stored email + builds from stored items)
       const res  = await fetch(`/admin/cart-links/${_clSendToken}/resend`, { method: 'POST', headers: authHeaders() });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Send failed');
-      msgEl.style.cssText = 'display:block;color:#6fcf97;font-size:0.78rem;margin:10px 0 0;';
+      msgEl.style.cssText = 'display:block;color:#6fcf97;font-size:0.82rem;margin:10px 0 0;text-align:center;';
       msgEl.textContent = '✓ Email sent!';
       loadCartLinks();
-      setTimeout(clCloseSendModal, 1400);
+      setTimeout(clCloseSendModal, 1600);
     } catch (e) {
       btn.disabled = false; btn.textContent = '✉ Send Email';
-      msgEl.style.cssText = 'display:block;color:#e07a5f;font-size:0.78rem;margin:10px 0 0;';
+      msgEl.style.cssText = 'display:block;color:#e07a5f;font-size:0.78rem;margin:10px 0 0;text-align:center;';
       msgEl.textContent = '⚠ ' + (e.message || 'Send failed');
     }
   }
 
-  async function clDoPreview() {
-    if (!_clSendToken) return;
-    const email = document.getElementById('clSendModalEmail').value.trim();
-    const note  = document.getElementById('clSendModalNote').value.trim();
-    // Save edits first so the preview reflects the current note
-    if (email || note) {
-      await fetch(`/admin/cart-links/${_clSendToken}`, {
-        method: 'PATCH', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...(email ? { email } : {}), ...(note ? { note } : {}) }),
-      }).catch(() => {});
-    }
-    try {
-      const res = await fetch(`/admin/cart-links/${_clSendToken}/preview`, { headers: authHeaders() });
-      if (!res.ok) { showToast('Preview failed', true); return; }
-      const html = await res.text();
-      const blob = new Blob([html], { type: 'text/html' });
-      const url  = URL.createObjectURL(blob);
-      const win  = window.open(url, '_blank');
-      if (win) setTimeout(() => URL.revokeObjectURL(url), 5000);
-      else showToast('Allow popups to preview the email', true);
-    } catch (e) { showToast('Preview failed', true); }
-  }
+  async function clDoPreview() { clRefreshPreview(); }
 
   // ── CHARGE CUSTOMER (phone / MOTO payments) ─────────────────────────────
   let chStripe = null, chCard = null, chReady = false, chInitialized = false;
@@ -5262,36 +5273,56 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <!-- ── Lead Picker Modal ─────────────────────────────────────────────────── -->
-<!-- Send Email Modal — customize note + email before sending a cart link -->
-<div id="clSendModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9100;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#1a1a1a;border:1px solid #3a5a3c;border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,0.6);">
-    <div style="background:linear-gradient(135deg,#1e2e1f,#2C3E2D);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+<!-- Compose & Preview Modal — edit note, see live preview, send from one place -->
+<div id="clSendModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9100;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+  <div style="background:#161616;border:1px solid #3a5a3c;border-radius:14px;width:100%;max-width:960px;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,0.7);margin:auto;">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1e2e1f,#2C3E2D);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
-        <p style="font-size:1rem;font-weight:600;color:#f0ebe4;margin:0;">&#9993; Send Cart Link Email</p>
-        <p id="clSendModalSubtitle" style="font-size:0.76rem;color:#8db88f;margin:3px 0 0;"></p>
+        <p style="font-size:1rem;font-weight:700;color:#f0ebe4;margin:0;">&#9993; Compose &amp; Preview Email</p>
+        <p id="clSendModalSubtitle" style="font-size:0.75rem;color:#8db88f;margin:2px 0 0;"></p>
       </div>
-      <button onclick="clCloseSendModal()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:1.1rem;cursor:pointer;padding:4px 8px;">&#x2715;</button>
+      <button onclick="clCloseSendModal()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#f0ebe4;font-size:1rem;cursor:pointer;padding:5px 11px;border-radius:7px;flex-shrink:0;">&#x2715; Close</button>
     </div>
-    <div style="padding:20px;">
-      <div style="background:#111;border:1px solid #222;border-radius:8px;padding:12px;margin-bottom:16px;font-size:0.8rem;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="color:#888;">To:</span><span id="clSendModalTo" style="color:#f0ebe4;font-weight:600;"></span></div>
-        <div style="display:flex;justify-content:space-between;"><span style="color:#888;">Subject:</span><span style="color:#f0ebe4;">Your custom order from Heart of Texas Organics 🌿</span></div>
+    <!-- Two-column layout: compose left, preview right -->
+    <div style="display:flex;gap:0;min-height:520px;">
+      <!-- Left: compose panel -->
+      <div style="width:300px;flex-shrink:0;padding:20px;border-right:1px solid #2a2a2a;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="display:block;font-size:0.7rem;color:#888;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">Customer Email</label>
+          <input id="clSendModalEmail" type="email" placeholder="customer@email.com"
+            style="width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;">
+          <label style="display:block;font-size:0.7rem;color:#888;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">
+            Personal Note
+            <span style="color:#555;font-weight:400;text-transform:none;letter-spacing:0;"> — optional, shown in email</span>
+          </label>
+          <textarea id="clSendModalNote" rows="8" placeholder="e.g. Hi Ashlan! Everything is fresh from this week's harvest. So excited for you to try the sourdough!"
+            oninput="clSchedulePreviewRefresh()"
+            style="flex:1;width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;resize:vertical;box-sizing:border-box;font-family:inherit;min-height:160px;"></textarea>
+          <p style="font-size:0.7rem;color:#555;margin:5px 0 0;">Preview updates as you type</p>
+        </div>
+        <div style="border-top:1px solid #222;padding-top:14px;">
+          <div style="background:#111;border:1px solid #222;border-radius:7px;padding:10px;font-size:0.77rem;margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#666;">To:</span><span id="clSendModalTo" style="color:#f0ebe4;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:170px;"></span></div>
+            <div style="display:flex;justify-content:space-between;gap:8px;"><span style="color:#666;flex-shrink:0;">Subject:</span><span style="color:#aaa;text-align:right;font-size:0.73rem;">Your custom order from Heart of Texas Organics 🌿</span></div>
+          </div>
+          <button id="clSendModalBtn" onclick="clDoSendEmail()"
+            style="width:100%;padding:11px;background:#2C3E2D;color:#f0ebe4;border:1px solid #3a5a3c;border-radius:9px;font-size:0.92rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;">
+            &#9993; Send Email
+          </button>
+          <p id="clSendModalMsg" style="font-size:0.78rem;margin:10px 0 0;display:none;text-align:center;"></p>
+        </div>
       </div>
-      <div style="margin-bottom:6px;">
-        <label style="display:block;font-size:0.75rem;color:#aaa;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;">Customer Email</label>
-        <input id="clSendModalEmail" type="email" placeholder="customer@email.com"
-          style="width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+      <!-- Right: live preview -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+        <div style="padding:10px 16px;border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.72rem;color:#666;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Live Preview</span>
+          <span id="clPreviewStatus" style="font-size:0.72rem;color:#555;"></span>
+        </div>
+        <iframe id="clPreviewFrame" style="flex:1;border:none;background:#f4f0e8;min-height:460px;" sandbox="allow-same-origin"></iframe>
       </div>
-      <div style="margin-bottom:16px;">
-        <label style="display:block;font-size:0.75rem;color:#aaa;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;">Personal Note <span style="color:#555;font-weight:400;text-transform:none;">(optional)</span></label>
-        <textarea id="clSendModalNote" rows="3" placeholder="e.g. Hi Ashlan! Everything is fresh from this week's harvest…"
-          style="width:100%;padding:9px 11px;background:#111;border:1px solid #333;border-radius:7px;color:#f0ebe4;font-size:0.85rem;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button id="clSendModalBtn" onclick="clDoSendEmail()" style="flex:1;padding:10px;background:#2C3E2D;color:#f0ebe4;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;">&#9993; Send Email</button>
-        <button onclick="clDoPreview()" style="padding:10px 14px;background:#1a1a1a;color:#8db88f;border:1px solid #3a5a3c;border-radius:8px;font-size:0.85rem;cursor:pointer;">Preview</button>
-      </div>
-      <p id="clSendModalMsg" style="font-size:0.78rem;margin:10px 0 0;display:none;"></p>
     </div>
   </div>
 </div>

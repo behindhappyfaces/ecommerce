@@ -3050,26 +3050,34 @@ app.delete('/admin/cart-links/:token', requireAdmin, async (req, res) => {
 });
 
 // Preview the email HTML for a cart link — auth via Authorization header only (no query param)
-app.get('/admin/cart-links/:token/preview', requireAdmin, async (req, res) => {
+function buildCartPreviewHtml(cart, noteOverride) {
   const escHtml = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+  const cartUrl = `${siteUrl}/offerings.html?rc=${cart.token}`;
+  const itemRows = (cart.items || []).map(i => ({
+    name: i.name + (i.free ? ' (FREE)' : ''),
+    qty: 'x' + (i.quantity || 1),
+    price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
+  }));
+  const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+  const note = noteOverride !== undefined ? noteOverride : cart.note;
+  const emailHtml = cartLinkEmailHtml({
+    name: cart.name, note, items: itemRows,
+    total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
+  });
+  return emailHtml;
+}
+
+// GET — opens a standalone preview page (used for popups)
+app.get('/admin/cart-links/:token/preview', requireAdmin, async (req, res) => {
   try {
     const cart = await getPendingCartDB(req.params.token);
     if (!cart) return res.status(404).send('<h1>Cart link not found</h1>');
-    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
-    const cartUrl = `${siteUrl}/offerings.html?rc=${cart.token}`;
-    const itemRows = (cart.items || []).map(i => ({
-      name: i.name + (i.free ? ' (FREE)' : ''),
-      qty: 'x' + (i.quantity || 1),
-      price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
-    }));
-    const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
-    const html = cartLinkEmailHtml({
-      name: cart.name, note: cart.note, items: itemRows,
-      total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
-    });
+    const emailHtml = buildCartPreviewHtml(cart);
+    const escHtml = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const toLine = cart.email
       ? '&nbsp;&middot;&nbsp; To: <strong>' + escHtml(cart.email) + '</strong>'
-      : '&nbsp;&middot;&nbsp; <em style="color:#f2994a;">No email on file &mdash; add one before sending</em>';
+      : '&nbsp;&middot;&nbsp; <em style="color:#f2994a;">No email on file</em>';
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:;");
@@ -3081,11 +3089,25 @@ app.get('/admin/cart-links/:token/preview', requireAdmin, async (req, res) => {
         Subject: <em>Your custom order from Heart of Texas Organics</em>
         ${toLine}
       </div>
-      ${html}
+      ${emailHtml}
     </body></html>`);
   } catch (e) {
     console.error('[cart-link preview]', e.message);
     res.status(500).send('<h1>Preview failed</h1>');
+  }
+});
+
+// POST — returns just the rendered email body HTML with a live note override (does not save)
+app.post('/admin/cart-links/:token/preview', requireAdmin, express.json(), async (req, res) => {
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).json({ error: 'Not found' });
+    const emailHtml = buildCartPreviewHtml(cart, req.body.note);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(emailHtml);
+  } catch (e) {
+    console.error('[cart-link preview post]', e.message);
+    res.status(500).send('');
   }
 });
 

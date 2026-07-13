@@ -3049,11 +3049,9 @@ app.delete('/admin/cart-links/:token', requireAdmin, async (req, res) => {
   }
 });
 
-// Preview the email HTML for a cart link (opens in browser tab — auth via ?token= query param)
-app.get('/admin/cart-links/:token/preview', async (req, res) => {
-  const bearer = req.query.token || (req.headers.authorization || '').replace('Bearer ', '');
-  if (!bearer || bearer !== makeAdminToken()) return res.status(401).send('<h1>Not authenticated</h1>');
-
+// Preview the email HTML for a cart link — auth via Authorization header only (no query param)
+app.get('/admin/cart-links/:token/preview', requireAdmin, async (req, res) => {
+  const escHtml = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   try {
     const cart = await getPendingCartDB(req.params.token);
     if (!cart) return res.status(404).send('<h1>Cart link not found</h1>');
@@ -3069,14 +3067,19 @@ app.get('/admin/cart-links/:token/preview', async (req, res) => {
       name: cart.name, note: cart.note, items: itemRows,
       total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
     });
-    res.setHeader('Content-Type', 'text/html');
+    const toLine = cart.email
+      ? '&nbsp;&middot;&nbsp; To: <strong>' + escHtml(cart.email) + '</strong>'
+      : '&nbsp;&middot;&nbsp; <em style="color:#f2994a;">No email on file &mdash; add one before sending</em>';
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; img-src https: data:;");
     res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Email Preview</title>
       <style>body{margin:0;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:sans-serif;}
       .preview-bar{background:#2C3E2D;color:#F5F0E8;padding:10px 20px;border-radius:8px;margin-bottom:20px;font-size:14px;width:100%;max-width:640px;box-sizing:border-box;}
       </style></head><body>
-      <div class="preview-bar">📧 <strong>Email Preview</strong> — This is exactly what the customer will receive.
-        Subject: <em>Your custom order from Heart of Texas Organics 🌿</em>
-        ${cart.email ? '&nbsp;·&nbsp; To: <strong>' + cart.email + '</strong>' : '&nbsp;·&nbsp; <em style="color:#f2994a;">No email on file — add one before sending</em>'}
+      <div class="preview-bar">&#128231; <strong>Email Preview</strong> &mdash; This is exactly what the customer will receive.
+        Subject: <em>Your custom order from Heart of Texas Organics</em>
+        ${toLine}
       </div>
       ${html}
     </body></html>`);

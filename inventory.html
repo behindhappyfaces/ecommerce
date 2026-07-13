@@ -4612,7 +4612,16 @@
       return;
     }
     if (action === 'preview') {
-      window.open(`/admin/cart-links/${token}/preview?token=${localStorage.getItem('inv_token') || ''}`, '_blank');
+      try {
+        const res = await fetch(`/admin/cart-links/${token}/preview`, { headers: authHeaders() });
+        if (!res.ok) { showToast('Preview failed — ' + res.status, true); return; }
+        const html = await res.text();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (win) setTimeout(() => URL.revokeObjectURL(url), 5000);
+        else showToast('Allow popups to preview the email', true);
+      } catch (e) { showToast('Preview failed', true); }
       return;
     }
     if (action === 'resend') {

@@ -3049,6 +3049,43 @@ app.delete('/admin/cart-links/:token', requireAdmin, async (req, res) => {
   }
 });
 
+// Preview the email HTML for a cart link (opens in browser tab — auth via ?token= query param)
+app.get('/admin/cart-links/:token/preview', async (req, res) => {
+  const bearer = req.query.token || (req.headers.authorization || '').replace('Bearer ', '');
+  if (!bearer || bearer !== makeAdminToken()) return res.status(401).send('<h1>Not authenticated</h1>');
+
+  try {
+    const cart = await getPendingCartDB(req.params.token);
+    if (!cart) return res.status(404).send('<h1>Cart link not found</h1>');
+    const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
+    const cartUrl = `${siteUrl}/offerings.html?rc=${cart.token}`;
+    const itemRows = (cart.items || []).map(i => ({
+      name: i.name + (i.free ? ' (FREE)' : ''),
+      qty: 'x' + (i.quantity || 1),
+      price: i.free ? 'FREE' : (i.price ? '$' + (i.price / 100).toFixed(2) : '—'),
+    }));
+    const totalCents = (cart.items || []).reduce((s, i) => s + (i.free ? 0 : (i.price || 0) * (i.quantity || 1)), 0);
+    const html = cartLinkEmailHtml({
+      name: cart.name, note: cart.note, items: itemRows,
+      total: '$' + (totalCents / 100).toFixed(2), discount: cart.discount, cartUrl,
+    });
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Email Preview</title>
+      <style>body{margin:0;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:sans-serif;}
+      .preview-bar{background:#2C3E2D;color:#F5F0E8;padding:10px 20px;border-radius:8px;margin-bottom:20px;font-size:14px;width:100%;max-width:640px;box-sizing:border-box;}
+      </style></head><body>
+      <div class="preview-bar">📧 <strong>Email Preview</strong> — This is exactly what the customer will receive.
+        Subject: <em>Your custom order from Heart of Texas Organics 🌿</em>
+        ${cart.email ? '&nbsp;·&nbsp; To: <strong>' + cart.email + '</strong>' : '&nbsp;·&nbsp; <em style="color:#f2994a;">No email on file — add one before sending</em>'}
+      </div>
+      ${html}
+    </body></html>`);
+  } catch (e) {
+    console.error('[cart-link preview]', e.message);
+    res.status(500).send('<h1>Preview failed</h1>');
+  }
+});
+
 // Duplicate an existing cart link into a brand-new link (same items/customer, fresh token)
 app.post('/admin/cart-links/:token/duplicate', requireAdmin, async (req, res) => {
   try {

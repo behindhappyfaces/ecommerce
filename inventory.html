@@ -4561,7 +4561,10 @@
     const sentDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
     const statusBadge = c.completed
       ? '<span style="color:#6fcf97;">&#10003; Completed</span>'
-      : '<span style="color:#d4a96a;">Pending</span>';
+      : '<span style="color:#d4a96a;">&#9200; Awaiting Payment</span>';
+    const emailBadge = !c.remindersSent
+      ? '<span style="color:#f2994a;font-size:0.72rem;">&#9993; Not sent</span>'
+      : '<span style="color:#8db88f;font-size:0.72rem;">&#9993; Sent ' + c.remindersSent + 'x</span>';
     const custLine = escCartLink(c.name || '(no name)') +
       (c.email ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.email) + '</span>' : '') +
       (c.phone ? '<br><span style="color:#888;font-size:0.75rem;">' + escCartLink(c.phone) + '</span>' : '');
@@ -4589,11 +4592,12 @@
       <td>${custLine}</td>
       <td>${itemCell}</td>
       <td>$${(total / 100).toFixed(2)}</td>
-      <td style="font-size:0.78rem;color:#aaa;">${sentDate}${c.remindersSent ? ' · sent ' + c.remindersSent + 'x' : ''}</td>
+      <td style="font-size:0.78rem;color:#aaa;">${sentDate}<br>${emailBadge}</td>
       <td>${statusBadge}</td>
       <td style="white-space:nowrap;">
         <button class="btn-sm btn-ghost" data-action="copy" data-token="${c.token}" data-url="${escCartLink(c.url)}">Copy</button>
-        <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" data-sent-count="${c.remindersSent || 1}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" ${c.email ? '' : 'disabled title="No email on file"'}>Resend</button>
+        <button class="btn-sm btn-ghost" data-action="preview" data-token="${c.token}" title="Preview the email">Preview</button>
+        <button class="btn-sm btn-ghost" data-action="resend" data-token="${c.token}" data-sent-count="${c.remindersSent || 0}" data-customer-name="${(c.name || '').replace(/"/g,'&quot;')}" ${c.email ? '' : 'disabled title="No email on file — add one first"'}>${c.remindersSent ? 'Resend' : 'Send Email'}</button>
         <button class="btn-sm btn-ghost" data-action="duplicate" data-token="${c.token}">Duplicate</button>
         <button class="btn-sm" style="background:#5a1a1a;color:#f4a261;border:1px solid #8b2222;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.75rem;" data-action="delete" data-token="${c.token}">Delete</button>
       </td>
@@ -4607,15 +4611,22 @@
       if (url) { navigator.clipboard.writeText(url); showToast('Link copied'); }
       return;
     }
+    if (action === 'preview') {
+      window.open(`/admin/cart-links/${token}/preview?token=${localStorage.getItem('inv_token') || ''}`, '_blank');
+      return;
+    }
     if (action === 'resend') {
-      const sentCount = parseInt(triggerBtn?.dataset.sentCount || '1', 10);
+      const sentCount = parseInt(triggerBtn?.dataset.sentCount || '0', 10);
       const custName = triggerBtn?.dataset.customerName || 'the customer';
-      if (!confirm(`This link has already been sent ${sentCount} time${sentCount !== 1 ? 's' : ''} to ${custName}.\n\nSend again?`)) return;
+      const msg = sentCount === 0
+        ? `Send the cart link email to ${custName}?`
+        : `This email has already been sent ${sentCount} time${sentCount !== 1 ? 's' : ''} to ${custName}.\n\nSend again?`;
+      if (!confirm(msg)) return;
       try {
         const res = await fetch(`/admin/cart-links/${token}/resend`, { method: 'POST', headers: authHeaders() });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'Failed');
-        showToast('Email resent');
+        showToast(sentCount === 0 ? 'Email sent!' : 'Email resent');
         loadCartLinks();
       } catch (e) { showToast(e.message, true); }
       return;

@@ -1106,7 +1106,34 @@
       <button id="cl-tax-none" type="button" class="btn-sm btn-ghost">Clear all taxable</button>
     </div>
 
-    <button id="cl-add-custom" class="btn-sm btn-ghost" style="margin-bottom:16px;">+ Add Custom Item</button>
+    <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px;">
+      <button id="cl-add-custom" class="btn-sm btn-ghost">+ Add Custom Item</button>
+      <button id="cl-delivery-toggle" class="btn-sm btn-ghost" style="background:#1e2b1f;border-color:#3a5a3c;color:#8db88f;">&#128666; Add Delivery Fee</button>
+    </div>
+
+    <!-- Delivery fee calculator -->
+    <div id="cl-delivery-calc" style="display:none;background:#111;border:1px solid #3a5a3c;border-radius:10px;padding:16px 18px;margin-bottom:16px;max-width:480px;">
+      <p style="font-size:0.78rem;font-weight:700;color:#8db88f;letter-spacing:0.07em;text-transform:uppercase;margin:0 0 10px;">&#128666; Delivery Fee Calculator</p>
+      <div style="font-size:0.75rem;color:#666;margin-bottom:12px;line-height:1.7;">
+        0–10 mi: <strong style="color:#aaa;">Free</strong> &nbsp;·&nbsp;
+        11–20 mi: <strong style="color:#aaa;">$15 flat</strong> &nbsp;·&nbsp;
+        20+ mi: <strong style="color:#aaa;">$15 + $0.70/mi over 20</strong>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <label style="font-size:0.8rem;color:#aaa;">Distance:</label>
+          <input id="cl-delivery-miles" type="number" min="0" step="0.1" placeholder="e.g. 18"
+            style="width:80px;padding:7px 10px;background:#1a1a1a;border:1px solid #444;border-radius:6px;color:#f0ebe4;font-size:0.9rem;">
+          <span style="font-size:0.8rem;color:#666;">miles</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.85rem;color:#aaa;">Fee:</span>
+          <span id="cl-delivery-result" style="font-size:1rem;font-weight:700;color:#6fcf97;">—</span>
+        </div>
+        <button id="cl-delivery-add" class="btn-sm" style="background:#2C3E2D;color:#f0ebe4;border:1px solid #3a5a3c;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem;" disabled>Add to Cart</button>
+      </div>
+      <p id="cl-delivery-breakdown" style="font-size:0.72rem;color:#555;margin:8px 0 0;"></p>
+    </div>
 
     <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
       <div>
@@ -4276,6 +4303,74 @@
     document.getElementById('cl-add-custom').addEventListener('click', () => {
       customCounter++;
       addRow('custom-' + customCounter, '', 0, true);
+      saveDraft();
+    });
+
+    // ── Delivery fee calculator ──────────────────────────────────────────────
+    function calcDeliveryFeeCents(miles) {
+      if (miles <= 10) return 0;
+      if (miles <= 20) return 1500;
+      return 1500 + Math.round((miles - 20) * 70);
+    }
+
+    function deliveryBreakdown(miles, feeCents) {
+      if (miles <= 10) return `${miles} mi — within free zone (0–10 mi)`;
+      if (miles <= 20) return `${miles} mi — flat rate zone (11–20 mi): $15.00`;
+      const extra = (miles - 20).toFixed(1);
+      const extraFee = ((miles - 20) * 0.70).toFixed(2);
+      return `${miles} mi — $15.00 base + ${extra} mi × $0.70 = $${(feeCents / 100).toFixed(2)}`;
+    }
+
+    document.getElementById('cl-delivery-toggle').addEventListener('click', () => {
+      const calc = document.getElementById('cl-delivery-calc');
+      const isOpen = calc.style.display !== 'none';
+      calc.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) document.getElementById('cl-delivery-miles').focus();
+    });
+
+    document.getElementById('cl-delivery-miles').addEventListener('input', function() {
+      const miles = parseFloat(this.value);
+      const resultEl     = document.getElementById('cl-delivery-result');
+      const breakdownEl  = document.getElementById('cl-delivery-breakdown');
+      const addBtn       = document.getElementById('cl-delivery-add');
+      if (isNaN(miles) || miles < 0) {
+        resultEl.textContent = '—'; breakdownEl.textContent = ''; addBtn.disabled = true; return;
+      }
+      const feeCents = calcDeliveryFeeCents(miles);
+      resultEl.textContent = feeCents === 0 ? 'FREE' : '$' + (feeCents / 100).toFixed(2);
+      resultEl.style.color = feeCents === 0 ? '#6fcf97' : '#d4a96a';
+      breakdownEl.textContent = deliveryBreakdown(miles, feeCents);
+      addBtn.disabled = false;
+      addBtn.dataset.feeCents = feeCents;
+      addBtn.dataset.miles    = miles;
+    });
+
+    document.getElementById('cl-delivery-add').addEventListener('click', function() {
+      const feeCents = parseInt(this.dataset.feeCents || '0', 10);
+      const miles    = parseFloat(this.dataset.miles || '0');
+      const label    = feeCents === 0 ? `Delivery Fee (${miles} mi — free zone)` : `Delivery Fee (${miles} mi)`;
+
+      // Remove any existing delivery fee row
+      const existing = [...tbody.querySelectorAll('tr')].find(tr => {
+        const nameInp = tr.querySelector('[data-name-for]');
+        return nameInp && nameInp.value.toLowerCase().includes('delivery fee');
+      });
+      if (existing) existing.remove();
+
+      // Add a new pre-checked delivery fee row
+      customCounter++;
+      const newId = 'custom-' + customCounter;
+      addRow(newId, label, feeCents, true);
+      const newCb = tbody.querySelector(`[data-id="${newId}"]`);
+      if (newCb) newCb.checked = true;
+
+      // Close calculator and show toast
+      document.getElementById('cl-delivery-calc').style.display = 'none';
+      document.getElementById('cl-delivery-miles').value = '';
+      document.getElementById('cl-delivery-result').textContent = '—';
+      document.getElementById('cl-delivery-breakdown').textContent = '';
+      document.getElementById('cl-delivery-add').disabled = true;
+      showToast(feeCents === 0 ? 'Delivery added — free zone' : `Delivery fee $${(feeCents / 100).toFixed(2)} added`);
       saveDraft();
     });
 

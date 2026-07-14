@@ -3571,6 +3571,32 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
               removeBtn.addEventListener('click', function() { removeItem(item.id); });
               div.appendChild(info); div.appendChild(removeBtn);
               wrap.appendChild(div);
+
+              // Delivery fee info card shown beneath the delivery item
+              if (displayName.toLowerCase().startsWith('delivery fee')) {
+                var dNote = document.createElement('div');
+                dNote.style.cssText = 'margin:-4px 0 10px;padding:9px 12px;background:rgba(44,62,45,0.06);border-radius:6px;border-left:2px solid rgba(44,62,45,0.3);';
+                var dTitle = document.createElement('p');
+                dTitle.style.cssText = 'font-family:var(--font-sans);font-size:0.68rem;font-weight:700;color:#2C3E2D;margin:0 0 3px;';
+                dTitle.textContent = '🚚 Delivery from our farm';
+                var dAddr = document.createElement('p');
+                dAddr.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:#888;margin:0 0 5px;line-height:1.6;';
+                dAddr.textContent = '7678 E US Hwy 290, Johnson City, TX 78636';
+                var dRates = document.createElement('p');
+                dRates.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:#888;margin:0 0 5px;line-height:1.6;';
+                dRates.textContent = '0–10 mi: Free  ·  11–20 mi: $15 flat  ·  20+ mi: $15 + $0.70/mi over 20';
+                var dLink = document.createElement('a');
+                dLink.href = 'https://www.google.com/maps/dir//7678+E+US+Highway+290,+Johnson+City,+TX+78636';
+                dLink.target = '_blank';
+                dLink.rel = 'noopener';
+                dLink.style.cssText = 'font-family:var(--font-sans);font-size:0.65rem;color:#5a7a5a;text-decoration:underline;';
+                dLink.textContent = 'Check your distance on Google Maps →';
+                dNote.appendChild(dTitle);
+                dNote.appendChild(dAddr);
+                dNote.appendChild(dRates);
+                dNote.appendChild(dLink);
+                wrap.appendChild(dNote);
+              }
             });
             var subtotal = cartData.items.reduce(function(s, i) { return s + (i.free ? 0 : (i.price || 0)) * i.qty; }, 0);
             var footer = document.createElement('div');

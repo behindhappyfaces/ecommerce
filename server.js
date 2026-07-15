@@ -4235,6 +4235,81 @@ if (cron) {
   console.log('[Cron] Weekly inventory report scheduled (Sundays 8am CT)');
 }
 
+// --- Daily data backup (Supabase free tier has no automatic backups) ---
+async function buildBackupSnapshot() {
+  const { products, transactions } = await db.getAllForCSV();
+  const snapshot = {
+    generated_at:         new Date().toISOString(),
+    products,
+    transactions,
+    leads:                await db.getLeads(),
+    customers:            await db.getCustomers(),
+    orders:               await readOrdersDB(),
+    pending_carts:        await readPendingCartsDB(),
+    subscribers:          await readSubscribers(),
+    magazine_subscribers: await readMagSubs(),
+    workshop_interest:    await readWorkshopInterest(),
+    bundle_sales:         await getBundleSales(),
+  };
+  const pg = getPcPool();
+  if (pg) {
+    for (const table of ['product_waitlist', 'delivery_promos', 'recipe_access_codes', 'social_posts']) {
+      try { snapshot[table] = (await pg.query(`SELECT * FROM ${table}`)).rows; }
+      catch (e) { snapshot[table] = { backup_error: e.message }; }
+    }
+  }
+  return snapshot;
+}
+
+async function sendBackupEmail() {
+  const snapshot = await buildBackupSnapshot();
+  const date = new Date().toISOString().slice(0, 10);
+  const summary = [
+    ['Orders',       Object.keys(snapshot.orders).length],
+    ['Products',     snapshot.products.length],
+    ['Customers',    snapshot.customers.length],
+    ['Leads',        snapshot.leads.length],
+    ['Subscribers',  snapshot.subscribers.length],
+    ['Magazine subs', snapshot.magazine_subscribers.length],
+  ].map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;">${k}</td><td><strong>${v}</strong></td></tr>`).join('');
+  await sendEmailTo(
+    ADMIN_EMAIL,
+    `HOTO daily data backup — ${date}`,
+    `<p>Attached is today's full data backup. Keep a few of these — any one of them can restore the business records.</p>
+     <table>${summary}</table>
+     <p style="color:#888;font-size:0.85rem;">Sent automatically every morning at 6am CT. You can also download one anytime from the dashboard.</p>`,
+    [{ filename: `hoto-backup-${date}.json`, content: Buffer.from(JSON.stringify(snapshot, null, 2)) }]
+  );
+}
+
+app.get('/admin/backup/download', requireAdmin, async (req, res) => {
+  try {
+    const snapshot = await buildBackupSnapshot();
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Disposition', `attachment; filename="hoto-backup-${date}.json"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(snapshot, null, 2));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/admin/backup/email', requireAdmin, async (req, res) => {
+  try {
+    await sendBackupEmail();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+if (cron) {
+  cron.schedule('0 6 * * *', () => {
+    sendBackupEmail().catch(e => console.warn('[Backup] daily email failed:', e.message));
+  }, { timezone: 'America/Chicago' });
+  console.log('[Cron] Daily backup email scheduled (6am CT)');
+}
+
 // =========================================
 // SHIPPING ESTIMATOR
 // =========================================

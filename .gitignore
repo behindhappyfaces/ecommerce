@@ -2,3 +2,8 @@ node_modules
 .env
 orders.json
 .DS_Store
+pending-carts.json
+subscribers.json
+magazine-subscribers.json
+workshop-interest.json
+data/

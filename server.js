@@ -419,6 +419,78 @@ async function ensureSocialPostsTable() {
 }
 ensureSocialPostsTable().catch(e => console.warn('[SocialPosts] table init failed:', e.message));
 
+// ── Orders — PostgreSQL-backed so order history survives Render redeploys ──
+async function ensureOrdersTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS orders (
+    pi_id      TEXT PRIMARY KEY,
+    data       JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+  // One-time import of legacy orders.json so existing history isn't lost
+  const { rows } = await pg.query('SELECT COUNT(*)::int AS n FROM orders');
+  if (rows[0].n === 0) {
+    const legacy = readOrders();
+    const entries = Object.entries(legacy);
+    for (const [piId, data] of entries) {
+      await pg.query(
+        `INSERT INTO orders (pi_id, data) VALUES ($1, $2) ON CONFLICT (pi_id) DO NOTHING`,
+        [piId, JSON.stringify(data)]
+      );
+    }
+    if (entries.length) console.log(`[Orders] Imported ${entries.length} legacy orders from orders.json`);
+  }
+}
+ensureOrdersTable().catch(e => console.warn('[Orders] table init failed:', e.message));
+
+// ── Generic JSON stores (subscribers, magazine subs, workshop interest, bundle sales) ──
+async function ensureJsonStoresTable() {
+  const pg = getPcPool();
+  if (!pg) return;
+  await pg.query(`CREATE TABLE IF NOT EXISTS json_stores (
+    name       TEXT PRIMARY KEY,
+    data       JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  )`);
+}
+ensureJsonStoresTable().catch(e => console.warn('[JsonStores] table init failed:', e.message));
+
+async function readJsonStore(name, file, fallback) {
+  const pg = getPcPool();
+  if (!pg) {
+    try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+    catch { return fallback; }
+  }
+  const { rows } = await pg.query('SELECT data FROM json_stores WHERE name = $1', [name]);
+  if (rows[0]) return rows[0].data;
+  // First read with a database attached: import the legacy file so existing data isn't lost
+  let seed = fallback;
+  try { seed = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+  await pg.query(
+    `INSERT INTO json_stores (name, data) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING`,
+    [name, JSON.stringify(seed)]
+  );
+  return seed;
+}
+
+async function writeJsonStore(name, file, data) {
+  const pg = getPcPool();
+  if (!pg) {
+    try {
+      const dir = path.dirname(file);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(data, null, 2));
+    } catch (e) { console.warn(`[JsonStores] Could not save ${name}:`, e.message); }
+    return;
+  }
+  await pg.query(
+    `INSERT INTO json_stores (name, data) VALUES ($1, $2)
+     ON CONFLICT (name) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
+    [name, JSON.stringify(data)]
+  );
+}
+
 // No platform has an approved auto-posting integration yet (Meta App Review /
 // TikTok audit pending, Substack has no official API). Until credentials for a
 // given platform are wired in below, every post falls back to emailing the
@@ -500,6 +572,45 @@ async function updatePendingCartDB(token, updates) {
   const existing = await getPendingCartDB(token);
   if (!existing) return;
   await setPendingCartDB(token, { ...existing, ...updates });
+}
+async function deletePendingCartDB(token) {
+  const pg = getPcPool();
+  if (!pg) {
+    const carts = readPendingCarts();
+    delete carts[token];
+    writePendingCarts(carts);
+    return;
+  }
+  await pg.query('DELETE FROM pending_carts WHERE token = $1', [token]);
+}
+
+async function readOrdersDB() {
+  const pg = getPcPool();
+  if (!pg) return readOrders();
+  const { rows } = await pg.query('SELECT pi_id, data FROM orders');
+  const obj = {};
+  rows.forEach(r => { obj[r.pi_id] = r.data; });
+  return obj;
+}
+async function saveOrderDB(paymentIntentId, data) {
+  const pg = getPcPool();
+  if (!pg) return saveOrder(paymentIntentId, data);
+  const patch = { ...data, updatedAt: new Date().toISOString() };
+  await pg.query(
+    `INSERT INTO orders (pi_id, data) VALUES ($1, $2)
+     ON CONFLICT (pi_id) DO UPDATE SET data = orders.data || EXCLUDED.data, updated_at = NOW()`,
+    [paymentIntentId, JSON.stringify(patch)]
+  );
+}
+async function deleteOrdersDB(piIds) {
+  const pg = getPcPool();
+  if (!pg) {
+    const orders = readOrders();
+    piIds.forEach(id => { delete orders[id]; });
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+    return;
+  }
+  await pg.query('DELETE FROM orders WHERE pi_id = ANY($1)', [piIds]);
 }
 
 
@@ -615,7 +726,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
         // Track bundle sales
         if (session.metadata?.type === 'bundle' && isPaid) {
-          const sales = getBundleSales();
+          const sales = await getBundleSales();
           sales.sold = Math.min(BUNDLE_TOTAL, sales.sold + 1);
           const processing = session.metadata?.processing || 'no';
           const bread = session.metadata?.bread || 'challah';
@@ -643,7 +754,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             total: session.amount_total,
             notes: dNotes,
           });
-          saveBundleSales(sales);
+          await saveBundleSales(sales);
           console.log(`[Bundle] Sale #${sales.sold} — ${customerName} (${customerEmail}) · ${dMethod}${dAddr ? ' → ' + dAddr : ''}`);
 
           // Log to inventory system for dashboard reporting
@@ -824,7 +935,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
         if (isPaid) {
           // Card money cleared immediately
-          saveOrder(piId, {
+          await saveOrderDB(piId, {
             sessionId: session.id,
             status: 'READY_TO_SHIP',
             source: 'website',
@@ -938,7 +1049,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
         } else {
           // ACH bank info submitted — money not yet transferred
-          saveOrder(piId, {
+          await saveOrderDB(piId, {
             sessionId: session.id,
             status: 'AWAITING_PAYMENT',
             source: 'website',
@@ -1086,7 +1197,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const date    = formatDate(pi.created);
 
         // Update fulfillment status
-        saveOrder(pi.id, { status: 'READY_TO_SHIP', clearedAt: new Date().toISOString() });
+        await saveOrderDB(pi.id, { status: 'READY_TO_SHIP', clearedAt: new Date().toISOString() });
 
         await sendEmail(
           `✅ ACH Cleared ${total} Ship This Order Now`,
@@ -1180,7 +1291,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const total = formatMoney(pi.amount);
         const reason = pi.last_payment_error?.message ?? 'Unknown reason';
 
-        saveOrder(pi.id, { status: 'PAYMENT_FAILED', failedAt: new Date().toISOString(), reason });
+        await saveOrderDB(pi.id, { status: 'PAYMENT_FAILED', failedAt: new Date().toISOString(), reason });
 
         await sendEmail(
           `❌ Payment Failed ${total}`,
@@ -2592,14 +2703,28 @@ app.post('/reserve', async (req, res) => {
 // =========================================
 
 // --- Auth (stateless HMAC token — survives server restarts) ---
-function makeAdminToken() {
+const ADMIN_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // sessions last 7 days
+
+function signAdminExpiry(exp) {
   return crypto.createHmac('sha256', process.env.ADMIN_PASSWORD || 'no-password-set')
-    .update('hoto-admin-v1')
+    .update('hoto-admin-v1.' + exp)
     .digest('hex');
+}
+function makeAdminToken() {
+  const exp = Date.now() + ADMIN_TOKEN_TTL_MS;
+  return exp + '.' + signAdminExpiry(exp);
+}
+function verifyAdminToken(token) {
+  const [exp, sig] = String(token || '').split('.');
+  if (!exp || !sig || !/^\d+$/.test(exp)) return false;
+  if (Date.now() > Number(exp)) return false;
+  const a = Buffer.from(sig);
+  const b = Buffer.from(signAdminExpiry(exp));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 function requireAdmin(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
-  if (!token || token !== makeAdminToken()) return res.status(401).json({ error: 'Not authenticated' });
+  if (!verifyAdminToken(token)) return res.status(401).json({ error: 'Not authenticated' });
   next();
 }
 
@@ -2654,9 +2779,11 @@ async function deductStockForOrder(lineItems, orderId, orderDate = null) {
 const SUBSCRIBERS_FILE = path.join(__dirname, 'subscribers.json');
 const WELCOME_COUPON_ID = 'HOTO_WELCOME_10PCT';
 
-function readSubscribers() {
-  try { return JSON.parse(fs.readFileSync(SUBSCRIBERS_FILE, 'utf8')); }
-  catch { return []; }
+async function readSubscribers() {
+  return readJsonStore('subscribers', SUBSCRIBERS_FILE, []);
+}
+async function saveSubscribers(subs) {
+  return writeJsonStore('subscribers', SUBSCRIBERS_FILE, subs);
 }
 
 // Ensure the base 10% coupon exists — promo codes are created per-customer
@@ -2692,7 +2819,7 @@ app.post('/subscribe', express.json(), async (req, res) => {
   const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
 
   // Check if already subscribed — never send a second code
-  const subs = readSubscribers();
+  const subs = await readSubscribers();
   const existing = subs.find(s => s.email.toLowerCase() === normalizedEmail);
   if (existing) {
     console.log('[Subscribe] Already subscribed:', normalizedEmail);
@@ -2732,7 +2859,7 @@ app.post('/subscribe', express.json(), async (req, res) => {
     hasOrdered,
     subscribedAt: new Date().toISOString(),
   });
-  try { fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subs, null, 2)); }
+  try { await saveSubscribers(subs); }
   catch(e) { console.warn('[Subscribe] Could not save subscriber:', e.message); }
 
   // Send welcome email — different message if they've already ordered
@@ -3240,7 +3367,7 @@ async function handlePhoneOrderSucceeded(pi) {
   if (!order) { console.error('[phone-order] No pending record for', pi.id); return; }
 
   const total = formatMoney(pi.amount_received);
-  saveOrder(pi.id, {
+  await saveOrderDB(pi.id, {
     sessionId:       pi.id,
     status:          'READY_TO_SHIP',
     source:          'phone',
@@ -3315,11 +3442,25 @@ app.post('/admin/create-test-promo', requireAdmin, async (req, res) => {
 });
 
 // --- Admin auth routes ---
+// Rate limit: max 10 failed login attempts per IP per 15 minutes
+const loginAttempts = new Map();
 app.post('/admin/login', (req, res) => {
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip || 'unknown';
+  const now = Date.now();
+  if (loginAttempts.size > 1000) {
+    for (const [k, v] of loginAttempts) if (now >= v.resetAt) loginAttempts.delete(k);
+  }
+  const rec = loginAttempts.get(ip);
+  if (rec && now < rec.resetAt && rec.count >= 10) {
+    return res.status(429).json({ error: 'Too many attempts — try again in 15 minutes' });
+  }
   const { password } = req.body || {};
   if (!password || password !== process.env.ADMIN_PASSWORD) {
+    if (!rec || now >= rec.resetAt) loginAttempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    else rec.count++;
     return res.status(401).json({ error: 'Invalid password' });
   }
+  loginAttempts.delete(ip);
   res.json({ token: makeAdminToken() });
 });
 
@@ -3667,60 +3808,51 @@ app.get('/admin/transactions', requireAdmin, async (req, res) => {
   res.json(await db.getTransactions(product_id || null, 150, date_from || null, date_to || null));
 });
 
-app.get('/admin/orders', requireAdmin, (req, res) => {
-  const orders = readOrders();
+app.get('/admin/orders', requireAdmin, async (req, res) => {
+  const orders = await readOrdersDB();
   const list = Object.entries(orders)
     .map(([piId, data]) => ({ piId, ...data }))
     .sort((a, b) => new Date(b.created || 0) - new Date(a.created || 0));
   res.json(list);
 });
 
-app.delete('/admin/orders/:piId', requireAdmin, (req, res) => {
+app.delete('/admin/orders/:piId', requireAdmin, async (req, res) => {
   const { piId } = req.params;
-  const orders = readOrders();
+  const orders = await readOrdersDB();
   if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
-  delete orders[piId];
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  await deleteOrdersDB([piId]);
   res.json({ ok: true });
 });
 
-app.delete('/admin/orders', requireAdmin, (req, res) => {
+app.delete('/admin/orders', requireAdmin, async (req, res) => {
   const { piIds } = req.body;
   if (!Array.isArray(piIds) || !piIds.length) return res.status(400).json({ error: 'piIds array required' });
-  const orders = readOrders();
-  piIds.forEach(id => { delete orders[id]; });
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  await deleteOrdersDB(piIds);
   res.json({ ok: true, deleted: piIds.length });
 });
 
-app.put('/admin/orders/:piId/complete', requireAdmin, (req, res) => {
+app.put('/admin/orders/:piId/complete', requireAdmin, async (req, res) => {
   const { piId } = req.params;
-  const orders = readOrders();
+  const orders = await readOrdersDB();
   if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
-  orders[piId] = {
-    ...orders[piId],
+  await saveOrderDB(piId, {
     previousStatus: orders[piId].status,
     status: 'COMPLETED',
     completedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  });
   res.json({ ok: true });
 });
 
-app.put('/admin/orders/:piId/uncomplete', requireAdmin, (req, res) => {
+app.put('/admin/orders/:piId/uncomplete', requireAdmin, async (req, res) => {
   const { piId } = req.params;
-  const orders = readOrders();
+  const orders = await readOrdersDB();
   if (!orders[piId]) return res.status(404).json({ error: 'Order not found' });
   const revertTo = orders[piId].previousStatus || 'READY_TO_SHIP';
-  orders[piId] = {
-    ...orders[piId],
+  await saveOrderDB(piId, {
     status: revertTo,
     previousStatus: null,
     completedAt: null,
-    updatedAt: new Date().toISOString(),
-  };
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  });
   res.json({ ok: true, status: revertTo });
 });
 
@@ -3741,7 +3873,7 @@ async function performStripeSync(limit = 50) {
     if (allSessions.length >= limit) break;
   }
 
-  const orders = readOrders();
+  const orders = await readOrdersDB();
   let synced = 0;
   let skipped = 0;
   const syncedDetails = [];
@@ -3770,7 +3902,7 @@ async function performStripeSync(limit = 50) {
     const isPaid          = session.payment_status === 'paid';
     const isGift          = session.metadata?.is_gift === 'true';
 
-    saveOrder(piId, {
+    await saveOrderDB(piId, {
       sessionId:       session.id,
       status:          isInPerson ? 'IN_PERSON_SALE' : (isPaid ? 'READY_TO_SHIP' : 'AWAITING_PAYMENT'),
       source:          isInPerson ? 'in-person' : 'website',
@@ -3862,7 +3994,7 @@ app.post('/admin/sync-from-stripe', requireAdmin, async (req, res) => {
 // ABANDONED CART — SAVE & RESTORE
 // =========================================
 
-app.post('/api/save-pending-cart', express.json(), (req, res) => {
+app.post('/api/save-pending-cart', express.json(), async (req, res) => {
   try {
     const { phone, email, items, location } = req.body || {};
     const normalized = normalizePhone(phone);
@@ -3873,16 +4005,16 @@ app.post('/api/save-pending-cart', express.json(), (req, res) => {
       ? items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : '')
       : 'your items';
 
-    const carts = readPendingCarts();
+    const carts = await readPendingCartsDB();
 
     // Dedupe: remove older pending cart from same phone/email
-    Object.keys(carts).forEach(k => {
+    for (const k of Object.keys(carts)) {
       if (!carts[k].completed && (carts[k].phone === normalized || carts[k].email === email)) {
-        delete carts[k];
+        await deletePendingCartDB(k);
       }
-    });
+    }
 
-    carts[token] = {
+    await setPendingCartDB(token, {
       token,
       phone:       normalized || null,
       email:       email || null,
@@ -3893,8 +4025,7 @@ app.post('/api/save-pending-cart', express.json(), (req, res) => {
       remindersSent: 0,
       lastReminderAt: null,
       completed:   false,
-    };
-    writePendingCarts(carts);
+    });
     res.json({ ok: true, token });
   } catch(e) {
     console.error('[PendingCart] save error:', e.message);
@@ -3929,8 +4060,7 @@ if (cron) {
   cron.schedule('*/30 * * * *', async () => {
     if (!twilioClient) return;
     const now = Date.now();
-    const carts = readPendingCarts();
-    let changed = false;
+    const carts = await readPendingCartsDB();
 
     // Reminder schedule (ms after createdAt)
     const schedule = [
@@ -3951,27 +4081,26 @@ if (cron) {
 
       const sent = await sendAbandonedCartSMS(cart, cart.remindersSent);
       if (sent) {
-        cart.remindersSent++;
-        cart.lastReminderAt = new Date().toISOString();
-        changed = true;
+        await updatePendingCartDB(token, {
+          remindersSent:  cart.remindersSent + 1,
+          lastReminderAt: new Date().toISOString(),
+        });
       }
     }
 
     // Clean up carts older than 48h
-    Object.keys(carts).forEach(k => {
+    for (const k of Object.keys(carts)) {
       const age = now - new Date(carts[k].createdAt).getTime();
-      if (age > 48 * 60 * 60 * 1000) { delete carts[k]; changed = true; }
-    });
-
-    if (changed) writePendingCarts(carts);
+      if (age > 48 * 60 * 60 * 1000) await deletePendingCartDB(k);
+    }
   });
   console.log('[Cron] Abandoned cart SMS scheduler running');
 }
 
 // --- Webhook health check ---
-app.get('/admin/webhook-status', requireAdmin, (req, res) => {
+app.get('/admin/webhook-status', requireAdmin, async (req, res) => {
   const hasSecret = !!process.env.STRIPE_WEBHOOK_SECRET_ORDERS;
-  const orderCount = Object.keys(readOrders()).length;
+  const orderCount = Object.keys(await readOrdersDB()).length;
   res.json({
     webhook_secret_configured: hasSecret,
     orders_on_file: orderCount,
@@ -4347,12 +4476,11 @@ app.post('/admin/shipping/buy-label', requireAdmin, async (req, res) => {
 const MAG_SUBS_FILE     = path.join(__dirname, 'magazine-subscribers.json');
 const OBSIDIAN_MAG_SUBS = '/Users/deborahsmith/Documents/collab/HOTO/Best Medicines/subscribers';
 
-function readMagSubs() {
-  try { return JSON.parse(fs.readFileSync(MAG_SUBS_FILE, 'utf8')); }
-  catch { return []; }
+async function readMagSubs() {
+  return readJsonStore('magazine_subscribers', MAG_SUBS_FILE, []);
 }
-function saveMagSubs(subs) {
-  fs.writeFileSync(MAG_SUBS_FILE, JSON.stringify(subs, null, 2));
+async function saveMagSubs(subs) {
+  return writeJsonStore('magazine_subscribers', MAG_SUBS_FILE, subs);
 }
 
 app.post('/api/magazine-subscribe', async (req, res) => {
@@ -4363,9 +4491,9 @@ app.post('/api/magazine-subscribe', async (req, res) => {
     }
     const now = new Date();
     const sub = { firstName, lastName, email, phone, address: address || '', agreedToUpdates: true, createdAt: now.toISOString() };
-    const subs = readMagSubs();
+    const subs = await readMagSubs();
     subs.push(sub);
-    saveMagSubs(subs);
+    await saveMagSubs(subs);
 
     // Write Obsidian note
     try {
@@ -4384,8 +4512,8 @@ app.post('/api/magazine-subscribe', async (req, res) => {
   }
 });
 
-app.get('/api/magazine-subscribers', requireAdmin, (req, res) => {
-  res.json(readMagSubs());
+app.get('/api/magazine-subscribers', requireAdmin, async (req, res) => {
+  res.json(await readMagSubs());
 });
 
 app.get('/api/staples-subscribers', requireAdmin, async (req, res) => {
@@ -4434,8 +4562,8 @@ app.get('/api/staples-subscribers', requireAdmin, async (req, res) => {
   }
 });
 
-app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
-  const subs = readMagSubs();
+app.get('/api/magazine-subscribers/csv', requireAdmin, async (req, res) => {
+  const subs = await readMagSubs();
   const header = ['First Name','Last Name','Email','Phone','Address','Agreed to Updates','Date'];
   const rows = [header, ...subs.map(s => [
     s.firstName || s.first || '',
@@ -4458,12 +4586,11 @@ app.get('/api/magazine-subscribers/csv', requireAdmin, (req, res) => {
 
 const WORKSHOP_INTEREST_FILE = path.join(__dirname, 'workshop-interest.json');
 
-function readWorkshopInterest() {
-  try { return JSON.parse(fs.readFileSync(WORKSHOP_INTEREST_FILE, 'utf8')); }
-  catch { return []; }
+async function readWorkshopInterest() {
+  return readJsonStore('workshop_interest', WORKSHOP_INTEREST_FILE, []);
 }
-function saveWorkshopInterest(list) {
-  fs.writeFileSync(WORKSHOP_INTEREST_FILE, JSON.stringify(list, null, 2));
+async function saveWorkshopInterest(list) {
+  return writeJsonStore('workshop_interest', WORKSHOP_INTEREST_FILE, list);
 }
 
 app.post('/api/workshop-interest', express.json(), async (req, res) => {
@@ -4472,12 +4599,12 @@ app.post('/api/workshop-interest', express.json(), async (req, res) => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Valid email required' });
     }
-    const list = readWorkshopInterest();
+    const list = await readWorkshopInterest();
     if (list.some(e => e.email.toLowerCase() === email.toLowerCase())) {
       return res.json({ success: true, alreadyRegistered: true });
     }
     list.push({ email: email.toLowerCase(), createdAt: new Date().toISOString() });
-    saveWorkshopInterest(list);
+    await saveWorkshopInterest(list);
     res.json({ success: true });
   } catch (err) {
     console.error('Workshop interest error:', err.message);
@@ -4485,8 +4612,8 @@ app.post('/api/workshop-interest', express.json(), async (req, res) => {
   }
 });
 
-app.get('/admin/workshop-interest', requireAdmin, (req, res) => {
-  res.json(readWorkshopInterest());
+app.get('/admin/workshop-interest', requireAdmin, async (req, res) => {
+  res.json(await readWorkshopInterest());
 });
 
 // =========================================
@@ -4498,26 +4625,21 @@ const BUNDLE_TOTAL = 25;
 const BUNDLE_PRICE_CENTS = 19900;
 const bundleSalesFile = path.join(__dirname, 'data', 'bundle-sales.json');
 
-function getBundleSales() {
-  try {
-    if (fs.existsSync(bundleSalesFile)) return JSON.parse(fs.readFileSync(bundleSalesFile, 'utf8'));
-  } catch {}
-  return { sold: 0, orders: [] };
+async function getBundleSales() {
+  return readJsonStore('bundle_sales', bundleSalesFile, { sold: 0, orders: [] });
 }
 
-function saveBundleSales(data) {
+async function saveBundleSales(data) {
   try {
-    const dir = path.dirname(bundleSalesFile);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(bundleSalesFile, JSON.stringify(data, null, 2));
+    await writeJsonStore('bundle_sales', bundleSalesFile, data);
   } catch (e) {
-    console.error('[Bundle] Could not save sales file:', e.message);
+    console.error('[Bundle] Could not save sales:', e.message);
   }
 }
 
 // GET /bundle-availability
-app.get('/bundle-availability', (req, res) => {
-  const sales = getBundleSales();
+app.get('/bundle-availability', async (req, res) => {
+  const sales = await getBundleSales();
   res.json({ sold: sales.sold, total: BUNDLE_TOTAL, remaining: Math.max(0, BUNDLE_TOTAL - sales.sold) });
 });
 
@@ -4908,7 +5030,7 @@ app.post('/admin/bundle-order', requireAdmin, async (req, res) => {
     const notes    = String(req.body.notes    || '').slice(0, 300).trim();
     if (!name) return res.status(400).json({ error: 'Customer name is required.' });
 
-    const sales = getBundleSales();
+    const sales = await getBundleSales();
     if (sales.sold >= BUNDLE_TOTAL) {
       return res.status(400).json({ error: 'All 25 bundles have been claimed.' });
     }
@@ -4925,7 +5047,7 @@ app.post('/admin/bundle-order', requireAdmin, async (req, res) => {
       bread: bread || 'challah',
       notes: notes || '',
     });
-    saveBundleSales(sales);
+    await saveBundleSales(sales);
 
     // Log to inventory system
     const inv = await db.getProduct('bundle-4th-july');
@@ -4948,8 +5070,8 @@ app.post('/admin/bundle-order', requireAdmin, async (req, res) => {
 });
 
 // GET /admin/bundle-orders — list all bundle orders with channel breakdown
-app.get('/admin/bundle-orders', requireAdmin, (req, res) => {
-  const sales = getBundleSales();
+app.get('/admin/bundle-orders', requireAdmin, async (req, res) => {
+  const sales = await getBundleSales();
   const byChannel = sales.orders.reduce((acc, o) => {
     const ch = o.channel || 'online';
     if (!acc[ch]) acc[ch] = [];
@@ -4968,7 +5090,7 @@ app.get('/admin/bundle-orders', requireAdmin, (req, res) => {
 // POST /bundle-checkout — creates Stripe checkout session
 app.post('/bundle-checkout', async (req, res) => {
   try {
-    const sales = getBundleSales();
+    const sales = await getBundleSales();
     if (sales.sold >= BUNDLE_TOTAL) {
       return res.json({ error: 'Sorry — all 25 bundles have been claimed. Thank you for your interest!' });
     }

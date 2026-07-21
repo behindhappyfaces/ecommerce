@@ -4398,7 +4398,9 @@
 
     // ── Address geocoding (OpenStreetMap Nominatim — free, no key needed) ──────
     const FARM_ADDRESS = '7678 E US Highway 290, Johnson City, TX 78636';
-    let _farmCoords = null;  // cached after first geocode
+    // Nominatim has no address point for this rural highway address, so it always
+    // fails to geocode. Coords below verified via US Census geocoder + OSM reverse lookup.
+    const _farmCoords = { lat: 30.198553, lng: -98.255519, display: FARM_ADDRESS };
 
     function haversineDistanceMiles(lat1, lng1, lat2, lng2) {
       const R = 3958.8;
@@ -4427,9 +4429,7 @@
 
       status.textContent = 'Looking up address…';
       try {
-        // Geocode farm once and cache
-        if (!_farmCoords) _farmCoords = await nominatimGeocode(FARM_ADDRESS);
-        // Geocode customer address
+        // Geocode customer address (farm coords are hardcoded above — see note)
         const customer = await nominatimGeocode(addr);
         // Straight-line distance (Haversine); multiply by 1.2 to approximate road distance
         const straight = haversineDistanceMiles(_farmCoords.lat, _farmCoords.lng, customer.lat, customer.lng);

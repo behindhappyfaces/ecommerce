@@ -80,6 +80,13 @@ function saveCart(cart) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
+// Workshop seats (ids prefixed "workshop-") don't need shipping or pickup —
+// a cart made up entirely of them skips straight to checkout.
+function isWorkshopOnlyCart() {
+  const items = getCart().items;
+  return items.length > 0 && items.every(i => (i.id || '').startsWith('workshop-'));
+}
+
 // Items sold only in fixed increments (e.g. cinnamon rolls: half-dozen minimum)
 const QTY_STEP = { 'cinnamon-rolls': 6 };
 
@@ -562,10 +569,12 @@ function renderCart() {
     footer.appendChild(emailCaptureDiv);
   }
 
+  const workshopOnly = isWorkshopOnlyCart();
+
   const note = document.createElement('p');
   note.className = 'cart-footer__note';
   const freqNote = (subscribing && adminSub && adminSub.frequency) ? adminSub.frequency.note + ' · cancel anytime' : 'Charged monthly · cancel anytime';
-  note.textContent = subscribing ? freqNote : 'Shipping calculated at checkout';
+  note.textContent = subscribing ? freqNote : workshopOnly ? 'You\'ll get a confirmation email once payment goes through.' : 'Shipping calculated at checkout';
 
   const checkoutBtn = document.createElement('button');
   checkoutBtn.className = 'btn btn--dark cart-footer__checkout';
@@ -573,6 +582,7 @@ function renderCart() {
   checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(monthlyPrice)}/mo` : 'Proceed to Checkout';
   const checkoutHandler = adminSub ? openAdminSubDeliveryModal
                         : subscribing ? openCartDeliveryModal
+                        : workshopOnly ? () => checkout('pickup', null, null)
                         : openOneTimeDeliveryChoice;
   checkoutBtn.addEventListener('click', checkoutHandler);
 

@@ -53,51 +53,6 @@
       margin: 0 auto;
     }
 
-    /* ---- Controls Bar ---- */
-    .w-controls {
-      background: var(--w-cream-dark);
-      border-bottom: 1px solid var(--w-border);
-      padding: 18px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .w-controls__label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--w-muted);
-      margin-right: 4px;
-    }
-
-    .w-view-btn {
-      padding: 9px 22px;
-      border-radius: 4px;
-      border: 1.5px solid var(--w-border);
-      background: #fff;
-      color: var(--w-muted);
-      font-family: sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .w-view-btn:hover { border-color: var(--w-olive); color: var(--w-olive); }
-
-    .w-view-btn--active {
-      background: var(--w-olive);
-      border-color: var(--w-olive);
-      color: #fff;
-    }
-
-    .w-view-btn--active:hover { background: var(--w-olive-dark); border-color: var(--w-olive-dark); color: #fff; }
-
     /* ---- Main Content Area ---- */
     .w-body {
       background: var(--w-cream);
@@ -262,187 +217,6 @@
       font-size: 0.72rem;
       color: var(--w-muted);
       letter-spacing: 0.04em;
-    }
-
-    /* ── MONTH VIEW ─────────────────────────────── */
-    .w-month-nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .w-month-nav__arrow {
-      background: #fff;
-      border: 1.5px solid var(--w-border);
-      border-radius: 4px;
-      width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      cursor: pointer;
-      color: var(--w-text);
-      transition: border-color 0.2s;
-    }
-
-    .w-month-nav__arrow:hover { border-color: var(--w-olive); color: var(--w-olive); }
-
-    .w-month-nav__label {
-      font-family: Georgia, serif;
-      font-size: 1.4rem;
-      font-weight: normal;
-      color: var(--w-text);
-    }
-
-    .w-cal-grid {
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
-    }
-
-    .w-cal-grid__header {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      background: var(--w-olive);
-    }
-
-    .w-cal-grid__dow {
-      padding: 10px 0;
-      text-align: center;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.8);
-    }
-
-    .w-cal-grid__days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      border-top: 1px solid var(--w-border);
-    }
-
-    .w-cal-day {
-      min-height: 80px;
-      padding: 8px;
-      border-right: 1px solid var(--w-border);
-      border-bottom: 1px solid var(--w-border);
-      cursor: default;
-      position: relative;
-      transition: background 0.15s;
-    }
-
-    .w-cal-day:nth-child(7n) { border-right: none; }
-
-    .w-cal-day--other-month { background: #FAFAF4; }
-    .w-cal-day--other-month .w-cal-day__num { color: #C0C0A8; }
-
-    .w-cal-day--today .w-cal-day__num {
-      background: var(--w-olive);
-      color: #fff;
-      border-radius: 50%;
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .w-cal-day--has-event { cursor: pointer; }
-    .w-cal-day--has-event:hover { background: var(--w-cream-dark); }
-
-    .w-cal-day--selected { background: var(--w-cream-dark); }
-
-    .w-cal-day__num {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--w-text);
-      margin-bottom: 4px;
-    }
-
-    .w-cal-day__dot {
-      width: 7px;
-      height: 7px;
-      background: var(--w-olive-light);
-      border-radius: 50%;
-      margin: 2px 0;
-    }
-
-    .w-cal-day__label {
-      font-size: 0.62rem;
-      color: var(--w-olive);
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Day detail panel */
-    .w-day-detail {
-      margin-top: 24px;
-      background: #fff;
-      border-radius: 8px;
-      padding: 28px;
-      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
-      border-top: 3px solid var(--w-olive);
-    }
-
-    .w-day-detail__heading {
-      font-family: Georgia, serif;
-      font-size: 1.15rem;
-      font-weight: normal;
-      color: var(--w-text);
-      margin: 0 0 16px;
-    }
-
-    .w-day-detail__event {
-      padding: 14px 0;
-      border-bottom: 1px solid var(--w-border);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .w-day-detail__event:last-child { border-bottom: none; }
-
-    .w-day-detail__event-title {
-      font-family: Georgia, serif;
-      font-size: 1.05rem;
-      font-weight: normal;
-      color: var(--w-text);
-      margin: 0 0 4px;
-    }
-
-    .w-day-detail__event-time {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--w-olive);
-      margin-bottom: 6px;
-    }
-
-    .w-day-detail__event-desc {
-      font-size: 0.88rem;
-      color: var(--w-muted);
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .w-no-events {
-      text-align: center;
-      padding: 48px 0;
-      color: var(--w-muted);
-      font-size: 0.95rem;
-    }
-
-    @media (max-width: 560px) {
-      .w-cal-day { min-height: 52px; padding: 4px; }
-      .w-cal-day__label { display: none; }
-      .w-cal-day__num { font-size: 0.74rem; }
     }
 
     /* ---- Email Signup ---- */
@@ -722,6 +496,20 @@
       margin: 16px 0 0;
       text-align: center;
     }
+
+    .w-guest {
+      border-top: 1px solid var(--w-border);
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+    .w-guest__label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--w-olive);
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>  <nav class="nav" aria-label="Main navigation">
@@ -733,7 +521,7 @@
       <li><a class="nav__link" href="about-heart-of-texas.html">Our Story</a></li>
       <li><a class="nav__link" href="offerings.html">Order Now</a></li>
       <li><a class="nav__link" href="pantry.html">What's In Your Box</a></li>
-      <li><a class="nav__link" href="workshops.html?view=month">Lost Arts</a></li>
+      <li><a class="nav__link" href="workshops.html">Lost Arts</a></li>
       <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
     </ul>
     <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -746,7 +534,7 @@
     <a class="nav__mobile-link" href="about-heart-of-texas.html">Our Story</a>
     <a class="nav__mobile-link" href="offerings.html">Order Now</a>
     <a class="nav__mobile-link" href="pantry.html">What's In Your Box</a>
-    <a class="nav__mobile-link" href="workshops.html?view=month">Lost Arts</a>
+    <a class="nav__mobile-link" href="workshops.html">Lost Arts</a>
     <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
   </div>
 
@@ -758,13 +546,6 @@
       Four relaxed evenings on the farm. Small group, hands in the flour, good food and good company.
     </p>
   </header>
-
-  <!-- View Toggle -->
-  <div class="w-controls">
-    <span class="w-controls__label">View:</span>
-    <button class="w-view-btn w-view-btn--active" id="btn-list" aria-pressed="true">List</button>
-    <button class="w-view-btn" id="btn-month" aria-pressed="false">Calendar</button>
-  </div>
 
   <!-- Content -->
   <section class="w-body" aria-label="Workshop calendar">
@@ -802,9 +583,9 @@
             <p class="w-event-card__desc">We braid challah together and everyone leaves with a loaf of their own. Soft, golden, a little sweet, and easier than it looks.</p>
           </div>
           <div class="w-event-card__actions">
-            <div class="w-event-card__price" data-price="aug-06-challah">Price: TBD</div>
-            <button class="w-register-btn" data-event="aug-06-challah" data-title="Challah Bread Night" data-when="Thursday, August 6">Reserve a Spot</button>
-            <div class="w-spots-left" data-spots="aug-06-challah">Limited to 16 seats</div>
+            <div class="w-event-card__price" data-price="workshop-aug-06-challah">Price: TBD</div>
+            <button class="w-register-btn" data-event="workshop-aug-06-challah" data-title="Challah Bread Night" data-when="Thursday, August 6">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="workshop-aug-06-challah">Limited to 16 seats</div>
           </div>
         </div>
 
@@ -820,9 +601,9 @@
             <p class="w-event-card__desc">Make cultured butter from scratch, then blend your own herb and compound butters to take home. Simple, hands-on, and surprisingly fun.</p>
           </div>
           <div class="w-event-card__actions">
-            <div class="w-event-card__price" data-price="aug-13-butter">Price: TBD</div>
-            <button class="w-register-btn" data-event="aug-13-butter" data-title="Cultured Butter &amp; Compound Butters" data-when="Thursday, August 13">Reserve a Spot</button>
-            <div class="w-spots-left" data-spots="aug-13-butter">Limited to 16 seats</div>
+            <div class="w-event-card__price" data-price="workshop-aug-13-butter">Price: TBD</div>
+            <button class="w-register-btn" data-event="workshop-aug-13-butter" data-title="Cultured Butter &amp; Compound Butters" data-when="Thursday, August 13">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="workshop-aug-13-butter">Limited to 16 seats</div>
           </div>
         </div>
 
@@ -838,9 +619,9 @@
             <p class="w-event-card__desc">Roll and cut fresh pasta by hand, then toss it with a simple sauce built from what's in season. Dinner you made yourself.</p>
           </div>
           <div class="w-event-card__actions">
-            <div class="w-event-card__price" data-price="aug-20-pasta">Price: TBD</div>
-            <button class="w-register-btn" data-event="aug-20-pasta" data-title="Homemade Pasta Night" data-when="Thursday, August 20">Reserve a Spot</button>
-            <div class="w-spots-left" data-spots="aug-20-pasta">Limited to 16 seats</div>
+            <div class="w-event-card__price" data-price="workshop-aug-20-pasta">Price: TBD</div>
+            <button class="w-register-btn" data-event="workshop-aug-20-pasta" data-title="Homemade Pasta Night" data-when="Thursday, August 20">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="workshop-aug-20-pasta">Limited to 16 seats</div>
           </div>
         </div>
 
@@ -856,9 +637,9 @@
             <p class="w-event-card__desc">Flaky biscuits, farm eggs, and seasonal jam. We cook breakfast at night and talk through how good ingredients make all the difference.</p>
           </div>
           <div class="w-event-card__actions">
-            <div class="w-event-card__price" data-price="aug-27-breakfast">Price: TBD</div>
-            <button class="w-register-btn" data-event="aug-27-breakfast" data-title="Farm Breakfast for Dinner" data-when="Thursday, August 27">Reserve a Spot</button>
-            <div class="w-spots-left" data-spots="aug-27-breakfast">Limited to 16 seats</div>
+            <div class="w-event-card__price" data-price="workshop-aug-27-breakfast">Price: TBD</div>
+            <button class="w-register-btn" data-event="workshop-aug-27-breakfast" data-title="Farm Breakfast for Dinner" data-when="Thursday, August 27">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="workshop-aug-27-breakfast">Limited to 16 seats</div>
           </div>
         </div>
 
@@ -905,8 +686,8 @@
             </div>
             <div class="w-field-row">
               <div class="w-field">
-                <label for="w-reg-phone">Phone (optional)</label>
-                <input type="tel" id="w-reg-phone" placeholder="(512) 555-0100" autocomplete="tel" />
+                <label for="w-reg-phone">Phone</label>
+                <input type="tel" id="w-reg-phone" placeholder="(512) 555-0100" autocomplete="tel" required />
               </div>
               <div class="w-field">
                 <label for="w-reg-seats">Seats</label>
@@ -919,9 +700,10 @@
               </div>
             </div>
             <div class="w-field">
-              <label for="w-reg-notes">Anything we should know? (optional)</label>
-              <textarea id="w-reg-notes" rows="2" placeholder="Dietary needs, who you're bringing, etc."></textarea>
+              <label for="w-reg-notes">Any allergies? If none, list None</label>
+              <textarea id="w-reg-notes" rows="2" placeholder="List any allergies, or type None" required></textarea>
             </div>
+            <div id="w-reg-guests"></div>
             <button type="submit" class="w-modal__submit" id="w-reg-submit">Reserve My Spot</button>
             <p class="w-modal__msg" id="w-reg-msg" aria-live="polite"></p>
             <p class="w-modal__fine">Seats are held as you register. We'll follow up by email with the location and details.</p>
@@ -958,21 +740,8 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/cart.js?v=20260722"></script>
   <script>
-    // View toggle (kept for UI, but both views show same static content)
-    document.getElementById('btn-list').addEventListener('click', () => {
-      document.getElementById('btn-list').classList.add('w-view-btn--active');
-      document.getElementById('btn-list').setAttribute('aria-pressed', 'true');
-      document.getElementById('btn-month').classList.remove('w-view-btn--active');
-      document.getElementById('btn-month').setAttribute('aria-pressed', 'false');
-    });
-    document.getElementById('btn-month').addEventListener('click', () => {
-      document.getElementById('btn-month').classList.add('w-view-btn--active');
-      document.getElementById('btn-month').setAttribute('aria-pressed', 'true');
-      document.getElementById('btn-list').classList.remove('w-view-btn--active');
-      document.getElementById('btn-list').setAttribute('aria-pressed', 'false');
-    });
-
     // Workshop interest email signup
     const form    = document.getElementById('workshop-notify-form');
     const emailIn = document.getElementById('workshop-notify-email');
@@ -1014,6 +783,7 @@
 
     // ── Workshop registration ──────────────────────────────────
     const money = cents => '$' + (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+    const workshopEvents = {}; // keyed by event id, filled in by loadWorkshopAvailability
 
     // Load live prices + spots-left and reflect them on each card
     async function loadWorkshopAvailability() {
@@ -1022,6 +792,7 @@
         if (!r.ok) return;
         const events = await r.json();
         events.forEach(ev => {
+          workshopEvents[ev.id] = ev;
           const priceEl = document.querySelector(`[data-price="${ev.id}"]`);
           if (priceEl) {
             priceEl.innerHTML = (ev.priceCents && ev.priceCents > 0)
@@ -1061,6 +832,32 @@
     const regMsg    = document.getElementById('w-reg-msg');
     const regSubmit = document.getElementById('w-reg-submit');
 
+    // Optional guest name/email fields, shown one per extra seat beyond the
+    // primary registrant (2 seats → 1 guest row, up to 4 seats → 3 rows).
+    const guestsWrap = document.getElementById('w-reg-guests');
+    function renderGuestRows() {
+      const seats = parseInt(document.getElementById('w-reg-seats').value, 10) || 1;
+      guestsWrap.innerHTML = '';
+      for (let i = 1; i < seats; i++) {
+        const block = document.createElement('div');
+        block.className = 'w-guest';
+        block.innerHTML = `
+          <p class="w-guest__label">Guest ${i} (optional)</p>
+          <div class="w-field-row">
+            <div class="w-field">
+              <label for="w-reg-guest-name-${i}">Guest Full Name</label>
+              <input type="text" id="w-reg-guest-name-${i}" placeholder="Optional" autocomplete="off" />
+            </div>
+            <div class="w-field">
+              <label for="w-reg-guest-email-${i}">Guest Email</label>
+              <input type="email" id="w-reg-guest-email-${i}" placeholder="Optional" autocomplete="off" />
+            </div>
+          </div>`;
+        guestsWrap.appendChild(block);
+      }
+    }
+    document.getElementById('w-reg-seats').addEventListener('change', renderGuestRows);
+
     function openReg(eventId, title, when) {
       document.getElementById('w-reg-event').value = eventId;
       document.getElementById('w-reg-title').textContent = title;
@@ -1068,6 +865,7 @@
       regMsg.textContent = '';
       regMsg.className = 'w-modal__msg';
       regForm.reset();
+      renderGuestRows();
       overlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -1076,10 +874,32 @@
       document.body.style.overflow = '';
     }
 
+    // Priced workshops go straight into the site cart (same pattern as the
+    // Whole Chicken / Real Cream Butter custom-priced items) and from there
+    // through the normal "Proceed to Checkout" flow. While a workshop's price
+    // is still TBD there's nothing to charge, so it stays a free RSVP modal.
+    function addWorkshopToCart(id, title, when, priceCents) {
+      const cart = getCart();
+      const existing = cart.items.find(i => i.id === id);
+      if (existing) { existing.qty += 1; }
+      else { cart.items.push({ id, qty: 1, price: priceCents, name: `${title} — ${when}` }); }
+      saveCart(cart);
+      renderCart();
+      openCart();
+    }
+
     document.querySelectorAll('.w-register-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.disabled) return;
-        openReg(btn.dataset.event, btn.dataset.title.replace(/&amp;/g, '&'), btn.dataset.when);
+        const id    = btn.dataset.event;
+        const title = btn.dataset.title.replace(/&amp;/g, '&');
+        const when  = btn.dataset.when;
+        const ev    = workshopEvents[id];
+        if (ev && ev.priceCents && ev.priceCents > 0) {
+          addWorkshopToCart(id, title, when, ev.priceCents);
+        } else {
+          openReg(id, title, when);
+        }
       });
     });
     document.getElementById('w-reg-close').addEventListener('click', closeReg);
@@ -1096,8 +916,17 @@
       const seats   = document.getElementById('w-reg-seats').value;
       const notes   = document.getElementById('w-reg-notes').value.trim();
 
-      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        regMsg.textContent = 'Please enter your name and a valid email address.';
+      // Optional guest name/email — one row per extra seat, only sent if filled in
+      const seatCount = parseInt(seats, 10) || 1;
+      const guests = [];
+      for (let i = 1; i < seatCount; i++) {
+        const gName  = document.getElementById(`w-reg-guest-name-${i}`)?.value.trim() || '';
+        const gEmail = document.getElementById(`w-reg-guest-email-${i}`)?.value.trim() || '';
+        if (gName || gEmail) guests.push({ name: gName, email: gEmail });
+      }
+
+      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !phone || !notes) {
+        regMsg.textContent = 'Please fill in your name, email, phone, and allergies (or type None).';
         regMsg.className = 'w-modal__msg w-modal__msg--error';
         return;
       }
@@ -1111,7 +940,7 @@
         const r = await fetch('/api/workshop-register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ eventId, name, email, phone, seats, notes }),
+          body: JSON.stringify({ eventId, name, email, phone, seats, notes, guests }),
         });
         const data = await r.json();
 

@@ -4746,7 +4746,7 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
     const { eventId, name, email, phone, seats, notes } = req.body || {};
     const ev = WORKSHOPS.find(w => w.id === eventId);
     if (!ev) return res.status(400).json({ error: 'Please choose a workshop.' });
-    if (!name || !name.trim() || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!name || !name.trim() || !email || !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email)) {
       return res.status(400).json({ error: 'Please enter your name and a valid email address.' });
     }
     const seatCount = Math.min(4, Math.max(1, parseInt(seats) || 1));
@@ -4790,12 +4790,12 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
     await sendEmail(
       `Workshop RSVP — ${evLabel} (${seatCount} seat${seatCount === 1 ? '' : 's'})`,
       `<h2 style="color:#2C3E2D;">New Workshop RSVP</h2>
-       <p><strong>Event:</strong> ${evLabel}</p>
+       <p><strong>Event:</strong> ${escHtml(evLabel)}</p>
        <p><strong>Seats:</strong> ${seatCount}</p>
-       <p><strong>Name:</strong> ${cleanName}</p>
-       <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-       <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-       <p><strong>Notes:</strong> ${notes || 'None'}</p>`
+       <p><strong>Name:</strong> ${escHtml(cleanName)}</p>
+       <p><strong>Email:</strong> <a href="mailto:${encodeURIComponent(email)}">${escHtml(email)}</a></p>
+       <p><strong>Phone:</strong> ${escHtml(phone) || 'Not provided'}</p>
+       <p><strong>Notes:</strong> ${escHtml(notes) || 'None'}</p>`
     );
 
     try {
@@ -4804,8 +4804,8 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
         `You're in — ${ev.title}`,
         `<div style="font-family:Georgia,serif;color:#2A2A2A;line-height:1.65;">
            <h2 style="color:#2C3E2D;">Your spot is saved</h2>
-           <p>Thanks ${cleanName.split(' ')[0]}! We've saved ${seatCount} seat${seatCount === 1 ? '' : 's'} for you at
-             <strong>${ev.title}</strong> on ${formatWorkshopDate(ev.date)}, 6:00 to 8:00 PM.</p>
+           <p>Thanks ${escHtml(cleanName.split(' ')[0])}! We've saved ${seatCount} seat${seatCount === 1 ? '' : 's'} for you at
+             <strong>${escHtml(ev.title)}</strong> on ${formatWorkshopDate(ev.date)}, 6:00 to 8:00 PM.</p>
            <p>It's a small, relaxed evening. Come a few minutes early, bring your appetite, and we'll take care of the rest.
              We'll follow up with the location and anything else you need to know.</p>
            <p style="color:#6B6B5E;">See you soon,<br>Heart of Texas Organics</p>

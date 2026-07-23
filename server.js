@@ -4692,6 +4692,139 @@ app.get('/admin/workshop-interest', requireAdmin, async (req, res) => {
 });
 
 // =========================================
+// WORKSHOP REGISTRATION — August Thursday Night Series
+// =========================================
+// Each event's price starts null (TBD). While null, the Register button works as
+// a free RSVP (records the seat, emails the farm + guest). Set priceCents to a
+// number and that event automatically switches to Stripe checkout — no other
+// changes needed. Keep this list in sync with the cards in workshops.html.
+const WORKSHOP_CAP = 16; // small-group cap (10–16); spots-left counts down from here
+const WORKSHOPS = [
+  { id: 'aug-06-challah',   title: 'Challah Bread Night',                 date: '2026-08-06', priceCents: null },
+  { id: 'aug-13-butter',    title: 'Cultured Butter & Compound Butters',  date: '2026-08-13', priceCents: null },
+  { id: 'aug-20-pasta',     title: 'Homemade Pasta Night',               date: '2026-08-20', priceCents: null },
+  { id: 'aug-27-breakfast', title: 'Farm Breakfast for Dinner',          date: '2026-08-27', priceCents: null },
+];
+
+const WORKSHOP_REG_FILE = path.join(__dirname, 'data', 'workshop-registrations.json');
+async function readWorkshopRegs()      { return readJsonStore('workshop_registrations', WORKSHOP_REG_FILE, []); }
+async function saveWorkshopRegs(list)  { return writeJsonStore('workshop_registrations', WORKSHOP_REG_FILE, list); }
+
+function workshopSeatsBooked(regs, eventId) {
+  return regs
+    .filter(r => r.eventId === eventId && r.status !== 'canceled')
+    .reduce((n, r) => n + (parseInt(r.seats) || 1), 0);
+}
+function formatWorkshopDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
+
+// Live availability — the workshops page calls this to show spots left / sold out
+app.get('/api/workshop-availability', async (req, res) => {
+  try {
+    const regs = await readWorkshopRegs();
+    res.json(WORKSHOPS.map(w => {
+      const booked = workshopSeatsBooked(regs, w.id);
+      return {
+        id: w.id,
+        priceCents: w.priceCents,
+        cap: WORKSHOP_CAP,
+        spotsLeft: Math.max(0, WORKSHOP_CAP - booked),
+      };
+    }));
+  } catch (err) {
+    console.error('Workshop availability error:', err.message);
+    res.status(500).json({ error: 'Could not load availability' });
+  }
+});
+
+// Register — free RSVP while price is TBD, Stripe checkout once a price is set
+app.post('/api/workshop-register', express.json(), async (req, res) => {
+  try {
+    const { eventId, name, email, phone, seats, notes } = req.body || {};
+    const ev = WORKSHOPS.find(w => w.id === eventId);
+    if (!ev) return res.status(400).json({ error: 'Please choose a workshop.' });
+    if (!name || !name.trim() || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Please enter your name and a valid email address.' });
+    }
+    const seatCount = Math.min(4, Math.max(1, parseInt(seats) || 1));
+    const cleanName = name.trim();
+
+    const regs = await readWorkshopRegs();
+    const left = WORKSHOP_CAP - workshopSeatsBooked(regs, ev.id);
+    if (left <= 0)          return res.status(400).json({ error: 'full' });
+    if (seatCount > left)   return res.status(400).json({ error: `Only ${left} spot${left === 1 ? '' : 's'} left for this evening.` });
+
+    const evLabel = `${ev.title} — ${formatWorkshopDate(ev.date)}`;
+
+    // PAID path — a price has been set, so send them to Stripe checkout
+    if (ev.priceCents && ev.priceCents > 0) {
+      const origin = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: { currency: 'usd', product_data: { name: evLabel }, unit_amount: ev.priceCents },
+          quantity: seatCount,
+        }],
+        customer_email: email,
+        metadata: {
+          workshop_id: ev.id, workshop_title: ev.title, workshop_date: ev.date,
+          seats: String(seatCount), reg_name: cleanName, reg_phone: phone || '', reg_notes: notes || '',
+        },
+        success_url: `${origin}/workshops.html?registered=1`,
+        cancel_url:  `${origin}/workshops.html`,
+      });
+      // Hold the seats optimistically (small farm class — no webhook reconciliation needed)
+      regs.push({ eventId: ev.id, name: cleanName, email, phone: phone || '', seats: seatCount, notes: notes || '', status: 'pending_payment', createdAt: new Date().toISOString() });
+      await saveWorkshopRegs(regs);
+      return res.json({ url: session.url });
+    }
+
+    // FREE / TBD path — record the RSVP and email both sides
+    regs.push({ eventId: ev.id, name: cleanName, email, phone: phone || '', seats: seatCount, notes: notes || '', status: 'rsvp', createdAt: new Date().toISOString() });
+    await saveWorkshopRegs(regs);
+
+    await sendEmail(
+      `Workshop RSVP — ${evLabel} (${seatCount} seat${seatCount === 1 ? '' : 's'})`,
+      `<h2 style="color:#2C3E2D;">New Workshop RSVP</h2>
+       <p><strong>Event:</strong> ${evLabel}</p>
+       <p><strong>Seats:</strong> ${seatCount}</p>
+       <p><strong>Name:</strong> ${cleanName}</p>
+       <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+       <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+       <p><strong>Notes:</strong> ${notes || 'None'}</p>`
+    );
+
+    try {
+      await sendEmailTo(
+        email,
+        `You're in — ${ev.title}`,
+        `<div style="font-family:Georgia,serif;color:#2A2A2A;line-height:1.65;">
+           <h2 style="color:#2C3E2D;">Your spot is saved</h2>
+           <p>Thanks ${cleanName.split(' ')[0]}! We've saved ${seatCount} seat${seatCount === 1 ? '' : 's'} for you at
+             <strong>${ev.title}</strong> on ${formatWorkshopDate(ev.date)}, 6:00 to 8:00 PM.</p>
+           <p>It's a small, relaxed evening. Come a few minutes early, bring your appetite, and we'll take care of the rest.
+             We'll follow up with the location and anything else you need to know.</p>
+           <p style="color:#6B6B5E;">See you soon,<br>Heart of Texas Organics</p>
+         </div>`
+      );
+    } catch (e) { console.warn('[workshop] guest confirmation failed:', e.message); }
+
+    return res.json({ ok: true, rsvp: true });
+  } catch (err) {
+    console.error('Workshop register error:', err.message);
+    res.status(500).json({ error: 'Something went wrong. Please try again or email operations@heartoftexasorganics.com.' });
+  }
+});
+
+app.get('/admin/workshop-registrations', requireAdmin, async (req, res) => {
+  res.json(await readWorkshopRegs());
+});
+
+// =========================================
 // =========================================
 // BUNDLE — 4th of July Homestead Table
 // =========================================

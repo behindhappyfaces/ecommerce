@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>August Thursday Night Series — Flyer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+    :root {
+      --olive:      #2C3E2D;
+      --olive-dark: #1E2D1F;
+      --cream:      #F5F0E8;
+      --cream-2:    #EDE6D6;
+      --rust:       #8B4A2F;
+      --tan:        #B89B6E;
+      --text:       #2A2A2A;
+      --muted:      #6B6B5E;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans:  'Inter', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #4a4a44;
+      font-family: var(--sans);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 28px 16px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── 8.5 x 11 page ─────────────────────────────── */
+    .page {
+      width: 8.5in;
+      height: 11in;
+      background: var(--cream);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* thin inner frame */
+    .page::after {
+      content: "";
+      position: absolute;
+      inset: 0.28in;
+      border: 1px solid var(--tan);
+      pointer-events: none;
+    }
+
+    /* ── Header band ───────────────────────────────── */
+    .hd {
+      background: var(--olive);
+      color: #fff;
+      text-align: center;
+      padding: 0.62in 0.7in 0.5in;
+    }
+    .hd__eyebrow {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--tan);
+      margin-bottom: 14px;
+    }
+    .hd__title {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 46px;
+      line-height: 1.04;
+      letter-spacing: 0.01em;
+    }
+    .hd__rule {
+      width: 54px;
+      height: 2px;
+      background: var(--tan);
+      margin: 16px auto 15px;
+    }
+    .hd__tagline {
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: rgba(255,255,255,0.82);
+      max-width: 4.9in;
+      margin: 0 auto;
+    }
+
+    /* ── Meta strip ────────────────────────────────── */
+    .meta {
+      background: var(--cream-2);
+      text-align: center;
+      padding: 12px 0.7in;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--olive);
+    }
+    .meta .dot { color: var(--tan); margin: 0 8px; }
+
+    /* ── Body ──────────────────────────────────────── */
+    .body {
+      flex: 1;
+      padding: 0.34in 0.7in 0.3in;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dates { margin-top: 2px; }
+
+    .ev {
+      display: grid;
+      grid-template-columns: 0.92in 1fr;
+      gap: 0 18px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--cream-2);
+    }
+    .ev:first-child { padding-top: 4px; }
+    .ev:last-child { border-bottom: none; }
+
+    .ev__date {
+      text-align: center;
+      border-right: 2px solid var(--rust);
+      padding-right: 16px;
+    }
+    .ev__mon {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--rust);
+    }
+    .ev__day {
+      font-family: var(--serif);
+      font-size: 34px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+      margin-top: 1px;
+    }
+    .ev__dow {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .ev__title {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--olive);
+      line-height: 1.15;
+    }
+    .ev__desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 3px;
+    }
+
+    /* ── Flow + tone ───────────────────────────────── */
+    .flow {
+      margin-top: 16px;
+      background: #fff;
+      border-left: 3px solid var(--olive);
+      padding: 14px 18px;
+    }
+    .flow__label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 7px;
+    }
+    .flow__line {
+      font-size: 11.5px;
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .flow__line b { color: var(--olive); font-weight: 600; }
+    .tone {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 14.5px;
+      color: var(--text);
+      text-align: center;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    /* ── Location + RSVP ───────────────────────────── */
+    .foot {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding-top: 15px;
+    }
+    .box {
+      border: 1.5px dashed var(--tan);
+      border-radius: 6px;
+      padding: 13px 16px;
+      text-align: center;
+    }
+    .box--solid {
+      border: none;
+      background: var(--olive);
+    }
+    .box__label {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 6px;
+    }
+    .box--solid .box__label { color: var(--tan); }
+    .box__fill {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .box--solid .box__cta {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .box--solid .box__fill {
+      color: rgba(255,255,255,0.82);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    /* ── Sign-off ──────────────────────────────────── */
+    .signoff {
+      text-align: center;
+      padding: 10px 0 2px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .signoff b { color: var(--olive); font-weight: 600; }
+
+    /* ── Print ─────────────────────────────────────── */
+    @page { size: 8.5in 11in; margin: 0; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; width: 8.5in; height: 11in; }
+      .noprint { display: none !important; }
+    }
+
+    .noprint {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      background: var(--olive);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+
+    <!-- Header -->
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">August Thursday<br>Night Series</div>
+      <div class="hd__rule"></div>
+      <p class="hd__tagline">Four unhurried evenings on the farm. Come make something good with your hands, taste it warm, and take the rest home.</p>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta">
+      Thursdays in August <span class="dot">&bull;</span> 6:00 to 8:00 PM <span class="dot">&bull;</span> Small group of 10 to 16
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <div class="dates">
+        <div class="ev">
+          <div class="ev__date">
+            <div class="ev__mon">Aug</div>
+            <div class="ev__day">6</div>
+            <div class="ev__dow">Thu</div>
+          </div>
+          <div>
+            <div class="ev__title">Challah Bread Night</div>
+            <div class="ev__desc">We braid challah together and everyone leaves with a warm loaf of their own.</div>
+          </div>
+        </div>
+
+        <div class="ev">
+          <div class="ev__date">
+            <div class="ev__mon">Aug</div>
+            <div class="ev__day">13</div>
+            <div class="ev__dow">Thu</div>
+          </div>
+          <div>
+            <div class="ev__title">Cultured Butter &amp; Compound Butters</div>
+            <div class="ev__desc">Churn butter from scratch, then blend your own herb butters to take home.</div>
+          </div>
+        </div>
+
+        <div class="ev">
+          <div class="ev__date">
+            <div class="ev__mon">Aug</div>
+            <div class="ev__day">20</div>
+            <div class="ev__dow">Thu</div>
+          </div>
+          <div>
+            <div class="ev__title">Homemade Pasta Night</div>
+            <div class="ev__desc">Roll fresh pasta by hand and eat it with a simple sauce made from what is in season.</div>
+          </div>
+        </div>
+
+        <div class="ev">
+          <div class="ev__date">
+            <div class="ev__mon">Aug</div>
+            <div class="ev__day">27</div>
+            <div class="ev__dow">Thu</div>
+          </div>
+          <div>
+            <div class="ev__title">Farm Breakfast for Dinner</div>
+            <div class="ev__desc">Biscuits, farm eggs, and seasonal jam, with easy tips for cooking with good ingredients.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow -->
+      <div class="flow">
+        <div class="flow__label">How the evening goes</div>
+        <div class="flow__line">
+          <b>6:00</b> arrive, mingle, light refreshments <span style="color:var(--tan)">&bull;</span>
+          <b>6:15</b> hands-on workshop <span style="color:var(--tan)">&bull;</span>
+          <b>7:15</b> taste what we made and chat <span style="color:var(--tan)">&bull;</span>
+          <b>7:45</b> browse the merch table and shop
+        </div>
+      </div>
+
+      <p class="tone">No rush and no presentation. Just good food and good conversation.</p>
+
+      <!-- Location + RSVP -->
+      <div class="foot">
+        <div class="box">
+          <div class="box__label">Where</div>
+          <div class="box__fill">[ Add your location and<br>address here ]</div>
+        </div>
+        <div class="box box--solid">
+          <div class="box__label">Save your spot</div>
+          <div class="box__cta">[ Add booking link ]</div>
+          <div class="box__fill">Seats are limited, so let us know you are coming.</div>
+        </div>
+      </div>
+
+      <div class="signoff">Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b></div>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -518,6 +518,210 @@
     }
     .w-notify-msg--success { color: var(--w-olive); }
     .w-notify-msg--error   { color: #b33; }
+
+    /* ── Series intro (shared flow + tone, shown once) ─────────── */
+    .w-intro {
+      background: #fff;
+      border-radius: 8px;
+      border-top: 3px solid var(--w-olive);
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
+    }
+    .w-intro__lead {
+      font-family: Georgia, serif;
+      font-size: 1.12rem;
+      line-height: 1.7;
+      color: var(--w-text);
+      margin: 0 0 6px;
+    }
+    .w-intro__tone {
+      font-size: 0.95rem;
+      color: var(--w-muted);
+      line-height: 1.7;
+      margin: 0 0 22px;
+    }
+    .w-intro__meta {
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--w-olive);
+      text-transform: uppercase;
+      margin: 0 0 16px;
+    }
+    .w-flow {
+      list-style: none;
+      margin: 0;
+      padding: 18px 0 0;
+      border-top: 1px solid var(--w-border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 32px;
+    }
+    @media (max-width: 560px) { .w-flow { grid-template-columns: 1fr; } }
+    .w-flow li {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      font-size: 0.9rem;
+      color: var(--w-text);
+      line-height: 1.5;
+    }
+    .w-flow__time {
+      font-weight: 700;
+      color: var(--w-olive);
+      white-space: nowrap;
+      min-width: 92px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Price line on each card ───────────────────────────────── */
+    .w-event-card__price {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      color: var(--w-text);
+      font-weight: 600;
+    }
+    .w-event-card__price small {
+      display: block;
+      font-family: sans-serif;
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--w-muted);
+    }
+
+    /* ── Registered banner (after Stripe return) ───────────────── */
+    .w-banner {
+      background: var(--w-olive);
+      color: #fff;
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    /* ── Registration modal ────────────────────────────────────── */
+    .w-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28,32,26,0.55);
+      z-index: 1000;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .w-modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .w-modal {
+      background: var(--w-cream);
+      border-radius: 12px;
+      max-width: 480px;
+      width: 100%;
+      margin: auto;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .w-modal__head {
+      background: var(--w-olive);
+      color: #fff;
+      padding: 22px 26px;
+      position: relative;
+    }
+    .w-modal__eyebrow {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      margin: 0 0 6px;
+    }
+    .w-modal__title {
+      font-family: Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: normal;
+      margin: 0;
+      line-height: 1.25;
+    }
+    .w-modal__when {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.82);
+      margin: 6px 0 0;
+    }
+    .w-modal__close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.8);
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .w-modal__close:hover { color: #fff; }
+    .w-modal__body { padding: 24px 26px 28px; }
+
+    .w-field { margin-bottom: 16px; }
+    .w-field label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--w-muted);
+      margin-bottom: 6px;
+    }
+    .w-field input,
+    .w-field select,
+    .w-field textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--w-border);
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 0.95rem;
+      color: var(--w-text);
+      background: #fff;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .w-field input:focus,
+    .w-field select:focus,
+    .w-field textarea:focus { outline: none; border-color: var(--w-olive); }
+    .w-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .w-modal__submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--w-olive);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .w-modal__submit:hover:not(:disabled) { background: var(--w-olive-dark); }
+    .w-modal__submit:disabled { opacity: 0.6; cursor: default; }
+    .w-modal__msg { margin-top: 12px; font-size: 0.88rem; text-align: center; min-height: 20px; }
+    .w-modal__msg--error   { color: #b33; }
+    .w-modal__msg--success { color: var(--w-olive); font-weight: 600; }
+    .w-modal__fine {
+      font-size: 0.76rem;
+      color: var(--w-muted);
+      line-height: 1.55;
+      margin: 16px 0 0;
+      text-align: center;
+    }
   </style>
 </head>
 <body>  <nav class="nav" aria-label="Main navigation">
@@ -549,9 +753,9 @@
   <!-- Hero -->
   <header class="w-hero">
     <p class="w-hero__eyebrow">Heart of Texas Organics</p>
-    <h1 class="w-hero__title">Workshops &amp; Classes</h1>
+    <h1 class="w-hero__title">August Thursday Night Series</h1>
     <p class="w-hero__sub">
-      Hands-on bread making and seasonal workshops.
+      Four relaxed evenings on the farm. Small group, hands in the flour, good food and good company.
     </p>
   </header>
 
@@ -566,19 +770,103 @@
   <section class="w-body" aria-label="Workshop calendar">
     <div class="w-container" id="w-content">
 
-      <div class="w-state" style="padding-top: 40px; padding-bottom: 20px;">
-        <p class="w-state__title" style="font-size:1.6rem; margin-bottom: 10px;">No Upcoming Workshops Currently</p>
-        <p style="color: var(--w-muted); font-size: 0.96rem; line-height: 1.7; max-width: 460px; margin: 0 auto;">
-          We're planning our next series of hands-on classes and seasonal workshops. Enter your email below and you'll be the first to know when new dates are posted.
-        </p>
-        <p style="margin-top: 14px; font-size: 0.92rem; color: var(--w-muted);">
-          <a href="contact.html" style="color: #556B2F; font-weight: 700; text-decoration: underline;">Contact us directly</a> to ask about upcoming events.
-        </p>
+      <div class="w-banner" id="w-registered-banner" style="display:none;">
+        You're all set. Thanks for registering, we've saved your spot and will be in touch with the details. See you on the farm.
       </div>
 
-      <div class="w-notify-section">
-        <h2 class="w-notify-section__title">Get Notified When Classes Open</h2>
-        <p class="w-notify-section__sub">No spam — only a heads-up when workshops or classes get scheduled.</p>
+      <!-- Shared series intro: flow + tone, shown once -->
+      <div class="w-intro">
+        <p class="w-intro__lead">Four Thursday evenings in August, each one hands-on and unhurried. You make something real, taste it warm, and take the rest home.</p>
+        <p class="w-intro__tone">A relaxed, intimate evening with no rush and no presentation. Just good food, good company, and something made by hand. Every week follows the same easy flow:</p>
+        <p class="w-intro__meta">6:00 to 8:00 PM &nbsp;&middot;&nbsp; Small group of 10 to 16</p>
+        <ul class="w-flow">
+          <li><span class="w-flow__time">6:00–6:15</span><span>Arrive, mingle, light refreshments</span></li>
+          <li><span class="w-flow__time">6:15–7:15</span><span>Hands-on workshop</span></li>
+          <li><span class="w-flow__time">7:15–7:45</span><span>Taste what we made, ask questions, chat</span></li>
+          <li><span class="w-flow__time">7:45–8:00</span><span>Browse the merch table, shop, wrap up</span></li>
+        </ul>
+      </div>
+
+      <!-- Event list -->
+      <div class="w-list">
+
+        <div class="w-event-card">
+          <div class="w-event-card__date-block">
+            <div class="w-event-card__month">Aug</div>
+            <div class="w-event-card__day">6</div>
+            <div class="w-event-card__dow">Thu</div>
+          </div>
+          <div class="w-event-card__info">
+            <h3 class="w-event-card__title">Challah Bread Night</h3>
+            <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Small group (10–16)</div>
+            <p class="w-event-card__desc">We braid challah together and everyone leaves with a loaf of their own. Soft, golden, a little sweet, and easier than it looks.</p>
+          </div>
+          <div class="w-event-card__actions">
+            <div class="w-event-card__price" data-price="aug-06-challah">Price: TBD</div>
+            <button class="w-register-btn" data-event="aug-06-challah" data-title="Challah Bread Night" data-when="Thursday, August 6">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="aug-06-challah">Limited to 16 seats</div>
+          </div>
+        </div>
+
+        <div class="w-event-card">
+          <div class="w-event-card__date-block">
+            <div class="w-event-card__month">Aug</div>
+            <div class="w-event-card__day">13</div>
+            <div class="w-event-card__dow">Thu</div>
+          </div>
+          <div class="w-event-card__info">
+            <h3 class="w-event-card__title">Cultured Butter &amp; Compound Butters</h3>
+            <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Small group (10–16)</div>
+            <p class="w-event-card__desc">Make cultured butter from scratch, then blend your own herb and compound butters to take home. Simple, hands-on, and surprisingly fun.</p>
+          </div>
+          <div class="w-event-card__actions">
+            <div class="w-event-card__price" data-price="aug-13-butter">Price: TBD</div>
+            <button class="w-register-btn" data-event="aug-13-butter" data-title="Cultured Butter &amp; Compound Butters" data-when="Thursday, August 13">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="aug-13-butter">Limited to 16 seats</div>
+          </div>
+        </div>
+
+        <div class="w-event-card">
+          <div class="w-event-card__date-block">
+            <div class="w-event-card__month">Aug</div>
+            <div class="w-event-card__day">20</div>
+            <div class="w-event-card__dow">Thu</div>
+          </div>
+          <div class="w-event-card__info">
+            <h3 class="w-event-card__title">Homemade Pasta Night</h3>
+            <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Small group (10–16)</div>
+            <p class="w-event-card__desc">Roll and cut fresh pasta by hand, then toss it with a simple sauce built from what's in season. Dinner you made yourself.</p>
+          </div>
+          <div class="w-event-card__actions">
+            <div class="w-event-card__price" data-price="aug-20-pasta">Price: TBD</div>
+            <button class="w-register-btn" data-event="aug-20-pasta" data-title="Homemade Pasta Night" data-when="Thursday, August 20">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="aug-20-pasta">Limited to 16 seats</div>
+          </div>
+        </div>
+
+        <div class="w-event-card">
+          <div class="w-event-card__date-block">
+            <div class="w-event-card__month">Aug</div>
+            <div class="w-event-card__day">27</div>
+            <div class="w-event-card__dow">Thu</div>
+          </div>
+          <div class="w-event-card__info">
+            <h3 class="w-event-card__title">Farm Breakfast for Dinner</h3>
+            <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Small group (10–16)</div>
+            <p class="w-event-card__desc">Flaky biscuits, farm eggs, and seasonal jam. We cook breakfast at night and talk through how good ingredients make all the difference.</p>
+          </div>
+          <div class="w-event-card__actions">
+            <div class="w-event-card__price" data-price="aug-27-breakfast">Price: TBD</div>
+            <button class="w-register-btn" data-event="aug-27-breakfast" data-title="Farm Breakfast for Dinner" data-when="Thursday, August 27">Reserve a Spot</button>
+            <div class="w-spots-left" data-spots="aug-27-breakfast">Limited to 16 seats</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="w-notify-section" style="margin-top:44px;">
+        <h2 class="w-notify-section__title">Can't make these dates?</h2>
+        <p class="w-notify-section__sub">Leave your email and we'll give you a heads-up when the next series is scheduled. No spam, just a note when new dates go up.</p>
         <form class="w-notify-form" id="workshop-notify-form" novalidate>
           <input
             class="w-notify-form__input"
@@ -593,6 +881,53 @@
         <p class="w-notify-msg" id="workshop-notify-msg" aria-live="polite"></p>
       </div>
 
+    </div>
+
+    <!-- Registration modal -->
+    <div class="w-modal-overlay" id="w-reg-overlay" role="dialog" aria-modal="true" aria-labelledby="w-reg-title">
+      <div class="w-modal">
+        <div class="w-modal__head">
+          <button class="w-modal__close" id="w-reg-close" aria-label="Close">&times;</button>
+          <p class="w-modal__eyebrow">Reserve a Spot</p>
+          <h3 class="w-modal__title" id="w-reg-title">Workshop</h3>
+          <p class="w-modal__when" id="w-reg-when">6:00 to 8:00 PM</p>
+        </div>
+        <div class="w-modal__body">
+          <form id="w-reg-form" novalidate>
+            <input type="hidden" id="w-reg-event" />
+            <div class="w-field">
+              <label for="w-reg-name">Full Name</label>
+              <input type="text" id="w-reg-name" placeholder="Jane Smith" autocomplete="name" required />
+            </div>
+            <div class="w-field">
+              <label for="w-reg-email">Email Address</label>
+              <input type="email" id="w-reg-email" placeholder="jane@email.com" autocomplete="email" required />
+            </div>
+            <div class="w-field-row">
+              <div class="w-field">
+                <label for="w-reg-phone">Phone (optional)</label>
+                <input type="tel" id="w-reg-phone" placeholder="(512) 555-0100" autocomplete="tel" />
+              </div>
+              <div class="w-field">
+                <label for="w-reg-seats">Seats</label>
+                <select id="w-reg-seats">
+                  <option value="1">1 seat</option>
+                  <option value="2">2 seats</option>
+                  <option value="3">3 seats</option>
+                  <option value="4">4 seats</option>
+                </select>
+              </div>
+            </div>
+            <div class="w-field">
+              <label for="w-reg-notes">Anything we should know? (optional)</label>
+              <textarea id="w-reg-notes" rows="2" placeholder="Dietary needs, who you're bringing, etc."></textarea>
+            </div>
+            <button type="submit" class="w-modal__submit" id="w-reg-submit">Reserve My Spot</button>
+            <p class="w-modal__msg" id="w-reg-msg" aria-live="polite"></p>
+            <p class="w-modal__fine">Seats are held as you register. We'll follow up by email with the location and details.</p>
+          </form>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -675,6 +1010,140 @@
       }
       btn.disabled = false;
       btn.textContent = 'Notify Me';
+    });
+
+    // ── Workshop registration ──────────────────────────────────
+    const money = cents => '$' + (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
+
+    // Load live prices + spots-left and reflect them on each card
+    async function loadWorkshopAvailability() {
+      try {
+        const r = await fetch('/api/workshop-availability');
+        if (!r.ok) return;
+        const events = await r.json();
+        events.forEach(ev => {
+          const priceEl = document.querySelector(`[data-price="${ev.id}"]`);
+          if (priceEl) {
+            priceEl.innerHTML = (ev.priceCents && ev.priceCents > 0)
+              ? `${money(ev.priceCents)}<small>per seat</small>`
+              : `Price: TBD`;
+          }
+          const spotsEl = document.querySelector(`[data-spots="${ev.id}"]`);
+          const btn     = document.querySelector(`.w-register-btn[data-event="${ev.id}"]`);
+          if (spotsEl) {
+            if (ev.spotsLeft <= 0) {
+              spotsEl.textContent = 'Fully booked';
+              if (btn) {
+                btn.textContent = 'Full';
+                btn.classList.add('w-register-btn--disabled');
+                btn.disabled = true;
+              }
+            } else if (ev.spotsLeft <= 5) {
+              spotsEl.textContent = `Only ${ev.spotsLeft} spot${ev.spotsLeft === 1 ? '' : 's'} left`;
+            } else {
+              spotsEl.textContent = `${ev.spotsLeft} spots left`;
+            }
+          }
+        });
+      } catch { /* leave the static "Limited to 16 seats" fallback in place */ }
+    }
+    loadWorkshopAvailability();
+
+    // Show the confirmation banner after a successful Stripe return
+    if (new URLSearchParams(location.search).get('registered') === '1') {
+      const banner = document.getElementById('w-registered-banner');
+      if (banner) banner.style.display = 'block';
+    }
+
+    // Modal open / close
+    const overlay   = document.getElementById('w-reg-overlay');
+    const regForm   = document.getElementById('w-reg-form');
+    const regMsg    = document.getElementById('w-reg-msg');
+    const regSubmit = document.getElementById('w-reg-submit');
+
+    function openReg(eventId, title, when) {
+      document.getElementById('w-reg-event').value = eventId;
+      document.getElementById('w-reg-title').textContent = title;
+      document.getElementById('w-reg-when').textContent = when + '  ·  6:00 to 8:00 PM';
+      regMsg.textContent = '';
+      regMsg.className = 'w-modal__msg';
+      regForm.reset();
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeReg() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.w-register-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        openReg(btn.dataset.event, btn.dataset.title.replace(/&amp;/g, '&'), btn.dataset.when);
+      });
+    });
+    document.getElementById('w-reg-close').addEventListener('click', closeReg);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeReg(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeReg(); });
+
+    // Submit registration → RSVP (price TBD) or Stripe checkout (price set)
+    regForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const eventId = document.getElementById('w-reg-event').value;
+      const name    = document.getElementById('w-reg-name').value.trim();
+      const email   = document.getElementById('w-reg-email').value.trim();
+      const phone   = document.getElementById('w-reg-phone').value.trim();
+      const seats   = document.getElementById('w-reg-seats').value;
+      const notes   = document.getElementById('w-reg-notes').value.trim();
+
+      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        regMsg.textContent = 'Please enter your name and a valid email address.';
+        regMsg.className = 'w-modal__msg w-modal__msg--error';
+        return;
+      }
+
+      regSubmit.disabled = true;
+      regSubmit.textContent = 'Saving...';
+      regMsg.textContent = '';
+      regMsg.className = 'w-modal__msg';
+
+      try {
+        const r = await fetch('/api/workshop-register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, name, email, phone, seats, notes }),
+        });
+        const data = await r.json();
+
+        if (!r.ok) {
+          regSubmit.disabled = false;
+          regSubmit.textContent = 'Reserve My Spot';
+          regMsg.textContent = data.error === 'full'
+            ? 'Sorry, this evening just filled up.'
+            : (data.error || 'Something went wrong. Please try again.');
+          regMsg.className = 'w-modal__msg w-modal__msg--error';
+          return;
+        }
+
+        if (data.url) {
+          // Paid workshop — off to Stripe checkout
+          regSubmit.textContent = 'Redirecting to payment...';
+          window.location.href = data.url;
+          return;
+        }
+
+        // Free RSVP saved
+        regMsg.textContent = "You're in! Check your email for confirmation.";
+        regMsg.className = 'w-modal__msg w-modal__msg--success';
+        regSubmit.textContent = 'Reserved';
+        loadWorkshopAvailability();
+        setTimeout(closeReg, 1800);
+      } catch {
+        regSubmit.disabled = false;
+        regSubmit.textContent = 'Reserve My Spot';
+        regMsg.textContent = 'Connection error. Please try again.';
+        regMsg.className = 'w-modal__msg w-modal__msg--error';
+      }
     });
   </script>
 </body>

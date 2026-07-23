@@ -293,62 +293,6 @@
     .w-notify-msg--success { color: var(--w-olive); }
     .w-notify-msg--error   { color: #b33; }
 
-    /* ── Series intro (shared flow + tone, shown once) ─────────── */
-    .w-intro {
-      background: #fff;
-      border-radius: 8px;
-      border-top: 3px solid var(--w-olive);
-      padding: 28px 32px;
-      margin-bottom: 28px;
-      box-shadow: 0 2px 12px rgba(85,107,47,0.07);
-    }
-    .w-intro__lead {
-      font-family: Georgia, serif;
-      font-size: 1.12rem;
-      line-height: 1.7;
-      color: var(--w-text);
-      margin: 0 0 6px;
-    }
-    .w-intro__tone {
-      font-size: 0.95rem;
-      color: var(--w-muted);
-      line-height: 1.7;
-      margin: 0 0 22px;
-    }
-    .w-intro__meta {
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      color: var(--w-olive);
-      text-transform: uppercase;
-      margin: 0 0 16px;
-    }
-    .w-flow {
-      list-style: none;
-      margin: 0;
-      padding: 18px 0 0;
-      border-top: 1px solid var(--w-border);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 32px;
-    }
-    @media (max-width: 560px) { .w-flow { grid-template-columns: 1fr; } }
-    .w-flow li {
-      display: flex;
-      gap: 12px;
-      align-items: baseline;
-      font-size: 0.9rem;
-      color: var(--w-text);
-      line-height: 1.5;
-    }
-    .w-flow__time {
-      font-weight: 700;
-      color: var(--w-olive);
-      white-space: nowrap;
-      min-width: 92px;
-      font-variant-numeric: tabular-nums;
-    }
-
     /* ── Price line on each card ───────────────────────────────── */
     .w-event-card__price {
       font-family: Georgia, serif;
@@ -553,19 +497,6 @@
 
       <div class="w-banner" id="w-registered-banner" style="display:none;">
         You're all set. Thanks for registering, we've saved your spot and will be in touch with the details. See you on the farm.
-      </div>
-
-      <!-- Shared series intro: flow + tone, shown once -->
-      <div class="w-intro">
-        <p class="w-intro__lead">Four Thursday evenings in August, each one hands-on and unhurried. You make something real, taste it warm, and take the rest home.</p>
-        <p class="w-intro__tone">A relaxed, intimate evening with no rush and no presentation. Just good food, good company, and something made by hand. Every week follows the same easy flow:</p>
-        <p class="w-intro__meta">6:00 to 8:00 PM &nbsp;&middot;&nbsp; Small group of 10 to 16</p>
-        <ul class="w-flow">
-          <li><span class="w-flow__time">6:00–6:15</span><span>Arrive, mingle, light refreshments</span></li>
-          <li><span class="w-flow__time">6:15–7:15</span><span>Hands-on workshop</span></li>
-          <li><span class="w-flow__time">7:15–7:45</span><span>Taste what we made, ask questions, chat</span></li>
-          <li><span class="w-flow__time">7:45–8:00</span><span>Browse the merch table, shop, wrap up</span></li>
-        </ul>
       </div>
 
       <!-- Event list -->

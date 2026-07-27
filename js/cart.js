@@ -921,6 +921,104 @@ function closeButterModal() {
   setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }, 300);
 }
 
+// --- Seasonal Preserves — flavor modal ---
+// PRESERVES_FLAVORS is declared further down this file (with the box-customizer
+// data); by the time a shopper can actually open this modal, the whole script
+// has already run, so the later declaration is already in scope here.
+
+function injectPreservesModal() {
+  if (document.getElementById('preserves-modal-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'preserves-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.3s,visibility 0.3s;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,0.25);">
+      <div style="padding:24px 28px 16px;border-bottom:1px solid rgba(44,62,45,0.08);">
+        <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:0 0 4px;">Farmhouse Staple</p>
+        <h2 style="font-family:var(--font-serif);font-size:1.4rem;color:var(--color-green);margin:0;font-weight:400;">Seasonal Preserves</h2>
+      </div>
+      <div style="padding:24px 28px;">
+        <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Choose a Flavor</p>
+        <div id="psv-flavors" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+
+        <div style="background:var(--color-cream,#F5F0E8);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-green);">Total</span>
+          <span id="psv-total" style="font-family:var(--font-serif);font-size:1.3rem;color:var(--color-green);font-weight:400;"></span>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button id="psv-cancel" style="flex:1;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;border:1.5px solid rgba(44,62,45,0.2);background:transparent;color:rgba(44,62,45,0.6);border-radius:8px;cursor:pointer;">Cancel</button>
+          <button id="psv-add" style="flex:2;padding:14px;font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;background:var(--color-green);color:var(--color-cream,#F5F0E8);border-radius:8px;cursor:pointer;">Add to Cart</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePreservesModal(); });
+  document.getElementById('psv-cancel').onclick = closePreservesModal;
+
+  const flavorsEl = document.getElementById('psv-flavors');
+  PRESERVES_FLAVORS.forEach((f, i) => {
+    const available = f.available !== false;
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid rgba(44,62,45,0.15);border-radius:8px;cursor:' + (available ? 'pointer' : 'not-allowed') + ';opacity:' + (available ? '1' : '0.45') + ';';
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'psv-flavor';
+    radio.value = String(i);
+    radio.disabled = !available;
+    radio.checked = available && !PRESERVES_FLAVORS.slice(0, i).some(x => x.available !== false);
+    radio.style.cssText = 'width:16px;height:16px;accent-color:var(--color-rust,#8B4A2F);';
+    radio.addEventListener('change', psvUpdateTotal);
+    const text = document.createElement('span');
+    text.style.cssText = 'font-family:var(--font-sans);font-size:0.88rem;color:var(--color-green);flex:1;';
+    text.textContent = f.name + (available ? '' : ' — Sold Out');
+    const price = document.createElement('span');
+    price.style.cssText = 'font-family:var(--font-sans);font-size:0.82rem;color:rgba(44,62,45,0.5);';
+    price.textContent = available ? fmt(f.price) : '';
+    label.appendChild(radio); label.appendChild(text); label.appendChild(price);
+    flavorsEl.appendChild(label);
+  });
+
+  document.getElementById('psv-add').onclick = () => {
+    const idx = parseInt(document.querySelector('input[name="psv-flavor"]:checked')?.value ?? '-1', 10);
+    const flavor = PRESERVES_FLAVORS[idx];
+    if (!flavor) return;
+    const name = 'Seasonal Preserves — ' + flavor.name;
+
+    const cart = getCart();
+    cart.items = cart.items.filter(i => i.id !== 'seasonal-preserves');
+    cart.items.unshift({ id: 'seasonal-preserves', qty: 1, price: flavor.price, name });
+    saveCart(cart);
+
+    closePreservesModal();
+    renderCart();
+    openCart();
+  };
+}
+
+function psvUpdateTotal() {
+  const idx = parseInt(document.querySelector('input[name="psv-flavor"]:checked')?.value ?? '-1', 10);
+  const flavor = PRESERVES_FLAVORS[idx];
+  const el = document.getElementById('psv-total');
+  if (el) el.textContent = flavor ? fmt(flavor.price) : '—';
+}
+
+function openPreservesModal() {
+  if (!document.getElementById('preserves-modal-overlay')) injectPreservesModal();
+  psvUpdateTotal();
+  const overlay = document.getElementById('preserves-modal-overlay');
+  overlay.style.visibility = 'visible';
+  overlay.style.pointerEvents = 'all';
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+}
+
+function closePreservesModal() {
+  const overlay = document.getElementById('preserves-modal-overlay');
+  if (!overlay) return;
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.pointerEvents = 'none'; }, 300);
+}
+
 // --- Open / Close ---
 
 function openCart() {
@@ -3732,6 +3830,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = btn.dataset.addToCart;
       if (id === 'whole-chicken')      { openChickenModal(); }
       else if (id === 'cultured-butter') { openButterModal(); }
+      else if (id === 'seasonal-preserves') { openPreservesModal(); }
       else if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); }
       else { addItem(id); }
     });

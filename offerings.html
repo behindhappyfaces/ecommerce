@@ -341,6 +341,14 @@
               no antibiotics, no shortcuts, ever. Reserve yours before they're gone.
             </p>
             <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">$100 &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">Reserve &amp; we'll contact you</span></p>
+            <label style="display:flex;align-items:flex-start;gap:9px;margin:10px 0 14px;padding:10px 12px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;">
+              <input type="checkbox" id="turkey-card-smoke" style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
+              <span style="text-align:left;">
+                <span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);font-weight:600;">Have it smoked for you</span>
+                &nbsp;<span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-rust);font-weight:700;">+$75</span><br>
+                <span style="font-size:0.72rem;color:var(--color-text-muted);line-height:1.4;">Add-on by <strong>Good BBQ Lake Travis</strong> — ready for pick-up. Charged now, non-refundable.</span>
+              </span>
+            </label>
             <div class="offering-card__actions">
               <button class="offering-card__add" data-add-to-cart="thanksgiving-turkey" style="background:var(--color-rust);border-color:var(--color-rust);">Reserve My Turkey</button>
             </div>
@@ -537,6 +545,14 @@
           <label style="display:block;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-tan-light);margin-bottom:5px;">Email Address</label>
           <input id="tr-email" type="email" placeholder="jane@email.com" autocomplete="email" style="width:100%;padding:10px 12px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:var(--color-white);font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
         </div>
+        <label style="display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;padding:12px;border:1.5px solid rgba(255,255,255,0.2);border-radius:6px;background:rgba(255,255,255,0.06);cursor:pointer;">
+          <input type="checkbox" id="tr-smoke" style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
+          <span style="text-align:left;">
+            <span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-white);font-weight:600;">Have it smoked for you</span>
+            &nbsp;<span style="font-family:var(--font-sans);font-size:0.85rem;color:#f4a261;font-weight:700;">+$75</span><br>
+            <span style="font-size:0.7rem;color:rgba(255,255,255,0.55);line-height:1.4;">Add-on by <strong>Good BBQ Lake Travis</strong> — ready for pick-up. Charged now, non-refundable.</span>
+          </span>
+        </label>
         <p id="tr-error" style="color:#f4a261;font-size:0.8rem;margin-bottom:10px;display:none;"></p>
         <button id="tr-submit" class="turkey-modal__cta" style="width:100%;">Proceed to Payment</button>
         <p style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;line-height:1.5;">$100 deposit · final cost billed at $12/lb · all sales non-refundable</p>
@@ -922,6 +938,7 @@
           var name  = document.getElementById('tr-name').value.trim();
           var phone = document.getElementById('tr-phone').value.trim();
           var email = document.getElementById('tr-email').value.trim();
+          var smoke = document.getElementById('tr-smoke').checked;
           var err   = document.getElementById('tr-error');
           var btn   = document.getElementById('tr-submit');
 
@@ -938,7 +955,7 @@
             var res = await fetch('/reserve-checkout', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: name, email: email, phone: phone, bundle: 'bundle2', notes: 'From popup on offerings page' }),
+              body: JSON.stringify({ name: name, email: email, phone: phone, bundle: 'bundle2', notes: 'From popup on offerings page', smoke: smoke }),
             });
             var data = await res.json();
             if (!res.ok) {

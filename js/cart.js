@@ -13,6 +13,7 @@ const PRODUCTS = {
   'farm-eggs':          { name: 'Farm Eggs (1 dozen)', price: 1300, subPrice: null, image: 'images/eggs.jpg' },
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
+  'addon-turkey-smoke':    { name: 'Smoking Service — Good BBQ Lake Travis', price: 7500, subPrice: null, image: null },
   'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
   'chicken-dinner-roll-bundle': { name: 'Chicken & Dinner Roll Bundle', price: 9900, subPrice: null, image: null },
   'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 1800, subPrice: null, image: 'images/chili-crunch.jpg' },
@@ -1740,6 +1741,9 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (promoCode && promoAmt)            { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
     if (freeGiftEligible)              body.free_gift_eligible = true;
+    // Attendee details collected in the Reserve a Spot modal, keyed by workshop id
+    const workshopDetails = (() => { try { return JSON.parse(localStorage.getItem('hoto-workshop-details') || '{}'); } catch { return {}; } })();
+    if (Object.keys(workshopDetails).length) body.workshop_details = workshopDetails;
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1755,6 +1759,7 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
       localStorage.removeItem('hoto-free-gift-eligible');
       localStorage.removeItem('hoto-cart-link-token');
       localStorage.removeItem('hoto-sampler-delivery');
+      localStorage.removeItem('hoto-workshop-details');
       // Save abandoned cart so SMS reminders can fire if they don't complete
       if (deliveryMethod === 'pickup' && pickupContact?.phone) {
         try {
@@ -3841,6 +3846,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (id === 'cultured-butter') { openButterModal(); }
       else if (id === 'seasonal-preserves') { openPreservesModal(); }
       else if (PRODUCTS[id]?.subPrice) { openSubPrompt(id); }
+      else if (id === 'thanksgiving-turkey') {
+        addItem(id);
+        var smokeChk = document.getElementById('turkey-card-smoke');
+        if (smokeChk && smokeChk.checked) addItem('addon-turkey-smoke');
+      }
       else { addItem(id); }
     });
   });

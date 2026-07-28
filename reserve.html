@@ -299,12 +299,21 @@
             <div class="item-card__info">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
                 <p class="item-card__name" style="font-size:1.1rem;">Thanksgiving Turkey Bundle</p>
-                <p style="font-family:var(--font-serif);font-size:1.25rem;color:var(--color-rust);font-weight:700;white-space:nowrap;">$100</p>
+                <p style="font-family:var(--font-serif);font-size:1.25rem;color:var(--color-rust);font-weight:700;white-space:nowrap;" id="bundle2-price">$100</p>
               </div>
               <p class="item-card__desc" style="margin-top:6px;line-height:1.6;">
                 1 Pasture-Raised Thanksgiving Turkey &nbsp;·&nbsp; No antibiotics, no shortcuts
               </p>
               <p style="font-size:0.78rem;color:var(--color-text-muted);margin-top:10px;line-height:1.6;">*A reservation deposit is required to hold your order. Final cost is billed at $12/lb, with your deposit credited toward your total. All sales are non-refundable.</p>
+
+              <label style="display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--color-cream-dark);cursor:pointer;" onclick="event.stopPropagation();">
+                <input type="checkbox" id="chk-smoke" style="width:18px;height:18px;min-width:18px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" onclick="event.stopPropagation();" onchange="toggleSmokeUpcharge()" />
+                <span>
+                  <span style="font-family:var(--font-serif);font-size:0.95rem;color:var(--color-green);">Have it smoked for you</span>
+                  &nbsp;<span style="font-family:var(--font-serif);font-weight:700;color:var(--color-rust);">+$75</span><br>
+                  <span style="font-size:0.78rem;color:var(--color-text-muted);line-height:1.5;">Add-on by <strong>Good BBQ Lake Travis</strong> — they'll smoke your whole turkey and have it ready for pick-up. Charged now, non-refundable.</span>
+                </span>
+              </label>
             </div>
           </div>
 
@@ -330,6 +339,17 @@
       document.querySelectorAll('.item-card').forEach(function(c) { c.classList.remove('selected'); });
       document.getElementById('chk-' + key).checked = true;
       card.classList.add('selected');
+      if (key !== 'bundle2') {
+        var smokeChk = document.getElementById('chk-smoke');
+        if (smokeChk && smokeChk.checked) { smokeChk.checked = false; toggleSmokeUpcharge(); }
+      }
+    }
+
+    function toggleSmokeUpcharge() {
+      var checked  = document.getElementById('chk-smoke').checked;
+      var priceEl  = document.getElementById('bundle2-price');
+      priceEl.textContent = checked ? '$175' : '$100';
+      if (checked) selectBundle('bundle2', document.getElementById('card-bundle2'));
     }
 
     document.getElementById('reserve-form').addEventListener('submit', async function (e) {
@@ -339,6 +359,7 @@
       const email = document.getElementById('r-email').value.trim();
       const phone = document.getElementById('r-phone').value.trim();
       const notes = document.getElementById('r-notes').value.trim();
+      const smoke = document.getElementById('chk-smoke').checked;
       const btn   = document.getElementById('r-submit');
       const status = document.getElementById('r-status');
 
@@ -369,7 +390,7 @@
         const res = await fetch('/reserve-checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, bundle, notes }),
+          body: JSON.stringify({ name, email, phone, bundle, notes, smoke: bundle === 'bundle2' ? smoke : false }),
         });
 
         const data = await res.json();

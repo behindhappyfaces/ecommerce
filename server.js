@@ -2745,7 +2745,7 @@ app.post('/contact', async (req, res) => {
 // =========================================
 // RESERVATION CHECKOUT
 app.post('/reserve-checkout', async (req, res) => {
-  const { name, email, phone, bundle, notes } = req.body;
+  const { name, email, phone, bundle, notes, smoke } = req.body;
   if (!name || !email || !bundle) return res.status(400).json({ error: 'Missing required fields' });
 
   const bundles = {
@@ -2755,6 +2755,9 @@ app.post('/reserve-checkout', async (req, res) => {
   const chosen = bundles[bundle];
   if (!chosen) return res.status(400).json({ error: 'Invalid bundle' });
 
+  // Smoking add-on (Good BBQ Lake Travis) only applies to the turkey bundle
+  const smokeAddon = bundle === 'bundle2' && !!smoke;
+
   // Check inventory
   const product = await db.getProduct(chosen.inventoryId);
   if (product && product.stock <= 0) {
@@ -2763,12 +2766,19 @@ app.post('/reserve-checkout', async (req, res) => {
 
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
+    const line_items = [{ price_data: { currency: 'usd', product_data: { name: chosen.name }, unit_amount: chosen.amount }, quantity: 1 }];
+    if (smokeAddon) {
+      line_items.push({ price_data: { currency: 'usd', product_data: { name: 'Smoking Service — Good BBQ Lake Travis' }, unit_amount: 7500 }, quantity: 1 });
+    }
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
-      line_items: [{ price_data: { currency: 'usd', product_data: { name: chosen.name }, unit_amount: chosen.amount }, quantity: 1 }],
+      line_items,
       customer_email: email,
-      metadata: { reservation_name: name, reservation_phone: phone || '', reservation_notes: notes || '', bundle, inventory_id: chosen.inventoryId },
+      metadata: {
+        reservation_name: name, reservation_phone: phone || '', reservation_notes: notes || '',
+        bundle, inventory_id: chosen.inventoryId, smoke_addon: smokeAddon ? 'yes' : 'no',
+      },
       success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/reserve.html`,
     });

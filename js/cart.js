@@ -2577,6 +2577,14 @@ function openBoxCustomizer(subId, name, price) {
   const overlay = document.getElementById('box-customizer-overlay');
   document.getElementById('bc-title').textContent = box ? box.label : name;
 
+  // Mirror the main card's waitlist state — checked live against the DOM so
+  // this stays in sync if a box goes on/off the waitlist without a second edit.
+  const isWaitlisted = !!document.querySelector(`.waitlist-btn[data-waitlist-id="${subId}"]`);
+  const continueBtn = document.getElementById('bc-continue');
+  continueBtn.disabled = isWaitlisted;
+  continueBtn.style.opacity = isWaitlisted ? '0.5' : '';
+  continueBtn.style.cursor = isWaitlisted ? 'not-allowed' : 'pointer';
+
   // Render items
   const itemsEl = document.getElementById('bc-items');
   itemsEl.innerHTML = '';
@@ -3058,6 +3066,7 @@ function openBoxCustomizer(subId, name, price) {
 
   // Continue → populate cart with box items, open cart drawer
   document.getElementById('bc-continue').onclick = () => {
+    if (document.getElementById('bc-continue').disabled) return;
     const calculatedTotal = recalcBoxTotal();
     const swaps = [...document.querySelectorAll('#bc-items select[data-original-id]')].map(s => ({ from: s.dataset.originalId, to: s.value })).filter(s => s.from !== s.to);
 

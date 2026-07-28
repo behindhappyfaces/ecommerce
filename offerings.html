@@ -1237,6 +1237,7 @@
       recalc();
 
       atcBtn.addEventListener('click', function() {
+        if (atcBtn.disabled) return;
         var total = recalc();
         var addonTotal = 0;
         document.querySelectorAll('.sampler-addon:checked').forEach(function(cb) {
@@ -1274,7 +1275,15 @@
         if (typeof openCart  === 'function') openCart();
       });
 
-      function openSampler()  { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; recalc(); }
+      function openSampler() {
+        overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; recalc();
+        // Mirror the main card's waitlist state — checked live so this stays in
+        // sync if the box ever goes on/off the waitlist without a second edit.
+        var isWaitlisted = !!document.querySelector('.waitlist-btn[data-waitlist-id="sampler-box"]');
+        atcBtn.disabled = isWaitlisted;
+        atcBtn.style.opacity = isWaitlisted ? '0.5' : '';
+        atcBtn.style.cursor = isWaitlisted ? 'not-allowed' : 'pointer';
+      }
       function closeSampler() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
       document.getElementById('sampler-whats-inside').addEventListener('click', openSampler);
       document.getElementById('sampler-modal-close').addEventListener('click', closeSampler);

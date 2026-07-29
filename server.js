@@ -712,11 +712,16 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           expand: ['line_items'],
         });
 
-        const isPaid = session.payment_status === 'paid';
+        // Stripe marks a genuine $0 total (e.g. workshops while priceCents is 0
+        // for testing) as 'no_payment_required', not 'paid' — treat both as paid.
+        // A $0 session also has no payment_intent, so fall back to the session
+        // id as the order's dedup key (matches the pattern used by the Stripe
+        // sync tool below).
+        const isPaid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
         const total  = formatMoney(session.amount_total);
         const items  = session.line_items?.data ?? [];
         const date   = formatDate(session.created);
-        const piId   = session.payment_intent;
+        const piId   = session.payment_intent || ('sess_' + session.id);
 
         const customerEmail  = session.customer_details?.email;
         const customerName   = session.customer_details?.name || 'Valued Customer';
@@ -724,47 +729,55 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const shippingAddr   = session.shipping_details?.address;
         const siteUrl        = process.env.SITE_URL || 'https://heartoftexasorganics.com';
 
-        // Confirm workshop seats booked through the normal cart checkout —
-        // capacity was already checked at session-creation time, so this just
-        // records the paid reservation and emails both sides.
-        if (isPaid && session.metadata?.workshop_regs) {
+        // Confirm workshop seats booked through the normal cart checkout. The
+        // registration record (with the attendee's own name/email/phone/notes)
+        // was already written as "pending_payment" when the session was created —
+        // this just flips it to paid and sends the confirmation email, which is
+        // intentionally withheld until payment actually goes through.
+        if (isPaid && session.metadata?.workshop_reg_ids) {
           try {
-            const regsRequested = JSON.parse(session.metadata.workshop_regs);
-            const attendeeName  = (session.custom_fields || []).find(f => f.key === 'attendee_name')?.text?.value || customerName;
-            const attendeeAllergies = (session.custom_fields || []).find(f => f.key === 'allergies')?.text?.value || 'None listed';
-            const attendeePhone = session.customer_details?.phone || '';
+            const regIds = JSON.parse(session.metadata.workshop_reg_ids);
             const wRegs = await readWorkshopRegs();
+            let changed = false;
 
-            for (const r of regsRequested) {
-              const ev = WORKSHOPS.find(w => w.id === r.id);
+            for (const regId of regIds) {
+              const reg = wRegs.find(r => r.id === regId);
+              if (!reg || reg.status === 'paid') continue;
+              const ev = WORKSHOPS.find(w => w.id === reg.eventId);
               if (!ev) continue;
-              const seatCount = parseInt(r.qty) || 1;
-              wRegs.push({
-                eventId: ev.id, name: attendeeName, email: customerEmail || '', phone: attendeePhone,
-                seats: seatCount, notes: attendeeAllergies, status: 'paid', createdAt: new Date().toISOString(), sessionId: session.id,
-              });
+
+              reg.status = 'paid';
+              reg.paidAt = new Date().toISOString();
+              reg.sessionId = session.id;
+              changed = true;
 
               const evLabel = `${ev.title} — ${formatWorkshopDate(ev.date)}`;
+              const guestListHtml = (reg.guests || []).length
+                ? `<ul>${reg.guests.map(g => `<li>${escHtml(g.name) || '(no name)'}${g.email ? ' — ' + escHtml(g.email) : ''}</li>`).join('')}</ul>`
+                : '<p style="color:#6B6B5E;">None listed</p>';
+
               await sendEmail(
-                `Workshop registration (paid) — ${evLabel} (${seatCount} seat${seatCount === 1 ? '' : 's'})`,
+                `Workshop registration (paid) — ${evLabel} (${reg.seats} seat${reg.seats === 1 ? '' : 's'})`,
                 `<h2 style="color:#2C3E2D;">New Paid Workshop Registration</h2>
                  <p><strong>Event:</strong> ${escHtml(evLabel)}</p>
-                 <p><strong>Seats:</strong> ${seatCount}</p>
-                 <p><strong>Name:</strong> ${escHtml(attendeeName)}</p>
-                 <p><strong>Email:</strong> <a href="mailto:${encodeURIComponent(customerEmail || '')}">${escHtml(customerEmail || '')}</a></p>
-                 <p><strong>Phone:</strong> ${escHtml(attendeePhone) || 'Not provided'}</p>
-                 <p><strong>Allergies:</strong> ${escHtml(attendeeAllergies)}</p>
+                 <p><strong>Seats:</strong> ${reg.seats}</p>
+                 <p><strong>Name:</strong> ${escHtml(reg.name)}</p>
+                 <p><strong>Email:</strong> <a href="mailto:${encodeURIComponent(reg.email)}">${escHtml(reg.email)}</a></p>
+                 <p><strong>Phone:</strong> ${escHtml(reg.phone) || 'Not provided'}</p>
+                 <p><strong>Allergies:</strong> ${escHtml(reg.notes) || 'None'}</p>
+                 <p><strong>Guests:</strong></p>
+                 ${guestListHtml}
                  <p><strong>Paid:</strong> ${formatMoney(session.amount_total)}</p>`
               );
 
-              if (customerEmail) {
+              if (reg.email) {
                 try {
                   await sendEmailTo(
-                    customerEmail,
+                    reg.email,
                     `You're in — ${ev.title}`,
                     `<div style="font-family:Georgia,serif;color:#2A2A2A;line-height:1.65;">
-                       <h2 style="color:#2C3E2D;">Your spot is saved</h2>
-                       <p>Thanks ${escHtml(attendeeName.split(' ')[0])}! We've saved ${seatCount} seat${seatCount === 1 ? '' : 's'} for you at
+                       <h2 style="color:#2C3E2D;">Payment received — your spot is confirmed</h2>
+                       <p>Thanks ${escHtml(reg.name.split(' ')[0])}! We've confirmed ${reg.seats} seat${reg.seats === 1 ? '' : 's'} for you at
                          <strong>${escHtml(ev.title)}</strong> on ${formatWorkshopDate(ev.date)}, 6:00 to 8:00 PM.</p>
                        <p>It's a small, relaxed evening. Come a few minutes early, bring your appetite, and we'll take care of the rest.
                          We'll follow up with the location and anything else you need to know.</p>
@@ -774,7 +787,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 } catch (e) { console.warn('[workshop] guest confirmation failed:', e.message); }
               }
             }
-            await saveWorkshopRegs(wRegs);
+            if (changed) await saveWorkshopRegs(wRegs);
           } catch (e) {
             console.error('[workshop] webhook registration failed:', e.message);
           }
@@ -2132,7 +2145,7 @@ app.post('/create-checkout-session', async (req, res) => {
     const { items, shipping, delivery_method, billing, gift, pickup_location, pickup_contact,
             delivery_address, delivery_promo_code,
             promo_code, promo_discount_cents, tax_rate_pct, free_gift_eligible,
-            cart_link_token } = req.body;
+            cart_link_token, workshop_details } = req.body;
     // delivery_fee_cents from client is intentionally not destructured — fee is always
     // recomputed server-side to prevent price tampering
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -2141,27 +2154,52 @@ app.post('/create-checkout-session', async (req, res) => {
     // Workshop seats: price and capacity are never trusted from the client —
     // same reasoning as the delivery fee above. Any cart item whose id starts
     // with "workshop-" gets its price/name overwritten from the WORKSHOPS list,
-    // and the request is rejected if not enough seats remain.
+    // and the request is rejected if not enough seats remain. Attendee details
+    // were already collected in the Reserve a Spot modal before the item was
+    // added to the cart, so we don't ask Stripe to collect them again.
     const cartWorkshopItems = items.filter(i => isWorkshopId(i.id));
     const isWorkshopOnlyCart = items.length > 0 && cartWorkshopItems.length === items.length;
+    const newWorkshopRegIds = [];
+    let workshopCustomerEmail = null;
     if (cartWorkshopItems.length) {
       const wRegsNow = await readWorkshopRegs();
       for (const item of cartWorkshopItems) {
         const ev = WORKSHOPS.find(w => w.id === item.id);
         if (!ev) return res.status(400).json({ error: 'One of the workshops in your cart is no longer available.' });
-        if (!ev.priceCents || ev.priceCents <= 0) {
-          return res.status(400).json({ error: `${ev.title} isn't open for paid registration yet.` });
+        if (ev.priceCents == null) {
+          return res.status(400).json({ error: `${ev.title} isn't open for checkout yet.` });
+        }
+        const details = (workshop_details || {})[item.id];
+        if (!details || !details.name || !details.email || !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(details.email) || !details.phone || !details.notes) {
+          return res.status(400).json({ error: `Please fill in your details for ${ev.title} before checking out.` });
         }
         item.price    = ev.priceCents;
         item.name     = `${ev.title} — ${formatWorkshopDate(ev.date)}`;
         item.taxable  = false;
+        const seatCount = item.quantity || 1;
         const left = WORKSHOP_CAP - workshopSeatsBooked(wRegsNow, ev.id);
-        if ((item.quantity || 1) > left) {
+        if (seatCount > left) {
           return res.status(400).json({
             error: left <= 0 ? `${ev.title} is fully booked.` : `Only ${left} spot${left === 1 ? '' : 's'} left for ${ev.title}.`,
           });
         }
+        const cleanGuests = Array.isArray(details.guests)
+          ? details.guests.slice(0, seatCount - 1).map(g => ({
+              name: String(g?.name || '').trim().slice(0, 200), email: String(g?.email || '').trim().slice(0, 200),
+            })).filter(g => g.name || g.email)
+          : [];
+        const regId = crypto.randomBytes(12).toString('hex');
+        wRegsNow.push({
+          id: regId, eventId: ev.id,
+          name: String(details.name).trim().slice(0, 200), email: String(details.email).trim().slice(0, 200),
+          phone: String(details.phone).trim().slice(0, 60), notes: String(details.notes).trim().slice(0, 1000),
+          guests: cleanGuests, seats: seatCount, status: 'pending_payment', reminderSentAt: null,
+          createdAt: new Date().toISOString(),
+        });
+        newWorkshopRegIds.push(regId);
+        if (!workshopCustomerEmail) workshopCustomerEmail = String(details.email).trim();
       }
+      await saveWorkshopRegs(wRegsNow);
       if (isWorkshopOnlyCart) isShip = false; // no shipping/pickup address needed for a class
     }
 
@@ -2333,11 +2371,9 @@ app.post('/create-checkout-session', async (req, res) => {
     if (cart_link_token) {
       metadata.cart_link_token = cart_link_token.slice(0, 500);
     }
-    if (cartWorkshopItems.length) {
-      // Read back by the webhook to register confirmed seats once payment succeeds
-      metadata.workshop_regs = JSON.stringify(
-        cartWorkshopItems.map(i => ({ id: i.id, qty: i.quantity || 1 }))
-      ).slice(0, 490);
+    if (newWorkshopRegIds.length) {
+      // Read back by the webhook to confirm these pending registrations once payment succeeds
+      metadata.workshop_reg_ids = JSON.stringify(newWorkshopRegIds).slice(0, 490);
     }
 
     // Allow Stripe's promo code box only when no turkey in cart and no discount already applied
@@ -2358,29 +2394,12 @@ app.post('/create-checkout-session', async (req, res) => {
       sessionParams.phone_number_collection     = { enabled: true };
     }
 
-    // Workshop-only cart: no shipping/pickup address needed, but we do need the
-    // attendee's name, phone, and any allergies — it's a hands-on food class.
-    if (isWorkshopOnlyCart) {
-      sessionParams.phone_number_collection = { enabled: true };
-      sessionParams.custom_fields = [
-        {
-          key: 'attendee_name',
-          label: { type: 'custom', custom: 'Full Name (for your reservation)' },
-          type: 'text',
-          optional: false,
-        },
-        {
-          key: 'allergies',
-          label: { type: 'custom', custom: 'Any allergies? If none, list None' },
-          type: 'text',
-          optional: false,
-        },
-      ];
-    }
-
-    // For pickup orders: pre-attach customer by email so Stripe skips the email field
-    if (!isShip && pickup_contact?.email) {
-      const email = pickup_contact.email.trim();
+    // For pickup orders (including workshop-only carts): pre-attach customer by
+    // email so Stripe skips asking for it again — name/phone/allergies were
+    // already collected in our own form before the item was added to the cart.
+    const preAttachEmail = workshopCustomerEmail || pickup_contact?.email;
+    if (!isShip && preAttachEmail) {
+      const email = preAttachEmail.trim();
       const existing = await stripe.customers.list({ email, limit: 1 });
       const customer = existing.data.length
         ? existing.data[0]
@@ -4813,18 +4832,25 @@ app.get('/admin/workshop-interest', requireAdmin, async (req, res) => {
 // =========================================
 // WORKSHOP REGISTRATION — August Thursday Night Series
 // =========================================
-// Each event's price starts null (TBD). While null, "Reserve a Spot" is a free
-// RSVP (records the seat, emails the farm + guest). Set priceCents to a number
-// and that event automatically becomes a real cart item that goes through the
-// site's normal checkout — no other changes needed. Ids are prefixed "workshop-"
-// so the cart (js/cart.js) and checkout (/create-checkout-session) can recognize
-// them generically. Keep this list in sync with the cards in workshops.html.
-const WORKSHOP_CAP = 16; // small-group cap (10–16); spots-left counts down from here
+// These classes are paid — priceCents is set to 0 for now so the full
+// cart → checkout → Stripe → confirmation flow can be tested end-to-end
+// before real pricing goes live. Update each priceCents to the real amount
+// (in cents) when ready. While priceCents is null (not set at all), the
+// event shows "Coming Soon" and "Reserve a Spot" just holds the seat via
+// /api/workshop-register, with pricing/payment to follow later. Once
+// priceCents is any number (including 0), the event is a real cart item:
+// clicking "Reserve a Spot" adds it straight to the cart, and attendee
+// details (name/email/phone/seats/allergies) are collected in a modal at
+// checkout time, then carried through to Stripe. Ids are prefixed
+// "workshop-" so the cart (js/cart.js) and checkout (/create-checkout-session)
+// can recognize them generically. Keep this list in sync with the cards in
+// workshops.html.
+const WORKSHOP_CAP = 15; // small-group cap; spots-left counts down from here
 const WORKSHOPS = [
-  { id: 'workshop-aug-06-challah',   title: 'Challah Bread Night',                 date: '2026-08-06', priceCents: null },
-  { id: 'workshop-aug-13-butter',    title: 'Cultured Butter & Compound Butters',  date: '2026-08-13', priceCents: null },
-  { id: 'workshop-aug-20-pasta',     title: 'Homemade Pasta Night',               date: '2026-08-20', priceCents: null },
-  { id: 'workshop-aug-27-breakfast', title: 'Farm Breakfast for Dinner',          date: '2026-08-27', priceCents: null },
+  { id: 'workshop-aug-06-challah',   title: 'Challah Bread Night',                 date: '2026-08-06', priceCents: 0 },
+  { id: 'workshop-aug-13-butter',    title: 'Cultured Butter & Compound Butters',  date: '2026-08-13', priceCents: 0 },
+  { id: 'workshop-aug-20-pasta',     title: 'Homemade Pasta Night',               date: '2026-08-20', priceCents: 0 },
+  { id: 'workshop-aug-27-breakfast', title: 'Farm Breakfast for Dinner',          date: '2026-08-27', priceCents: 0 },
 ];
 const isWorkshopId = id => typeof id === 'string' && id.startsWith('workshop-');
 
@@ -4862,7 +4888,7 @@ app.get('/api/workshop-availability', async (req, res) => {
   }
 });
 
-// Register — free RSVP while price is TBD, Stripe checkout once a price is set
+// Register — holds the seat while pricing is pending, Stripe checkout once a price is set
 app.post('/api/workshop-register', express.json(), async (req, res) => {
   try {
     const { eventId, name, email, phone, seats, notes, guests } = req.body || {};
@@ -4889,9 +4915,9 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
 
     // Once a price is set, this workshop is a real cart item that goes through
     // the site's normal checkout (see /create-checkout-session). This endpoint
-    // only handles the free RSVP path — the client shouldn't reach here for a
-    // priced event, but guard it anyway.
-    if (ev.priceCents && ev.priceCents > 0) {
+    // only handles the pending-price path — the client shouldn't reach here for
+    // a priced event, but guard it anyway.
+    if (ev.priceCents != null) {
       return res.status(400).json({ error: 'This workshop requires checkout — please use Reserve a Spot to add it to your cart.' });
     }
 
@@ -4900,8 +4926,9 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
       ? `<ul>${cleanGuests.map(g => `<li>${escHtml(g.name) || '(no name)'}${g.email ? ' — ' + escHtml(g.email) : ''}</li>`).join('')}</ul>`
       : '<p style="color:#6B6B5E;">None listed</p>';
 
-    // FREE / TBD path — record the RSVP and email both sides
-    regs.push({ eventId: ev.id, name: cleanName, email, phone: phone || '', seats: seatCount, notes: notes || '', guests: cleanGuests, status: 'rsvp', createdAt: new Date().toISOString() });
+    // Price still pending — hold the seat and email both sides. No payment is
+    // due yet; the farm will follow up once pricing/checkout is live.
+    regs.push({ eventId: ev.id, name: cleanName, email, phone: phone || '', seats: seatCount, notes: notes || '', guests: cleanGuests, status: 'pending_price', createdAt: new Date().toISOString() });
     await saveWorkshopRegs(regs);
 
     await sendEmail(
@@ -4942,6 +4969,99 @@ app.post('/api/workshop-register', express.json(), async (req, res) => {
 app.get('/admin/workshop-registrations', requireAdmin, async (req, res) => {
   res.json(await readWorkshopRegs());
 });
+
+// Clicked from the 24-hour abandoned-checkout reminder email — rebuilds a fresh
+// Stripe session for that one pending registration (the original session has
+// long since expired) and sends the browser straight to it.
+app.get('/api/workshop-resume-checkout', async (req, res) => {
+  const siteUrl = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+  try {
+    const { id } = req.query;
+    const regs = await readWorkshopRegs();
+    const reg = regs.find(r => r.id === id);
+    if (!reg || reg.status !== 'pending_payment') {
+      return res.redirect(`${siteUrl}/workshops.html`);
+    }
+    const ev = WORKSHOPS.find(w => w.id === reg.eventId);
+    if (!ev || ev.priceCents == null) {
+      return res.redirect(`${siteUrl}/workshops.html`);
+    }
+    const left = WORKSHOP_CAP - workshopSeatsBooked(regs.filter(r => r.id !== reg.id), ev.id);
+    if (reg.seats > left) {
+      return res.redirect(`${siteUrl}/workshops.html`);
+    }
+
+    const email = reg.email.trim();
+    const existing = await stripe.customers.list({ email, limit: 1 });
+    const customer = existing.data.length ? existing.data[0] : await stripe.customers.create({ email });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer: customer.id,
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `${ev.title} — ${formatWorkshopDate(ev.date)}` },
+          unit_amount: ev.priceCents,
+        },
+        quantity: reg.seats,
+      }],
+      metadata: { workshop_reg_ids: JSON.stringify([reg.id]) },
+      success_url: `${siteUrl}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${siteUrl}/workshops.html`,
+    });
+
+    reg.sessionId = session.id;
+    await saveWorkshopRegs(regs);
+    res.redirect(session.url);
+  } catch (e) {
+    console.error('[workshop] resume checkout error:', e.message);
+    res.redirect(`${siteUrl}/workshops.html`);
+  }
+});
+
+// Cron: every 30 minutes — nudge anyone who started a paid workshop checkout
+// but didn't finish within 24 hours. Fires once per registration.
+if (cron) {
+  cron.schedule('*/30 * * * *', async () => {
+    try {
+      const regs = await readWorkshopRegs();
+      const now = Date.now();
+      const siteUrl = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+      let changed = false;
+
+      for (const reg of regs) {
+        if (reg.status !== 'pending_payment' || reg.reminderSentAt) continue;
+        const age = now - new Date(reg.createdAt).getTime();
+        if (age < 24 * 60 * 60 * 1000) continue;
+        const ev = WORKSHOPS.find(w => w.id === reg.eventId);
+        if (!ev || !reg.email) continue;
+
+        try {
+          await sendEmailTo(
+            reg.email,
+            `You're SO close — finish your spot for ${ev.title}`,
+            `<div style="font-family:Georgia,serif;color:#2A2A2A;line-height:1.65;">
+               <h2 style="color:#2C3E2D;">Don't miss your spot</h2>
+               <p>Hi ${escHtml(reg.name.split(' ')[0])}, you started reserving ${reg.seats} seat${reg.seats === 1 ? '' : 's'} for
+                 <strong>${escHtml(ev.title)}</strong> on ${formatWorkshopDate(ev.date)} but didn't finish checking out.
+                 It's a small group and seats are limited — we'd love to have you.</p>
+               <p><a href="${siteUrl}/api/workshop-resume-checkout?id=${encodeURIComponent(reg.id)}"
+                  style="display:inline-block;background:#2C3E2D;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Finish My Reservation</a></p>
+               <p style="color:#6B6B5E;">See you soon,<br>Heart of Texas Organics</p>
+             </div>`
+          );
+          reg.reminderSentAt = new Date().toISOString();
+          changed = true;
+        } catch (e) { console.warn('[workshop] reminder email failed:', e.message); }
+      }
+      if (changed) await saveWorkshopRegs(regs);
+    } catch (e) {
+      console.error('[workshop] reminder cron error:', e.message);
+    }
+  });
+}
 
 // =========================================
 // =========================================

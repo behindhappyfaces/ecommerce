@@ -81,6 +81,16 @@ function saveCart(cart) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
 }
 
+// Closes a modal on backdrop click, but only when the drag actually started
+// on the backdrop too — otherwise dragging to select text inside a field
+// and releasing the mouse a pixel past the modal's edge closes the whole
+// thing mid-selection.
+function addBackdropClose(overlay, closeFn) {
+  let downOnBackdrop = false;
+  overlay.addEventListener('mousedown', e => { downOnBackdrop = (e.target === overlay); });
+  overlay.addEventListener('click', e => { if (e.target === overlay && downOnBackdrop) closeFn(); });
+}
+
 // Workshop seats (ids prefixed "workshop-") don't need shipping or pickup —
 // a cart made up entirely of them skips straight to checkout.
 function isWorkshopOnlyCart() {
@@ -663,7 +673,7 @@ function injectClearCartModal() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeClearCartModal(); });
+  addBackdropClose(overlay, () => closeClearCartModal());
 
   keepBtn.addEventListener('click', () => {
     localStorage.setItem('hoto-free-gift-eligible', 'true');
@@ -738,7 +748,7 @@ function injectChickenModal() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeChickenModal(); });
+  addBackdropClose(overlay, () => closeChickenModal());
   document.getElementById('chk-cancel').onclick = closeChickenModal;
 
   const weightsEl = document.getElementById('chk-weights');
@@ -845,7 +855,7 @@ function injectButterModal() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeButterModal(); });
+  addBackdropClose(overlay, () => closeButterModal());
   document.getElementById('but-cancel').onclick = closeButterModal;
 
   const sizesEl = document.getElementById('but-sizes');
@@ -956,7 +966,7 @@ function injectPreservesModal() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closePreservesModal(); });
+  addBackdropClose(overlay, () => closePreservesModal());
   document.getElementById('psv-cancel').onclick = closePreservesModal;
 
   const flavorsEl = document.getElementById('psv-flavors');
@@ -1079,7 +1089,7 @@ function injectAddressConfirmModal() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+  addBackdropClose(overlay, () => overlay.classList.remove('open'));
 }
 
 function showAddressConfirmModal(entered, suggested, onSelect) {
@@ -1311,7 +1321,7 @@ function injectShipCalcModal() {
     } catch { /* silent — not critical */ }
   });
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeShipCalcModal(); });
+  addBackdropClose(overlay, () => closeShipCalcModal());
   cancelBtn.addEventListener('click', closeShipCalcModal);
   getRatesBtn.addEventListener('click', fetchShippingRates);
   continueBtn.addEventListener('click', checkoutWithShipping);
@@ -2009,7 +2019,7 @@ function injectSubscriberModal() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeSubPrompt(); });
+  addBackdropClose(overlay, () => closeSubPrompt());
 }
 
 function openSubPrompt(productId) {
@@ -2114,7 +2124,7 @@ function injectPickupLocationModal() {
   box.appendChild(cancelBtn);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closePickupLocationModal(); });
+  addBackdropClose(overlay, () => closePickupLocationModal());
 }
 
 function closePickupLocationModal() {
@@ -2338,7 +2348,7 @@ function openPickupContactModal(location, onConfirm) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add('open'));
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  addBackdropClose(overlay, () => overlay.remove());
 }
 
 function showAddressChoice(entered, verified, onSelect) {
@@ -2615,7 +2625,7 @@ function injectBoxCustomizer() {
       </div>
     </div>`;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeBoxCustomizer(); });
+  addBackdropClose(overlay, () => closeBoxCustomizer());
   document.getElementById('bc-close').onclick = closeBoxCustomizer;
   document.getElementById('bc-cancel').onclick = closeBoxCustomizer;
 }
@@ -3412,7 +3422,7 @@ function injectDeliveryModal() {
   box.appendChild(step3);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeDeliveryModal(); });
+  addBackdropClose(overlay, () => closeDeliveryModal());
 }
 
 function _openDeliveryStep2(onConfirm) {

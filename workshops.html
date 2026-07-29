@@ -873,26 +873,18 @@
 
     // Once a workshop has a price (including $0 while testing), "Reserve a
     // Spot" adds it straight to the site cart — same pattern as the Whole
-    // Chicken / Real Cream Butter custom-priced items. Attendee details
-    // (name/email/phone/seats/allergies) are collected later, at checkout.
-    // While a workshop is still "Coming Soon" (priceCents === null), the
-    // button instead opens this page's own RSVP modal to hold the seat.
+    // Chicken / Real Cream Butter custom-priced items. Name and allergies are
+    // collected later, at checkout, as extra fields on the same Contact Info
+    // step used for regular pickup orders (see openPickupContactModal in
+    // js/cart.js) — seats are just the cart quantity. While a workshop is
+    // still "Coming Soon" (priceCents === null), the button instead opens
+    // this page's own RSVP modal to hold the seat.
     function addWorkshopToCart(id, title, when, priceCents, seatCount) {
       const cart = getCart();
       const existing = cart.items.find(i => i.id === id);
       if (existing) { existing.qty += seatCount; }
       else { cart.items.push({ id, qty: seatCount, price: priceCents, name: `${title} — ${when}` }); }
       saveCart(cart);
-      // Seat count just changed — clear any previously-collected attendee
-      // details for this workshop so checkout re-confirms them against the
-      // new count instead of carrying over a stale seat number.
-      try {
-        const details = JSON.parse(localStorage.getItem('hoto-workshop-details') || '{}');
-        if (details[id]) {
-          delete details[id];
-          localStorage.setItem('hoto-workshop-details', JSON.stringify(details));
-        }
-      } catch {}
       renderCart();
       openCart();
     }

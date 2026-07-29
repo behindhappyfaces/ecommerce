@@ -583,7 +583,9 @@ function renderCart() {
   checkoutBtn.textContent = subscribing ? `Subscribe — ${fmt(monthlyPrice)}/mo` : 'Proceed to Checkout';
   const checkoutHandler = adminSub ? openAdminSubDeliveryModal
                         : subscribing ? openCartDeliveryModal
-                        : workshopOnly ? beginWorkshopCheckout
+                        // Workshops aren't tied to a pickup location — skip straight to
+                        // the (workshop-aware) contact info step.
+                        : workshopOnly ? () => openPickupContactModal('your workshop', contact => checkout('pickup', null, contact))
                         : openOneTimeDeliveryChoice;
   checkoutBtn.addEventListener('click', checkoutHandler);
 
@@ -1034,191 +1036,6 @@ function closeCart() {
   document.body.style.overflow = '';
 }
 
-// --- Workshop Reservation Modal ---
-// Attendee details (name/email/phone/seats/allergies) for a workshop seat are
-// collected here, at checkout time, rather than the moment "Reserve a Spot"
-// is clicked on workshops.html — that button just adds the seat to the cart.
-// beginWorkshopCheckout() walks every workshop-* cart item and opens this
-// modal for any that don't already have valid saved details, then proceeds
-// to the normal checkout once the queue is empty.
-
-let _workshopRegResolve = null;
-
-function injectWorkshopRegModal() {
-  if (document.getElementById('workshop-reg-overlay')) return;
-
-  const overlay = document.createElement('div');
-  overlay.id = 'workshop-reg-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.3s,visibility 0.3s;';
-  overlay.innerHTML = `
-    <div style="width:100%;max-width:420px;max-height:92vh;overflow-y:auto;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,0.3);">
-      <div style="background:var(--color-green);padding:22px 26px 18px;position:relative;">
-        <button id="wr-close" aria-label="Close" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,0.8);font-size:1.3rem;cursor:pointer;line-height:1;">&times;</button>
-        <p style="font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-tan-light,#D4BA8A);margin:0 0 6px;">Reserve a Spot</p>
-        <h2 id="wr-title" style="font-family:var(--font-serif);font-size:1.4rem;color:#fff;margin:0 0 4px;font-weight:400;">Workshop</h2>
-        <p id="wr-when" style="font-family:var(--font-sans);font-size:0.85rem;color:rgba(255,255,255,0.7);margin:0;">6:00 to 8:00 PM</p>
-      </div>
-      <div style="background:var(--color-cream,#F5F0E8);padding:24px 26px 28px;">
-        <form id="wr-form" novalidate>
-          <div style="margin-bottom:14px;">
-            <label style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted,#6B6B5E);margin-bottom:6px;">Full Name</label>
-            <input type="text" id="wr-name" placeholder="Jane Smith" autocomplete="name" required style="width:100%;padding:11px 13px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
-          </div>
-          <div style="margin-bottom:14px;">
-            <label style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted,#6B6B5E);margin-bottom:6px;">Email Address</label>
-            <input type="email" id="wr-email" placeholder="jane@email.com" autocomplete="email" required style="width:100%;padding:11px 13px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
-          </div>
-          <div style="display:flex;gap:12px;margin-bottom:14px;">
-            <div style="flex:1;">
-              <label style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted,#6B6B5E);margin-bottom:6px;">Phone</label>
-              <input type="tel" id="wr-phone" placeholder="(512) 555-0100" autocomplete="tel" required style="width:100%;padding:11px 13px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;" />
-            </div>
-            <div style="flex:1;">
-              <label style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted,#6B6B5E);margin-bottom:6px;">Seats</label>
-              <select id="wr-seats" style="width:100%;padding:11px 13px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.9rem;background:#fff;box-sizing:border-box;">
-                <option value="1">1 seat</option>
-                <option value="2">2 seats</option>
-                <option value="3">3 seats</option>
-                <option value="4">4 seats</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-bottom:14px;">
-            <label style="display:block;font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted,#6B6B5E);margin-bottom:6px;">Any allergies? If none, list None</label>
-            <textarea id="wr-notes" rows="2" placeholder="List any allergies, or type None" required style="width:100%;padding:11px 13px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.9rem;box-sizing:border-box;resize:vertical;"></textarea>
-          </div>
-          <div id="wr-guests"></div>
-          <button type="submit" id="wr-submit" style="width:100%;padding:14px;font-family:var(--font-sans);font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border:none;background:var(--color-rust,#8B4A2F);color:#fff;border-radius:8px;cursor:pointer;margin-top:4px;">Continue</button>
-          <p id="wr-msg" style="margin:10px 0 0;font-size:0.82rem;text-align:center;min-height:18px;color:var(--color-rust,#8B4A2F);"></p>
-          <p style="margin:10px 0 0;font-size:0.75rem;color:var(--color-text-muted,#6B6B5E);text-align:center;">We'll follow up by email with the location and details.</p>
-        </form>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  function cancel() {
-    const resolve = _workshopRegResolve;
-    _workshopRegResolve = null;
-    closeWorkshopRegModal();
-    if (resolve) resolve(null);
-  }
-  overlay.addEventListener('click', e => { if (e.target === overlay) cancel(); });
-  document.getElementById('wr-close').addEventListener('click', cancel);
-  document.getElementById('wr-seats').addEventListener('change', renderWorkshopGuestRows);
-
-  document.getElementById('wr-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const name  = document.getElementById('wr-name').value.trim();
-    const email = document.getElementById('wr-email').value.trim();
-    const phone = document.getElementById('wr-phone').value.trim();
-    const seats = document.getElementById('wr-seats').value;
-    const notes = document.getElementById('wr-notes').value.trim();
-    const msg   = document.getElementById('wr-msg');
-
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !phone || !notes) {
-      msg.textContent = 'Please fill in your name, email, phone, and allergies (or type None).';
-      return;
-    }
-    const seatCount = parseInt(seats, 10) || 1;
-    const guests = [];
-    for (let i = 1; i < seatCount; i++) {
-      const gName  = document.getElementById(`wr-guest-name-${i}`)?.value.trim() || '';
-      const gEmail = document.getElementById(`wr-guest-email-${i}`)?.value.trim() || '';
-      if (gName || gEmail) guests.push({ name: gName, email: gEmail });
-    }
-
-    const resolve = _workshopRegResolve;
-    _workshopRegResolve = null;
-    closeWorkshopRegModal();
-    if (resolve) resolve({ name, email, phone, notes, seats: seatCount, guests });
-  });
-}
-
-function renderWorkshopGuestRows() {
-  const seats = parseInt(document.getElementById('wr-seats').value, 10) || 1;
-  const wrap = document.getElementById('wr-guests');
-  wrap.innerHTML = '';
-  for (let i = 1; i < seats; i++) {
-    const block = document.createElement('div');
-    block.style.cssText = 'margin-bottom:14px;padding-top:10px;border-top:1px dashed var(--color-cream-dark,#EDE6D6);';
-    block.innerHTML = `
-      <p style="font-size:0.72rem;color:var(--color-text-muted,#6B6B5E);margin:0 0 8px;">Guest ${i} (optional)</p>
-      <div style="display:flex;gap:12px;">
-        <input type="text" id="wr-guest-name-${i}" placeholder="Guest full name" autocomplete="off" style="flex:1;padding:10px 12px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.85rem;box-sizing:border-box;" />
-        <input type="email" id="wr-guest-email-${i}" placeholder="Guest email" autocomplete="off" style="flex:1;padding:10px 12px;border:1.5px solid var(--color-cream-dark,#EDE6D6);border-radius:6px;font-family:var(--font-sans);font-size:0.85rem;box-sizing:border-box;" />
-      </div>`;
-    wrap.appendChild(block);
-  }
-}
-
-// Returns a Promise resolving to { name, email, phone, notes, seats, guests },
-// or null if the customer closed the modal without finishing.
-let _workshopModalCloseTimer = null;
-
-function openWorkshopRegModal(item) {
-  if (!document.getElementById('workshop-reg-overlay')) injectWorkshopRegModal();
-  // Cancel any pending close cleanup from a previous modal in this queue —
-  // otherwise it fires ~300ms later and clobbers this freshly-opened one.
-  if (_workshopModalCloseTimer) { clearTimeout(_workshopModalCloseTimer); _workshopModalCloseTimer = null; }
-
-  const parts = (item.name || '').split(' — ');
-  document.getElementById('wr-title').textContent = parts[0] || item.name || 'Workshop';
-  document.getElementById('wr-when').textContent = parts[1] || '';
-  document.getElementById('wr-form').reset();
-  document.getElementById('wr-seats').value = String(item.qty || 1);
-  document.getElementById('wr-msg').textContent = '';
-  renderWorkshopGuestRows();
-
-  const overlay = document.getElementById('workshop-reg-overlay');
-  overlay.style.visibility = 'visible';
-  overlay.style.pointerEvents = 'all';
-  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
-
-  return new Promise(resolve => { _workshopRegResolve = resolve; });
-}
-
-function closeWorkshopRegModal() {
-  const overlay = document.getElementById('workshop-reg-overlay');
-  if (!overlay) return;
-  overlay.style.opacity = '0';
-  if (_workshopModalCloseTimer) clearTimeout(_workshopModalCloseTimer);
-  _workshopModalCloseTimer = setTimeout(() => {
-    overlay.style.visibility = 'hidden';
-    overlay.style.pointerEvents = 'none';
-    _workshopModalCloseTimer = null;
-  }, 300);
-}
-
-// Walks every workshop item in the cart, collecting attendee details for any
-// that don't already have them saved, then proceeds to the normal checkout.
-// If the customer backs out of a modal partway through, the queue stops and
-// checkout is not triggered — they're left in the cart to try again.
-async function beginWorkshopCheckout() {
-  const cart = getCart();
-  const workshopItems = cart.items.filter(i => (i.id || '').startsWith('workshop-'));
-  if (!workshopItems.length) { checkout('pickup', null, null); return; }
-
-  const details = (() => { try { return JSON.parse(localStorage.getItem('hoto-workshop-details') || '{}'); } catch { return {}; } })();
-
-  for (const item of workshopItems) {
-    const existing = details[item.id];
-    if (existing && existing.name && existing.email && existing.phone && existing.notes) continue;
-
-    const result = await openWorkshopRegModal(item);
-    if (!result) return;
-
-    details[item.id] = { name: result.name, email: result.email, phone: result.phone, notes: result.notes, guests: result.guests };
-    localStorage.setItem('hoto-workshop-details', JSON.stringify(details));
-
-    const freshCart = getCart();
-    const cartItem = freshCart.items.find(i => i.id === item.id);
-    if (cartItem) cartItem.qty = result.seats;
-    saveCart(freshCart);
-  }
-
-  renderCart();
-  checkout('pickup', null, null);
-}
 
 // --- Shipping Calculator Modal ---
 
@@ -1927,9 +1744,20 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (promoCode && promoAmt)            { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
     if (freeGiftEligible)              body.free_gift_eligible = true;
-    // Attendee details collected in the Reserve a Spot modal, keyed by workshop id
-    const workshopDetails = (() => { try { return JSON.parse(localStorage.getItem('hoto-workshop-details') || '{}'); } catch { return {}; } })();
-    if (Object.keys(workshopDetails).length) body.workshop_details = workshopDetails;
+    // Attendee name/allergies were collected as extra fields on the same
+    // Contact Info step used for regular pickup orders — applied to every
+    // workshop line item in the cart (seats are just the cart quantity).
+    const workshopItemIds = items.filter(i => (i.id || '').startsWith('workshop-')).map(i => i.id);
+    if (workshopItemIds.length && pickupContact) {
+      const workshopDetails = {};
+      workshopItemIds.forEach(id => {
+        workshopDetails[id] = {
+          name: pickupContact.name || '', email: pickupContact.email || '',
+          phone: pickupContact.phone || '', notes: pickupContact.notes || '', guests: [],
+        };
+      });
+      body.workshop_details = workshopDetails;
+    }
     const res = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2296,6 +2124,13 @@ function closePickupLocationModal() {
 function openPickupContactModal(location, onConfirm) {
   document.getElementById('pickup-contact-overlay')?.remove();
 
+  // Workshops need a name (for the registration record) and allergies, on
+  // top of the phone/email already collected here — reusing this one step
+  // instead of a second popup so nothing is asked for twice.
+  const cartNow = getCart();
+  const hasWorkshop = cartNow.items.some(i => (i.id || '').startsWith('workshop-'));
+  const workshopOnlyCheckout = hasWorkshop && cartNow.items.every(i => (i.id || '').startsWith('workshop-'));
+
   const overlay = document.createElement('div');
   overlay.id = 'pickup-contact-overlay';
   overlay.className = 'sub-prompt-overlay';
@@ -2323,11 +2158,24 @@ function openPickupContactModal(location, onConfirm) {
 
   const sub = document.createElement('p');
   sub.className = 'pickup-contact__sub';
-  sub.textContent = 'So we can coordinate your ' + location + ' pick-up.';
+  sub.textContent = workshopOnlyCheckout
+    ? 'So we can confirm your seat and any dietary notes.'
+    : hasWorkshop
+      ? 'So we can coordinate your ' + location + ' pick-up and confirm your workshop seat.'
+      : 'So we can coordinate your ' + location + ' pick-up.';
 
   // Restore previously entered info (same browser)
   var _saved = {};
   try { _saved = JSON.parse(localStorage.getItem('hoto-pickup-contact') || '{}'); } catch {}
+
+  // Full name + allergies — only asked when a workshop is in the cart
+  const nameInput  = mkInput('text', 'Jane Smith', 'pc-name');
+  const notesInput = document.createElement('textarea');
+  notesInput.id = 'pc-notes';
+  notesInput.className = 'pickup-contact__input';
+  notesInput.rows = 2;
+  notesInput.placeholder = 'List any allergies, or type None';
+  if (_saved.name) nameInput.value = _saved.name;
 
   // Phone
   const phoneInput  = mkInput('tel',   '(555) 000-0000',           'pc-phone');
@@ -2450,14 +2298,18 @@ function openPickupContactModal(location, onConfirm) {
   async function verifyAndContinue() {
     const phone = phoneInput.value.trim();
     const email = emailInput.value.trim();
+    const name  = hasWorkshop ? nameInput.value.trim() : '';
+    const notes = hasWorkshop ? notesInput.value.trim() : '';
 
-    if (!phone)               { errMsg.textContent = 'Please enter your phone number.'; return; }
-    if (!email)               { errMsg.textContent = 'Please enter your email address.'; return; }
-    if (!commSelected.length) { errMsg.textContent = 'Please select at least one contact method.'; return; }
+    if (!phone)                { errMsg.textContent = 'Please enter your phone number.'; return; }
+    if (!email)                { errMsg.textContent = 'Please enter your email address.'; return; }
+    if (hasWorkshop && !name)  { errMsg.textContent = 'Please enter your full name.'; return; }
+    if (hasWorkshop && !notes) { errMsg.textContent = 'Please list any allergies, or type None.'; return; }
+    if (!commSelected.length)  { errMsg.textContent = 'Please select at least one contact method.'; return; }
     errMsg.textContent = '';
 
     overlay.remove();
-    var _contact = { phone, email, street1: '', street2: '', city: '', state: '', zip: '', commPref: commSelected.join(',') };
+    var _contact = { phone, email, street1: '', street2: '', city: '', state: '', zip: '', commPref: commSelected.join(','), name, notes };
     localStorage.setItem('hoto-pickup-contact', JSON.stringify(_contact));
     onConfirm(_contact);
   }
@@ -2466,6 +2318,10 @@ function openPickupContactModal(location, onConfirm) {
 
   box.appendChild(heading);
   box.appendChild(sub);
+  if (hasWorkshop) {
+    box.appendChild(mkLabel('Full Name'));
+    box.appendChild(nameInput);
+  }
   box.appendChild(mkLabel('Phone Number'));
   box.appendChild(phoneInput);
   box.appendChild(mkLabel('Email Address'));
@@ -2473,6 +2329,10 @@ function openPickupContactModal(location, onConfirm) {
   box.appendChild(mkLabel('Preferred Contact Methods'));
   box.appendChild(commNote);
   box.appendChild(commOpts);
+  if (hasWorkshop) {
+    box.appendChild(mkLabel('Any allergies? If none, list None'));
+    box.appendChild(notesInput);
+  }
   box.appendChild(errMsg);
   box.appendChild(continueBtn);
   overlay.appendChild(box);
@@ -4022,7 +3882,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { injectBoxCustomizer(); } catch(e) { console.error('injectBoxCustomizer', e); }
   try { injectClearCartModal(); } catch(e) { console.error('injectClearCartModal', e); }
   try { injectChickenModal(); } catch(e) { console.error('injectChickenModal', e); }
-  try { injectWorkshopRegModal(); } catch(e) { console.error('injectWorkshopRegModal', e); }
   try { injectButterModal(); } catch(e) { console.error('injectButterModal', e); }
   try { renderCart(); } catch(e) { console.error('renderCart', e); }
 

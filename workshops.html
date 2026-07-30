@@ -360,6 +360,12 @@
       cursor: pointer;
       transition: background 0.2s;
     }
+    .w-cal-event--paused {
+      background: var(--w-border);
+      color: var(--w-muted);
+      cursor: default;
+    }
+    .w-cal-event--paused:hover { background: var(--w-border); }
     .w-cal-event:hover { background: var(--w-olive-dark); }
 
     @media (max-width: 640px) {
@@ -864,11 +870,10 @@
 
     function handleCalendarEventClick(ev) {
       const evData = workshopEvents[ev.id];
-      if (evData && evData.priceCents != null) {
-        addWorkshopToCart(ev.id, ev.title, formatEventWhen(ev.edate), evData.priceCents, 1);
-      } else {
-        openReg(ev.id, ev.title, formatEventWhen(ev.edate));
-      }
+      // While pricing is paused (priceCents null), reservations are closed
+      // entirely — same as the disabled "Coming Soon" button in list view.
+      if (!evData || evData.priceCents == null) return;
+      addWorkshopToCart(ev.id, ev.title, formatEventWhen(ev.edate), evData.priceCents, 1);
     }
 
     function makeDayCell(dayNum, isOtherMonth, isToday, dayEvents) {
@@ -879,10 +884,13 @@
       num.textContent = dayNum;
       cell.appendChild(num);
       (dayEvents || []).forEach(ev => {
+        const evData = workshopEvents[ev.id];
+        const paused = !evData || evData.priceCents == null;
         const pill = document.createElement('button');
         pill.type = 'button';
-        pill.className = 'w-cal-event';
+        pill.className = 'w-cal-event' + (paused ? ' w-cal-event--paused' : '');
         pill.textContent = ev.title;
+        pill.disabled = paused;
         pill.addEventListener('click', () => handleCalendarEventClick(ev));
         cell.appendChild(pill);
       });
@@ -1006,10 +1014,20 @@
               : (ev.priceCents === 0 ? `FREE<small>testing</small>` : `${money(ev.priceCents)}<small>per seat</small>`);
           }
           // Exact counts aren't shown publicly — just a qualitative nudge, and
-          // a hard "Fully booked" once it's actually full.
+          // a hard "Fully booked" once it's actually full. While pricing is
+          // paused (priceCents null), reservations are closed entirely —
+          // the button is disabled outright rather than falling through to
+          // the RSVP-hold flow.
           const spotsEl = document.querySelector(`[data-spots="${ev.id}"]`);
           const btn     = document.querySelector(`.w-register-btn[data-event="${ev.id}"]`);
-          if (spotsEl) {
+          if (ev.priceCents == null) {
+            if (btn) {
+              btn.textContent = 'Coming Soon';
+              btn.classList.add('w-register-btn--disabled');
+              btn.disabled = true;
+            }
+            if (spotsEl) spotsEl.textContent = '';
+          } else if (spotsEl) {
             if (ev.spotsLeft <= 0) {
               spotsEl.textContent = 'Fully booked';
               if (btn) {

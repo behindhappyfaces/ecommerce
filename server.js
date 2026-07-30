@@ -4847,10 +4847,10 @@ app.get('/admin/workshop-interest', requireAdmin, async (req, res) => {
 // workshops.html.
 const WORKSHOP_CAP = 15; // small-group cap; spots-left counts down from here
 const WORKSHOPS = [
-  { id: 'workshop-aug-13-challah',   title: 'Challah Bread Night',       date: '2026-08-13', priceCents: 0 },
-  { id: 'workshop-aug-20-butter',    title: 'Butter Making',             date: '2026-08-20', priceCents: 0 },
-  { id: 'workshop-aug-27-breakfast', title: 'Farm Breakfast for Dinner', date: '2026-08-27', priceCents: 0 },
-  { id: 'workshop-sep-03-pasta',     title: 'Homemade Pasta Making',     date: '2026-09-03', priceCents: 0 },
+  { id: 'workshop-aug-13-challah',   title: 'Challah Bread Night',       date: '2026-08-13', priceCents: 7500 },
+  { id: 'workshop-aug-20-butter',    title: 'Butter Making',             date: '2026-08-20', priceCents: 7500 },
+  { id: 'workshop-aug-27-breakfast', title: 'Farm Breakfast for Dinner', date: '2026-08-27', priceCents: 7500 },
+  { id: 'workshop-sep-03-pasta',     title: 'Homemade Pasta Making',     date: '2026-09-03', priceCents: 7500 },
 ];
 const isWorkshopId = id => typeof id === 'string' && id.startsWith('workshop-');
 

@@ -23,10 +23,10 @@ const SEED = [
   { id:'sampler-box',                  name:'Farm Sampler Box',             category:'Sampler',      stock:10, reorder_level:2,  unit:'box',    price_cents:14900, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'chicken-dinner-roll-bundle',   name:'Chicken & Dinner Roll Bundle', category:'Bundles',      stock:10, reorder_level:2,  unit:'bundle', price_cents:9900,  cost_cents:0,    allow_preorder:0, active:1 },
   { id:'bundle-4th-july',             name:'4th of July Homestead Table',  category:'Bundles',      stock:0,  reorder_level:0,  unit:'bundle', price_cents:19900, cost_cents:8600, allow_preorder:0, active:1 },
-  { id:'workshop-aug-13-challah',   name:'Challah Bread Night',       category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:0, cost_cents:0, allow_preorder:0, active:1 },
-  { id:'workshop-aug-20-butter',    name:'Butter Making',             category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:0, cost_cents:0, allow_preorder:0, active:1 },
-  { id:'workshop-aug-27-breakfast', name:'Farm Breakfast for Dinner', category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:0, cost_cents:0, allow_preorder:0, active:1 },
-  { id:'workshop-sep-03-pasta',     name:'Homemade Pasta Making',     category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:0, cost_cents:0, allow_preorder:0, active:1 },
+  { id:'workshop-aug-13-challah',   name:'Challah Bread Night',       category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:7500, cost_cents:0, allow_preorder:0, active:1 },
+  { id:'workshop-aug-20-butter',    name:'Butter Making',             category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:7500, cost_cents:0, allow_preorder:0, active:1 },
+  { id:'workshop-aug-27-breakfast', name:'Farm Breakfast for Dinner', category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:7500, cost_cents:0, allow_preorder:0, active:1 },
+  { id:'workshop-sep-03-pasta',     name:'Homemade Pasta Making',     category:'Workshops', stock:7, reorder_level:2, unit:'seat', price_cents:7500, cost_cents:0, allow_preorder:0, active:1 },
 ];
 
 // ─── PostgreSQL store ────────────────────────────────────────────────────────

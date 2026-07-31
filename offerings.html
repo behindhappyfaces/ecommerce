@@ -354,6 +354,31 @@
             </div>
           </div>
         </article>
+
+        <article class="offering-card" data-fade id="turkey-smoke-standalone-section">
+          <div class="offering-card__image-wrap" style="position:relative;">
+            <div class="offering-card__placeholder" style="display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--color-rust);min-height:180px;">🔥</div>
+            <div style="position:absolute;top:10px;left:10px;background:var(--color-green);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Add-On Only</div>
+          </div>
+          <div class="offering-card__body">
+            <p class="offering-card__category">Thanksgiving Add-On</p>
+            <h3 class="offering-card__name">Turkey Smoking Service</h3>
+            <p class="offering-card__desc">
+              Already reserved your Thanksgiving turkey? Add the smoking service on its own, no need to reserve another bird. Smoked by <strong>Good BBQ Lake Travis</strong> in Lake Travis, TX, and ready for pick-up.
+            </p>
+            <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">$75 &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">Charged now, non-refundable</span></p>
+            <label style="display:flex;align-items:flex-start;gap:9px;margin:10px 0 10px;padding:10px 12px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;">
+              <input type="checkbox" id="turkey-smoke-standalone-confirm" style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
+              <span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);font-weight:600;text-align:left;">
+                Yes, I've already reserved my Thanksgiving turkey.
+              </span>
+            </label>
+            <p id="turkey-smoke-standalone-error" style="display:none;color:var(--color-rust);font-size:0.78rem;margin:-4px 0 10px;">Please confirm you've already reserved a turkey before adding this.</p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" id="turkey-smoke-standalone-add" style="opacity:0.5;cursor:not-allowed;" disabled>Add Smoking Service</button>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -1048,6 +1073,30 @@
           }
         });
       }).catch(function() {});
+    })();
+  </script>
+
+  <script>
+    (function () {
+      var confirmChk = document.getElementById('turkey-smoke-standalone-confirm');
+      var addBtn     = document.getElementById('turkey-smoke-standalone-add');
+      var errorMsg   = document.getElementById('turkey-smoke-standalone-error');
+      if (!confirmChk || !addBtn) return;
+
+      confirmChk.addEventListener('change', function () {
+        addBtn.disabled = !confirmChk.checked;
+        addBtn.style.opacity = confirmChk.checked ? '1' : '0.5';
+        addBtn.style.cursor = confirmChk.checked ? 'pointer' : 'not-allowed';
+        if (confirmChk.checked) errorMsg.style.display = 'none';
+      });
+
+      addBtn.addEventListener('click', function () {
+        if (!confirmChk.checked) {
+          errorMsg.style.display = 'block';
+          return;
+        }
+        addItem('addon-turkey-smoke');
+      });
     })();
   </script>
 

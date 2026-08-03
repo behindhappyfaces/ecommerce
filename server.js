@@ -4145,9 +4145,13 @@ app.post('/api/save-pending-cart', express.json(), async (req, res) => {
 
     const carts = await readPendingCartsDB();
 
-    // Dedupe: remove older pending cart from same phone/email
+    // Dedupe: remove older *auto-captured* pending cart from the same
+    // phone/email (this is just SMS-reminder bookkeeping for an abandoned
+    // checkout). Never touch an admin-created cart link this way — those
+    // are explicit work the admin did and must only go away if they mark
+    // it complete or delete it themselves.
     for (const k of Object.keys(carts)) {
-      if (!carts[k].completed && (carts[k].phone === normalized || carts[k].email === email)) {
+      if (!carts[k].adminCreated && !carts[k].completed && (carts[k].phone === normalized || carts[k].email === email)) {
         await deletePendingCartDB(k);
       }
     }
@@ -4269,12 +4273,8 @@ if (cron) {
       }
     }
 
-    // Clean up carts older than 7 days — gives the 48h delinquent email
-    // plenty of room to fire before the record disappears.
-    for (const k of Object.keys(carts)) {
-      const age = now - new Date(carts[k].createdAt).getTime();
-      if (age > 7 * 24 * 60 * 60 * 1000) await deletePendingCartDB(k);
-    }
+    // No time-based cleanup — a pending cart (cart link or otherwise) only
+    // ever goes away when it's marked complete or an admin deletes it.
   });
   console.log('[Cron] Abandoned cart SMS + delinquent email scheduler running');
 }

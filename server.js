@@ -4193,14 +4193,47 @@ app.get('/api/restore-cart', async (req, res) => {
   }
 });
 
-// Cron: every 30 minutes — send SMS reminders for abandoned carts
+// --- Delinquent (unpaid cart link) email settings — editable from the Cart
+// Links tab in inventory.html. The email reuses the same template as a
+// manually-sent cart link, just with this subject/body and an automatic
+// 48-hour trigger instead of an admin click.
+const DELINQUENT_EMAIL_FILE = path.join(__dirname, 'delinquent-email-settings.json');
+const DELINQUENT_EMAIL_DEFAULTS = {
+  enabled: false,
+  subject: "Still thinking it over? Your order's waiting",
+  body: "Just checking in — we noticed you haven't completed your order yet. Your cart is still saved and ready whenever you are. No rush, but we didn't want you to miss out.",
+};
+async function readDelinquentEmailSettings() {
+  return readJsonStore('delinquent_email_settings', DELINQUENT_EMAIL_FILE, DELINQUENT_EMAIL_DEFAULTS);
+}
+async function writeDelinquentEmailSettings(data) {
+  return writeJsonStore('delinquent_email_settings', DELINQUENT_EMAIL_FILE, data);
+}
+
+app.get('/admin/delinquent-email-settings', requireAdmin, async (req, res) => {
+  res.json(await readDelinquentEmailSettings());
+});
+
+app.put('/admin/delinquent-email-settings', requireAdmin, express.json(), async (req, res) => {
+  const { enabled, subject, body } = req.body || {};
+  const settings = {
+    enabled: !!enabled,
+    subject: (subject || '').trim() || DELINQUENT_EMAIL_DEFAULTS.subject,
+    body:    (body    || '').trim() || DELINQUENT_EMAIL_DEFAULTS.body,
+  };
+  await writeDelinquentEmailSettings(settings);
+  res.json({ ok: true, settings });
+});
+
+// Cron: every 30 minutes — SMS reminders for abandoned carts, and a one-time
+// delinquent email 48 hours after a cart link goes unpaid (if enabled above).
 if (cron) {
   cron.schedule('*/30 * * * *', async () => {
-    if (!twilioClient) return;
     const now = Date.now();
     const carts = await readPendingCartsDB();
+    const delinquentSettings = await readDelinquentEmailSettings();
 
-    // Reminder schedule (ms after createdAt)
+    // SMS reminder schedule (ms after createdAt)
     const schedule = [
       60 * 60 * 1000,       // 1 hour  → reminder 0
       4  * 60 * 60 * 1000,  // 4 hours → reminder 1
@@ -4210,29 +4243,40 @@ if (cron) {
     for (const token of Object.keys(carts)) {
       const cart = carts[token];
       if (cart.completed) continue;
-      if (cart.remindersSent >= SMS_MESSAGES.length) continue;
-      if (!cart.phone) continue;
+      const age = now - new Date(cart.createdAt).getTime();
 
-      const age       = now - new Date(cart.createdAt).getTime();
-      const threshold = schedule[cart.remindersSent];
-      if (age < threshold) continue;
+      if (twilioClient && cart.phone && (cart.remindersSent || 0) < SMS_MESSAGES.length) {
+        const threshold = schedule[cart.remindersSent || 0];
+        if (age >= threshold) {
+          const sent = await sendAbandonedCartSMS(cart, cart.remindersSent || 0);
+          if (sent) {
+            await updatePendingCartDB(token, {
+              remindersSent:  (cart.remindersSent || 0) + 1,
+              lastReminderAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
 
-      const sent = await sendAbandonedCartSMS(cart, cart.remindersSent);
-      if (sent) {
-        await updatePendingCartDB(token, {
-          remindersSent:  cart.remindersSent + 1,
-          lastReminderAt: new Date().toISOString(),
-        });
+      if (delinquentSettings.enabled && cart.email && !cart.delinquentEmailSentAt && age >= 48 * 60 * 60 * 1000) {
+        try {
+          const html = buildCartPreviewHtml(cart, delinquentSettings.body);
+          await sendEmailTo(cart.email, delinquentSettings.subject, html);
+          await updatePendingCartDB(token, { delinquentEmailSentAt: new Date().toISOString() });
+        } catch (e) {
+          console.warn('[DelinquentEmail] send failed for', token, e.message);
+        }
       }
     }
 
-    // Clean up carts older than 48h
+    // Clean up carts older than 7 days — gives the 48h delinquent email
+    // plenty of room to fire before the record disappears.
     for (const k of Object.keys(carts)) {
       const age = now - new Date(carts[k].createdAt).getTime();
-      if (age > 48 * 60 * 60 * 1000) await deletePendingCartDB(k);
+      if (age > 7 * 24 * 60 * 60 * 1000) await deletePendingCartDB(k);
     }
   });
-  console.log('[Cron] Abandoned cart SMS scheduler running');
+  console.log('[Cron] Abandoned cart SMS + delinquent email scheduler running');
 }
 
 // --- Webhook health check ---

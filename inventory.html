@@ -1285,31 +1285,12 @@
         </table>
       </div>
 
-      <!-- Send email section -->
+      <!-- Generating no longer sends anything by itself — sending only happens
+           from Compose below, so a link is never emailed twice. -->
       <div style="margin-top:16px;border-top:1px solid #333;padding-top:14px;">
-        <p style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin:0 0 10px;">Send to Customer</p>
-        <div style="background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:12px;margin-bottom:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:0.75rem;color:#888;">To:</span>
-            <span id="cl-email-preview-to" style="font-size:0.75rem;color:#f0ebe4;"></span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:0.75rem;color:#888;">Subject:</span>
-            <span style="font-size:0.75rem;color:#f0ebe4;">Your order from Heart of Texas Organics 🌿</span>
-          </div>
-          <div style="font-size:0.75rem;color:#888;border-top:1px solid #222;padding-top:8px;margin-top:4px;line-height:1.5;">
-            Hi <span id="cl-email-preview-name" style="color:#f0ebe4;"></span>, your custom farm order is ready! Click the link below to review and complete your purchase…
-          </div>
-        </div>
-        <div style="margin-bottom:10px;">
-          <label style="display:block;font-size:0.72rem;color:#888;margin-bottom:4px;letter-spacing:0.06em;text-transform:uppercase;">Add a personal note (optional)</label>
-          <textarea id="cl-email-note" placeholder="e.g. Hi Jane! Everything is fresh from this week's harvest…" rows="2" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.82rem;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button id="cl-send-email" class="btn-action" style="background:var(--terra);">✉ Send Email to Customer</button>
-          <span id="cl-send-msg" style="font-size:0.75rem;display:none;"></span>
-        </div>
-        <p id="cl-no-email-warning" style="font-size:0.75rem;color:#e07a5f;margin:6px 0 0;display:none;">⚠ Enter a customer email above before generating the link to enable sending.</p>
+        <p style="font-size:0.82rem;color:#8db88f;line-height:1.6;">
+          Link created — nothing has been emailed yet. Find it in <strong>Sent Cart Links</strong> below and click <strong>✎ Compose</strong> to write the message and send it.
+        </p>
       </div>
     </div>
 
@@ -4839,71 +4820,10 @@
         document.getElementById('cl-preview-total').textContent =
           grandTotal ? '$' + (grandTotal / 100).toFixed(2) : '—';
 
-        // Update email preview pane
-        document.getElementById('cl-email-preview-to').textContent   = custEmail || '—';
-        document.getElementById('cl-email-preview-name').textContent = custName  || 'there';
-        document.getElementById('cl-no-email-warning').style.display = custEmail ? 'none' : 'block';
-
       } catch(e) {
         alert('Error: ' + e.message);
       } finally {
         btn.textContent = isSub ? 'Generate Subscription Link' : 'Generate Cart Link'; btn.disabled = false;
-      }
-    });
-
-    // Send email to customer
-    document.getElementById('cl-send-email').addEventListener('click', async () => {
-      const custEmail  = document.getElementById('cl-cust-email').value.trim();
-      const custName   = document.getElementById('cl-cust-name').value.trim();
-      const custPhone  = document.getElementById('cl-cust-phone').value.trim();
-      const custSource = document.getElementById('cl-source').value;
-      const cartUrl    = document.getElementById('cl-link').value;
-      const note       = (document.getElementById('cl-email-note').value.trim()) ||
-                         (document.getElementById('cl-note').value.trim());
-      const msgEl      = document.getElementById('cl-send-msg');
-
-      if (!custEmail) {
-        document.getElementById('cl-no-email-warning').style.display = 'block';
-        return;
-      }
-      if (!cartUrl) { alert('Generate the cart link first.'); return; }
-
-      // Guard against accidental duplicate sends
-      const _prevSentUrl = document.getElementById('cl-send-email').dataset.lastSentUrl;
-      if (_prevSentUrl === cartUrl) {
-        if (!confirm(`This link was already sent to ${custEmail || custName || 'this customer'}.\n\nSend it again?`)) return;
-      }
-
-      const sendBtn = document.getElementById('cl-send-email');
-      sendBtn.textContent = 'Sending…'; sendBtn.disabled = true;
-      msgEl.style.display = 'none';
-
-      // Collect items for the email table
-      const rows = [...document.querySelectorAll('#cl-preview-body tr')].map(tr => {
-        const tds = tr.querySelectorAll('td');
-        return { name: tds[0]?.textContent || '', qty: tds[1]?.textContent || '', price: tds[2]?.textContent || '' };
-      });
-      const total = document.getElementById('cl-preview-total').textContent;
-
-      const discAmt2 = parseFloat(document.getElementById('cl-discount-amount').value) || 0;
-      const discount = discAmt2 > 0 ? { amount: discAmt2, type: document.getElementById('cl-discount-type').value, label: document.getElementById('cl-discount-label').value.trim() || 'Discount' } : null;
-
-      try {
-        const res = await fetch('/admin/send-cart-link-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('inv_token') || '') },
-          body: JSON.stringify({ to: custEmail, name: custName, phone: custPhone, source: custSource, cartUrl, note, items: rows, total, discount }),
-        });
-        const data = await res.json();
-        if (!data.ok) throw new Error(data.error || 'Failed to send');
-        msgEl.textContent = '✓ Email sent' + (data.sheetRecorded ? ' & recorded in spreadsheet' : '');
-        msgEl.style.cssText = 'font-size:0.75rem;color:#6fcf97;display:inline;';
-        document.getElementById('cl-send-email').dataset.lastSentUrl = cartUrl;
-      } catch(e) {
-        msgEl.textContent = '✗ ' + e.message;
-        msgEl.style.cssText = 'font-size:0.75rem;color:#e07a5f;display:inline;';
-      } finally {
-        sendBtn.textContent = '✉ Send Email to Customer'; sendBtn.disabled = false;
       }
     });
 

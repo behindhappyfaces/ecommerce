@@ -3188,68 +3188,12 @@ function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl })
   return html;
 }
 
-// Extracts the rc= token from a cart link URL
-function tokenFromCartUrl(cartUrl) {
-  try { return new URL(cartUrl).searchParams.get('rc'); }
-  catch { return null; }
-}
-
-// Send a cart link email to a customer
-app.post('/admin/send-cart-link-email', requireAdmin, express.json(), async (req, res) => {
-  const { to, name, phone, source, cartUrl, note, items = [], total, discount } = req.body || {};
-  if (!to || !cartUrl) return res.status(400).json({ error: 'Missing to or cartUrl' });
-
-  const html = cartLinkEmailHtml({ name, note, items, total, discount, cartUrl });
-
-  try {
-    await sendEmailTo(to, 'Your custom order from Heart of Texas Organics 🌿', html);
-
-    // Send a copy to the admin inbox so it's visible in Outlook
-    const copyHtml = `
-      <div style="background:#2C3E2D;color:#F5F0E8;font-family:Georgia,serif;font-size:12px;padding:10px 18px;margin-bottom:0;">
-        📋 <strong>Copy of cart link email</strong> sent to ${name ? `<strong>${name}</strong> (${to})` : `<strong>${to}</strong>`}
-      </div>
-      ${html}`;
-    sendEmailTo(ADMIN_EMAIL, `📋 Copy: Cart link → ${name || to}`, copyHtml).catch(e =>
-      console.warn('[CartLink copy email]', e.message)
-    );
-
-    // Persist customer details + reminder count back onto the saved cart link
-    // so it can be found later in the Sent Cart Links list, resent, or duplicated.
-    const token = tokenFromCartUrl(cartUrl);
-    if (token) {
-      try {
-        const existing = await getPendingCartDB(token);
-        if (existing) {
-          const sentAt2 = new Date().toISOString();
-          const histEntry = { sentAt: sentAt2, subject: 'Your custom order from Heart of Texas Organics 🌿', note: note || '', toEmail: to };
-          await updatePendingCartDB(token, {
-            name:           name  || existing.name  || '',
-            email:          to,
-            phone:          phone || existing.phone || null,
-            source:         source || existing.source || '',
-            remindersSent:  (existing.remindersSent || 0) + 1,
-            lastReminderAt: sentAt2,
-            sentHistory:    [...(existing.sentHistory || []), histEntry],
-          });
-        }
-      } catch (pcErr) {
-        console.warn('[CartLink] Could not update pending cart record:', pcErr.message);
-      }
-    }
-
-    let sheetRecorded = false;
-    try {
-      sheetRecorded = await sheetsRecordCustomer({ name, email: to, phone, source, items, total, note, cartUrl });
-    } catch(sheetErr) {
-      console.warn('[Sheets] Record failed (non-fatal):', sheetErr.message);
-    }
-    res.json({ ok: true, sheetRecorded });
-  } catch (err) {
-    console.error('[send-cart-link-email]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
+// Sending only ever happens here now — generating a cart link no longer
+// fires an email on its own (that used to be a second, separate send path
+// via a now-removed /admin/send-cart-link-email, which meant a customer
+// could get emailed once right after the link was generated and again
+// later via Compose). This is the one and only send path, so it also
+// carries what that old endpoint used to do: an admin copy and CRM logging.
 
 // List all admin-created cart links (for resending / duplicating)
 app.get('/admin/cart-links', requireAdmin, async (req, res) => {
@@ -3292,13 +3236,33 @@ app.post('/admin/cart-links/:token/resend', requireAdmin, express.json(), async 
     const sentAt  = new Date().toISOString();
     await sendEmailTo(cart.email, subject, html);
 
+    // Copy to the admin inbox so it's visible in Outlook/Resend
+    const copyHtml = `
+      <div style="background:#2C3E2D;color:#F5F0E8;font-family:Georgia,serif;font-size:12px;padding:10px 18px;margin-bottom:0;">
+        📋 <strong>Copy of cart link email</strong> sent to ${cart.name ? `<strong>${cart.name}</strong> (${cart.email})` : `<strong>${cart.email}</strong>`}
+      </div>
+      ${html}`;
+    sendEmailTo(ADMIN_EMAIL, `📋 Copy: Cart link → ${cart.name || cart.email}`, copyHtml).catch(e =>
+      console.warn('[CartLink copy email]', e.message)
+    );
+
     const historyEntry = { sentAt, subject, note: cart.note || '', toEmail: cart.email };
     await updatePendingCartDB(cart.token, {
       remindersSent:  (cart.remindersSent || 0) + 1,
       lastReminderAt: sentAt,
       sentHistory:    [...(cart.sentHistory || []), historyEntry],
     });
-    res.json({ ok: true });
+
+    let sheetRecorded = false;
+    try {
+      sheetRecorded = await sheetsRecordCustomer({
+        name: cart.name, email: cart.email, phone: cart.phone, source: cart.source,
+        items: itemRows, total: '$' + (total / 100).toFixed(2), note: cart.note, cartUrl,
+      });
+    } catch (sheetErr) {
+      console.warn('[Sheets] Record failed (non-fatal):', sheetErr.message);
+    }
+    res.json({ ok: true, sheetRecorded });
   } catch (e) {
     console.error('[cart-link resend]', e.message);
     res.status(500).json({ error: e.message });

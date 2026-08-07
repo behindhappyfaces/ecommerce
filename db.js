@@ -6,7 +6,7 @@ const path = require('path');
 const USE_PG = !!process.env.DATABASE_URL;
 
 const SEED = [
-  { id:'japanese-milk-loaf',  name:'Japanese Milk Loaf',           category:'Bakery',       stock:12, reorder_level:4,  unit:'loaf',   price_cents:1800,  cost_cents:600,  allow_preorder:0, active:1 },
+  { id:'japanese-milk-loaf',  name:'Japanese Milk Loaf',           category:'Bakery',       stock:12, reorder_level:4,  unit:'loaf',   price_cents:1500,  cost_cents:600,  allow_preorder:0, active:1 },
   { id:'cinnamon-rolls',      name:'Cinnamon Rolls',               category:'Bakery',       stock:24, reorder_level:6,  unit:'dozen',  price_cents:1500,  cost_cents:450,  allow_preorder:0, active:1 },
   { id:'whole-wheat-loaf',    name:'Whole Wheat Loaf',             category:'Bakery',       stock:8,  reorder_level:3,  unit:'loaf',   price_cents:1400,  cost_cents:400,  allow_preorder:0, active:1 },
   { id:'yeast-rolls',         name:'Yeast Rolls',                  category:'Bakery',       stock:30, reorder_level:10, unit:'roll',   price_cents:300,   cost_cents:80,   allow_preorder:0, active:1 },

@@ -53,51 +53,6 @@
       margin: 0 auto;
     }
 
-    /* ---- Controls Bar ---- */
-    .w-controls {
-      background: var(--w-cream-dark);
-      border-bottom: 1px solid var(--w-border);
-      padding: 18px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .w-controls__label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--w-muted);
-      margin-right: 4px;
-    }
-
-    .w-view-btn {
-      padding: 9px 22px;
-      border-radius: 4px;
-      border: 1.5px solid var(--w-border);
-      background: #fff;
-      color: var(--w-muted);
-      font-family: sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .w-view-btn:hover { border-color: var(--w-olive); color: var(--w-olive); }
-
-    .w-view-btn--active {
-      background: var(--w-olive);
-      border-color: var(--w-olive);
-      color: #fff;
-    }
-
-    .w-view-btn--active:hover { background: var(--w-olive-dark); border-color: var(--w-olive-dark); color: #fff; }
-
     /* ---- Main Content Area ---- */
     .w-body {
       background: var(--w-cream);
@@ -152,7 +107,7 @@
       padding: 24px 28px;
       box-shadow: 0 2px 12px rgba(85,107,47,0.07);
       display: grid;
-      grid-template-columns: 80px 1fr auto;
+      grid-template-columns: 1fr auto;
       gap: 0 24px;
       align-items: start;
     }
@@ -162,35 +117,6 @@
         grid-template-columns: 1fr;
         gap: 16px;
       }
-      .w-event-card__date-block { display: flex; gap: 10px; align-items: baseline; }
-    }
-
-    .w-event-card__date-block {
-      text-align: center;
-    }
-
-    .w-event-card__month {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--w-olive);
-    }
-
-    .w-event-card__day {
-      font-family: Georgia, serif;
-      font-size: 2.2rem;
-      font-weight: normal;
-      color: var(--w-text);
-      line-height: 1;
-      margin: 2px 0;
-    }
-
-    .w-event-card__dow {
-      font-size: 0.7rem;
-      color: var(--w-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     .w-event-card__info {}
@@ -262,117 +188,6 @@
       font-size: 0.72rem;
       color: var(--w-muted);
       letter-spacing: 0.04em;
-    }
-
-    /* ── CALENDAR VIEW ──────────────────────────── */
-    .w-calendar__nav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .w-calendar__nav-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1.5px solid var(--w-border);
-      background: #fff;
-      color: var(--w-olive);
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .w-calendar__nav-btn:hover { background: var(--w-olive); color: #fff; border-color: var(--w-olive); }
-
-    .w-calendar__month-label {
-      font-family: Georgia, serif;
-      font-size: 1.4rem;
-      font-weight: normal;
-      color: var(--w-text);
-      margin: 0;
-      min-width: 200px;
-      text-align: center;
-    }
-
-    .w-calendar__weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      margin-bottom: 6px;
-    }
-    .w-calendar__weekdays span {
-      text-align: center;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--w-muted);
-      padding: 4px 0;
-    }
-
-    .w-calendar__grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-    }
-
-    .w-cal-day {
-      background: #fff;
-      border: 1px solid var(--w-cream-dark);
-      border-radius: 6px;
-      min-height: 84px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .w-cal-day--other-month {
-      background: transparent;
-      border-color: transparent;
-    }
-    .w-cal-day--other-month .w-cal-day__num { color: var(--w-border); }
-    .w-cal-day--today { border-color: var(--w-olive); border-width: 2px; }
-
-    .w-cal-day__num {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--w-muted);
-    }
-    .w-cal-day--today .w-cal-day__num { color: var(--w-olive); }
-
-    .w-cal-event {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: var(--w-olive);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 6px;
-      font-family: sans-serif;
-      font-size: 0.68rem;
-      font-weight: 600;
-      line-height: 1.3;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .w-cal-event--paused {
-      background: var(--w-border);
-      color: var(--w-muted);
-      cursor: default;
-    }
-    .w-cal-event--paused:hover { background: var(--w-border); }
-    .w-cal-event:hover { background: var(--w-olive-dark); }
-
-    @media (max-width: 640px) {
-      .w-calendar__weekdays span { font-size: 0.58rem; }
-      .w-cal-day { min-height: 64px; padding: 5px; gap: 3px; }
-      .w-cal-day__num { font-size: 0.72rem; }
-      .w-cal-event { font-size: 0.6rem; padding: 3px 4px; }
     }
 
     /* ---- Email Signup ---- */
@@ -623,6 +438,7 @@
       <li><a class="nav__link" href="pantry.html">What's In Your Box</a></li>
       <li><a class="nav__link" href="workshops.html">Lost Arts</a></li>
       <li><a class="nav__link" href="magazine.html">Best Medicines</a></li>
+      <li><a class="nav__link" href="events.html">Events</a></li>
     </ul>
     <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -636,6 +452,7 @@
     <a class="nav__mobile-link" href="pantry.html">What's In Your Box</a>
     <a class="nav__mobile-link" href="workshops.html">Lost Arts</a>
     <a class="nav__mobile-link" href="magazine.html">Best Medicines</a>
+    <a class="nav__mobile-link" href="events.html">Events</a>
   </div>
 
   <!-- Hero -->
@@ -646,13 +463,6 @@
       We bring the farm to you. Hands on, good food and company, we intentionally keep these workshops small.
     </p>
   </header>
-
-  <!-- View Toggle -->
-  <div class="w-controls">
-    <span class="w-controls__label">View:</span>
-    <button class="w-view-btn w-view-btn--active" id="btn-list" aria-pressed="true">List</button>
-    <button class="w-view-btn" id="btn-month" aria-pressed="false">Calendar</button>
-  </div>
 
   <!-- Content -->
   <section class="w-body" aria-label="Workshop calendar">
@@ -666,11 +476,6 @@
       <div class="w-list">
 
         <div class="w-event-card">
-          <div class="w-event-card__date-block">
-            <div class="w-event-card__month">Aug</div>
-            <div class="w-event-card__day">13</div>
-            <div class="w-event-card__dow">Thu</div>
-          </div>
           <div class="w-event-card__info">
             <h3 class="w-event-card__title">Challah Bread Night</h3>
             <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Space limited &nbsp;&middot;&nbsp; Lakeway, TX</div>
@@ -684,11 +489,6 @@
         </div>
 
         <div class="w-event-card">
-          <div class="w-event-card__date-block">
-            <div class="w-event-card__month">Aug</div>
-            <div class="w-event-card__day">20</div>
-            <div class="w-event-card__dow">Thu</div>
-          </div>
           <div class="w-event-card__info">
             <h3 class="w-event-card__title">Butter Making</h3>
             <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Space limited &nbsp;&middot;&nbsp; Lakeway, TX</div>
@@ -702,11 +502,6 @@
         </div>
 
         <div class="w-event-card">
-          <div class="w-event-card__date-block">
-            <div class="w-event-card__month">Aug</div>
-            <div class="w-event-card__day">27</div>
-            <div class="w-event-card__dow">Thu</div>
-          </div>
           <div class="w-event-card__info">
             <h3 class="w-event-card__title">Farm Breakfast for Dinner</h3>
             <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Space limited &nbsp;&middot;&nbsp; Lakeway, TX</div>
@@ -720,11 +515,6 @@
         </div>
 
         <div class="w-event-card">
-          <div class="w-event-card__date-block">
-            <div class="w-event-card__month">Sep</div>
-            <div class="w-event-card__day">3</div>
-            <div class="w-event-card__dow">Thu</div>
-          </div>
           <div class="w-event-card__info">
             <h3 class="w-event-card__title">Homemade Pasta Making</h3>
             <div class="w-event-card__time">6:00–8:00 PM &nbsp;&middot;&nbsp; Space limited &nbsp;&middot;&nbsp; Lakeway, TX</div>
@@ -738,19 +528,6 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- Calendar view (hidden until "Calendar" is selected) -->
-      <div class="w-calendar" id="w-calendar" style="display:none;">
-        <div class="w-calendar__nav">
-          <button class="w-calendar__nav-btn" id="w-cal-prev" aria-label="Previous month">&larr;</button>
-          <h2 class="w-calendar__month-label" id="w-cal-label">Month Year</h2>
-          <button class="w-calendar__nav-btn" id="w-cal-next" aria-label="Next month">&rarr;</button>
-        </div>
-        <div class="w-calendar__weekdays">
-          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-        </div>
-        <div class="w-calendar__grid" id="w-cal-grid"></div>
       </div>
 
       <div class="w-notify-section" style="margin-top:44px;">
@@ -850,112 +627,6 @@
   <script src="js/main.js"></script>
   <script src="js/cart.js?v=20260724"></script>
   <script>
-    // ── View toggle: List <-> Calendar ─────────────────────────
-    // Kept in sync with the WORKSHOPS array in server.js — same ids/titles/
-    // dates as the cards above, just reshaped for placing on a grid.
-    const CALENDAR_EVENTS = [
-      { id: 'workshop-aug-13-challah',   title: 'Challah Bread Night',       edate: '2026-08-13' },
-      { id: 'workshop-aug-20-butter',    title: 'Butter Making',             edate: '2026-08-20' },
-      { id: 'workshop-aug-27-breakfast', title: 'Farm Breakfast for Dinner', edate: '2026-08-27' },
-      { id: 'workshop-sep-03-pasta',     title: 'Homemade Pasta Making',     edate: '2026-09-03' },
-    ];
-
-    let calViewDate = new Date();
-
-    function formatEventWhen(iso) {
-      const [y, m, d] = iso.split('-').map(Number);
-      return new Date(Date.UTC(y, m - 1, d))
-        .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
-    }
-
-    function handleCalendarEventClick(ev) {
-      const evData = workshopEvents[ev.id];
-      // While pricing is paused (priceCents null), reservations are closed
-      // entirely — same as the disabled "Coming Soon" button in list view.
-      if (!evData || evData.priceCents == null) return;
-      addWorkshopToCart(ev.id, ev.title, formatEventWhen(ev.edate), evData.priceCents, 1);
-    }
-
-    function makeDayCell(dayNum, isOtherMonth, isToday, dayEvents) {
-      const cell = document.createElement('div');
-      cell.className = 'w-cal-day' + (isOtherMonth ? ' w-cal-day--other-month' : '') + (isToday ? ' w-cal-day--today' : '');
-      const num = document.createElement('div');
-      num.className = 'w-cal-day__num';
-      num.textContent = dayNum;
-      cell.appendChild(num);
-      (dayEvents || []).forEach(ev => {
-        const evData = workshopEvents[ev.id];
-        const paused = !evData || evData.priceCents == null;
-        const pill = document.createElement('button');
-        pill.type = 'button';
-        pill.className = 'w-cal-event' + (paused ? ' w-cal-event--paused' : '');
-        pill.textContent = ev.title;
-        pill.disabled = paused;
-        pill.addEventListener('click', () => handleCalendarEventClick(ev));
-        cell.appendChild(pill);
-      });
-      return cell;
-    }
-
-    function renderCalendar() {
-      const grid  = document.getElementById('w-cal-grid');
-      const label = document.getElementById('w-cal-label');
-      const year  = calViewDate.getFullYear();
-      const month = calViewDate.getMonth(); // 0-indexed
-
-      label.textContent = calViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-      grid.innerHTML = '';
-
-      const startWeekday    = new Date(year, month, 1).getDay();
-      const daysInMonth     = new Date(year, month + 1, 0).getDate();
-      const daysInPrevMonth = new Date(year, month, 0).getDate();
-      const todayIso        = new Date().toISOString().slice(0, 10);
-
-      for (let i = startWeekday - 1; i >= 0; i--) {
-        grid.appendChild(makeDayCell(daysInPrevMonth - i, true, false, null));
-      }
-      for (let d = 1; d <= daysInMonth; d++) {
-        const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const dayEvents = CALENDAR_EVENTS.filter(ev => ev.edate === iso);
-        grid.appendChild(makeDayCell(d, false, iso === todayIso, dayEvents));
-      }
-      const trailing = (7 - ((startWeekday + daysInMonth) % 7)) % 7;
-      for (let d = 1; d <= trailing; d++) {
-        grid.appendChild(makeDayCell(d, true, false, null));
-      }
-    }
-
-    document.getElementById('w-cal-prev').addEventListener('click', () => {
-      calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() - 1, 1);
-      renderCalendar();
-    });
-    document.getElementById('w-cal-next').addEventListener('click', () => {
-      calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + 1, 1);
-      renderCalendar();
-    });
-
-    function showListView() {
-      document.getElementById('btn-list').classList.add('w-view-btn--active');
-      document.getElementById('btn-list').setAttribute('aria-pressed', 'true');
-      document.getElementById('btn-month').classList.remove('w-view-btn--active');
-      document.getElementById('btn-month').setAttribute('aria-pressed', 'false');
-      document.querySelector('.w-list').style.display = '';
-      document.getElementById('w-calendar').style.display = 'none';
-    }
-    function showCalendarView() {
-      document.getElementById('btn-month').classList.add('w-view-btn--active');
-      document.getElementById('btn-month').setAttribute('aria-pressed', 'true');
-      document.getElementById('btn-list').classList.remove('w-view-btn--active');
-      document.getElementById('btn-list').setAttribute('aria-pressed', 'false');
-      document.querySelector('.w-list').style.display = 'none';
-      document.getElementById('w-calendar').style.display = 'block';
-      calViewDate = new Date();
-      renderCalendar();
-    }
-    document.getElementById('btn-list').addEventListener('click', showListView);
-    document.getElementById('btn-month').addEventListener('click', showCalendarView);
-    // List is the default view on every visit/refresh — no auto-switch to calendar.
-
     // Workshop interest email signup
     const form    = document.getElementById('workshop-notify-form');
     const emailIn = document.getElementById('workshop-notify-email');

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fresh Today — Inventory Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --cream-2:    #EDE6D6;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --text:       #2A2A2A;
+    --muted:      #6B6B5E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #4a4a44;
+    font-family: var(--sans);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── 8.5 x 11 page ─────────────────────────────── */
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute;
+    inset: 0.28in;
+    border: 1px solid var(--tan);
+    pointer-events: none;
+  }
+
+  /* ── Header band ───────────────────────────────── */
+  .hd {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.62in 0.7in 0.5in;
+  }
+  .hd__eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 14px;
+  }
+  .hd__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 50px;
+    line-height: 1.04;
+    letter-spacing: 0.01em;
+  }
+  .hd__rule {
+    width: 54px;
+    height: 2px;
+    background: var(--tan);
+    margin: 16px auto 15px;
+  }
+  .hd__tagline {
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.82);
+    max-width: 4.9in;
+    margin: 0 auto;
+  }
+
+  /* ── Meta strip ────────────────────────────────── */
+  .meta {
+    background: var(--cream-2);
+    text-align: center;
+    padding: 12px 0.7in;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--olive);
+  }
+  .meta .dot { color: var(--tan); margin: 0 8px; }
+
+  /* ── Body ──────────────────────────────────────── */
+  .body {
+    flex: 1;
+    padding: 0.5in 0.7in 0.3in;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Product cards ─────────────────────────────── */
+  .products {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 4px;
+  }
+
+  .prod {
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid var(--olive);
+    padding: 26px 28px;
+    box-shadow: 0 2px 14px rgba(44,62,45,0.08);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0 20px;
+  }
+
+  .prod__name {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--olive);
+    line-height: 1.15;
+  }
+  .prod__desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 6px;
+    max-width: 4.3in;
+  }
+  .prod__badge {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rust);
+    background: var(--cream-2);
+    border-radius: 20px;
+    padding: 5px 12px;
+  }
+  .prod__price {
+    text-align: right;
+  }
+  .prod__price-num {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+  }
+  .prod__price-unit {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .tone {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--text);
+    text-align: center;
+    margin-top: 26px;
+    line-height: 1.5;
+  }
+
+  /* ── QR / order block ──────────────────────────── */
+  .order {
+    margin-top: auto;
+    padding-top: 26px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 26px;
+    background: var(--olive);
+    border-radius: 10px;
+    padding: 22px 28px;
+  }
+  .order__qr {
+    background: #fff;
+    border-radius: 6px;
+    padding: 8px;
+    width: 1.15in;
+    height: 1.15in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .order__qr img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .order__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 6px;
+  }
+  .order__title {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .order__sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .order__url {
+    font-weight: 600;
+    color: var(--tan);
+  }
+
+  /* ── Sign-off ──────────────────────────────────── */
+  .signoff {
+    text-align: center;
+    padding: 14px 0 2px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .signoff b { color: var(--olive); font-weight: 600; }
+
+  /* ── Print ─────────────────────────────────────── */
+  @page { size: 8.5in 11in; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; width: 8.5in; height: 11in; }
+    .noprint { display: none !important; }
+  }
+
+  .noprint {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+
+    <!-- Header -->
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">Fresh Today</div>
+      <div class="hd__rule"></div>
+      <p class="hd__tagline">Small-batch and farm-fresh, made this week and ready now. Once it's gone, it's gone until the next bake.</p>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta">
+      Available Now <span class="dot">&bull;</span> Limited Quantities <span class="dot">&bull;</span> Order Online for Pickup
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <div class="products">
+        <div class="prod">
+          <div>
+            <div class="prod__name">Japanese Milk Loaf</div>
+            <p class="prod__desc">Soft, pillowy milk bread with a golden crust and a touch of sweetness. Baked fresh this week.</p>
+            <div class="prod__badge">10 Loaves Available</div>
+          </div>
+          <div class="prod__price">
+            <div class="prod__price-num">$15</div>
+            <div class="prod__price-unit">per loaf</div>
+          </div>
+        </div>
+
+        <div class="prod">
+          <div>
+            <div class="prod__name">Pasture-Raised Eggs</div>
+            <p class="prod__desc">Rich, golden yolks from hens raised out on the pasture. Gathered fresh, sold by the dozen.</p>
+            <div class="prod__badge">10 Dozen Available</div>
+          </div>
+          <div class="prod__price">
+            <div class="prod__price-num">$13</div>
+            <div class="prod__price-unit">per dozen</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="tone">Real food, made by real people. No shortcuts.</p>
+
+      <!-- Order / QR -->
+      <div class="order">
+        <div class="order__qr">
+          <img src="data:image/png;base64,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" alt="QR code to order online" />
+        </div>
+        <div>
+          <div class="order__label">Scan to Order</div>
+          <div class="order__title">Order Online for Pickup</div>
+          <p class="order__sub">Scan the code to go straight to our order page, or visit <span class="order__url">heartoftexasorganics.com/offerings.html</span></p>
+        </div>
+      </div>
+
+      <div class="signoff">Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b></div>
+
+    </div>
+  </div>
+</body>
+</html>

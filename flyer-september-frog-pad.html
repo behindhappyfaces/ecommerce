@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>September at The Frog Pad — Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --cream-2:    #EDE6D6;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --text:       #2A2A2A;
+    --muted:      #6B6B5E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #4a4a44;
+    font-family: var(--sans);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute;
+    inset: 0.26in;
+    border: 1px solid var(--tan);
+    pointer-events: none;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .hd {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.4in 0.65in 0.3in;
+  }
+  .hd__eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 10px;
+  }
+  .hd__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 34px;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+  .hd__rule {
+    width: 48px;
+    height: 2px;
+    background: var(--tan);
+    margin: 11px auto 10px;
+  }
+  .hd__sub {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 8px;
+  }
+  .hd__venue {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--tan);
+  }
+
+  /* ── Intro ─────────────────────────────────────── */
+  .intro {
+    background: var(--cream-2);
+    text-align: center;
+    padding: 12px 0.7in;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  /* ── Body ──────────────────────────────────────── */
+  .body {
+    flex: 1;
+    padding: 0.22in 0.65in 0.1in;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ev {
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid var(--olive);
+    padding: 16px 20px 15px;
+    box-shadow: 0 2px 12px rgba(44,62,45,0.07);
+  }
+
+  .ev__date-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .ev__date {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rust);
+  }
+  .ev__time {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .ev__title {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 600;
+    color: var(--olive);
+    line-height: 1.15;
+  }
+  .ev__subtitle {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .ev__desc {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+  .ev__desc + .ev__desc { margin-top: -2px; }
+
+  .ev__perk {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--olive);
+    background: var(--cream-2);
+    border-radius: 20px;
+    padding: 4px 11px;
+    margin-top: 4px;
+    margin-right: 6px;
+  }
+
+  .ev__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--cream-2);
+  }
+  .ev__price {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ev__price small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .ev__cause {
+    font-size: 10.5px;
+    color: var(--rust);
+    font-weight: 600;
+    text-align: right;
+    max-width: 3.6in;
+    line-height: 1.4;
+  }
+
+  .tone {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
+    margin: 2px 0 0;
+  }
+
+  /* ── QR / register block ──────────────────────── */
+  .order {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 22px;
+    background: var(--olive);
+    border-radius: 10px;
+    padding: 14px 22px;
+  }
+  .order__qr {
+    background: #fff;
+    border-radius: 6px;
+    padding: 6px;
+    width: 0.92in;
+    height: 0.92in;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .order__qr img { width: 100%; height: 100%; display: block; }
+  .order__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 4px;
+  }
+  .order__title {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .order__sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .order__url { font-weight: 600; color: var(--tan); }
+
+  .signoff {
+    text-align: center;
+    padding: 10px 0 2px;
+    font-size: 9.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .signoff b { color: var(--olive); font-weight: 600; }
+
+  @page { size: 8.5in 11in; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; width: 8.5in; height: 11in; }
+    .noprint { display: none !important; }
+  }
+
+  .noprint {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">September at The Frog Pad</div>
+      <div class="hd__rule"></div>
+      <p class="hd__sub">Farm &bull; Food &bull; Wellness &bull; Community</p>
+      <p class="hd__venue">Hosted at The Frog Pad &mdash; Lakeway, Texas</p>
+    </div>
+
+    <p class="intro">Two intimate, hands-on experiences designed to bring women and the community together around good food, meaningful conversation, and a bigger purpose.</p>
+
+    <div class="body">
+
+      <div class="ev">
+        <div class="ev__date-row">
+          <div class="ev__date">Wednesday, September 10</div>
+          <div class="ev__time">6:00&ndash;8:00 PM</div>
+        </div>
+        <div class="ev__title">Bake for a Bigger Purpose</div>
+        <p class="ev__subtitle">A Hands-On Challah Bread Making Workshop</p>
+        <p class="ev__desc">With Rosh Hashanah beginning September 11, gather around the table and learn the tradition of making beautiful, braided challah. You'll shape your own loaf from scratch, with plenty of time to connect, enjoy the process, and take home something delicious to share.</p>
+        <span class="ev__perk">Take Home Your Loaf</span>
+        <span class="ev__perk">+ Complimentary Butter or Preserves, Your Choice</span>
+        <div class="ev__foot">
+          <div class="ev__price">$75<small>per seat</small></div>
+          <div class="ev__cause">$10 from every ticket sold will be donated to CC4C</div>
+        </div>
+      </div>
+
+      <div class="ev">
+        <div class="ev__date-row">
+          <div class="ev__date">Wednesday, September 24</div>
+          <div class="ev__time">6:00&ndash;8:00 PM</div>
+        </div>
+        <div class="ev__title">Women's Wellness: Pasta + Wine</div>
+        <p class="ev__subtitle">An Evening of Food, Connection &amp; Well-Being</p>
+        <p class="ev__desc">Take an evening for yourself. Join us for a hands-on pasta-making experience paired with a delicious meal, wine, and meaningful conversation centered around women's health and wellness &mdash; featuring Leah Busby of Sleep Cycle Center, sharing insights on the importance of sleep, rest, and restoration.</p>
+        <p class="ev__desc">With World Heart Day and National Women's Health &amp; Fitness Day both taking place in September, this is a chance to gather around the table and focus on the whole woman: health, connection, nourishment, and well-being.</p>
+        <div class="ev__foot">
+          <div class="ev__price">TBD<small>ticket price</small></div>
+          <div class="ev__cause">A portion of proceeds benefits Hill Country Women's Health Collective</div>
+        </div>
+      </div>
+
+      <p class="tone">Good food. Good people. A bigger purpose.</p>
+
+      <div class="order">
+        <div class="order__qr">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAzQAAAM0CAIAAADiEPAgAAATw0lEQVR4nO3YQY7juhVA0VTg7dhb8Nq1BXtBziRAkMFHV5ndfpetc+aCnilKvuDX6/X6FwAADf+eHgAAgP8RZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCLtMDfNr1fpsegV94Ho+R+67sjZWZp/bk1DqvmHpGK872fD0j/oQdv1crnJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAEHKZHmAnz+MxPcI2rvfb9AhEreyNqXdwauap92jH3zu1N/wvfJ//he9zcgYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAyGV6gLO43m/TI/zY83hMj/BjK+u84++dmnlqnafuu+PeONu7sCP/C/wTJ2cAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhFymBwDed73f3r72eTxGrl0xdd+zrfPK7wXWOTkDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIOQyPQDwvufxePva6/32Gyf5u62s84qpZ2RfwSwnZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEXKYHOIvn8ZgegT/oer9Nj/Bj9uT3TT3flWe0MvPKtVMz78g7yD9xcgYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAyGV6gJ1c77fpEfgLPY/H29eu7En3/Ywdf69v3fdZK/4EJ2cAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhFymB/i05/GYHgH+z/V+mx6BP2jq+e64r6a+z/4XqHFyBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAEDI1+v1mp7ho67329vXPo/HyH3PZmWdV0w9o7Ptqx2f79Qzslb9+57N1J48GydnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAIR8vV6v6Rm2cb3f3r72eTy2uy+fYV9938rMZ7PjM9px5hVT7++Ks31zpjg5AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACDk6/V6Tc+wjev99va1z+PxGyf5vpWZd7SyzlNrtePMZzP1/q7wvfqMqfd3x+/Gju/RFCdnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAIRcpgf4tOv9tt19n8dj5Nqpmaee0crMZ3O2fbXjzFOs1Wfs+J2c2hs7cnIGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQMhlegC6nsfj7Wuv99tvnOQz9536vSv3XeH5/t12fL5TzrZWZ/u9O3JyBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAEDIZXqAs3gej+kRPmrH33u936ZH2MbK811Z56l9NTXz1Drv6Gx7csXZ9saOnJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAEHKZHuDTnsfj7Wuv99tvnOQzVmbeca1WZl65dsXUM1ox9Xx3XKsVO75HU872fV4x9W3fcV9NcXIGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQMjX6/WanuEUrvfb9Ag/9jweI/ddWauVmafuu8LM/JMdvzlnM/W9WuEd/AwnZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEXKYHOIvn8Zge4aOu99v0CB819XvPtq9WrDyjqXWemnnH+66YmnnHPbnibL93hZMzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAEK+Xq/X9Az8wvV+e/va5/HY7r5ns7LOK3Z8RjvuyannS9/U93mF/5TPcHIGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQMhleoBPu95v0yP82PN4bHffHdd5hWf0d1tZq6m9MfV8z/Z7V0ztq7PtjR05OQMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAg5DI9AH/W9X4bue/zeLx97dlmXrnvlKmZz7Y3puz4LpztGU3NvOM7uCMnZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEfL1er+kZtnG936ZH+LHn8Xj72qnfe7aZV6z8XjN/344zr5j6vTu+v2f7X+AznJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAEHKZHuDTrvfb9Ain8Dweb1+78oxW7rtix5l3NLXOO+6rFTu+vyv33fH93fG/bMd1nuLkDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAICQy/QAO3kej+kRfux6v7197crv3fG+ZzP1jKbeox33xo7fHDN/3457cuq7cTZOzgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAI+Xq9XtMzfNT1fnv72ufx+I2TfN+OM6/Y8feuzDxlZa2mnpG98RnW6vum9vOOdvw/muLkDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAICQy/QAZ3G936ZH+LEdZ57yPB5vXzu1zjs+36l1Xrnviqn77rhWU6beo7Ot89k4OQMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAg5Ov1ek3PAL/N9X6bHuGjnsfj7WtX1mrlvivO9nxXTO2NKVN7csXUO+j59jk5AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACDkMj3Ap13vt+kR+IXn8Ri5dkcr+3lqraZmPtta+dZ93457Y0fW6vucnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQcpkeYCfP4zE9wjau99t2993x+U7NfLZ1ntrPfIY9+Rln+26scHIGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQMhleoCzuN5v0yP82PN4TI9wCmfbG1O/d2o/r/zes828ct8d36Mpvu19Ts4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACLlMDwAV1/tt5L7P4/H2tSszT913xdlmXrHj3tjxvium9uSKs71HU5ycAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABBymR4AmHG936ZH+LGpmZ/HY+S+U6bW+Wz3XdlXKzOvXHu2d2GKkzMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQi7TA5zF83hMj3AKO67z9X4bue/UWq383h2f74qz7Y0VO+6rqZmn9hXf5+QMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgJDL9AA7ud5v0yPwCyvP6Hk8fuMkf7epd2Hqvit7Y8c9ueO3bse1mpr5bPt5R07OAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAj5er1e0zMAAPBfTs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAIAQcQYAECLOAABCxBkAQIg4AwAIEWcAACHiDAAgRJwBAISIMwCAEHEGABAizgAAQsQZAECIOAMACBFnAAAh4gwAIEScAQCEiDMAgBBxBgAQIs4AAELEGQBAiDgDAAgRZwAAIeIMACBEnAEAhIgzAICQ/wBq7uktFFsuewAAAABJRU5ErkJggg==" alt="QR code to register" />
+        </div>
+        <div>
+          <div class="order__label">Scan to Reserve Your Spot</div>
+          <div class="order__title">Heart of Texas Organics &times; The Frog Pad</div>
+          <p class="order__sub">Limited seating for both evenings. Scan the code or visit <span class="order__url">heartoftexasorganics.com/contact.html</span> to reserve.</p>
+        </div>
+      </div>
+
+      <div class="signoff">Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b></div>
+
+    </div>
+  </div>
+</body>
+</html>

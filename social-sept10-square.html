@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Sept 10 — Bake for a Bigger Purpose — Square</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1080px; overflow: hidden; }
+  body {
+    font-family: var(--sans);
+    background: var(--olive);
+  }
+  .canvas {
+    width: 1080px;
+    height: 1080px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 90px 100px;
+    background: radial-gradient(ellipse at 50% 0%, var(--olive-dark) 0%, var(--olive) 62%);
+    color: #fff;
+    text-align: center;
+  }
+  .canvas::after {
+    content: "";
+    position: absolute;
+    inset: 42px;
+    border: 1.5px solid rgba(184,155,110,0.55);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 34px;
+  }
+
+  .title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 76px;
+    line-height: 1.08;
+    max-width: 780px;
+    margin-bottom: 20px;
+  }
+
+  .subtitle {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 30px;
+    color: var(--tan);
+    margin-bottom: 40px;
+  }
+
+  .rule {
+    width: 90px;
+    height: 2px;
+    background: var(--tan);
+    margin-bottom: 40px;
+  }
+
+  .datebar {
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .locbar {
+    font-size: 20px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 40px;
+  }
+
+  .desc {
+    font-size: 22px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.88);
+    max-width: 720px;
+    margin-bottom: 34px;
+  }
+
+  .perks {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 44px;
+  }
+  .perk {
+    font-size: 16.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--olive-dark);
+    background: var(--cream);
+    border-radius: 30px;
+    padding: 12px 22px;
+  }
+
+  .pricebar {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .price {
+    font-family: var(--serif);
+    font-size: 52px;
+    font-weight: 600;
+    color: var(--tan);
+  }
+  .priceunit {
+    font-size: 18px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .cause {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tan);
+    max-width: 620px;
+    margin-bottom: 46px;
+  }
+
+  .cta {
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 30px;
+    padding: 14px 32px;
+  }
+  .cta b { color: var(--tan); }
+</style>
+</head>
+<body>
+  <div class="canvas">
+    <p class="eyebrow">Heart of Texas Organics &times; The Frog Pad</p>
+    <h1 class="title">Bake for a Bigger Purpose</h1>
+    <p class="subtitle">A Hands-On Challah Bread Making Workshop</p>
+    <div class="rule"></div>
+    <p class="datebar">Wednesday, September 10 &nbsp;&bull;&nbsp; 6:00&ndash;8:00 PM</p>
+    <p class="locbar">The Frog Pad &mdash; Lakeway, Texas</p>
+    <p class="desc">With Rosh Hashanah beginning September 11, gather around the table and learn the tradition of braiding your own challah from scratch &mdash; then take home something delicious to share.</p>
+    <div class="perks">
+      <span class="perk">Take Home Your Loaf</span>
+      <span class="perk">+ Complimentary Butter or Preserves</span>
+    </div>
+    <div class="pricebar">
+      <span class="price">$75</span>
+      <span class="priceunit">per seat</span>
+    </div>
+    <p class="cause">$10 from every ticket sold will be donated to CC4C</p>
+    <p class="cta">Reserve your spot at <b>heartoftexasorganics.com/contact.html</b></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Farmstead Collection — Price List</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --cream-2:    #EDE6D6;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --text:       #2A2A2A;
+    --muted:      #6B6B5E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #4a4a44;
+    font-family: var(--sans);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── 8.5 x 11 page ─────────────────────────────── */
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute;
+    inset: 0.28in;
+    border: 1px solid var(--tan);
+    pointer-events: none;
+  }
+
+  /* ── Header band ───────────────────────────────── */
+  .hd {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.46in 0.7in 0.34in;
+  }
+  .hd__eyebrow {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 12px;
+  }
+  .hd__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 40px;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+  .hd__rule {
+    width: 54px;
+    height: 2px;
+    background: var(--tan);
+    margin: 14px auto 13px;
+  }
+  .hd__tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14px;
+    color: var(--tan);
+    margin-bottom: 12px;
+  }
+  .hd__intro {
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.82);
+    max-width: 5in;
+    margin: 0 auto;
+  }
+
+  /* ── Body ──────────────────────────────────────── */
+  .body {
+    flex: 1;
+    padding: 0.3in 0.7in 0.1in;
+  }
+
+  .section + .section { margin-top: 20px; }
+
+  .section__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--rust);
+    text-align: center;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .section__label::before,
+  .section__label::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 1.55in;
+    height: 1px;
+    background: var(--tan);
+  }
+  .section__label::before { right: 100%; margin-right: 16px; }
+  .section__label::after  { left: 100%; margin-left: 16px; }
+
+  .item {
+    padding: 11px 0;
+    border-bottom: 1px solid var(--cream-2);
+  }
+  .item:first-of-type { padding-top: 0; }
+  .item:last-of-type { border-bottom: none; }
+
+  .item__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .item__name {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--olive);
+    line-height: 1.2;
+  }
+  .item__price {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .item__desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 5px;
+    max-width: 5.6in;
+  }
+  .item__note {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ── Footer sign-off band ──────────────────────── */
+  .ft {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.26in 0.7in 0.3in;
+    margin-top: auto;
+  }
+  .ft__eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 8px;
+  }
+  .ft__title {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .ft__tagline {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12.5px;
+    color: var(--tan);
+    margin-bottom: 10px;
+  }
+  .ft__desc {
+    font-size: 11px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+    max-width: 4.6in;
+    margin: 0 auto 10px;
+  }
+  .ft__url {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #fff;
+  }
+
+  /* ── Print ─────────────────────────────────────── */
+  @page { size: 8.5in 11in; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; width: 8.5in; height: 11in; }
+    .noprint { display: none !important; }
+  }
+
+  .noprint {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+
+    <!-- Header -->
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">Farmstead Collection</div>
+      <div class="hd__rule"></div>
+      <p class="hd__tagline">Small batch. Farm raised. Thoughtfully made.</p>
+      <p class="hd__intro">From our Hill Country farm to your table, each product is made in small quantities using thoughtfully sourced ingredients and time-honored methods.</p>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <div class="section">
+        <div class="section__label">From the Bakery</div>
+
+        <div class="item">
+          <div class="item__head">
+            <div class="item__name">Japanese Milk Loaf</div>
+            <div class="item__price">$16</div>
+          </div>
+          <p class="item__desc">A beautifully tender, rich loaf with a soft, delicate crumb. Made for slow mornings, afternoon tea, and everything in between.</p>
+        </div>
+
+        <div class="item">
+          <div class="item__head">
+            <div class="item__name">Farmhouse Cinnamon Roll</div>
+            <div class="item__price">$8 each</div>
+          </div>
+          <p class="item__desc">Soft, generously layered and finished by hand. Individually wrapped for an easy indulgence, wherever the day takes you.</p>
+          <p class="item__note">Seasonal and specialty varieties may be priced accordingly.</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section__label">From the Pantry</div>
+
+        <div class="item">
+          <div class="item__head">
+            <div class="item__name">Garlic Chili Crunch</div>
+            <div class="item__price">$18</div>
+          </div>
+          <p class="item__desc">A savory, aromatic blend with just the right amount of heat. Made in small batches to bring depth and character to everything from eggs to vegetables, meats and warm bread.</p>
+        </div>
+
+        <div class="item">
+          <div class="item__head">
+            <div class="item__name">Tuscan Herb Bread Dipping Oil</div>
+            <div class="item__price">$18</div>
+          </div>
+          <p class="item__desc">An aromatic blend of herbs and infused oil created for warm, crusty bread and leisurely gatherings around the table.</p>
+        </div>
+
+        <div class="item">
+          <div class="item__head">
+            <div class="item__name">Seasonal Farmstead Preserves</div>
+            <div class="item__price">$14</div>
+          </div>
+          <p class="item__desc">Made in small batches with seasonal fruit, capturing the character of each harvest. Available varieties change throughout the year.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sign-off -->
+    <div class="ft">
+      <div class="ft__eyebrow">From Our Farm to Your Table</div>
+      <div class="ft__title">Heart of Texas Organics</div>
+      <p class="ft__tagline">Food is Medicine</p>
+      <p class="ft__desc">Small-batch provisions inspired by the land, the seasons and the simple pleasure of gathering around a good table.</p>
+      <p class="ft__url">heartoftexasorganics.com</p>
+    </div>
+
+  </div>
+</body>
+</html>

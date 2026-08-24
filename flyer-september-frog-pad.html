@@ -74,6 +74,12 @@
     letter-spacing: 0.03em;
     line-height: 1.1;
   }
+  .hd__address {
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.72);
+    margin-top: 9px;
+  }
   .hd__rule {
     width: 48px;
     height: 2px;
@@ -274,6 +280,13 @@
     color: var(--muted);
   }
   .signoff b { color: var(--olive); font-weight: 600; }
+  .signoff__contact {
+    margin-top: 4px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: none;
+    color: var(--muted);
+  }
 
   @page { size: 8.5in 11in; margin: 0; }
   @media print {
@@ -308,12 +321,13 @@
     <div class="hd">
       <div class="hd__eyebrow">Heart of Texas Organics</div>
       <div class="hd__title">September at The Frog Pad</div>
+      <p class="hd__address">Located in Oak Grove Plaza<br>1501 Ranch Rd 620 N, Suite A, Lakeway, TX 78734</p>
       <div class="hd__rule"></div>
       <p class="hd__sub">Farm &bull; Food &bull; Wellness &bull; Community</p>
       <p class="hd__venue">Hosted at The Frog Pad &mdash; Lakeway, Texas</p>
     </div>
 
-    <p class="intro">Two intimate, hands-on experiences designed to bring the community together around good food, meaningful conversation, and a bigger purpose.</p>
+    <p class="intro">Two intimate, hands-on experiences designed to bring the community together around good food and meaningful conversation.</p>
 
     <div class="body">
 
@@ -346,7 +360,7 @@
         <span class="ev__perk">Recipe Card Included</span>
         <div class="ev__foot">
           <div class="ev__price">TBD<small>ticket price</small></div>
-          <div class="ev__cause">A portion of proceeds benefits Hill Country Women's Health Collective</div>
+          <div class="ev__cause">$10 from every ticket sold will be donated to Hill Country Women's Health Collective</div>
         </div>
       </div>
 
@@ -363,7 +377,10 @@
         </div>
       </div>
 
-      <div class="signoff">Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b></div>
+      <div class="signoff">
+        Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b>
+        <div class="signoff__contact">operations@heartoftexasorganics.com &nbsp;&bull;&nbsp; 512-803-0333</div>
+      </div>
 
     </div>
   </div>

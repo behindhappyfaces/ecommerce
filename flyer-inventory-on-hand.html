@@ -176,6 +176,24 @@
     white-space: nowrap;
   }
 
+  .prod__price--tiered {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+  .prod__price--tiered .prod__price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .prod__price--tiered .prod__price-num {
+    font-size: 18px;
+  }
+  .prod__price--tiered .prod__price-unit {
+    margin-top: 0;
+  }
+
   .tone {
     font-family: var(--serif);
     font-style: italic;
@@ -331,6 +349,23 @@
           <div class="prod__price">
             <div class="prod__price-num">$13</div>
             <div class="prod__price-unit">per dozen</div>
+          </div>
+        </div>
+
+        <div class="prod">
+          <div>
+            <div class="prod__name">Grass-Fed &amp; Finished Butter</div>
+            <p class="prod__desc">Rich, cultured butter from cows raised on pasture, grass-fed and grass-finished.</p>
+          </div>
+          <div class="prod__price prod__price--tiered">
+            <div class="prod__price-row">
+              <span class="prod__price-num">$17</span>
+              <span class="prod__price-unit">half lb</span>
+            </div>
+            <div class="prod__price-row">
+              <span class="prod__price-num">$24</span>
+              <span class="prod__price-unit">per lb</span>
+            </div>
           </div>
         </div>
 

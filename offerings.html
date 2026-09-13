@@ -1024,7 +1024,7 @@
             });
             var data = await res.json();
             if (!res.ok) {
-              err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : 'Something went wrong. Please try again.';
+              err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : data.error === 'smoke_sold_out' ? 'Sorry — the smoking add-on is sold out. You can still reserve your turkey without it.' : 'Something went wrong. Please try again.';
               err.style.display = 'block';
               btn.textContent = 'Proceed to Payment';
               btn.disabled = false;
@@ -1521,6 +1521,102 @@
           }
         });
       } catch(e) {
+        // Silently fail — stock badges are non-critical
+      }
+    })();
+  </script>
+
+  <!-- Live stock: Thanksgiving turkey reservation + smoking add-on. Handled separately
+       from the generic stock-badge script above because these two items don't map to a
+       single data-add-to-cart button each — the turkey reservation shares inventory with
+       the bundle-turkey reserve flow, and the smoking add-on can be added from three
+       different spots on this page. -->
+  <script>
+    (async function turkeySmokeStock() {
+      try {
+        const res = await fetch('/api/stock');
+        if (!res.ok) return;
+        const products = await res.json();
+        const byId = {};
+        products.forEach(function(p) { byId[p.id] = p; });
+
+        function addBanner(wrap, text, cls) {
+          if (!wrap) return;
+          var el = document.createElement('div');
+          el.className = cls;
+          el.textContent = text;
+          wrap.appendChild(el);
+        }
+
+        // Thanksgiving Turkey reservation — shares inventory with the reserve.html bundle
+        var turkey = byId['bundle-turkey'];
+        var turkeyCard = document.getElementById('thanksgiving-turkey-section');
+        if (turkey && turkeyCard) {
+          var turkeyBtn  = turkeyCard.querySelector('[data-add-to-cart="thanksgiving-turkey"]');
+          var turkeyWrap = turkeyCard.querySelector('.offering-card__image-wrap');
+          if (turkey.stock <= 0) {
+            addBanner(turkeyWrap, 'Sold Out', 'sold-out-banner');
+            if (turkeyBtn) {
+              turkeyBtn.disabled = true;
+              turkeyBtn.textContent = 'Sold Out';
+              turkeyBtn.style.opacity = '0.4';
+              turkeyBtn.style.cursor = 'not-allowed';
+            }
+          } else if (turkey.stock <= turkey.reorder_level) {
+            addBanner(turkeyWrap, 'Low Stock', 'low-stock-banner');
+          }
+        }
+
+        // Turkey smoking add-on — Good BBQ Lake Travis has limited capacity, shared
+        // across every place this add-on can be selected/added.
+        var smoke = byId['addon-turkey-smoke'];
+        if (smoke) {
+          var smokeSoldOut  = smoke.stock <= 0;
+          var smokeLow      = !smokeSoldOut && smoke.stock <= smoke.reorder_level;
+          var smokeNoteText = smokeSoldOut
+            ? 'Smoking service is sold out for this season'
+            : ('Only ' + smoke.stock + ' smoking slots left');
+
+          function gateSmokeCheckbox(chkId) {
+            var chk = document.getElementById(chkId);
+            if (!chk) return;
+            var label = chk.closest('label');
+            if (smokeSoldOut) {
+              chk.checked = false;
+              chk.disabled = true;
+              if (label) label.style.opacity = '0.5';
+            }
+            if (smokeSoldOut || smokeLow) {
+              var note = document.createElement('span');
+              note.style.cssText = 'display:block;font-size:0.72rem;font-weight:600;margin-top:4px;color:var(--color-rust);';
+              note.textContent = smokeNoteText;
+              (label || chk.parentElement).appendChild(note);
+            }
+          }
+          gateSmokeCheckbox('turkey-card-smoke');
+          gateSmokeCheckbox('tr-smoke');
+
+          // Standalone "Turkey Smoking Service" card
+          var smokeCard = document.getElementById('turkey-smoke-standalone-section');
+          if (smokeCard) {
+            var smokeWrap    = smokeCard.querySelector('.offering-card__image-wrap');
+            var smokeAddBtn  = document.getElementById('turkey-smoke-standalone-add');
+            var smokeConfirm = document.getElementById('turkey-smoke-standalone-confirm');
+            if (smokeSoldOut) {
+              addBanner(smokeWrap, 'Sold Out', 'sold-out-banner');
+              if (smokeAddBtn) {
+                smokeAddBtn.disabled = true;
+                smokeAddBtn.textContent = 'Sold Out';
+                smokeAddBtn.style.opacity = '0.4';
+                smokeAddBtn.style.cursor = 'not-allowed';
+              }
+              if (smokeConfirm) smokeConfirm.disabled = true;
+            } else if (smokeLow) {
+              addBanner(smokeWrap, 'Low Stock', 'low-stock-banner');
+            }
+          }
+        }
+      } catch (e) {
         // Silently fail — stock badges are non-critical
       }
     })();

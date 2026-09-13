@@ -934,7 +934,7 @@
         try {
           var res  = await fetch('/reserve-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, bundle: 'bundle2', notes: 'From popup on homepage', smoke: smoke }) });
           var data = await res.json();
-          if (!res.ok) { err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : 'Something went wrong. Please try again.'; err.style.display = 'block'; btn.textContent = 'Proceed to Payment'; btn.disabled = false; return; }
+          if (!res.ok) { err.textContent = data.error === 'sold_out' ? 'Sorry — turkeys are sold out.' : data.error === 'smoke_sold_out' ? 'Sorry — the smoking add-on is sold out. You can still reserve your turkey without it.' : 'Something went wrong. Please try again.'; err.style.display = 'block'; btn.textContent = 'Proceed to Payment'; btn.disabled = false; return; }
           window.location.href = data.url;
         } catch { err.textContent = 'Something went wrong. Please try again.'; err.style.display = 'block'; btn.textContent = 'Proceed to Payment'; btn.disabled = false; }
       });

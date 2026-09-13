@@ -1826,6 +1826,16 @@ function updateDeliveryMinimumState() {
   if (!btn) return;
   const note  = btn.querySelector('.delivery-modal__note');
   const total = getTotal();
+
+  // The turkey smoking add-on (Good BBQ Lake Travis) is pick-up only — no delivery
+  // when it's in the cart. A plain turkey with no smoking add-on can still be delivered.
+  const hasSmokeAddon = getCart().items.some(i => i.id === 'addon-turkey-smoke');
+  if (hasSmokeAddon) {
+    btn.disabled = true;
+    if (note) note.textContent = 'Not available with the turkey smoking add-on — that item is pick-up only';
+    return;
+  }
+
   if (total < DELIVERY_MIN_CENTS) {
     btn.disabled = true;
     if (note) note.textContent = 'Requires a $' + (DELIVERY_MIN_CENTS / 100).toFixed(0) + ' minimum order — add ' + fmt(DELIVERY_MIN_CENTS - total) + ' more to qualify';

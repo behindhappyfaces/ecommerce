@@ -2208,6 +2208,10 @@ app.post('/create-checkout-session', async (req, res) => {
       if (itemsSubtotal < DELIVERY_MIN_ORDER_CENTS) {
         return res.status(400).json({ error: `Delivery requires a $${(DELIVERY_MIN_ORDER_CENTS / 100).toFixed(0)} minimum order.` });
       }
+      // The turkey smoking add-on (Good BBQ Lake Travis) is pick-up only.
+      if (items.some(i => i.id === 'addon-turkey-smoke')) {
+        return res.status(400).json({ error: 'The turkey smoking add-on is pick-up only — please choose local pick-up instead of delivery.' });
+      }
     }
 
     const hasTurkey = items.some(i => TURKEY_ITEM_IDS.has(i.id));
@@ -2782,6 +2786,12 @@ app.post('/reserve-checkout', async (req, res) => {
   if (product && product.stock <= 0) {
     return res.status(400).json({ error: 'sold_out' });
   }
+  if (smokeAddon) {
+    const smokeProduct = await db.getProduct('addon-turkey-smoke');
+    if (smokeProduct && smokeProduct.stock <= 0) {
+      return res.status(400).json({ error: 'smoke_sold_out' });
+    }
+  }
 
   try {
     const origin = `${req.protocol}://${req.get('host')}`;
@@ -2885,6 +2895,8 @@ const PRODUCT_MAP = {
   'Tuscany Herb Bread Dipping Oil': 'herb-dipping-oil',
   'Farm Bundle':                    'bundle-farm',
   'Thanksgiving Turkey Bundle':     'bundle-turkey',
+  'Thanksgiving Turkey':            'bundle-turkey',
+  'Smoking Service — Good BBQ Lake Travis': 'addon-turkey-smoke',
   'Farm Sampler Box':               'sampler-box',
   'Chicken & Dinner Roll Bundle':   'chicken-dinner-roll-bundle',
   'Chicken and Dinner Roll Bundle': 'chicken-dinner-roll-bundle',
@@ -3766,6 +3778,62 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
   }
   sendEmail('New Wholesale Inquiry - Heart of Texas Organics', html)
     .catch(err => console.error('[Wholesale email error]', err.message));
+  res.json({ ok: true });
+});
+
+app.post('/api/event-inquiry', async (req, res) => {
+  const { name, email, interestType, eventDate, guestCount, details, website, form_ts } = req.body || {};
+
+  if (!name || !email || !details) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Honeypot — bots fill the hidden website field, humans never see it
+  if (website && website.trim().length > 0) {
+    console.log('[Spam] Event inquiry honeypot triggered:', email);
+    return res.json({ ok: true }); // silent drop
+  }
+
+  // Timing check — real users take at least 4 seconds to fill a form
+  const elapsed = form_ts ? Date.now() - parseInt(form_ts, 10) : 99999;
+  if (elapsed < 4000) {
+    console.log('[Spam] Event inquiry submitted too fast (' + elapsed + 'ms):', email);
+    return res.json({ ok: true }); // silent drop
+  }
+
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+  if (!contactAllowed(ip)) {
+    console.log('[Spam] Event inquiry rate limit hit from', ip);
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  if (looksLikeRandom(name) || looksLikeRandom(details)) {
+    console.log('[Spam] Event inquiry random content detected from:', email);
+    return res.json({ ok: true }); // silent drop
+  }
+
+  const esc = s => String(s).slice(0, 1000).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#2C3E2D;">New Event Inquiry</h2>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;width:180px;"><strong>Name</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(name)}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;"><strong>Email</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;"><strong>Interested In</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(interestType || 'Not specified')}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;"><strong>Event Date</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(eventDate || 'Not specified')}</td></tr>
+      <tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;"><strong>Estimated Guests</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${esc(guestCount || 'Not specified')}</td></tr>
+      <tr><td style="padding:10px;color:#8B4A2F;"><strong>Details</strong></td><td style="padding:10px;white-space:pre-wrap;">${esc(details)}</td></tr>
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#8B4A2F;">Submitted from heartoftexasorganics.com/events.html</p>
+  `;
+
+  try {
+    await db.createLead('event', { name, email, interestType, eventDate, guestCount, details });
+  } catch (err) {
+    console.error('[Event inquiry createLead error]', err.message);
+    return res.status(500).json({ error: 'Failed to save lead' });
+  }
+  sendEmail(`New Event Inquiry from ${name}`, html)
+    .catch(err => console.error('[Event inquiry email error]', err.message));
   res.json({ ok: true });
 });
 

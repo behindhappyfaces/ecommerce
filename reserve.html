@@ -399,6 +399,8 @@
           btn.disabled = false;
           if (data.error === 'sold_out') {
             status.textContent = 'Sorry — this bundle is sold out.';
+          } else if (data.error === 'smoke_sold_out') {
+            status.textContent = 'Sorry — the smoking add-on is sold out. You can still reserve your turkey without it.';
           } else {
             status.textContent = 'Something went wrong. Please email us at operations@heartoftexasorganics.com';
           }
@@ -451,6 +453,28 @@
           card.querySelector('.item-card__info').appendChild(tag);
         }
       });
+
+      // Smoking add-on has its own limited capacity — show status next to the checkbox
+      var smokeStock = stockMap['addon-turkey-smoke'];
+      var smokeLabel  = document.getElementById('chk-smoke') && document.getElementById('chk-smoke').closest('label');
+      if (smokeStock !== undefined && smokeLabel) {
+        var smokeTag = document.createElement('span');
+        smokeTag.style.cssText = 'display:block;font-size:0.72rem;font-weight:600;margin-top:4px;';
+        if (smokeStock <= 0) {
+          smokeTag.textContent = 'Smoking service is sold out for this season';
+          smokeTag.style.color = 'var(--color-rust)';
+          var smokeChkEl = document.getElementById('chk-smoke');
+          smokeChkEl.disabled = true;
+          if (smokeChkEl.checked) { smokeChkEl.checked = false; toggleSmokeUpcharge(); }
+          smokeLabel.style.opacity = '0.5';
+          smokeLabel.style.cursor = 'not-allowed';
+          smokeLabel.appendChild(smokeTag);
+        } else if (smokeStock <= 3) {
+          smokeTag.textContent = 'Only ' + smokeStock + ' smoking slots left — hurry!';
+          smokeTag.style.color = 'var(--color-rust)';
+          smokeLabel.appendChild(smokeTag);
+        }
+      }
     }).catch(function() {});
   </script>
 </body>

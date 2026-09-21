@@ -2427,11 +2427,16 @@ app.post('/create-checkout-session', async (req, res) => {
       if (deliveryDiscountCents > 0)
         labelParts.push('$5 Delivery Discount');
       if (!labelParts.length) labelParts.push('Savings');
+      // Stripe coupon names are capped at 40 characters — admin-typed cart-link
+      // discount labels have no length limit on our end, so this can otherwise
+      // fail checkout entirely for a customer with a long label.
+      let couponName = labelParts.join(' + ');
+      if (couponName.length > 40) couponName = couponName.slice(0, 37) + '...';
       const coupon = await stripe.coupons.create({
         amount_off: totalDiscountCents,
         currency:   'usd',
         duration:   'once',
-        name:       labelParts.join(' + '),
+        name:       couponName,
       });
       sessionParams.discounts = [{ coupon: coupon.id }];
       delete sessionParams.allow_promotion_codes;

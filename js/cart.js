@@ -3832,6 +3832,16 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
             checkoutBtn.id = 'cart-checkout';
             checkoutBtn.textContent = 'Proceed to Checkout';
 
+            // If the admin already added a delivery fee line item in the Cart
+            // Links builder, the fee and delivery decision are already final —
+            // skip our own pickup/delivery + address modal entirely (which would
+            // otherwise ask again AND let the server tack on a second, freshly
+            // recalculated "Local Delivery Fee" line item plus its own $5-off
+            // incentive on top of the one already included here).
+            var hasPreloadedDeliveryFee = cartData.items.some(function(i) {
+              return i.name && i.name.toLowerCase().indexOf('delivery fee') === 0;
+            });
+
             // If sampler box is in the cart, show a customize prompt before checkout
             var hasSamplerInLink = cartData.items.some(function(i) { return i.id === 'sampler-box'; });
             if (hasSamplerInLink) {
@@ -3861,7 +3871,9 @@ async function subscribe(subId, name, price, deliveryMethod, pickupLocation, swa
               footer.appendChild(customizeBtn);
               footer.appendChild(checkoutBtn);
             } else {
-              checkoutBtn.addEventListener('click', openOneTimeDeliveryChoice);
+              checkoutBtn.addEventListener('click', hasPreloadedDeliveryFee
+                ? function() { checkout('delivery', null, null); }
+                : openOneTimeDeliveryChoice);
               footer.appendChild(totalRow);
               footer.appendChild(noteEl);
               footer.appendChild(checkoutBtn);

@@ -3437,7 +3437,7 @@ app.get('/admin/stripe-publishable-key', requireAdmin, (req, res) => {
 
 app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req, res) => {
   try {
-    const { items, customerName, customerEmail, customerPhone, note, taxRate } = req.body || {};
+    const { items, customerName, customerEmail, customerPhone, note, taxRate, sourceCartToken, saveCard } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
@@ -3448,6 +3448,29 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     const totalCents = subtotalCents + taxCents;
     if (totalCents <= 0) return res.status(400).json({ error: 'Total must be greater than $0' });
 
+    // If this charge is completing a cart link the customer already had
+    // (rather than a brand-new phone order), verify it up front so we don't
+    // take payment for a token that turns out not to exist.
+    let linkedCart = null;
+    if (sourceCartToken) {
+      linkedCart = await getPendingCartDB(sourceCartToken);
+      if (!linkedCart) return res.status(404).json({ error: 'That cart link could not be found — it may have been deleted.' });
+    }
+
+    // "Save card" tokenizes the card with Stripe against a Customer record so
+    // it can be charged again later (e.g. to start a subscription) without
+    // ever re-collecting or storing the card number ourselves. Requires an
+    // email so the saved card can be found again.
+    let stripeCustomerId = null;
+    if (saveCard) {
+      if (!customerEmail) return res.status(400).json({ error: 'An email is required to save the card for future charges.' });
+      const existing = await stripe.customers.list({ email: customerEmail, limit: 1 });
+      const customer = existing.data.length
+        ? existing.data[0]
+        : await stripe.customers.create({ email: customerEmail, name: customerName || undefined, phone: customerPhone || undefined });
+      stripeCustomerId = customer.id;
+    }
+
     const intent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: 'usd',
@@ -3456,6 +3479,7 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
       description: `Phone order — ${customerName || 'customer'}`,
       receipt_email: customerEmail || undefined,
       metadata: { type: 'phone-order' },
+      ...(stripeCustomerId ? { customer: stripeCustomerId, setup_future_usage: 'off_session' } : {}),
     });
 
     // Persisted under the PaymentIntent id so the webhook can find full order
@@ -3466,6 +3490,8 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
       items, note: note || '', taxRate: taxPct, totalCents,
       itemSummary: items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : ''),
       createdAt: new Date().toISOString(), completed: false, remindersSent: 0, lastReminderAt: null,
+      linkedCartToken: sourceCartToken || null,
+      stripeCustomerId,
     });
 
     res.json({ ok: true, clientSecret: intent.client_secret, totalCents, taxCents, subtotalCents });
@@ -3494,6 +3520,9 @@ async function handlePhoneOrderSucceeded(pi) {
     customerPhone:   order.phone || '',
     deliveryMethod:  'phone-order',
     customerNotes:   order.note || '',
+    linkedCartToken: order.linkedCartToken || null,
+    stripeCustomerId: order.stripeCustomerId || null,
+    cardSaved:       !!order.stripeCustomerId,
   });
 
   try {
@@ -3501,6 +3530,31 @@ async function handlePhoneOrderSucceeded(pi) {
   } catch (e) { console.error('[phone-order] stock deduction error:', e.message); }
 
   await updatePendingCartDB(pi.id, { completed: true });
+
+  // If this phone charge was completing a cart link the customer already had,
+  // close that cart link out too so it stops going out in abandoned-cart /
+  // delinquent-payment reminders — the order isn't left dangling as a separate,
+  // still-"unpaid" record.
+  if (order.linkedCartToken) {
+    try {
+      await updatePendingCartDB(order.linkedCartToken, {
+        completed: true, completedAt: new Date().toISOString(),
+        completedVia: 'phone', linkedPhoneOrderPi: pi.id,
+      });
+    } catch (e) { console.error('[phone-order] failed to close linked cart link:', e.message); }
+  }
+
+  // Card was tokenized to a Stripe Customer for future use — set it as their
+  // default so a later subscription/repeat charge can be created against that
+  // customer without asking for the card again. We only ever handle the
+  // Stripe-issued IDs here, never the card itself.
+  if (order.stripeCustomerId && pi.payment_method) {
+    try {
+      await stripe.customers.update(order.stripeCustomerId, {
+        invoice_settings: { default_payment_method: pi.payment_method },
+      });
+    } catch (e) { console.error('[phone-order] failed to set default payment method:', e.message); }
+  }
 
   const itemLines = order.items.map(i =>
     `<tr><td style="padding:6px 10px;border-bottom:1px solid #e8e2d6;">${i.name}</td>
@@ -3514,6 +3568,8 @@ async function handlePhoneOrderSucceeded(pi) {
      <p><strong>Total charged:</strong> ${total}</p>
      <table style="width:100%;border-collapse:collapse;">${itemLines}</table>
      ${order.note ? `<p><strong>Note:</strong> ${order.note}</p>` : ''}
+     ${order.linkedCartToken ? `<p style="color:#2a7a2a;"><strong>🔗 Linked to cart link:</strong> ${order.linkedCartToken} (marked paid, reminders stopped)</p>` : ''}
+     ${order.stripeCustomerId ? `<p style="color:#2a7a2a;"><strong>💳 Card saved for future use</strong> — Stripe customer <code>${order.stripeCustomerId}</code>. Use this in the Stripe Dashboard to charge again or start a subscription without asking for the card again.</p>` : ''}
      ${fulfillmentBadge('READY_TO_SHIP')}
      <p style="color:#888;font-size:12px;">PaymentIntent: ${pi.id}</p>`
   );

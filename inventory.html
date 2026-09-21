@@ -5420,7 +5420,7 @@
   function chLoadDraft() {
     let draft;
     try { draft = JSON.parse(localStorage.getItem(CH_DRAFT_KEY) || 'null'); } catch { draft = null; }
-    if (!draft) return;
+    if (!draft) { chAddItemRow(); return; }
 
     document.getElementById('ch-item-rows').innerHTML = '';
     (draft.rows || []).forEach(r => chAddItemRow(r.name, r.price, r.qty, r.taxable));

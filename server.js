@@ -3588,6 +3588,7 @@ async function handlePhoneOrderSucceeded(pi) {
      <table style="width:100%;border-collapse:collapse;">${itemLines}</table>
      ${order.discountCents ? `<p><strong>Discount applied:</strong> ${order.discount?.label || 'Discount'} (-${formatMoney(order.discountCents)})</p>` : ''}
      ${order.note ? `<p><strong>Note:</strong> ${order.note}</p>` : ''}
+     ${order.customerMessage ? `<p><strong>Message sent to customer:</strong><br>${order.customerMessage.replace(/\n/g, '<br>')}</p>` : ''}
      ${order.linkedCartToken ? `<p style="color:#2a7a2a;"><strong>🔗 Linked to cart link:</strong> ${order.linkedCartToken} (marked paid, reminders stopped)</p>` : ''}
      ${order.stripeCustomerId ? `<p style="color:#2a7a2a;"><strong>💳 Card saved for future use</strong> — Stripe customer <code>${order.stripeCustomerId}</code>. Use this in the Stripe Dashboard to charge again or start a subscription without asking for the card again.</p>` : ''}
      ${fulfillmentBadge('READY_TO_SHIP')}

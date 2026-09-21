@@ -3437,7 +3437,7 @@ app.get('/admin/stripe-publishable-key', requireAdmin, (req, res) => {
 
 app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req, res) => {
   try {
-    const { items, customerName, customerEmail, customerPhone, note, taxRate, sourceCartToken, saveCard } = req.body || {};
+    const { items, customerName, customerEmail, customerPhone, note, taxRate, sourceCartToken, saveCard, discount } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
@@ -3445,7 +3445,21 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     const taxableSubtotal = items.reduce((s, i) => s + (i.taxable && !_bundleIds.has(i.id) ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
     const taxPct = parseFloat(taxRate) || 0;
     const taxCents = taxPct > 0 ? Math.round(taxableSubtotal * taxPct / 100) : 0;
-    const totalCents = subtotalCents + taxCents;
+
+    // Same discount math as cart links (js/cart.js restore-cart handler):
+    // percent/fixed off the item subtotal, never trusted past what the
+    // subtotal can actually cover, and tax stays computed on the
+    // un-discounted taxable subtotal above.
+    let discountCents = 0;
+    const discAmount = parseFloat(discount?.amount) || 0;
+    if (discount && discAmount > 0) {
+      discountCents = discount.type === 'percent'
+        ? Math.round(subtotalCents * discAmount / 100)
+        : Math.round(discAmount * 100);
+      discountCents = Math.max(0, Math.min(discountCents, subtotalCents));
+    }
+
+    const totalCents = subtotalCents - discountCents + taxCents;
     if (totalCents <= 0) return res.status(400).json({ error: 'Total must be greater than $0' });
 
     // If this charge is completing a cart link the customer already had
@@ -3492,9 +3506,11 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
       createdAt: new Date().toISOString(), completed: false, remindersSent: 0, lastReminderAt: null,
       linkedCartToken: sourceCartToken || null,
       stripeCustomerId,
+      discount: discountCents > 0 ? discount : null,
+      discountCents,
     });
 
-    res.json({ ok: true, clientSecret: intent.client_secret, totalCents, taxCents, subtotalCents });
+    res.json({ ok: true, clientSecret: intent.client_secret, totalCents, taxCents, subtotalCents, discountCents });
   } catch (e) {
     console.error('[charge/create-intent]', e.message);
     res.status(500).json({ error: e.message || 'Could not start payment' });
@@ -3523,6 +3539,8 @@ async function handlePhoneOrderSucceeded(pi) {
     linkedCartToken: order.linkedCartToken || null,
     stripeCustomerId: order.stripeCustomerId || null,
     cardSaved:       !!order.stripeCustomerId,
+    discount:        order.discount || null,
+    discountCents:   order.discountCents || 0,
   });
 
   try {
@@ -3567,6 +3585,7 @@ async function handlePhoneOrderSucceeded(pi) {
      <p><strong>Customer:</strong> ${order.name || 'unknown'} ${order.email ? '&lt;' + order.email + '&gt;' : ''} ${order.phone ? '· ' + order.phone : ''}</p>
      <p><strong>Total charged:</strong> ${total}</p>
      <table style="width:100%;border-collapse:collapse;">${itemLines}</table>
+     ${order.discountCents ? `<p><strong>Discount applied:</strong> ${order.discount?.label || 'Discount'} (-${formatMoney(order.discountCents)})</p>` : ''}
      ${order.note ? `<p><strong>Note:</strong> ${order.note}</p>` : ''}
      ${order.linkedCartToken ? `<p style="color:#2a7a2a;"><strong>🔗 Linked to cart link:</strong> ${order.linkedCartToken} (marked paid, reminders stopped)</p>` : ''}
      ${order.stripeCustomerId ? `<p style="color:#2a7a2a;"><strong>💳 Card saved for future use</strong> — Stripe customer <code>${order.stripeCustomerId}</code>. Use this in the Stripe Dashboard to charge again or start a subscription without asking for the card again.</p>` : ''}
@@ -3581,6 +3600,7 @@ async function handlePhoneOrderSucceeded(pi) {
         <h2 style="color:#2C3E2D;">Your order is confirmed! 🌾</h2>
         <p style="color:#3d3d3d;line-height:1.9;">Hi ${order.name || 'there'}, thanks for your order over the phone — here's what we charged:</p>
         <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">${itemLines}</table>
+        ${order.discountCents ? `<p style="color:#3d3d3d;margin-top:12px;">${order.discount?.label || 'Discount'}: -${formatMoney(order.discountCents)}</p>` : ''}
         <p style="color:#2C3E2D;font-weight:700;margin-top:16px;">Total: ${total}</p>
         <p style="color:#3d3d3d;line-height:1.9;margin-top:24px;">Questions? Just reply to this email or reach us at operations@heartoftexasorganics.com.</p>
       </div>`

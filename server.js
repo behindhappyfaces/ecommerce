@@ -3485,11 +3485,18 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
       stripeCustomerId = customer.id;
     }
 
+    // TEMPORARY: `moto: true` is left off until Stripe support enables MOTO on
+    // this account (dashboard.stripe.com/settings/account → Contact support →
+    // API Integration). Until then, Stripe rejects it with "Received unknown
+    // parameter: payment_method_options[card][moto]". Card entry still goes
+    // straight through Stripe Elements either way — this only affects the
+    // MOTO transaction categorization. Re-add `moto: true` to the object below
+    // once Stripe confirms it's enabled.
     const intent = await stripe.paymentIntents.create({
       amount: totalCents,
       currency: 'usd',
       payment_method_types: ['card'],
-      payment_method_options: { card: { moto: true, request_three_d_secure: 'any' } },
+      payment_method_options: { card: { request_three_d_secure: 'any' } },
       description: `Phone order — ${customerName || 'customer'}`,
       receipt_email: customerEmail || undefined,
       metadata: { type: 'phone-order' },

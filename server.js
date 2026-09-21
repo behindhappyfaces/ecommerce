@@ -3437,7 +3437,7 @@ app.get('/admin/stripe-publishable-key', requireAdmin, (req, res) => {
 
 app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req, res) => {
   try {
-    const { items, customerName, customerEmail, customerPhone, note, taxRate, sourceCartToken, saveCard, discount } = req.body || {};
+    const { items, customerName, customerEmail, customerPhone, note, customerMessage, taxRate, sourceCartToken, saveCard, discount } = req.body || {};
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
@@ -3501,7 +3501,7 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     await setPendingCartDB(intent.id, {
       token: intent.id, isPhoneOrder: true, adminCreated: true,
       name: customerName || '', email: customerEmail || null, phone: customerPhone || null,
-      items, note: note || '', taxRate: taxPct, totalCents,
+      items, note: note || '', customerMessage: customerMessage || '', taxRate: taxPct, totalCents,
       itemSummary: items.slice(0, 2).map(i => i.name).join(' & ') + (items.length > 2 ? ` (+${items.length - 2} more)` : ''),
       createdAt: new Date().toISOString(), completed: false, remindersSent: 0, lastReminderAt: null,
       linkedCartToken: sourceCartToken || null,
@@ -3536,6 +3536,7 @@ async function handlePhoneOrderSucceeded(pi) {
     customerPhone:   order.phone || '',
     deliveryMethod:  'phone-order',
     customerNotes:   order.note || '',
+    customerMessage: order.customerMessage || '',
     linkedCartToken: order.linkedCartToken || null,
     stripeCustomerId: order.stripeCustomerId || null,
     cardSaved:       !!order.stripeCustomerId,
@@ -3602,6 +3603,7 @@ async function handlePhoneOrderSucceeded(pi) {
         <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:4px;overflow:hidden;">${itemLines}</table>
         ${order.discountCents ? `<p style="color:#3d3d3d;margin-top:12px;">${order.discount?.label || 'Discount'}: -${formatMoney(order.discountCents)}</p>` : ''}
         <p style="color:#2C3E2D;font-weight:700;margin-top:16px;">Total: ${total}</p>
+        ${order.customerMessage ? `<p style="color:#3d3d3d;line-height:1.9;margin-top:24px;padding:14px 18px;background:#fff;border-left:3px solid #2C3E2D;border-radius:4px;">${order.customerMessage.replace(/\n/g, '<br>')}</p>` : ''}
         <p style="color:#3d3d3d;line-height:1.9;margin-top:24px;">Questions? Just reply to this email or reach us at operations@heartoftexasorganics.com.</p>
       </div>`
     );

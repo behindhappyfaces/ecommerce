@@ -1520,8 +1520,13 @@
     </div>
 
     <div style="margin-bottom:16px;max-width:680px;">
-      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Note (optional, for your records)</label>
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Note (optional, for your records — goes to your admin notification, not the customer)</label>
       <input id="ch-note" type="text" placeholder="e.g. Trouble checking out online, charged manually" style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;">
+    </div>
+
+    <div style="margin-bottom:16px;max-width:680px;">
+      <label style="display:block;font-size:0.78rem;color:#aaa;margin-bottom:4px;">Message to Customer (optional — included in their confirmation email)</label>
+      <textarea id="ch-customer-message" rows="2" placeholder="e.g. Thanks so much for your order, Jane! See you at pickup." style="width:100%;padding:8px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#f0ebe4;font-size:0.85rem;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
     </div>
 
     <div id="ch-discount-line" style="display:none;justify-content:space-between;align-items:center;max-width:420px;font-size:0.85rem;color:#6fcf97;margin-bottom:4px;">
@@ -5865,6 +5870,7 @@
     const customerEmail = document.getElementById('ch-cust-email').value.trim();
     const customerPhone = document.getElementById('ch-cust-phone').value.trim();
     const note          = document.getElementById('ch-note').value.trim();
+    const customerMessage = document.getElementById('ch-customer-message').value.trim();
     const taxEnabled    = document.getElementById('ch-tax-enable').checked;
     const taxRate       = taxEnabled ? (parseFloat(document.getElementById('ch-tax-rate').value) || 0) : 0;
     const saveCard      = document.getElementById('ch-save-card').checked;
@@ -5882,7 +5888,7 @@
       const res = await fetch('/admin/charge/create-intent', {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ items, customerName, customerEmail, customerPhone, note, taxRate, saveCard, sourceCartToken: chSourceCartToken, discount }),
+        body: JSON.stringify({ items, customerName, customerEmail, customerPhone, note, customerMessage, taxRate, saveCard, sourceCartToken: chSourceCartToken, discount }),
       });
       const data = await res.json();
       if (!data.clientSecret) throw new Error(data.error || 'Could not start payment');
@@ -5915,6 +5921,7 @@
       document.getElementById('ch-cust-email').value = '';
       document.getElementById('ch-cust-phone').value = '';
       document.getElementById('ch-note').value = '';
+      document.getElementById('ch-customer-message').value = '';
       document.getElementById('ch-item-rows').innerHTML = '';
       document.getElementById('ch-save-card').checked = false;
       document.getElementById('ch-discount-amount').value = '';

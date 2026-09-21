@@ -1460,6 +1460,11 @@
       it's a secure Stripe field, so the card number never passes through our server.
     </p>
 
+    <div id="ch-draft-banner" style="display:none;background:#2a2a1a;border:1px solid #5a5030;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.8rem;color:#d4c89a;justify-content:space-between;align-items:center;gap:12px;max-width:680px;">
+      <span>Draft restored from your last session — everything except the card is filled back in. Card details are never saved (they never leave Stripe's own field), so just re-enter the card and charge.</span>
+      <button id="ch-draft-clear" type="button" class="btn-sm btn-ghost" style="white-space:nowrap;">Clear Draft</button>
+    </div>
+
     <div style="max-width:680px;margin-bottom:18px;padding:12px 14px;background:#161c16;border:1px solid #3a5a3c;border-radius:8px;">
       <label style="display:block;font-size:0.78rem;color:#8db88f;margin-bottom:6px;">Already sent this customer a Cart Link? Load it here instead of re-typing their order</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -5324,6 +5329,9 @@
           const label = (c.name || c.email || 'Unnamed') + ' — ' + (c.itemSummary || (c.items || []).length + ' item(s)');
           return `<option value="${escHtml(c.token)}">${escHtml(label)}</option>`;
         }).join('');
+      // A restored draft may reference a cart link that loaded after the
+      // dropdown was first built — reflect the selection once options exist.
+      if (chSourceCartToken) select.value = chSourceCartToken;
     } catch (e) {
       console.error('[charge] could not load cart links', e);
     }
@@ -5369,6 +5377,79 @@
     document.getElementById('ch-cart-link-clear').style.display = 'inline-block';
     status.style.cssText = 'font-size:0.78rem;margin:8px 0 0;display:block;color:#6fcf97;';
     status.textContent = '✓ Loaded — this charge will be linked back to that cart link and it will stop sending reminder emails once paid.';
+    chSaveDraft();
+  }
+
+  // ── Autosave: everything on this tab except the card field survives a
+  // refresh. The card element lives in a Stripe-hosted iframe our JS has no
+  // access to, so there is no code path where card data could end up here —
+  // that's the point, not an oversight.
+  const CH_DRAFT_KEY = 'hoto-charge-draft';
+
+  function chReadRowsRaw() {
+    return [...document.querySelectorAll('#ch-item-rows tr')].map(tr => {
+      const inputs = tr.querySelectorAll('input');
+      return { name: inputs[0].value, qty: inputs[1].value, price: inputs[2].value, taxable: inputs[3].checked };
+    });
+  }
+
+  function chSaveDraft() {
+    const draft = {
+      rows: chReadRowsRaw(),
+      custName:  document.getElementById('ch-cust-name').value,
+      custEmail: document.getElementById('ch-cust-email').value,
+      custPhone: document.getElementById('ch-cust-phone').value,
+      note:      document.getElementById('ch-note').value,
+      customerMessage: document.getElementById('ch-customer-message').value,
+      taxEnabled: document.getElementById('ch-tax-enable').checked,
+      taxRate:    document.getElementById('ch-tax-rate').value,
+      discountAmount: document.getElementById('ch-discount-amount').value,
+      discountType:   document.getElementById('ch-discount-type').value,
+      discountLabel:  document.getElementById('ch-discount-label').value,
+      saveCard:   document.getElementById('ch-save-card').checked,
+      sourceCartToken: chSourceCartToken,
+    };
+    localStorage.setItem(CH_DRAFT_KEY, JSON.stringify(draft));
+  }
+
+  function chClearDraft() {
+    localStorage.removeItem(CH_DRAFT_KEY);
+    document.getElementById('ch-draft-banner').style.display = 'none';
+  }
+
+  function chLoadDraft() {
+    let draft;
+    try { draft = JSON.parse(localStorage.getItem(CH_DRAFT_KEY) || 'null'); } catch { draft = null; }
+    if (!draft) return;
+
+    document.getElementById('ch-item-rows').innerHTML = '';
+    (draft.rows || []).forEach(r => chAddItemRow(r.name, r.price, r.qty, r.taxable));
+    if (!(draft.rows || []).length) chAddItemRow();
+
+    document.getElementById('ch-cust-name').value  = draft.custName  || '';
+    document.getElementById('ch-cust-email').value = draft.custEmail || '';
+    document.getElementById('ch-cust-phone').value = draft.custPhone || '';
+    document.getElementById('ch-note').value       = draft.note || '';
+    document.getElementById('ch-customer-message').value = draft.customerMessage || '';
+    document.getElementById('ch-tax-enable').checked = !!draft.taxEnabled;
+    document.getElementById('ch-tax-rate').value = draft.taxRate || '8.25';
+    document.getElementById('ch-tax-rate').disabled = !draft.taxEnabled;
+    document.getElementById('ch-discount-amount').value = draft.discountAmount || '';
+    document.getElementById('ch-discount-type').value   = draft.discountType || 'percent';
+    document.getElementById('ch-discount-label').value  = draft.discountLabel || '';
+    document.getElementById('ch-save-card').checked = !!draft.saveCard;
+
+    if (draft.sourceCartToken) {
+      chSourceCartToken = draft.sourceCartToken;
+      document.getElementById('ch-cart-link-select').value = draft.sourceCartToken;
+      document.getElementById('ch-cart-link-clear').style.display = 'inline-block';
+      const status = document.getElementById('ch-cart-link-status');
+      status.style.cssText = 'font-size:0.78rem;margin:8px 0 0;display:block;color:#6fcf97;';
+      status.textContent = '✓ Restored — still linked to that cart link.';
+    }
+
+    chUpdateTotal();
+    document.getElementById('ch-draft-banner').style.display = 'flex';
   }
 
   function chRowStyle() {
@@ -5404,7 +5485,7 @@
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '×'; removeBtn.title = 'Remove row';
     removeBtn.style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:2px 6px;';
-    removeBtn.onclick = () => { tr.remove(); chUpdateTotal(); };
+    removeBtn.onclick = () => { tr.remove(); chUpdateTotal(); chSaveDraft(); };
 
     [nameInp, qtyInp, priceInp, taxCb, removeBtn].forEach((el, i) => {
       const td = document.createElement('td');
@@ -5826,9 +5907,10 @@
       document.getElementById('ch-cart-link-clear').style.display = 'none';
       const status = document.getElementById('ch-cart-link-status');
       status.style.display = 'none';
+      chSaveDraft();
     });
 
-    document.getElementById('ch-add-item').addEventListener('click', () => chAddItemRow());
+    document.getElementById('ch-add-item').addEventListener('click', () => { chAddItemRow(); chSaveDraft(); });
     document.getElementById('ch-tax-enable').addEventListener('change', (e) => {
       document.getElementById('ch-tax-rate').disabled = !e.target.checked;
       if (e.target.checked) {
@@ -5840,7 +5922,11 @@
     document.getElementById('ch-discount-amount').addEventListener('input', chUpdateTotal);
     document.getElementById('ch-discount-type').addEventListener('change', chUpdateTotal);
     document.getElementById('ch-discount-label').addEventListener('input', chUpdateTotal);
-    chAddItemRow();
+
+    document.getElementById('ch-draft-clear').addEventListener('click', chClearDraft);
+    document.getElementById('panel-charge').addEventListener('input', chSaveDraft);
+    document.getElementById('panel-charge').addEventListener('change', chSaveDraft);
+    chLoadDraft();
 
     try {
       const res = await fetch('/admin/stripe-publishable-key', { headers: authHeaders() });
@@ -5934,6 +6020,7 @@
       document.getElementById('ch-cart-link-clear').style.display = 'none';
       document.getElementById('ch-cart-link-status').style.display = 'none';
       loadChargeCartLinkOptions();
+      chClearDraft();
     } catch (e) {
       chShowMsg('✗ ' + e.message, false);
     } finally {

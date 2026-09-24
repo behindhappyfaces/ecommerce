@@ -198,30 +198,26 @@ h1, h2, h3, h4 {
   background: var(--color-green);
 }
 
-.nav:not(.nav--transparent):not(.scrolled) .nav__logo img {
-  filter: none;
-}
-
 .nav.nav--transparent {
   background: transparent;
 }
 
 .nav__logo {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  align-self: flex-start;
   gap: 12px;
   z-index: 101;
 }
 
+/* Full-color circular badge — same size and same full color on every page
+   and scroll state (no white-silhouette treatment, no shrink-on-scroll).
+   Pinned to the top of the fixed 72px nav bar so it overlaps whatever sits
+   just below the bar, matching the approved mockup. */
 .nav__logo img {
-  height: 64px;
-  width: auto;
-  filter: brightness(0) invert(1) drop-shadow(0 1px 4px rgba(0, 0, 0, 0.3));
-  transition: filter 0.4s ease;
-}
-
-.nav.scrolled .nav__logo img {
-  filter: none;
+  height: 210px;
+  width: 210px;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.25));
 }
 
 .nav__logo-text {

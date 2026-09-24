@@ -210,13 +210,14 @@ h1, h2, h3, h4 {
   z-index: 101;
 }
 
-/* Full-color circular badge — same size and same full color on every page
+/* Full-color circular badge — same full color and same size across pages
    and scroll state (no white-silhouette treatment, no shrink-on-scroll).
    Pinned to the top of the fixed 72px nav bar so it overlaps whatever sits
-   just below the bar, matching the approved mockup. */
+   just below the bar, matching the approved mockup. Desktop is slightly
+   larger than the approved mobile size (see the 768px breakpoint below). */
 .nav__logo img {
-  height: 210px;
-  width: 210px;
+  height: 105px;
+  width: 105px;
   filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.25));
 }
 
@@ -1768,6 +1769,11 @@ h1, h2, h3, h4 {
 
   .nav__links { display: none; }
   .nav__toggle { display: flex; }
+
+  .nav__logo img {
+    height: 90px;
+    width: 90px;
+  }
 
   .hero__content { padding: 0 24px 60px; }
   .page-hero__content { padding: 0 24px 48px; }

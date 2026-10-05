@@ -2499,7 +2499,6 @@ const BOX_CONTENTS = {
     items: [
       { id: 'yeast-rolls',        name: 'Dinner Rolls (1 doz)',      swapGroup: null },
       { id: 'whole-chicken',      name: 'Whole Chicken',             swapGroup: null },
-      { id: 'herb-dipping-oil',   name: 'Tuscany Bread Dipping Oil', swapGroup: null },
       { id: 'cultured-butter',    name: 'Real Cream Butter',         swapGroup: null },
       { id: 'cinnamon-rolls',     name: 'Cinnamon Rolls',            swapGroup: null },
     ],
@@ -2534,13 +2533,8 @@ const BOX_CONTENTS = {
 };
 
 const SWAP_OPTIONS = {
-  bread: [
-    { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf' },
-    { id: 'whole-wheat-loaf',   name: 'Whole Wheat Loaf (+$2)' },
-  ],
   larder: [
     { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },
-    { id: 'herb-dipping-oil',    name: 'Tuscany Herb Dipping Oil' },
     { id: 'seasonal-preserves',  name: 'Seasonal Preserves' },
   ],
 };
@@ -2552,7 +2546,6 @@ const INCLUDED_PRESERVES_FLAVORS = [
   { name: 'Peach (+$3)',                          upcharge: 300 },
   { name: 'Fig (+$3)',                            upcharge: 300 },
   { name: 'Orange Marmalade (+$3)',               upcharge: 300 },
-  { name: 'Swap: Tuscany Herb Dipping Oil (+$4)', upcharge: 400 },
 ];
 
 // Flavors for the add-on preserves (standalone purchase)
@@ -2589,7 +2582,6 @@ const ADDON_OPTIONS = [
     flavors: PRESERVES_FLAVORS,
   },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1800 },
-  { id: 'addon-herb-oil',       name: 'Tuscany Herb Dipping Oil',   price: 1800 },
   { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0, priceLabel: '$7/lb' },
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },
 ];

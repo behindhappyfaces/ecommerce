@@ -191,24 +191,6 @@
 
         <article class="offering-card" data-fade>
           <div class="offering-card__image-wrap">
-            <img src="images/whole-wheat-loaf.jpg"
-                 alt="Whole Wheat Loaf" loading="lazy" />
-          </div>
-          <div class="offering-card__body">
-            <p class="offering-card__category">Whole Wheat</p>
-            <h3 class="offering-card__name">Whole Wheat Loaf</h3>
-            <p class="offering-card__desc">
-              Hearty, nutty, tender crumb. No fillers.
-            </p>
-            <p class="offering-card__price">$18</p>
-            <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="whole-wheat-loaf">Add to Cart</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="offering-card" data-fade>
-          <div class="offering-card__image-wrap">
             <img src="images/cinnamon-rolls.jpg"
                  alt="Cinnamon Rolls" loading="lazy" />
           </div>
@@ -243,23 +225,6 @@
           </div>
         </article>
 
-        <article class="offering-card" data-fade style="opacity:0.75;">
-          <div class="offering-card__image-wrap">
-            <img src="images/focaccia-loaf.jpg"
-                 alt="Focaccia Loaf" loading="lazy" />
-          </div>
-          <div class="offering-card__body">
-            <p class="offering-card__category">Focaccia</p>
-            <h3 class="offering-card__name">Focaccia Loaf</h3>
-            <p class="offering-card__desc">
-              Olive oil soaked, sea salt topped. Crisp outside, airy inside.
-            </p>
-            <p class="offering-card__price">$32</p>
-            <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="focaccia-loaf" disabled style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Not Available</button>
-            </div>
-          </div>
-        </article>
       </div>
     </div>
   </section>
@@ -444,25 +409,6 @@
             <p class="offering-card__price">$18</p>
             <div class="offering-card__actions">
               <button class="offering-card__add" data-add-to-cart="garlic-chili-crunch">Add to Cart</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="offering-card" data-fade>
-          <div class="offering-card__image-wrap">
-            <img src="images/herb-dipping-oil.jpg"
-                 alt="Tuscany herb bread dipping oil" loading="lazy" />
-          </div>
-          <div class="offering-card__body">
-            <p class="offering-card__category">Farmhouse Table</p>
-            <h3 class="offering-card__name">Tuscany Herb Bread Dipping Oil</h3>
-            <p class="offering-card__desc">
-              A slow-infused blend of olive oil, and fragrant Italian herbs crafted to bring warmth and depth to any table.
-              Perfect for dipping fresh bread, drizzling over roasted vegetables, pasta, or finishing your favorite farmhouse meal.
-            </p>
-            <p class="offering-card__price">$18</p>
-            <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="herb-dipping-oil">Add to Cart</button>
             </div>
           </div>
         </article>
@@ -1183,17 +1129,10 @@
               </select>
             </div>
           </li>
-          <!-- Garlic Chili Crunch with swap -->
+          <!-- Garlic Chili Crunch -->
           <li style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:#F5F0E8;border-radius:10px;">
             <span style="font-size:1rem;">🌶️</span>
             <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">Garlic Chili Crunch <span style="font-size:0.72rem;color:rgba(44,62,45,0.45);">(4oz)</span></span>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-              <span style="font-family:var(--font-sans);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);">Swap</span>
-              <select id="sampler-sauce-swap" style="font-family:var(--font-sans);font-size:0.75rem;border:1px solid rgba(44,62,45,0.2);border-radius:6px;padding:4px 8px;background:#fff;color:var(--color-green,#2C3E2D);cursor:pointer;">
-                <option value="garlic-chili-crunch">Garlic Chili Crunch ✓</option>
-                <option value="herb-dipping-oil">Tuscany Herb Dipping Oil</option>
-              </select>
-            </div>
           </li>
         </ul>
 
@@ -1351,8 +1290,6 @@
         });
         var yeastCb  = document.getElementById('sampler-yeast-cb');
         var savings  = (yeastCb && yeastCb.checked) ? Math.round((BASE + addonTotal) * 0.05) : 0;
-        var sauceSel   = document.getElementById('sampler-sauce-swap');
-        var swapNote   = sauceSel.value !== 'garlic-chili-crunch' ? 'Swap: Tuscany Herb Dipping Oil' : '';
         var butterNote = butterSel.options[butterSel.selectedIndex].text;
 
         // Build cart items: sampler box + add-ons
@@ -1371,7 +1308,7 @@
         });
 
         localStorage.setItem('hoto-cart', JSON.stringify(cartData));
-        if (swapNote) localStorage.setItem('sampler-swap-note', swapNote);
+        localStorage.removeItem('sampler-swap-note');
         localStorage.setItem('sampler-butter-note', butterNote);
         if (samplerFromQR && samplerDeliveryData) {
           localStorage.setItem('hoto-sampler-delivery', JSON.stringify(samplerDeliveryData));

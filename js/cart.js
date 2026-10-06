@@ -1757,6 +1757,9 @@ async function checkout(deliveryMethod, pickupLocation, pickupContact) {
     if (pickupContact?.address)        body.delivery_address   = pickupContact.address;
     if (pickupContact?.deliveryFeeCents)  body.delivery_fee_cents    = pickupContact.deliveryFeeCents;
     if (pickupContact?.deliveryPromoCode) body.delivery_promo_code   = pickupContact.deliveryPromoCode;
+    if (items.some(i => i.id === 'breakfast-bundle')) {
+      try { const g = JSON.parse(localStorage.getItem('hoto-bundle-gift') || 'null'); if (g) body.gift = g; } catch (_) {}
+    }
     if (promoCode && promoAmt)            { body.promo_code = promoCode; body.promo_discount_cents = promoAmt; }
     if (taxRatePct > 0)                body.tax_rate_pct = taxRatePct;
     if (freeGiftEligible)              body.free_gift_eligible = true;
@@ -2638,6 +2641,19 @@ function injectBoxCustomizer() {
         <div id="bc-items" style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;"></div>
         <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 16px;">Add-Ons <span style="font-weight:400;color:rgba(44,62,45,0.4);font-size:0.7rem;text-transform:none;letter-spacing:0;">(optional — we'll confirm availability)</span></p>
         <div id="bc-addons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px;"></div>
+        <!-- Gift selector — Farm Breakfast Bundle only -->
+        <div id="bc-gift" style="display:none;margin-bottom:28px;">
+          <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Is This a Gift?</p>
+          <div class="gift-toggle" style="margin-bottom:10px;">
+            <button type="button" class="gift-toggle__btn gift-toggle__btn--active" id="bc-gift-no">No</button>
+            <button type="button" class="gift-toggle__btn" id="bc-gift-yes">Yes — it's a gift!</button>
+          </div>
+          <div id="bc-gift-fields" style="display:none;flex-direction:column;gap:8px;">
+            <input id="bc-gift-to" type="text" maxlength="80" placeholder="Recipient's name" style="font-family:var(--font-sans);font-size:0.85rem;padding:10px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;" />
+            <textarea id="bc-gift-msg" rows="3" maxlength="400" placeholder="Gift message (optional)" style="font-family:var(--font-sans);font-size:0.85rem;padding:10px 12px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;resize:vertical;"></textarea>
+            <p style="font-family:var(--font-sans);font-size:0.72rem;color:rgba(44,62,45,0.5);margin:0;">Enter the recipient's address at checkout — we'll deliver it to them.</p>
+          </div>
+        </div>
         <!-- Delivery frequency selector — subscription boxes only -->
         <div id="bc-frequency" style="display:none;margin-bottom:28px;">
           <p style="font-family:var(--font-sans);font-size:0.72rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-green);margin:0 0 12px;">Delivery Frequency</p>
@@ -2671,6 +2687,25 @@ function openBoxCustomizer(subId, name, price) {
   const box = BOX_CONTENTS[subId];
   const overlay = document.getElementById('box-customizer-overlay');
   document.getElementById('bc-title').textContent = box ? box.label : name;
+
+  // Gift selector — Farm Breakfast Bundle only
+  const giftWrap = document.getElementById('bc-gift');
+  if (giftWrap) {
+    giftWrap.style.display = subId === 'breakfast-bundle' ? 'block' : 'none';
+    const gNo = document.getElementById('bc-gift-no'), gYes = document.getElementById('bc-gift-yes');
+    const gFields = document.getElementById('bc-gift-fields');
+    const setGift = on => {
+      gYes.classList.toggle('gift-toggle__btn--active', on);
+      gNo.classList.toggle('gift-toggle__btn--active', !on);
+      gFields.style.display = on ? 'flex' : 'none';
+      giftWrap.dataset.gift = on ? 'yes' : 'no';
+    };
+    gNo.onclick = () => setGift(false);
+    gYes.onclick = () => setGift(true);
+    setGift(false);
+    document.getElementById('bc-gift-to').value = '';
+    document.getElementById('bc-gift-msg').value = '';
+  }
 
   // Mirror the main card's waitlist state — checked live against the DOM so
   // this stays in sync if a box goes on/off the waitlist without a second edit.
@@ -3186,6 +3221,18 @@ function openBoxCustomizer(subId, name, price) {
     const { subId, name } = _bcPendingArgs;
     const box = BOX_CONTENTS[subId];
     const subName = box ? box.label : name;
+
+    // Gift choice (Farm Breakfast Bundle) — sent with the order at checkout
+    const giftWrap = document.getElementById('bc-gift');
+    if (subId === 'breakfast-bundle' && giftWrap && giftWrap.dataset.gift === 'yes') {
+      const to = document.getElementById('bc-gift-to').value.trim();
+      localStorage.setItem('hoto-bundle-gift', JSON.stringify({
+        occasion: to ? 'Gift for ' + to : 'Gift',
+        message: document.getElementById('bc-gift-msg').value.trim(),
+      }));
+    } else {
+      localStorage.removeItem('hoto-bundle-gift');
+    }
 
     // Capture delivery frequency (subscription boxes only)
     const activeFreqBtn2 = document.querySelector('#bc-freq-btns button[data-active="true"]');

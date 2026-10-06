@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Farm Breakfast Bundle — Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --cream-2:    #EDE6D6;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --text:       #2A2A2A;
+    --muted:      #6B6B5E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #4a4a44;
+    font-family: var(--sans);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute;
+    inset: 0.26in;
+    border: 1px solid var(--tan);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .hd, .ribbon { flex-shrink: 0; }
+  .hd {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.42in 0.65in 0.26in;
+  }
+  .hd__eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 10px;
+  }
+  .hd__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 44px;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+  .hd__title em { font-weight: 500; color: var(--tan); }
+  .hd__rule {
+    width: 48px;
+    height: 2px;
+    background: var(--tan);
+    margin: 12px auto 10px;
+  }
+  .hd__sub {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ── Photo strip ───────────────────────────────── */
+  .photos {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .photos img {
+    width: 100%;
+    height: 2.75in;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── Limited ribbon ────────────────────────────── */
+  .ribbon {
+    background: var(--rust);
+    color: #fff;
+    text-align: center;
+    padding: 8px 0.7in;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ── Body ──────────────────────────────────────── */
+  .body {
+    flex: 1;
+    padding: 0.2in 0.65in 0.4in;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .deal {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .items {
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid var(--olive);
+    padding: 14px 20px 12px;
+    box-shadow: 0 2px 12px rgba(44,62,45,0.07);
+  }
+  .items__label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 0.95in 1fr;
+    align-items: baseline;
+    padding: 7px 0;
+    border-top: 1px solid var(--cream-2);
+  }
+  .item:first-of-type { border-top: none; padding-top: 0; }
+  .item__qty {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--rust);
+  }
+  .item__name {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--olive);
+    line-height: 1.2;
+  }
+  .item__desc {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+
+  .price {
+    width: 1.95in;
+    background: var(--olive);
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .price__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tan);
+  }
+  .price__amt {
+    font-family: var(--serif);
+    font-size: 62px;
+    font-weight: 600;
+    line-height: 1;
+    margin: 6px 0 8px;
+  }
+  .price__incl {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.88);
+  }
+  .price__incl b { color: var(--tan); }
+
+  /* ── Delivery row ──────────────────────────────── */
+  .delivery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .dcard {
+    background: var(--cream-2);
+    border-radius: 8px;
+    padding: 11px 16px;
+    text-align: center;
+  }
+  .dcard__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 3px;
+  }
+  .dcard__val {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--olive);
+  }
+
+  .tone {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13.5px;
+    color: var(--text);
+    text-align: center;
+  }
+
+  /* ── QR / order block ─────────────────────────── */
+  .order {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 22px;
+    background: var(--olive);
+    border-radius: 10px;
+    padding: 14px 22px;
+  }
+  .order__qr {
+    background: #fff;
+    border-radius: 6px;
+    padding: 6px;
+    width: 0.92in;
+    height: 0.92in;
+  }
+  .order__qr img { width: 100%; height: 100%; display: block; }
+  .order__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 4px;
+  }
+  .order__title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .order__sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .order__url { font-weight: 600; color: var(--tan); }
+
+  .signoff {
+    text-align: center;
+    padding: 4px 0 0;
+    font-size: 9.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .signoff b { color: var(--olive); font-weight: 600; }
+  .signoff__contact {
+    margin-top: 4px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: none;
+  }
+
+  @page { size: 8.5in 11in; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; }
+    .noprint { display: none !important; }
+  }
+
+  .noprint {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">The Farm <em>Breakfast</em> Bundle</div>
+      <div class="hd__rule"></div>
+      <p class="hd__sub">Delivered to your door &bull; Friday, October 9</p>
+    </div>
+
+    <div class="photos">
+      <img src="images/cinnamon-rolls.jpg" alt="Cinnamon rolls" />
+      <img src="images/eggs.jpg" alt="Pasture-raised eggs" />
+    </div>
+
+    <div class="ribbon">Limited Offer &bull; While Supplies Last</div>
+
+    <div class="body">
+
+      <div class="deal">
+        <div class="items">
+          <div class="items__label">What's in the bundle</div>
+          <div class="item">
+            <div class="item__qty">1+ lb</div>
+            <div>
+              <div class="item__name">Chicken Sausage Patties</div>
+              <p class="item__desc">Over a full pound, ready for the skillet.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item__qty">&frac12; dozen</div>
+            <div>
+              <div class="item__name">Cinnamon Rolls</div>
+              <p class="item__desc">Topped with cream cheese frosting.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item__qty">1 dozen</div>
+            <div>
+              <div class="item__name">Pasture-Raised Eggs</div>
+              <p class="item__desc">Fresh from our hens on pasture.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="price">
+          <div class="price__label">Bundle Price</div>
+          <div class="price__amt">$75</div>
+          <div class="price__incl"><b>Delivery included</b><br>within 15 miles</div>
+        </div>
+      </div>
+
+      <div class="delivery">
+        <div class="dcard">
+          <div class="dcard__label">Delivery Day</div>
+          <div class="dcard__val">Friday, October 9</div>
+        </div>
+        <div class="dcard">
+          <div class="dcard__label">Delivery Area</div>
+          <div class="dcard__val">15-Mile Radius</div>
+        </div>
+      </div>
+
+      <p class="tone">Slow mornings, real food, made by real people.</p>
+
+      <div class="order">
+        <div class="order__qr">
+          <img src="images/breakfast-bundle-qr.png" alt="QR code to order" />
+        </div>
+        <div>
+          <div class="order__label">Scan to Order Your Bundle</div>
+          <div class="order__title">Limited quantities available</div>
+          <p class="order__sub">Scan the code, visit <span class="order__url">heartoftexasorganics.com/contact.html</span>, or call/text <span class="order__url">512-803-0333</span> to reserve yours.</p>
+        </div>
+      </div>
+
+      <div class="signoff">
+        Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b>
+        <div class="signoff__contact">operations@heartoftexasorganics.com &nbsp;&bull;&nbsp; 512-803-0333 &nbsp;&bull;&nbsp; @heartoftxorganics</div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

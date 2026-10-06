@@ -2014,23 +2014,28 @@ function calcSamplerDeliveryFeeCents(miles) {
   if (miles <= 20) return 1500;
   return 1500 + Math.round((miles - 20) * 70);
 }
+// Farm Breakfast Bundle ($75) includes free delivery within this radius
+const BREAKFAST_FREE_MILES = 15;
+
 app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
-  const { street, city, state, zip, order_total_cents } = req.body || {};
+  const { street, city, state, zip, order_total_cents, item_ids } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in all address fields.' });
   const totalCents = parseInt(order_total_cents, 10) || 0;
+  const hasBreakfastBundle = Array.isArray(item_ids) && item_ids.includes('breakfast-bundle');
   const FREE_THRESHOLD = 9900; // $99
   const DISCOUNT_AMT   = 500;  // $5 off when ≥$99 outside free zone
   try {
     const { lat, lng } = await geocodeAddress(street, city, state, zip);
     const miles = haversineMiles(BUNDLE_ORIGIN_LAT, BUNDLE_ORIGIN_LNG, lat, lng);
     const roundedMiles = Math.round(miles * 10) / 10;
-    const withinFreeZone = miles <= 10;
-    const baseFee = calcSamplerDeliveryFeeCents(miles);
+    const breakfastFree = hasBreakfastBundle && miles <= BREAKFAST_FREE_MILES;
+    const withinFreeZone = miles <= 10 || breakfastFree;
+    const baseFee = breakfastFree ? 0 : calcSamplerDeliveryFeeCents(miles);
     const qualifiesForDiscount = !withinFreeZone && totalCents >= FREE_THRESHOLD;
     let feeCents = baseFee;
     let discountCents = 0;
     if (qualifiesForDiscount) { discountCents = DISCOUNT_AMT; feeCents = Math.max(0, baseFee - discountCents); }
-    const centsToThreshold = Math.max(0, FREE_THRESHOLD - totalCents);
+    const centsToThreshold = breakfastFree ? 0 : Math.max(0, FREE_THRESHOLD - totalCents);
     console.log(`[sampler-delivery-fee] ${roundedMiles}mi, base $${(baseFee/100).toFixed(2)}, fee $${(feeCents/100).toFixed(2)}, order $${(totalCents/100).toFixed(2)}`);
     res.json({ ok: true, miles: roundedMiles, fee_cents: feeCents, original_fee_cents: baseFee,
                discount_cents: discountCents, free: feeCents === 0,
@@ -2151,6 +2156,11 @@ app.post('/create-checkout-session', async (req, res) => {
     const origin = `${req.protocol}://${req.get('host')}`;
     let isShip = delivery_method !== 'pickup';
 
+    // Farm Breakfast Bundle is delivery only — no pick-up or shipping
+    if (Array.isArray(items) && items.some(i => i.id === 'breakfast-bundle') && delivery_method !== 'delivery') {
+      return res.status(400).json({ error: 'The Farm Breakfast Bundle is delivery only. Please choose Delivery at checkout.' });
+    }
+
     // Workshop seats: price and capacity are never trusted from the client —
     // same reasoning as the delivery fee above. Any cart item whose id starts
     // with "workshop-" gets its price/name overwritten from the WORKSHOPS list,
@@ -2244,7 +2254,7 @@ app.post('/create-checkout-session', async (req, res) => {
     // Sales tax — only applied to items the admin/cart marked as taxable;
     // free items already carry unit_amount 0 so they contribute nothing here.
     // Bundle/box products are always tax-exempt regardless of the taxable flag.
-    const BUNDLE_IDS = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle']);
+    const BUNDLE_IDS = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle','breakfast-bundle']);
     const taxPct = parseFloat(tax_rate_pct) || 0;
     if (taxPct > 0) {
       const taxableSubtotal = items.reduce(
@@ -2281,7 +2291,9 @@ app.post('/create-checkout-session', async (req, res) => {
         const miles = haversineMiles(originLat, originLng, lat, lng);
         const milesRounded = Math.round(miles * 10) / 10;
         const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-        const authoritative_fee = calcSamplerDeliveryFeeCents(miles);
+        // Farm Breakfast Bundle includes free delivery within 15 miles
+        const hasBreakfastBundle = items.some(i => i.id === 'breakfast-bundle');
+        const authoritative_fee = (hasBreakfastBundle && miles <= BREAKFAST_FREE_MILES) ? 0 : calcSamplerDeliveryFeeCents(miles);
 
         // $5 delivery discount for orders ≥$99 outside the free zone
         if (orderTotal >= 9900 && miles > 10 && authoritative_fee > 0) {
@@ -2905,6 +2917,7 @@ const PRODUCT_MAP = {
   'Farm Sampler Box':               'sampler-box',
   'Chicken & Dinner Roll Bundle':   'chicken-dinner-roll-bundle',
   'Chicken and Dinner Roll Bundle': 'chicken-dinner-roll-bundle',
+  'Farm Breakfast Bundle':          'breakfast-bundle',
 };
 
 async function deductStockForOrder(lineItems, orderId, orderDate = null) {
@@ -3446,7 +3459,7 @@ app.post('/admin/charge/create-intent', requireAdmin, express.json(), async (req
     if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'At least one item is required' });
 
     const subtotalCents = items.reduce((s, i) => s + Math.round(i.price || 0) * (i.quantity || 1), 0);
-    const _bundleIds = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle']);
+    const _bundleIds = new Set(['sampler-box','bread-box','harvest-subscription','farm-box','bundle-farm','bundle-turkey','bundle-4th-july','chicken-dinner-roll-bundle','breakfast-bundle']);
     const taxableSubtotal = items.reduce((s, i) => s + (i.taxable && !_bundleIds.has(i.id) ? Math.round(i.price || 0) * (i.quantity || 1) : 0), 0);
     const taxPct = parseFloat(taxRate) || 0;
     const taxCents = taxPct > 0 ? Math.round(taxableSubtotal * taxPct / 100) : 0;

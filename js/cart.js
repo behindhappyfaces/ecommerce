@@ -18,6 +18,7 @@ const PRODUCTS = {
   'addon-turkey-smoke':    { name: 'Smoking Service — Good BBQ Lake Travis', price: 7500, subPrice: null, image: null },
   'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
   'chicken-dinner-roll-bundle': { name: 'Chicken & Dinner Roll Bundle', price: 9900, subPrice: null, image: null },
+  'breakfast-bundle':      { name: 'Farm Breakfast Bundle', price: 7500, subPrice: null, image: 'images/cinnamon-rolls.jpg' },
   'garlic-chili-crunch':   { name: 'Garlic Chili Crunch',   price: 1800, subPrice: null, image: 'images/chili-crunch.jpg' },
   'herb-dipping-oil':      { name: 'Tuscany Herb Dipping Oil', price: 1800, subPrice: null, image: 'images/herb-dipping-oil.jpg' },
   'seasonal-preserves':    { name: 'Seasonal Preserves',    price: 1500, subPrice: null, image: 'images/preserves.jpg' },
@@ -38,7 +39,7 @@ const PRODUCTS = {
   'addon-chicken-broth':  { name: 'Chicken Bone Broth (16 oz)',         price: 2000, subPrice: null, image: null },
 };
 
-const BUNDLE_IDS = new Set(['sampler-box', 'bread-box', 'harvest-subscription', 'farm-box', 'chicken-dinner-roll-bundle']);
+const BUNDLE_IDS = new Set(['sampler-box', 'bread-box', 'harvest-subscription', 'farm-box', 'chicken-dinner-roll-bundle', 'breakfast-bundle']);
 
 const STORAGE_KEY   = 'hoto-cart';
 const SHIP_MINIMUM  = 0;
@@ -61,6 +62,7 @@ const PRODUCT_WEIGHTS = {
   'seasonal-preserves': 1.2,
   'sampler-box':        4.0,
   'chicken-dinner-roll-bundle': 6.0,
+  'breakfast-bundle': 4.0,
 };
 
 function calcCartWeight() {
@@ -1827,6 +1829,17 @@ function updateDeliveryMinimumState() {
   const note  = btn.querySelector('.delivery-modal__note');
   const total = getTotal();
 
+  // Farm Breakfast Bundle is delivery only — disable pick-up while it's in the cart
+  const pickupBtn = document.getElementById('dm-pickup');
+  if (pickupBtn) {
+    const pickupNote = pickupBtn.querySelector('.delivery-modal__note');
+    const hasBreakfast = getCart().items.some(i => i.id === 'breakfast-bundle');
+    pickupBtn.disabled = hasBreakfast;
+    if (pickupNote) pickupNote.textContent = hasBreakfast
+      ? 'Not available — the Farm Breakfast Bundle is delivery only'
+      : 'Pick-up details confirmed after checkout';
+  }
+
   // The turkey smoking add-on (Good BBQ Lake Travis) is pick-up only — no delivery
   // when it's in the cart. A plain turkey with no smoking add-on can still be delivered.
   const hasSmokeAddon = getCart().items.some(i => i.id === 'addon-turkey-smoke');
@@ -2530,6 +2543,14 @@ const BOX_CONTENTS = {
       { id: 'yeast-rolls',   name: 'Dinner Rolls — 1 Dozen',                              swapGroup: null },
     ],
   },
+  'breakfast-bundle': {
+    label: 'Farm Breakfast Bundle',
+    items: [
+      { id: 'chicken-sausage-plain', name: 'Chicken Sausage Patties — over 1 lb', swapGroup: null },
+      { id: 'cinnamon-rolls',        name: 'Cinnamon Rolls — ½ Dozen',            swapGroup: null, subtitle: 'With cream cheese frosting' },
+      { id: 'farm-eggs',             name: 'Pasture-Raised Eggs — 1 Dozen',       swapGroup: null },
+    ],
+  },
 };
 
 const SWAP_OPTIONS = {
@@ -2571,6 +2592,13 @@ BOX_CONTENTS['chicken-dinner-roll-bundle'].addons = [
   { id: 'addon-butter',         name: 'Real Cream Butter (½ lb)',    price: 1530, regularPrice: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1170, regularPrice: 1300 },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch (4 oz)', price: 1620, regularPrice: 1800 },
+];
+
+BOX_CONTENTS['breakfast-bundle'].addons = [
+  { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
+  { id: 'addon-eggs',           name: 'Extra Farm Eggs (1 doz)',      price: 1300 },
+  { id: 'addon-butter',         name: 'Real Cream Butter (½ lb)',     price: 1700 },
+  { id: 'addon-preserves',      name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
 ];
 
 const ADDON_OPTIONS = [
@@ -3480,7 +3508,7 @@ function _openDeliveryStep2(onConfirm) {
     try {
       const feeRes = await fetch('/api/sampler-delivery-fee', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ street, city, state, zip, order_total_cents: getTotal() }),
+        body: JSON.stringify({ street, city, state, zip, order_total_cents: getTotal(), item_ids: getCart().items.map(i => i.id) }),
       });
       feeData = await feeRes.json();
       if (feeRes.ok && feeData && typeof feeData.fee_cents === 'number') {
@@ -3947,5 +3975,7 @@ document.addEventListener('DOMContentLoaded', () => {
     openBoxCustomizer('sampler-box', 'The Farm Sampler Box', 14900);
   } else if (_qrStart === 'chicken-bundle') {
     openBoxCustomizer('chicken-dinner-roll-bundle', 'Chicken & Dinner Roll Bundle', 9900);
+  } else if (_qrStart === 'breakfast-bundle') {
+    openBoxCustomizer('breakfast-bundle', 'Farm Breakfast Bundle', 7500);
   }
 });

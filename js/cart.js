@@ -3397,7 +3397,7 @@ function injectDeliveryModal() {
     try {
       const r = await fetch('/api/validate-delivery-promo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, item_ids: getCart().items.map(i => i.id) }),
       });
       const d = await r.json();
       if (d.valid) {

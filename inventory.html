@@ -1353,6 +1353,10 @@
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
         <input id="dp-code-input" placeholder="Code (e.g. DELIVER25)" style="flex:1;min-width:140px;padding:8px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:inherit;font-size:0.85rem;">
         <input id="dp-pct-input" type="number" min="1" max="100" placeholder="% off" style="width:80px;padding:8px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:inherit;font-size:0.85rem;">
+        <select id="dp-item-input" style="padding:8px 12px;border:1px solid #d5c9bb;border-radius:6px;font-family:inherit;font-size:0.85rem;">
+          <option value="">Valid on any order</option>
+          <option value="breakfast-bundle">Only with Farm Breakfast Bundle</option>
+        </select>
         <button id="dp-create-btn" class="btn-sm" style="background:var(--terra);color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.85rem;">Create</button>
       </div>
       <p id="dp-msg" style="font-size:0.8rem;margin:0 0 12px;display:none;"></p>
@@ -1360,10 +1364,11 @@
         <thead><tr style="border-bottom:2px solid #e8e0d6;">
           <th style="text-align:left;padding:6px 8px;">Code</th>
           <th style="text-align:left;padding:6px 8px;">% Off Delivery</th>
+          <th style="text-align:left;padding:6px 8px;">Valid With</th>
           <th style="text-align:left;padding:6px 8px;">Status</th>
           <th style="padding:6px 8px;"></th>
         </tr></thead>
-        <tbody id="dp-list-body"><tr><td colspan="4" style="padding:12px 8px;color:#999;">Loading…</td></tr></tbody>
+        <tbody id="dp-list-body"><tr><td colspan="5" style="padding:12px 8px;color:#999;">Loading…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -5569,12 +5574,13 @@
     const body = document.getElementById('dp-list-body');
     const rows = await fetch('/admin/delivery-promos', { headers: authHeaders() }).then(r => r.json()).catch(() => []);
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="4" style="padding:12px 8px;color:#999;">No codes yet.</td></tr>';
+      body.innerHTML = '<tr><td colspan="5" style="padding:12px 8px;color:#999;">No codes yet.</td></tr>';
     } else {
       body.innerHTML = rows.map(r => `
         <tr style="border-bottom:1px solid #f0ebe3;">
           <td style="padding:8px;font-weight:700;letter-spacing:0.04em;">${escHtml(r.code)}</td>
           <td style="padding:8px;">${escHtml(r.pct_off)}%</td>
+          <td style="padding:8px;">${r.required_item === 'breakfast-bundle' ? 'Farm Breakfast Bundle only' : (r.required_item ? escHtml(r.required_item) + ' only' : 'Any order')}</td>
           <td style="padding:8px;color:${r.active ? '#2a7a2a' : '#999'};">${r.active ? 'Active' : 'Disabled'}</td>
           <td style="padding:8px;text-align:right;">
             <button onclick="deleteDeliveryPromo(${JSON.stringify(escHtml(r.code))})" style="background:#5a1a1a;color:#f4a261;border:none;border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">Disable</button>
@@ -5585,7 +5591,7 @@
       const code = document.getElementById('dp-code-input').value.trim().toUpperCase();
       const pct  = parseInt(document.getElementById('dp-pct-input').value, 10);
       if (!code || !pct || pct < 1 || pct > 100) { msg.style.color='#c0392b'; msg.textContent='Enter a code and a % between 1–100.'; msg.style.display='block'; return; }
-      const r = await fetch('/admin/delivery-promos', { method:'POST', headers:{...authHeaders(),'Content-Type':'application/json'}, body: JSON.stringify({ code, pct_off: pct }) });
+      const r = await fetch('/admin/delivery-promos', { method:'POST', headers:{...authHeaders(),'Content-Type':'application/json'}, body: JSON.stringify({ code, pct_off: pct, required_item: document.getElementById('dp-item-input').value || null }) });
       if (r.ok) { msg.style.color='#2a7a2a'; msg.textContent=`✓ Code "${code}" created — share it with customers for ${pct}% off delivery.`; document.getElementById('dp-code-input').value=''; document.getElementById('dp-pct-input').value=''; loadDeliveryPromos(); }
       else { msg.style.color='#c0392b'; msg.textContent='Error creating code.'; }
       msg.style.display='block';

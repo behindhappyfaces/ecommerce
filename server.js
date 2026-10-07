@@ -364,6 +364,18 @@ async function ensureDeliveryPromosTable() {
     active    BOOL NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`);
+  // Optional: code only valid when this product id is in the cart
+  await pg.query(`ALTER TABLE delivery_promos ADD COLUMN IF NOT EXISTS required_item TEXT`);
+  // Free-delivery code for Farm Breakfast Bundle email/cart-link orders
+  await pg.query(
+    `INSERT INTO delivery_promos (code, pct_off, required_item) VALUES ('BREAKFASTFREEDELIVERY', 100, 'breakfast-bundle')
+     ON CONFLICT (code) DO NOTHING`
+  );
+}
+// Product ids a delivery promo can be restricted to (id → display name)
+const PROMO_REQUIRED_ITEMS = { 'breakfast-bundle': 'Farm Breakfast Bundle' };
+function promoItemError(requiredItem) {
+  return `This code is only valid with the ${PROMO_REQUIRED_ITEMS[requiredItem] || requiredItem}.`;
 }
 ensureDeliveryPromosTable().catch(e => console.warn('[DeliveryPromos] table init failed:', e.message));
 
@@ -2104,15 +2116,17 @@ app.post('/api/validate-promo', express.json(), async (req, res) => {
 
 // ── Delivery promo — public validate ────────────────────────────────────────
 app.post('/api/validate-delivery-promo', express.json(), async (req, res) => {
-  const { code } = req.body || {};
+  const { code, item_ids } = req.body || {};
   if (!code) return res.status(400).json({ valid: false, error: 'No code' });
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ valid: false, error: 'Service unavailable' });
   const { rows } = await pg.query(
-    'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
+    'SELECT pct_off, required_item FROM delivery_promos WHERE code = $1 AND active = TRUE',
     [code.trim().toUpperCase()]
   );
   if (!rows[0]) return res.json({ valid: false, error: 'Code not found or expired' });
+  if (rows[0].required_item && !(Array.isArray(item_ids) && item_ids.includes(rows[0].required_item)))
+    return res.json({ valid: false, error: promoItemError(rows[0].required_item) });
   res.json({ valid: true, pct_off: rows[0].pct_off });
 });
 
@@ -2120,20 +2134,21 @@ app.post('/api/validate-delivery-promo', express.json(), async (req, res) => {
 app.get('/admin/delivery-promos', requireAdmin, async (req, res) => {
   const pg = getPcPool();
   if (!pg) return res.status(503).json([]);
-  const { rows } = await pg.query('SELECT code, pct_off, active, created_at FROM delivery_promos ORDER BY created_at DESC');
+  const { rows } = await pg.query('SELECT code, pct_off, active, required_item, created_at FROM delivery_promos ORDER BY created_at DESC');
   res.json(rows);
 });
 
 app.post('/admin/delivery-promos', requireAdmin, express.json(), async (req, res) => {
-  const { code, pct_off } = req.body || {};
+  const { code, pct_off, required_item } = req.body || {};
   if (!code || !pct_off) return res.status(400).json({ error: 'code and pct_off required' });
+  const reqItem = required_item && PROMO_REQUIRED_ITEMS[required_item] ? required_item : null;
   if (!/^[A-Z0-9_-]{1,32}$/.test((code || '').trim().toUpperCase()))
     return res.status(400).json({ error: 'Code must be 1–32 characters: letters, numbers, - or _' });
   const pg = getPcPool();
   if (!pg) return res.status(503).json({ error: 'Service unavailable' });
   await pg.query(
-    'INSERT INTO delivery_promos (code, pct_off) VALUES ($1, $2) ON CONFLICT (code) DO UPDATE SET pct_off = $2, active = TRUE',
-    [code.trim().toUpperCase(), parseInt(pct_off, 10)]
+    'INSERT INTO delivery_promos (code, pct_off, required_item) VALUES ($1, $2, $3) ON CONFLICT (code) DO UPDATE SET pct_off = $2, required_item = $3, active = TRUE',
+    [code.trim().toUpperCase(), parseInt(pct_off, 10), reqItem]
   );
   res.json({ ok: true });
 });
@@ -2306,10 +2321,10 @@ app.post('/create-checkout-session', async (req, res) => {
           const pg = getPcPool();
           if (pg) {
             const { rows: promoRows } = await pg.query(
-              'SELECT pct_off FROM delivery_promos WHERE code = $1 AND active = TRUE',
+              'SELECT pct_off, required_item FROM delivery_promos WHERE code = $1 AND active = TRUE',
               [delivery_promo_code.trim().toUpperCase()]
             );
-            if (promoRows[0]) {
+            if (promoRows[0] && (!promoRows[0].required_item || items.some(i => i.id === promoRows[0].required_item))) {
               cartDiscountCents += Math.round(authoritative_fee * promoRows[0].pct_off / 100);
             }
           }

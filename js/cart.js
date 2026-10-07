@@ -2507,7 +2507,6 @@ const BOX_CONTENTS = {
     items: [
       { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',       swapGroup: 'bread' },
       { id: 'cultured-butter',    name: 'Real Cream Butter (½ lb)', swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',        swapGroup: null },
     ],
   },
   'harvest-subscription': {
@@ -2527,7 +2526,6 @@ const BOX_CONTENTS = {
       { id: 'cultured-butter',    name: 'Real Cream Butter',        swapGroup: null },
       { id: 'japanese-milk-loaf', name: 'Japanese Milk Loaf',       swapGroup: 'bread' },
       { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch',      swapGroup: null },
-      { id: 'seasonal-preserves', name: 'Seasonal Preserves',       swapGroup: null },
     ],
   },
   'sampler-box': {
@@ -2536,7 +2534,7 @@ const BOX_CONTENTS = {
       { id: 'whole-chicken',      name: 'Whole Chicken — Processed into 10 Cuts', swapGroup: null, subtitle: '2 Boneless/Skinless Breasts · 2 Leg Quarters · 2 Tenders · 2 Drums · 2 Flats' },
       { id: 'farm-eggs',          name: 'Farm Eggs — 1 dozen',           swapGroup: null },
       { id: 'cultured-butter',    name: 'Real Cream Butter — ½ lb',      swapGroup: null },
-      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch (4oz)',     swapGroup: 'larder' },
+      { id: 'garlic-chili-crunch',name: 'Garlic Chili Crunch (4oz)',     swapGroup: null },
     ],
   },
   'chicken-dinner-roll-bundle': {
@@ -2559,7 +2557,6 @@ const BOX_CONTENTS = {
 const SWAP_OPTIONS = {
   larder: [
     { id: 'garlic-chili-crunch', name: 'Garlic Chili Crunch' },
-    { id: 'seasonal-preserves',  name: 'Seasonal Preserves' },
   ],
 };
 
@@ -2585,7 +2582,6 @@ const PRESERVES_FLAVORS = [
 BOX_CONTENTS['sampler-box'].addons = [
   { id: 'addon-neckbone',      name: 'Neckbone',                    price: 180,  regularPrice: 200 },
   { id: 'addon-chicken-broth', name: 'Chicken Bone Broth (16 oz)',   price: 1800, regularPrice: 2000, note: '*12+ hr slow simmered bone broth w/ onion and garlic.' },
-  { id: 'addon-preserves',     name: 'Seasonal Preserves',           price: 1350, regularPrice: 1500, regularPriceLabel: '$15–$18', priceLabel: '$13.50–$16.20', flavors: PRESERVES_FLAVORS },
   { id: 'addon-cinnamon-rolls',name: 'Cinnamon Rolls (½ doz)',       price: 3150, regularPrice: 3500 },
   { id: 'addon-yeast-rolls',   name: 'Yeast Rolls (1 doz)',          price: 2160, regularPrice: 2400 },
 ];
@@ -2601,7 +2597,6 @@ BOX_CONTENTS['breakfast-bundle'].addons = [
   { id: 'addon-cinnamon-rolls', name: 'Extra Cinnamon Rolls (½ doz)', price: 3500 },
   { id: 'addon-eggs',           name: 'Extra Farm Eggs (1 doz)',      price: 1300 },
   { id: 'addon-butter',         name: 'Real Cream Butter (½ lb)',     price: 1700 },
-  { id: 'addon-preserves',      name: 'Seasonal Preserves',           price: 1500, priceLabel: '$15–$18', flavors: PRESERVES_FLAVORS },
 ];
 
 const ADDON_OPTIONS = [
@@ -2609,9 +2604,6 @@ const ADDON_OPTIONS = [
   { id: 'addon-cinnamon-rolls', name: 'Cinnamon Rolls (½ doz)',   price: 3500 },
   { id: 'addon-butter',         name: 'Extra Real Cream Butter (½ lb)', price: 1700 },
   { id: 'addon-eggs',           name: 'Farm Eggs (1 doz)',           price: 1300 },
-  { id: 'addon-preserves',      name: 'Seasonal Preserves',         price: 1500, priceLabel: '$15–$18',
-    flavors: PRESERVES_FLAVORS,
-  },
   { id: 'addon-chili-crunch',   name: 'Garlic Chili Crunch',        price: 1800 },
   { id: 'addon-whole-chicken',  name: 'Whole Chicken',              price: 0, priceLabel: '$7/lb' },
   { id: 'addon-turkey-reserve', name: 'Reserve Your Thanksgiving Turkey', price: 10000 },

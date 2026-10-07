@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>4th of July Homestead Table Bundle | Heart of Texas Organics</title>
-  <meta name="description" content="The 4th of July Homestead Table Bundle — $199. Whole pasture chicken processed into 10 premium cuts, artisan bread, cinnamon rolls, garlic chili crunch, seasonal preserves + Farm to Table Recipe Guide. Only 25 available." />
+  <meta name="description" content="The 4th of July Homestead Table Bundle — $199. Whole pasture chicken processed into 10 premium cuts, artisan bread, cinnamon rolls, garlic chili crunch + Farm to Table Recipe Guide. Only 25 available." />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" type="image/png" href="images/logo.png" />
   <style>
@@ -325,17 +325,6 @@
         <div class="item-row">
           <span class="item-name">Garlic Chili Crunch</span>
         </div>
-        <div class="item-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
-          <span class="item-name">Seasonal Preserves</span>
-          <div style="display:flex;gap:16px;padding-left:2px;">
-            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
-              <input type="radio" name="preserveChoice" value="strawberry" checked style="accent-color:var(--color-green);" /> Strawberry
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12px;color:var(--color-text);cursor:pointer;">
-              <input type="radio" name="preserveChoice" value="blackberry" style="accent-color:var(--color-green);" /> Blackberry
-            </label>
-          </div>
-        </div>
         <div class="item-row">
           <span class="item-name">Farm to Table Recipe Guide <span class="item-bonus">DIGITAL DOWNLOAD</span></span>
         </div>
@@ -566,7 +555,6 @@
   async function checkout() {
     const btn = document.getElementById('buyBtn');
     const breadChoice = document.querySelector('input[name="breadChoice"]:checked')?.value || 'challah';
-    const preserveChoice = document.querySelector('input[name="preserveChoice"]:checked')?.value || 'strawberry';
     const method = getMethod();
 
     let address = null;
@@ -589,7 +577,7 @@
       const res = await fetch('/bundle-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ breadChoice, preserveChoice, deliveryMethod: method, address }),
+        body: JSON.stringify({ breadChoice, deliveryMethod: method, address }),
       });
       const data = await res.json();
       if (data.url) {

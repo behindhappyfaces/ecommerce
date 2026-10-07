@@ -5733,7 +5733,6 @@ app.post('/bundle-checkout', async (req, res) => {
       breadChoice === 'yeast-rolls' ? 'Dozen Yeast Rolls' : '3-Braided Challah Loaf',
       'Cinnamon Rolls (6-pack)',
       'Garlic Chili Crunch',
-      'Seasonal Preserves',
       'Farm to Table Recipe Guide (digital download)',
     ];
 

@@ -424,26 +424,6 @@
             </div>
           </div>
         </article>
-
-        <article class="offering-card" data-fade>
-          <div class="offering-card__image-wrap">
-            <img src="images/preserves.jpg"
-                 alt="Seasonal preserves jars on a wooden shelf" loading="lazy" />
-          </div>
-          <div class="offering-card__body">
-            <p class="offering-card__category">Farmhouse Staple</p>
-            <h3 class="offering-card__name">Seasonal Preserves</h3>
-            <p class="offering-card__desc">
-              Handcrafted in small batches using peak-season fruits, herbs, and traditional preserving methods.
-              NO Pectin EVER! Each jar captures unique artisan flavors such as blackberry vanilla, fig and honey,
-              apricot ginger, persimmon and cardamom.
-            </p>
-            <p class="offering-card__price">$15–$18</p>
-            <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="seasonal-preserves">Add to Cart</button>
-            </div>
-          </div>
-        </article>
       </div>
     </div>
   </section>
@@ -1161,16 +1141,6 @@
             <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🍲 Chicken Bone Broth <span style="font-size:0.75rem;color:rgba(44,62,45,0.4);">(16 oz)</span></span>
             <span style="font-family:var(--font-serif,Georgia,serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);">$20</span>
           </label>
-          <div>
-            <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid rgba(44,62,45,0.1);border-radius:10px 10px 0 0;cursor:pointer;">
-              <input type="checkbox" class="sampler-addon" id="sampler-preserves-cb" data-addon-id="seasonal-preserves" data-addon-name="Seasonal Preserves" data-addon-price="1500" style="accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;">
-              <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🫙 Seasonal Preserves</span>
-              <span style="font-family:var(--font-serif,Georgia,serif);font-size:0.95rem;color:var(--color-rust,#8B4A2F);">$15–$18</span>
-            </label>
-            <div id="sampler-preserves-flavor-wrap" style="display:none;padding:8px 14px 10px 40px;border:1px solid rgba(44,62,45,0.1);border-top:none;border-radius:0 0 10px 10px;">
-              <select id="sampler-preserves-flavor" style="width:100%;padding:8px 10px;border:1px solid rgba(44,62,45,0.2);border-radius:8px;font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green,#2C3E2D);background:#fff;cursor:pointer;"></select>
-            </div>
-          </div>
           <label style="display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid rgba(44,62,45,0.1);border-radius:10px;cursor:pointer;">
             <input type="checkbox" class="sampler-addon" data-addon-id="cinnamon-rolls" data-addon-name="Cinnamon Rolls (½ doz)" data-addon-price="3500" style="accent-color:var(--color-rust,#8B4A2F);width:16px;height:16px;flex-shrink:0;">
             <span style="font-family:var(--font-sans);font-size:0.86rem;color:var(--color-green,#2C3E2D);flex:1;">🥐 Cinnamon Rolls <span style="font-size:0.75rem;color:rgba(44,62,45,0.4);">(½ doz)</span></span>
@@ -1222,35 +1192,6 @@
       const totalEl   = document.getElementById('sampler-price-total');
       const atcBtn    = document.getElementById('sampler-atc-btn');
       const BASE      = 14900;
-
-      // Preserves flavor dropdown — same pattern as the subscription box customizer
-      const preservesCb       = document.getElementById('sampler-preserves-cb');
-      const preservesFlavorEl = document.getElementById('sampler-preserves-flavor-wrap');
-      const preservesFlavorSel= document.getElementById('sampler-preserves-flavor');
-      if (typeof PRESERVES_FLAVORS !== 'undefined') {
-        PRESERVES_FLAVORS.forEach(function(f) {
-          var opt = document.createElement('option');
-          opt.value = f.price;
-          opt.dataset.flavorName = f.name;
-          opt.textContent = f.name + ' — $' + (f.price / 100).toFixed(2).replace(/\.00$/, '');
-          preservesFlavorSel.appendChild(opt);
-        });
-      }
-      function syncPreservesPrice() {
-        if (preservesCb.checked) {
-          preservesCb.dataset.addonPrice = preservesFlavorSel.value;
-          preservesCb.dataset.addonName  = 'Seasonal Preserves (' + preservesFlavorSel.options[preservesFlavorSel.selectedIndex].dataset.flavorName + ')';
-        } else {
-          preservesCb.dataset.addonPrice = '1500';
-          preservesCb.dataset.addonName  = 'Seasonal Preserves';
-        }
-      }
-      preservesCb.addEventListener('change', function() {
-        preservesFlavorEl.style.display = preservesCb.checked ? 'block' : 'none';
-        syncPreservesPrice();
-        recalc();
-      });
-      preservesFlavorSel.addEventListener('change', function() { syncPreservesPrice(); recalc(); });
 
       var butterSel = document.getElementById('sampler-butter-flavor');
       butterSel.addEventListener('change', recalc);

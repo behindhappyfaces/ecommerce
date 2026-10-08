@@ -2001,6 +2001,14 @@ function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
 }
 
 async function geocodeAddress(street, city, state, zip) {
+  try { return await geocodeAddressExact(street, city, state, zip); }
+  catch (e) {
+    console.warn('[geocode] exact lookup failed, using ZIP center:', e.message);
+    return geocodeZip(zip);
+  }
+}
+
+async function geocodeAddressExact(street, city, state, zip) {
   // US Census geocoder — free, no key, and doesn't block cloud hosts the way
   // Nominatim does (Nominatim was failing for every address from Render).
   try {
@@ -2031,6 +2039,17 @@ async function geocodeAddress(street, city, state, zip) {
   const data2 = await r2.json();
   if (data2?.[0]) return { lat: parseFloat(data2[0].lat), lng: parseFloat(data2[0].lon) };
   throw new Error('Address not found');
+}
+
+// Last resort: ZIP code center point (rural addresses the Census doesn't list)
+async function geocodeZip(zip) {
+  const z = String(zip || '').trim().slice(0, 5);
+  if (!/^\d{5}$/.test(z)) throw new Error('Invalid ZIP');
+  const r = await fetch(`https://api.zippopotam.us/us/${z}`, { signal: AbortSignal.timeout(8000) });
+  const d = await r.json();
+  const p = d?.places?.[0];
+  if (!p) throw new Error('ZIP not found');
+  return { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) };
 }
 
 // Bundle-specific delivery fee:

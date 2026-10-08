@@ -2029,6 +2029,50 @@ function calcSamplerDeliveryFeeCents(miles) {
 // Farm Breakfast Bundle ($75) includes free delivery within this radius
 const BREAKFAST_FREE_MILES = 15;
 
+// Stripe-side BREAKFASTFREEDELIVERY code (typed into Stripe's own promo box).
+// The coupon only applies to this fixed "Local Delivery Fee" product, and that
+// product is only used for the delivery line when the Farm Breakfast Bundle is
+// in the cart — so the code zeroes delivery on bundle orders and is rejected
+// by Stripe on every other order.
+const BREAKFAST_DELIVERY_PRODUCT_ID = 'hoto_breakfast_bundle_delivery_fee';
+const BREAKFAST_DELIVERY_COUPON_ID  = 'HOTO_BREAKFAST_FREE_DELIVERY';
+const BREAKFAST_DELIVERY_PROMO_CODE = 'BREAKFASTFREEDELIVERY';
+async function ensureBreakfastDeliveryPromo() {
+  try {
+    try { await stripe.products.retrieve(BREAKFAST_DELIVERY_PRODUCT_ID); }
+    catch (e) {
+      if (e.code !== 'resource_missing') throw e;
+      await stripe.products.create({ id: BREAKFAST_DELIVERY_PRODUCT_ID, name: 'Local Delivery Fee' });
+    }
+    try { await stripe.coupons.retrieve(BREAKFAST_DELIVERY_COUPON_ID); }
+    catch (e) {
+      if (e.code !== 'resource_missing') throw e;
+      await stripe.coupons.create({
+        id: BREAKFAST_DELIVERY_COUPON_ID, name: 'Free Delivery — Breakfast Bundle',
+        percent_off: 100, duration: 'once',
+        applies_to: { products: [BREAKFAST_DELIVERY_PRODUCT_ID] },
+      });
+    }
+    const existing = await stripe.promotionCodes.list({ code: BREAKFAST_DELIVERY_PROMO_CODE, active: true, limit: 1 });
+    if (!existing.data.length) {
+      await stripe.promotionCodes.create({ coupon: BREAKFAST_DELIVERY_COUPON_ID, code: BREAKFAST_DELIVERY_PROMO_CODE });
+    }
+    console.log('[Stripe] BREAKFASTFREEDELIVERY promo ready');
+  } catch (e) {
+    console.warn('[Stripe] BREAKFASTFREEDELIVERY setup failed:', e.message);
+  }
+}
+ensureBreakfastDeliveryPromo();
+
+// Delivery fee line item — bundle orders use the fixed product so the
+// BREAKFASTFREEDELIVERY Stripe coupon can apply to it.
+function deliveryFeeLineItem(cents, label, hasBreakfastBundle) {
+  const price_data = { currency: 'usd', unit_amount: cents };
+  if (hasBreakfastBundle) price_data.product = BREAKFAST_DELIVERY_PRODUCT_ID;
+  else price_data.product_data = label;
+  return { price_data, quantity: 1 };
+}
+
 app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
   const { street, city, state, zip, order_total_cents, item_ids } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in all address fields.' });
@@ -2331,25 +2375,14 @@ app.post('/create-checkout-session', async (req, res) => {
         }
 
         if (authoritative_fee > 0) {
-          lineItems.push({
-            price_data: {
-              currency: 'usd',
-              product_data: { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
-              unit_amount: authoritative_fee,
-            },
-            quantity: 1,
-          });
+          lineItems.push(deliveryFeeLineItem(authoritative_fee,
+            { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
+            hasBreakfastBundle));
         }
       } catch (geoErr) {
         console.error('[checkout] delivery geocode failed:', geoErr.message);
-        lineItems.push({
-          price_data: {
-            currency: 'usd',
-            product_data: { name: 'Local Delivery Fee' },
-            unit_amount: 1500,
-          },
-          quantity: 1,
-        });
+        lineItems.push(deliveryFeeLineItem(1500, { name: 'Local Delivery Fee' },
+          items.some(i => i.id === 'breakfast-bundle')));
       }
     }
 

@@ -3547,7 +3547,7 @@ function _openDeliveryStep2(onConfirm) {
     try {
       const feeRes = await fetch('/api/sampler-delivery-fee', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ street, city, state, zip, order_total_cents: getTotal(), item_ids: getCart().items.map(i => i.id) }),
+        body: JSON.stringify({ street, city, state, zip, order_total_cents: getTotal(), item_ids: getCart().items.map(i => i.id), delivery_promo_code: capturedPromo }),
       });
       feeData = await feeRes.json();
       if (feeRes.ok && feeData && typeof feeData.fee_cents === 'number') {

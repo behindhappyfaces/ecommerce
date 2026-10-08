@@ -372,6 +372,20 @@ async function ensureDeliveryPromosTable() {
      ON CONFLICT (code) DO NOTHING`
   );
 }
+// Returns pct_off for an active delivery promo valid for these cart item ids, else 0
+async function deliveryPromoPctOff(code, itemIds) {
+  if (!code) return 0;
+  const pg = getPcPool();
+  if (!pg) return 0;
+  const { rows } = await pg.query(
+    'SELECT pct_off, required_item FROM delivery_promos WHERE code = $1 AND active = TRUE',
+    [String(code).trim().toUpperCase()]
+  );
+  if (!rows[0]) return 0;
+  if (rows[0].required_item && !(itemIds || []).includes(rows[0].required_item)) return 0;
+  return rows[0].pct_off;
+}
+
 // Product ids a delivery promo can be restricted to (id → display name)
 const PROMO_REQUIRED_ITEMS = { 'breakfast-bundle': 'Farm Breakfast Bundle' };
 function promoItemError(requiredItem) {
@@ -1987,6 +2001,20 @@ function calcDeliveryFeeCents(distanceMiles, orderTotalCents) {
 }
 
 async function geocodeAddress(street, city, state, zip) {
+  // US Census geocoder — free, no key, and doesn't block cloud hosts the way
+  // Nominatim does (Nominatim was failing for every address from Render).
+  try {
+    const addr = encodeURIComponent(`${street}, ${city}, ${state} ${zip}`);
+    const rc = await fetch(
+      `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${addr}&benchmark=Public_AR_Current&format=json`,
+      { signal: AbortSignal.timeout(10000) }
+    );
+    const dc = await rc.json();
+    const m = dc?.result?.addressMatches?.[0]?.coordinates;
+    if (m && typeof m.x === 'number') return { lat: m.y, lng: m.x };
+  } catch (e) {
+    console.warn('[geocode] census lookup failed, trying nominatim:', e.message);
+  }
   const q = encodeURIComponent(`${street}, ${city}, ${state} ${zip}, USA`);
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
@@ -2074,7 +2102,7 @@ function deliveryFeeLineItem(cents, label, hasBreakfastBundle) {
 }
 
 app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
-  const { street, city, state, zip, order_total_cents, item_ids } = req.body || {};
+  const { street, city, state, zip, order_total_cents, item_ids, delivery_promo_code } = req.body || {};
   if (!street || !city || !state || !zip) return res.status(400).json({ error: 'Please fill in all address fields.' });
   const totalCents = parseInt(order_total_cents, 10) || 0;
   const hasBreakfastBundle = Array.isArray(item_ids) && item_ids.includes('breakfast-bundle');
@@ -2091,19 +2119,29 @@ app.post('/api/sampler-delivery-fee', express.json(), async (req, res) => {
     let feeCents = baseFee;
     let discountCents = 0;
     if (qualifiesForDiscount) { discountCents = DISCOUNT_AMT; feeCents = Math.max(0, baseFee - discountCents); }
-    const centsToThreshold = breakfastFree ? 0 : Math.max(0, FREE_THRESHOLD - totalCents);
+    // Delivery promo code (e.g. BREAKFASTFREEDELIVERY) — same math as checkout
+    const promoPct = baseFee > 0 ? await deliveryPromoPctOff(delivery_promo_code, item_ids) : 0;
+    if (promoPct > 0) {
+      const promoFee = baseFee - Math.round(baseFee * promoPct / 100);
+      if (promoFee < feeCents) { feeCents = promoFee; discountCents = baseFee - promoFee; }
+    }
+    const promoFree = promoPct > 0 && feeCents === 0;
+    const centsToThreshold = (breakfastFree || promoFree) ? 0 : Math.max(0, FREE_THRESHOLD - totalCents);
     console.log(`[sampler-delivery-fee] ${roundedMiles}mi, base $${(baseFee/100).toFixed(2)}, fee $${(feeCents/100).toFixed(2)}, order $${(totalCents/100).toFixed(2)}`);
     res.json({ ok: true, miles: roundedMiles, fee_cents: feeCents, original_fee_cents: baseFee,
                discount_cents: discountCents, free: feeCents === 0,
-               within_free_zone: withinFreeZone, cents_to_threshold: centsToThreshold });
+               within_free_zone: withinFreeZone || promoFree, cents_to_threshold: centsToThreshold });
   } catch (e) {
     console.error('[sampler-delivery-fee] geocode failed, using flat fee fallback:', e.message);
-    const qualifiesForDiscount = totalCents >= FREE_THRESHOLD;
+    // Matches checkout's fallback: flat $15, minus any valid delivery promo
     const baseFee = 1500;
-    const feeCents = qualifiesForDiscount ? baseFee - DISCOUNT_AMT : baseFee;
+    let promoPct = 0;
+    try { promoPct = await deliveryPromoPctOff(delivery_promo_code, item_ids); } catch (_) {}
+    const feeCents = baseFee - Math.round(baseFee * promoPct / 100);
+    const promoFree = promoPct > 0 && feeCents === 0;
     res.json({ ok: true, miles: null, fee_cents: feeCents, original_fee_cents: baseFee,
-               discount_cents: qualifiesForDiscount ? DISCOUNT_AMT : 0, free: false,
-               within_free_zone: false, cents_to_threshold: Math.max(0, FREE_THRESHOLD - totalCents), fallback: true });
+               discount_cents: baseFee - feeCents, free: feeCents === 0,
+               within_free_zone: promoFree, cents_to_threshold: promoFree ? 0 : Math.max(0, FREE_THRESHOLD - totalCents), fallback: true });
   }
 });
 
@@ -2342,47 +2380,42 @@ app.post('/create-checkout-session', async (req, res) => {
     if (delivery_method === 'delivery' && delivery_address?.street) {
       const originLat = 30.191784; // 100 Commons Rd, Dripping Springs TX 78620
       const originLng = -98.084784;
+      const itemIds = items.map(i => i.id);
+      // Farm Breakfast Bundle includes free delivery within 15 miles
+      const hasBreakfastBundle = itemIds.includes('breakfast-bundle');
+      let miles = null;
+      let feeCents;
       try {
         const { lat, lng } = await geocodeAddress(
           delivery_address.street, delivery_address.city,
           delivery_address.state,  delivery_address.zip
         );
-        const miles = haversineMiles(originLat, originLng, lat, lng);
-        const milesRounded = Math.round(miles * 10) / 10;
-        const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
-        // Farm Breakfast Bundle includes free delivery within 15 miles
-        const hasBreakfastBundle = items.some(i => i.id === 'breakfast-bundle');
-        const authoritative_fee = (hasBreakfastBundle && miles <= BREAKFAST_FREE_MILES) ? 0 : calcSamplerDeliveryFeeCents(miles);
-
-        // $5 delivery discount for orders ≥$99 outside the free zone
-        if (orderTotal >= 9900 && miles > 10 && authoritative_fee > 0) {
-          deliveryDiscountCents = Math.min(500, authoritative_fee);
-          cartDiscountCents += deliveryDiscountCents;
-        }
-
-        // Delivery promo code: stacks on top of the $5 discount
-        if (delivery_promo_code && authoritative_fee > 0) {
-          const pg = getPcPool();
-          if (pg) {
-            const { rows: promoRows } = await pg.query(
-              'SELECT pct_off, required_item FROM delivery_promos WHERE code = $1 AND active = TRUE',
-              [delivery_promo_code.trim().toUpperCase()]
-            );
-            if (promoRows[0] && (!promoRows[0].required_item || items.some(i => i.id === promoRows[0].required_item))) {
-              cartDiscountCents += Math.round(authoritative_fee * promoRows[0].pct_off / 100);
-            }
-          }
-        }
-
-        if (authoritative_fee > 0) {
-          lineItems.push(deliveryFeeLineItem(authoritative_fee,
-            { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` },
-            hasBreakfastBundle));
-        }
+        miles = haversineMiles(originLat, originLng, lat, lng);
+        feeCents = (hasBreakfastBundle && miles <= BREAKFAST_FREE_MILES) ? 0 : calcSamplerDeliveryFeeCents(miles);
       } catch (geoErr) {
         console.error('[checkout] delivery geocode failed:', geoErr.message);
-        lineItems.push(deliveryFeeLineItem(1500, { name: 'Local Delivery Fee' },
-          items.some(i => i.id === 'breakfast-bundle')));
+        feeCents = 1500; // flat fallback when the address can't be located
+      }
+
+      // Delivery promo code — taken straight off the fee line
+      if (feeCents > 0 && delivery_promo_code) {
+        const pct = await deliveryPromoPctOff(delivery_promo_code, itemIds);
+        feeCents -= Math.round(feeCents * pct / 100);
+      }
+
+      // $5 delivery discount for orders ≥$99 outside the free zone
+      const orderTotal = items.reduce((s, i) => s + (i.price || 0) * (i.quantity || 1), 0);
+      if (orderTotal >= 9900 && miles !== null && miles > 10 && feeCents > 0) {
+        deliveryDiscountCents = Math.min(500, feeCents);
+        cartDiscountCents += deliveryDiscountCents;
+      }
+
+      if (feeCents > 0) {
+        const milesRounded = miles !== null ? Math.round(miles * 10) / 10 : null;
+        const label = milesRounded !== null
+          ? { name: `Local Delivery Fee (${milesRounded} mi)`, description: `Distance from farm: ${milesRounded} miles` }
+          : { name: 'Local Delivery Fee' };
+        lineItems.push(deliveryFeeLineItem(feeCents, label, hasBreakfastBundle));
       }
     }
 

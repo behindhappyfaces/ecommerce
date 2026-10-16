@@ -400,7 +400,7 @@
         <article class="offering-card offering-card--featured-turkey" data-fade id="thanksgiving-hen-section">
           <div class="offering-card__image-wrap" style="position:relative;">
             <img src="images/chicken.jpg" alt="Pasture-raised mature hen" loading="lazy" />
-            <div style="position:absolute;top:10px;left:10px;background:var(--color-rust);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Thanksgiving — Reserve Now</div>
+            <div style="position:absolute;top:10px;left:10px;background:var(--color-rust);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Thanksgiving — Coming Soon</div>
           </div>
           <div class="offering-card__body">
             <p class="offering-card__category">Thanksgiving Special</p>
@@ -413,14 +413,14 @@
             <p style="font-size:0.75rem;line-height:1.45;color:var(--color-text-muted);margin:0 0 10px;">Your bird is priced by final weight. We'll charge the difference after the $100 deposit once it's weighed.</p>
             <div style="display:flex;gap:8px;margin:0 0 10px;" role="radiogroup" aria-label="Choose your bird">
               <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;color:var(--color-green);">
-                <input type="radio" name="hen-card-bird" value="hen" checked style="accent-color:var(--color-rust);" /> Hen
+                <input type="radio" name="hen-card-bird" value="hen" checked disabled style="accent-color:var(--color-rust);" /> Hen
               </label>
               <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;color:var(--color-green);">
-                <input type="radio" name="hen-card-bird" value="rooster" style="accent-color:var(--color-rust);" /> Rooster
+                <input type="radio" name="hen-card-bird" value="rooster" disabled style="accent-color:var(--color-rust);" /> Rooster
               </label>
             </div>
             <label style="display:flex;align-items:flex-start;gap:9px;margin:0 0 14px;padding:10px 12px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;">
-              <input type="checkbox" id="hen-card-smoke" style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
+              <input type="checkbox" id="hen-card-smoke" disabled style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
               <span style="text-align:left;">
                 <span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);font-weight:600;">Request smoking service / price info</span>
                 &nbsp;<span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-rust);font-weight:700;">Price TBD</span><br>
@@ -428,7 +428,10 @@
               </span>
             </label>
             <div class="offering-card__actions">
-              <button class="offering-card__add" data-add-to-cart="thanksgiving-hen-rooster" style="background:var(--color-rust);border-color:var(--color-rust);">Reserve with $100 Deposit</button>
+              <button class="offering-card__add" data-add-to-cart="thanksgiving-hen-rooster" disabled aria-disabled="true" title="Coming soon" style="background:var(--color-rust);border-color:var(--color-rust);opacity:0.45;cursor:not-allowed;filter:grayscale(1);">Reserve with $100 Deposit</button>
+            </div>
+            <p style="font-family:var(--font-sans);font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin:8px 0 0;text-align:center;">Coming soon. Reservations aren't open yet.</p>
+            <div>
             </div>
           </div>
         </article>
@@ -447,7 +450,10 @@
             </p>
             <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">Price TBD &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">Not charged now</span></p>
             <div class="offering-card__actions">
-              <button class="offering-card__add" type="button" id="hen-smoke-standalone-request" onclick="openHenSmokeForm('standalone', function(){ alert('Thanks! Your smoking service request was sent. We\'ll be in touch with pricing.'); })">Request Service / Price Info</button>
+              <button class="offering-card__add" type="button" id="hen-smoke-standalone-request" disabled aria-disabled="true" title="Coming soon" style="opacity:0.45;cursor:not-allowed;filter:grayscale(1);" onclick="openHenSmokeForm('standalone', function(){ alert('Thanks! Your smoking service request was sent. We\'ll be in touch with pricing.'); })">Request Service / Price Info</button>
+            </div>
+            <p style="font-family:var(--font-sans);font-size:0.75rem;font-weight:600;color:var(--color-text-muted);margin:8px 0 0;text-align:center;">Coming soon.</p>
+            <div>
             </div>
           </div>
         </article>

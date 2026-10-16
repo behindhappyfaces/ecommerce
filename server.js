@@ -2272,6 +2272,11 @@ app.post('/create-checkout-session', async (req, res) => {
     const origin = `${req.protocol}://${req.get('host')}`;
     let isShip = delivery_method !== 'pickup';
 
+    // Thanksgiving hen/rooster reservations aren't open yet
+    if (!HEN_RESERVATIONS_OPEN && Array.isArray(items) && items.some(i => ['thanksgiving-hen', 'thanksgiving-rooster', 'addon-hen-smoke-request'].includes(i.id))) {
+      return res.status(400).json({ error: 'Thanksgiving hen & rooster reservations are coming soon and not open yet.' });
+    }
+
     // Farm Breakfast Bundle is delivery only — no pick-up or shipping
     if (Array.isArray(items) && items.some(i => i.id === 'breakfast-bundle') && delivery_method !== 'delivery') {
       return res.status(400).json({ error: 'The Farm Breakfast Bundle is delivery only. Please choose Delivery at checkout.' });
@@ -3991,8 +3996,13 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Flip to true to open Thanksgiving hen/rooster reservations + smoking requests
+// (also remove the disabled attributes on the cards in offerings.html)
+const HEN_RESERVATIONS_OPEN = false;
+
 // ── Thanksgiving hen/rooster smoking service — request for price info ────────
 app.post('/api/hen-smoke-request', async (req, res) => {
+  if (!HEN_RESERVATIONS_OPEN) return res.status(403).json({ error: 'The smoking service request is coming soon.' });
   const { name, email, phone, bird, source, website, form_ts } = req.body || {};
   if (!name || !email || !phone) {
     return res.status(400).json({ error: 'Please enter your name, email, and phone.' });

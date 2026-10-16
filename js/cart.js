@@ -16,6 +16,9 @@ const PRODUCTS = {
   'harvest-basket':        { name: 'Harvest Basket',        price: 0, subPrice: null, image: 'images/harvest.jpg' },
   'thanksgiving-turkey':   { name: 'Thanksgiving Turkey',   price: 10000, subPrice: null, image: 'images/chicken.jpg' },
   'addon-turkey-smoke':    { name: 'Smoking Service — Good BBQ Lake Travis', price: 7500, subPrice: null, image: null },
+  'thanksgiving-hen':      { name: 'Mature Hen — Thanksgiving Reservation ($100 Deposit)',     price: 10000, subPrice: null, image: 'images/chicken.jpg' },
+  'thanksgiving-rooster':  { name: 'Mature Rooster — Thanksgiving Reservation ($100 Deposit)', price: 10000, subPrice: null, image: 'images/chicken.jpg' },
+  'addon-hen-smoke-request': { name: 'Hen & Rooster Smoking Service — Price TBD (we\'ll contact you)', price: 0, subPrice: null, image: null },
   'sampler-box':           { name: 'The Farm Sampler Box',  price: 14900, subPrice: null, image: null },
   'chicken-dinner-roll-bundle': { name: 'Chicken & Dinner Roll Bundle', price: 9900, subPrice: null, image: null },
   'breakfast-bundle':      { name: 'Farm Breakfast Bundle', price: 7500, subPrice: null, image: 'images/cinnamon-rolls.jpg' },
@@ -106,6 +109,99 @@ function isWorkshopOnlyCart() {
 
 // Items sold only in fixed increments (e.g. cinnamon rolls: half-dozen minimum)
 const QTY_STEP = { 'cinnamon-rolls': 6 };
+
+// ─── Hen & Rooster smoking service request (Thanksgiving) ────────────────────
+// The smoking add-on has no price yet, so instead of charging for it we collect
+// name / email / phone and save it as a lead for the farm to follow up on.
+function _birdsInCart() {
+  const ids = getCart().items.map(i => i.id);
+  const birds = [];
+  if (ids.includes('thanksgiving-hen')) birds.push('Mature Hen');
+  if (ids.includes('thanksgiving-rooster')) birds.push('Mature Rooster');
+  return birds.join(' + ');
+}
+
+function openHenSmokeForm(source, onDone) {
+  let overlay = document.getElementById('hen-smoke-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'hen-smoke-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(28,28,28,0.6);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px;';
+    const IN = 'width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid rgba(44,62,45,0.25);border-radius:8px;font-family:var(--font-sans);font-size:0.9rem;margin-bottom:10px;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;padding:26px 24px;box-shadow:0 24px 80px rgba(0,0,0,0.25);">
+        <p style="font-family:var(--font-sans);font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--color-rust,#8B4A2F);margin:0 0 6px;">Thanksgiving Add-On</p>
+        <h2 style="font-family:var(--font-serif,Georgia,serif);font-size:1.35rem;color:var(--color-green,#2C3E2D);margin:0 0 8px;font-weight:400;">Hen &amp; Rooster Smoking Service</h2>
+        <p style="font-family:var(--font-sans);font-size:0.84rem;line-height:1.5;color:rgba(44,62,45,0.75);margin:0 0 16px;">Pricing is to be determined. Leave your contact info and we'll reach out with service and price details. You won't be charged for smoking now.</p>
+        <form id="hen-smoke-form" novalidate>
+          <input id="hs-name"  type="text"  placeholder="Full name"     autocomplete="name"  style="${IN}" required />
+          <input id="hs-email" type="email" placeholder="Email"         autocomplete="email" style="${IN}" required />
+          <input id="hs-phone" type="tel"   placeholder="Phone"         autocomplete="tel"   style="${IN}" required />
+          <input id="hs-website" type="text" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true" />
+          <p id="hs-msg" style="display:none;font-family:var(--font-sans);font-size:0.8rem;margin:0 0 10px;"></p>
+          <div style="display:flex;gap:10px;">
+            <button type="button" id="hs-cancel" style="flex:1;padding:12px;border:1px solid rgba(44,62,45,0.25);background:#fff;border-radius:8px;font-family:var(--font-sans);font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Cancel</button>
+            <button type="submit" id="hs-submit" style="flex:2;padding:12px;border:none;background:var(--color-green,#2C3E2D);color:var(--color-cream,#F5F0E8);border-radius:8px;font-family:var(--font-sans);font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Request Service / Price Info</button>
+          </div>
+        </form>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  overlay.dataset.ts = String(Date.now());
+  const msg = document.getElementById('hs-msg');
+  msg.style.display = 'none';
+  const submitBtn = document.getElementById('hs-submit');
+  submitBtn.disabled = false;
+  submitBtn.textContent = source === 'checkout' ? 'Submit & Continue to Checkout' : 'Request Service / Price Info';
+  const close = () => { overlay.style.display = 'none'; };
+  document.getElementById('hs-cancel').onclick = close;
+  overlay.onclick = e => { if (e.target === overlay) close(); };
+  document.getElementById('hen-smoke-form').onsubmit = async e => {
+    e.preventDefault();
+    const name  = document.getElementById('hs-name').value.trim();
+    const email = document.getElementById('hs-email').value.trim();
+    const phone = document.getElementById('hs-phone').value.trim();
+    const showErr = t => { msg.style.color = '#c0392b'; msg.textContent = t; msg.style.display = 'block'; };
+    if (!name || !email || !phone) return showErr('Please fill in your name, email, and phone.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid email address.');
+    submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
+    try {
+      const r = await fetch('/api/hen-smoke-request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, bird: _birdsInCart(), source,
+          website: document.getElementById('hs-website').value, form_ts: overlay.dataset.ts }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not send your request — please try again.');
+      close();
+      onDone && onDone();
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = source === 'checkout' ? 'Submit & Continue to Checkout' : 'Request Service / Price Info';
+      showErr(err.message);
+    }
+  };
+}
+
+// Runs before checkout: if the smoking request is in the cart, collect contact
+// info first. A request with nothing to pay for is sent and removed from the cart.
+function withHenSmokeRequest(proceed) {
+  const cart = getCart();
+  if (!cart.items.some(i => i.id === 'addon-hen-smoke-request')) return proceed();
+  openHenSmokeForm('checkout', () => {
+    const c = getCart();
+    const onlyRequest = c.items.every(i => i.id === 'addon-hen-smoke-request');
+    if (onlyRequest) {
+      c.items = [];
+      saveCart(c);
+      renderCart();
+      alert("Thanks! Your smoking service request was sent — we'll be in touch with pricing.");
+      return;
+    }
+    proceed();
+  });
+}
 
 function addItem(productId, priceOverride) {
   if (!PRODUCTS[productId]) return;
@@ -603,7 +699,7 @@ function renderCart() {
                         // the (workshop-aware) contact info step.
                         : workshopOnly ? () => openPickupContactModal('your workshop', contact => checkout('pickup', null, contact))
                         : openOneTimeDeliveryChoice;
-  checkoutBtn.addEventListener('click', checkoutHandler);
+  checkoutBtn.addEventListener('click', () => withHenSmokeRequest(checkoutHandler));
 
   const divider = document.createElement('div');
   divider.className = 'cart-footer__divider';
@@ -3991,6 +4087,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addItem(id);
         var smokeChk = document.getElementById('turkey-card-smoke');
         if (smokeChk && smokeChk.checked) addItem('addon-turkey-smoke');
+      }
+      else if (id === 'thanksgiving-hen-rooster') {
+        var birdSel = document.querySelector('input[name="hen-card-bird"]:checked');
+        addItem(birdSel && birdSel.value === 'rooster' ? 'thanksgiving-rooster' : 'thanksgiving-hen');
+        var henSmokeChk = document.getElementById('hen-card-smoke');
+        if (henSmokeChk && henSmokeChk.checked && !getCart().items.some(function(i) { return i.id === 'addon-hen-smoke-request'; })) {
+          addItem('addon-hen-smoke-request');
+        }
       }
       else { addItem(id); }
     });

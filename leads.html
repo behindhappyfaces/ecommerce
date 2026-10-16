@@ -98,6 +98,7 @@
     .badge-bni       { background: var(--sage-pale); color: var(--sage); }
     .badge-csa       { background: #fdf6e3; color: #8a6a10; }
     .badge-wholesale { background: #f5ede5; color: var(--brown-mid); }
+    .badge-hen-smoke { background: #fbe9e1; color: #8B4A2F; }
     .badge-converted { background: #e6f4e6; color: #3a6e3a; font-size: 0.68rem; padding: 2px 8px; }
 
     .lead-date { font-size: 0.7rem; color: var(--text-mid); white-space: nowrap; }
@@ -286,6 +287,7 @@
       <button class="filter-btn" data-type="bni">BNI Networking</button>
       <button class="filter-btn" data-type="csa">Farm Box / CSA</button>
       <button class="filter-btn" data-type="wholesale">Wholesale</button>
+      <button class="filter-btn" data-type="hen-smoke">Hen Smoking (Thanksgiving)</button>
     </div>
     <div class="stats-bar" id="leadsStats"></div>
     <div class="grid" id="leadsGrid"><div class="loading">Loading leads...</div></div>
@@ -522,8 +524,8 @@
     grid.innerHTML = visible.map(leadCard).join('');
   }
 
-  function badgeClass(type) { return type === 'bni' ? 'badge-bni' : type === 'csa' ? 'badge-csa' : 'badge-wholesale'; }
-  function badgeLabel(type) { return type === 'bni' ? 'BNI Networking' : type === 'csa' ? 'Farm Box / CSA' : 'Wholesale'; }
+  function badgeClass(type) { return type === 'bni' ? 'badge-bni' : type === 'csa' ? 'badge-csa' : type === 'hen-smoke' ? 'badge-hen-smoke' : 'badge-wholesale'; }
+  function badgeLabel(type) { return type === 'bni' ? 'BNI Networking' : type === 'csa' ? 'Farm Box / CSA' : type === 'hen-smoke' ? 'Hen Smoking — Thanksgiving' : 'Wholesale'; }
 
   function getName(lead) {
     var d = lead.data || {};
@@ -539,6 +541,13 @@
       if (d.phone)     rows.push(['Phone',     '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
       if (d.chapter)   rows.push(['Chapter',   esc(d.chapter)]);
       if (d.location)  rows.push(['Location',  esc(d.location)]);
+    } else if (lead.type === 'hen-smoke') {
+      rows.push(['Interested In', 'Having their hen/rooster smoked for Thanksgiving']);
+      if (d.fullName) rows.push(['Full Name', esc(d.fullName)]);
+      if (d.email)    rows.push(['Email',     '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);
+      if (d.phone)    rows.push(['Phone',     '<a href="tel:' + esc(d.phone) + '">' + esc(d.phone) + '</a>']);
+      if (d.bird)     rows.push(['Bird',      esc(d.bird)]);
+      if (d.source)   rows.push(['Requested', esc(d.source)]);
     } else if (lead.type === 'csa') {
       if (d.fullName)  rows.push(['Full Name',       esc(d.fullName)]);
       if (d.email)     rows.push(['Email',           '<a href="mailto:' + esc(d.email) + '">' + esc(d.email) + '</a>']);

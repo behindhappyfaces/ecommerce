@@ -22,6 +22,8 @@ const SEED = [
   { id:'bundle-turkey',       name:'Thanksgiving Turkey Bundle',   category:'Reservations', stock:10, reorder_level:2,  unit:'bundle', price_cents:10000, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'addon-turkey-smoke',  name:'Turkey Smoking Service (Good BBQ Lake Travis)', category:'Reservations', stock:10, reorder_level:2,  unit:'service', price_cents:7500, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'sampler-box',                  name:'Farm Sampler Box',             category:'Sampler',      stock:10, reorder_level:2,  unit:'box',    price_cents:14900, cost_cents:0,    allow_preorder:0, active:1 },
+  { id:'thanksgiving-hen',             name:'Mature Hen (Thanksgiving)',     category:'Reservations', stock:10, reorder_level:2,  unit:'bird',   price_cents:10000, cost_cents:0,    allow_preorder:0, active:1 },
+  { id:'thanksgiving-rooster',         name:'Mature Rooster (Thanksgiving)', category:'Reservations', stock:10, reorder_level:2,  unit:'bird',   price_cents:10000, cost_cents:0,    allow_preorder:0, active:1 },
   { id:'breakfast-bundle',             name:'Farm Breakfast Bundle',        category:'Bundles',      stock:12, reorder_level:2,  unit:'bundle', price_cents:7500,  cost_cents:0,    allow_preorder:0, active:1 },
   { id:'chicken-dinner-roll-bundle',   name:'Chicken & Dinner Roll Bundle', category:'Bundles',      stock:10, reorder_level:2,  unit:'bundle', price_cents:9900,  cost_cents:0,    allow_preorder:0, active:1 },
   { id:'bundle-4th-july',             name:'4th of July Homestead Table',  category:'Bundles',      stock:0,  reorder_level:0,  unit:'bundle', price_cents:19900, cost_cents:8600, allow_preorder:0, active:1 },

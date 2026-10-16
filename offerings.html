@@ -396,6 +396,61 @@
             </div>
           </div>
         </article>
+
+        <article class="offering-card offering-card--featured-turkey" data-fade id="thanksgiving-hen-section">
+          <div class="offering-card__image-wrap" style="position:relative;">
+            <img src="images/chicken.jpg" alt="Pasture-raised mature hen" loading="lazy" />
+            <div style="position:absolute;top:10px;left:10px;background:var(--color-rust);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Thanksgiving — Reserve Now</div>
+          </div>
+          <div class="offering-card__body">
+            <p class="offering-card__category">Thanksgiving Special</p>
+            <h3 class="offering-card__name">Pasture-Raised Mature Hens &amp; Roosters</h3>
+            <p class="offering-card__desc">
+              Mature, pasture-raised birds moved daily on open pasture. No antibiotics, no hormones,
+              no shortcuts. Rich, full flavor for your Thanksgiving table.
+            </p>
+            <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">$10 / lb &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">$100 deposit reserves yours</span></p>
+            <p style="font-size:0.75rem;line-height:1.45;color:var(--color-text-muted);margin:0 0 10px;">Your bird is priced by final weight. We'll charge the difference after the $100 deposit once it's weighed.</p>
+            <div style="display:flex;gap:8px;margin:0 0 10px;" role="radiogroup" aria-label="Choose your bird">
+              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;color:var(--color-green);">
+                <input type="radio" name="hen-card-bird" value="hen" checked style="accent-color:var(--color-rust);" /> Hen
+              </label>
+              <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;font-family:var(--font-sans);font-size:0.85rem;font-weight:600;color:var(--color-green);">
+                <input type="radio" name="hen-card-bird" value="rooster" style="accent-color:var(--color-rust);" /> Rooster
+              </label>
+            </div>
+            <label style="display:flex;align-items:flex-start;gap:9px;margin:0 0 14px;padding:10px 12px;border:1.5px solid var(--color-cream-dark);border-radius:6px;background:var(--color-cream);cursor:pointer;">
+              <input type="checkbox" id="hen-card-smoke" style="width:17px;height:17px;min-width:17px;accent-color:var(--color-rust);margin-top:2px;cursor:pointer;" />
+              <span style="text-align:left;">
+                <span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-green);font-weight:600;">Request smoking service / price info</span>
+                &nbsp;<span style="font-family:var(--font-sans);font-size:0.85rem;color:var(--color-rust);font-weight:700;">Price TBD</span><br>
+                <span style="font-size:0.72rem;color:var(--color-text-muted);line-height:1.4;">Hen &amp; rooster smoking service. Not charged now. We'll contact you with pricing.</span>
+              </span>
+            </label>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" data-add-to-cart="thanksgiving-hen-rooster" style="background:var(--color-rust);border-color:var(--color-rust);">Reserve with $100 Deposit</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="offering-card" data-fade id="hen-smoke-standalone-section">
+          <div class="offering-card__image-wrap" style="position:relative;">
+            <div class="offering-card__placeholder" style="display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--color-rust);min-height:180px;">🔥</div>
+            <div style="position:absolute;top:10px;left:10px;background:var(--color-green);color:var(--color-cream);font-family:var(--font-sans);font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:5px 12px;border-radius:100px;">Add-On Only</div>
+          </div>
+          <div class="offering-card__body">
+            <p class="offering-card__category">Thanksgiving Add-On</p>
+            <h3 class="offering-card__name">Hen &amp; Rooster Smoking Service</h3>
+            <p class="offering-card__desc">
+              Already reserved your Thanksgiving hen or rooster? Request the smoking service on its own,
+              no need to reserve another bird. Leave your info and we'll reach out with service and price details.
+            </p>
+            <p class="offering-card__price" style="color:var(--color-rust);font-weight:700;">Price TBD &nbsp;<span style="font-size:0.75rem;font-weight:400;color:var(--color-text-muted);">Not charged now</span></p>
+            <div class="offering-card__actions">
+              <button class="offering-card__add" type="button" id="hen-smoke-standalone-request" onclick="openHenSmokeForm('standalone', function(){ alert('Thanks! Your smoking service request was sent. We\'ll be in touch with pricing.'); })">Request Service / Price Info</button>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>

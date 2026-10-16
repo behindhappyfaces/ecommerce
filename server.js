@@ -2348,6 +2348,9 @@ app.post('/create-checkout-session', async (req, res) => {
     let cartDiscountCents = 0;
     const lineItems = [];
     for (const item of items) {
+      // Hen/rooster smoking request has no price yet — it's a lead, not a charge
+      // (contact info already saved via /api/hen-smoke-request); noted in metadata.
+      if (item.id === 'addon-hen-smoke-request') continue;
       if (item.price < 0) {
         // Collect discount — will be validated against subtotal below
         cartDiscountCents += Math.abs(Math.round(item.price || 0)) * (item.quantity || 1);
@@ -2452,6 +2455,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     // Build metadata (Stripe limits: 50 keys, values ≤ 500 chars)
     const metadata = { delivery_method: delivery_method || 'ship' };
+    if (items.some(i => i.id === 'addon-hen-smoke-request')) metadata.hen_smoke_request = 'yes — price TBD, see Customer Leads';
     if (delivery_address) {
       metadata.delivery_street = (delivery_address.street || '').slice(0, 200);
       metadata.delivery_city   = (delivery_address.city   || '').slice(0, 100);
@@ -3018,6 +3022,8 @@ const PRODUCT_MAP = {
   'Chicken & Dinner Roll Bundle':   'chicken-dinner-roll-bundle',
   'Chicken and Dinner Roll Bundle': 'chicken-dinner-roll-bundle',
   'Farm Breakfast Bundle':          'breakfast-bundle',
+  'Mature Hen — Thanksgiving Reservation ($100 Deposit)':     'thanksgiving-hen',
+  'Mature Rooster — Thanksgiving Reservation ($100 Deposit)': 'thanksgiving-rooster',
 };
 
 async function deductStockForOrder(lineItems, orderId, orderDate = null) {
@@ -3982,6 +3988,56 @@ app.post('/api/wholesale-inquiry', async (req, res) => {
   }
   sendEmail('New Wholesale Inquiry - Heart of Texas Organics', html)
     .catch(err => console.error('[Wholesale email error]', err.message));
+  res.json({ ok: true });
+});
+
+// ── Thanksgiving hen/rooster smoking service — request for price info ────────
+app.post('/api/hen-smoke-request', async (req, res) => {
+  const { name, email, phone, bird, source, website, form_ts } = req.body || {};
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: 'Please enter your name, email, and phone.' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+  // Honeypot + timing check — same spam guards as the event inquiry form
+  if (website && website.trim().length > 0) return res.json({ ok: true });
+  const elapsed = form_ts ? Date.now() - parseInt(form_ts, 10) : 99999;
+  if (elapsed < 3000) return res.json({ ok: true });
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+  if (!contactAllowed(ip)) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  const clean = s => String(s || '').trim().slice(0, 200);
+  const data = {
+    fullName: clean(name), email: clean(email), phone: clean(phone),
+    bird: clean(bird) || 'Not specified',
+    source: source === 'checkout' ? 'Added at checkout' : 'Smoking service card',
+    interest: 'Hen/rooster smoking service for Thanksgiving',
+  };
+  try {
+    await db.createLead('hen-smoke', data);
+  } catch (err) {
+    console.error('[Hen smoke createLead error]', err.message);
+    return res.status(500).json({ error: 'Could not save your request — please try again.' });
+  }
+
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const row = (k, v) => `<tr><td style="padding:10px;border-bottom:1px solid #ede8df;color:#8B4A2F;width:160px;"><strong>${k}</strong></td><td style="padding:10px;border-bottom:1px solid #ede8df;">${v}</td></tr>`;
+  const html = `
+    <h2 style="font-family:Georgia,serif;color:#2C3E2D;">New Hen &amp; Rooster Smoking Request</h2>
+    <p style="font-family:Arial,sans-serif;font-size:14px;">Someone is interested in having their bird smoked for Thanksgiving. Reach out with pricing.</p>
+    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+      ${row('Name', esc(data.fullName))}
+      ${row('Email', `<a href="mailto:${esc(data.email)}">${esc(data.email)}</a>`)}
+      ${row('Phone', `<a href="tel:${esc(data.phone)}">${esc(data.phone)}</a>`)}
+      ${row('Bird', esc(data.bird))}
+      ${row('Requested From', esc(data.source))}
+    </table>
+    <p style="margin-top:20px;font-size:12px;color:#8B4A2F;">Saved to Customer Leads → Hen Smoking (Thanksgiving)</p>`;
+  sendEmail(`Hen smoking request from ${data.fullName}`, html)
+    .catch(err => console.error('[Hen smoke email error]', err.message));
   res.json({ ok: true });
 });
 

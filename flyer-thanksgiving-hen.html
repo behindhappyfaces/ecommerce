@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thanksgiving Hen Dinner — Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --olive:      #2C3E2D;
+    --olive-dark: #1E2D1F;
+    --cream:      #F5F0E8;
+    --cream-2:    #EDE6D6;
+    --rust:       #8B4A2F;
+    --tan:        #B89B6E;
+    --text:       #2A2A2A;
+    --muted:      #6B6B5E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans:  'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #4a4a44;
+    font-family: var(--sans);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page::after {
+    content: "";
+    position: absolute;
+    inset: 0.26in;
+    border: 1px solid var(--tan);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── Header ────────────────────────────────────── */
+  .hd, .ribbon { flex-shrink: 0; }
+  .hd {
+    background: var(--olive);
+    color: #fff;
+    text-align: center;
+    padding: 0.42in 0.65in 0.26in;
+  }
+  .hd__eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 10px;
+  }
+  .hd__title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 44px;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+  .hd__title em { font-weight: 500; color: var(--tan); }
+  .hd__rule {
+    width: 48px;
+    height: 2px;
+    background: var(--tan);
+    margin: 12px auto 10px;
+  }
+  .hd__sub {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* ── Photo strip ───────────────────────────────── */
+  .photos {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .photos img {
+    width: 100%;
+    height: 2.75in;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── Limited ribbon ────────────────────────────── */
+  .ribbon {
+    background: var(--rust);
+    color: #fff;
+    text-align: center;
+    padding: 8px 0.7in;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ── Body ──────────────────────────────────────── */
+  .body {
+    flex: 1;
+    padding: 0.2in 0.65in 0.4in;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .deal {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  .items {
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid var(--olive);
+    padding: 14px 20px 12px;
+    box-shadow: 0 2px 12px rgba(44,62,45,0.07);
+  }
+  .items__label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 0.95in 1fr;
+    align-items: baseline;
+    padding: 7px 0;
+    border-top: 1px solid var(--cream-2);
+  }
+  .item:first-of-type { border-top: none; padding-top: 0; }
+  .item__qty {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--rust);
+  }
+  .item__name {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--olive);
+    line-height: 1.2;
+  }
+  .item__desc {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+
+  .price {
+    width: 1.95in;
+    background: var(--olive);
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .price__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--tan);
+  }
+  .price__amt {
+    font-family: var(--serif);
+    font-size: 62px;
+    font-weight: 600;
+    line-height: 1;
+    margin: 6px 0 8px;
+  }
+  .price__incl {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.88);
+  }
+  .price__incl b { color: var(--tan); }
+
+  /* ── Delivery row ──────────────────────────────── */
+  .delivery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .dcard {
+    background: var(--cream-2);
+    border-radius: 8px;
+    padding: 11px 16px;
+    text-align: center;
+  }
+  .dcard__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 3px;
+  }
+  .dcard__val {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--olive);
+  }
+
+  .tone {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13.5px;
+    color: var(--text);
+    text-align: center;
+  }
+
+  /* ── QR / order block ─────────────────────────── */
+  .order {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 22px;
+    background: var(--olive);
+    border-radius: 10px;
+    padding: 14px 22px;
+  }
+  .order__qr {
+    background: #fff;
+    border-radius: 6px;
+    padding: 6px;
+    width: 0.92in;
+    height: 0.92in;
+  }
+  .order__qr img { width: 100%; height: 100%; display: block; }
+  .order__label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tan);
+    margin-bottom: 4px;
+  }
+  .order__title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .order__sub {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .order__url { font-weight: 600; color: var(--tan); }
+
+  .signoff {
+    text-align: center;
+    padding: 4px 0 0;
+    font-size: 9.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .signoff b { color: var(--olive); font-weight: 600; }
+  .signoff__contact {
+    margin-top: 4px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: none;
+  }
+
+  /* ── Page 2: order sheet ───────────────────────── */
+  body { flex-direction: column; align-items: center; gap: 28px; }
+  .sheet {
+    background: #fff;
+    padding: 0.5in 0.45in 0.4in;
+  }
+  .sheet::after { display: none; }
+  .sheet__hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .sheet__title {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 600;
+    color: #000;
+  }
+  .sheet__meta {
+    font-size: 11px;
+    color: #000;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .sheet table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 10px;
+    color: #000;
+  }
+  .sheet th {
+    text-align: left;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid #000;
+    background: #eee;
+    padding: 6px 5px;
+  }
+  .sheet td {
+    border: 1px solid #000;
+    height: 0.62in;
+    padding: 3px 5px;
+    vertical-align: middle;
+  }
+  .sheet td.num { text-align: center; font-weight: 600; }
+  .sheet td.date { font-size: 9.5px; }
+  .paid {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+  .box {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border: 1.3px solid #000;
+    vertical-align: -2px;
+    margin-right: 4px;
+  }
+  .sheet__ft {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #000;
+  }
+
+  @page { size: 8.5in 11in; margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; gap: 0; }
+    .items { box-shadow: none; border: 1px solid var(--cream-2); border-left: 4px solid var(--olive); }
+    .page { box-shadow: none; break-after: page; page-break-after: always; }
+    .page:last-of-type { break-after: auto; page-break-after: auto; }
+    .noprint { display: none !important; }
+  }
+
+  .noprint {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--olive);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .photos--one { grid-template-columns: 1fr; }
+  .photos--three { grid-template-columns: 1.2fr 1fr 1fr; }
+  .photos--one img { height: 3.1in; object-position: center 55%; }
+  .photos--three img { height: 2.55in; }
+  .products { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .prod {
+    background: #fff; border-radius: 8px; border-top: 4px solid var(--olive);
+    padding: 14px 18px 14px; border-left: 1px solid var(--cream-2);
+    border-right: 1px solid var(--cream-2); border-bottom: 1px solid var(--cream-2);
+    display: flex; flex-direction: column;
+  }
+  .prod--rust { border-top-color: var(--rust); }
+  .prod__tag { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--rust); }
+  .prod__name { font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--olive); line-height: 1.15; margin: 4px 0 6px; }
+  .prod__desc { font-size: 11px; color: var(--muted); line-height: 1.5; flex: 1; }
+  .prod__price { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--rust); margin-top: 8px; }
+  .prod__price small { font-family: var(--sans); font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; }
+  .ideas { background: var(--cream-2); border-radius: 8px; padding: 11px 18px; text-align: center; }
+  .ideas__label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--rust); margin-bottom: 5px; }
+  .ideas__list { font-family: var(--serif); font-size: 15px; color: var(--olive); line-height: 1.5; }
+  .ideas__list span { color: var(--tan); padding: 0 6px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .step { background: var(--cream-2); border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .step__n { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--rust); line-height: 1; }
+  .step__t { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--olive); margin: 5px 0 3px; }
+  .step__d { font-size: 10px; color: var(--muted); line-height: 1.45; }
+  .price__amt--sm { font-size: 46px; }
+  .order--solo { grid-template-columns: 1fr; text-align: center; }
+  .order__big { font-family: var(--serif); font-size: 22px; font-weight: 600; color: #fff; margin-top: 2px; }
+  .order__big { white-space: nowrap; }
+  .order__email { font-size: 13px; font-weight: 600; color: var(--tan); margin-top: 2px; }
+  @media print {
+    .prod, .items { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+  <button class="noprint" onclick="window.print()">Print / Save PDF</button>
+
+  <div class="page">
+    <div class="hd">
+      <div class="hd__eyebrow">Heart of Texas Organics</div>
+      <div class="hd__title">The <em>Thanksgiving</em> Hen Dinner</div>
+      <div class="hd__rule"></div>
+      <p class="hd__sub">Pasture-raised hen &bull; Fresh-baked rolls &bull; Reserve yours now</p>
+    </div>
+
+    <div class="photos photos--three">
+      <img src="images/chicken.jpg" alt="Whole pasture-raised hen" />
+      <img src="images/yeast-rolls.jpg" alt="Yeast rolls" />
+      <img src="images/cinnamon-rolls.jpg" alt="Cinnamon rolls" />
+    </div>
+
+    <div class="ribbon">Limited Birds &bull; Reserve With a $100 Deposit</div>
+
+    <div class="body">
+      <div class="deal">
+        <div class="items">
+          <div class="items__label">What's included</div>
+          <div class="item">
+            <div class="item__qty">10&ndash;15 lb</div>
+            <div>
+              <div class="item__name">Mature Pasture-Raised Hen</div>
+              <p class="item__desc">Raised on pasture here on the farm. Rich, full-flavored meat.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item__qty">1 dozen</div>
+            <div>
+              <div class="item__name">Yeast Rolls</div>
+              <p class="item__desc">Soft, buttery dinner rolls, baked fresh.</p>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item__qty">&frac12; dozen</div>
+            <div>
+              <div class="item__name">Cinnamon Rolls</div>
+              <p class="item__desc">Topped with cream cheese frosting.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="price">
+          <div class="price__label">Hens</div>
+          <div class="price__amt price__amt--sm">$10<span style="font-size:20px">/lb</span></div>
+          <div class="price__incl"><b>$100 deposit</b><br>reserves your hen</div>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__n">1</div>
+          <div class="step__t">Reserve</div>
+          <p class="step__d">Hold your hen with a $100 deposit.</p>
+        </div>
+        <div class="step">
+          <div class="step__n">2</div>
+          <div class="step__t">Weigh &amp; Bill</div>
+          <p class="step__d">Your hen is weighed. Your total is billed before delivery, less your deposit.</p>
+        </div>
+        <div class="step">
+          <div class="step__n">3</div>
+          <div class="step__t">Delivered</div>
+          <p class="step__d">Your hen and rolls arrive in time for Thanksgiving.</p>
+        </div>
+      </div>
+
+      <p class="tone">A 10&ndash;15 lb hen runs about $100&ndash;$150 at $10/lb.</p>
+
+      <div class="order order--solo">
+        <div>
+          <div class="order__label">Reserve Your Hen &bull; Limited Birds</div>
+          <div class="order__big">Call / Text 512-803-0333</div><div class="order__email">operations@heartoftexasorganics.com</div>
+          <p class="order__sub">Reservations are first come, first served.</p>
+        </div>
+      </div>
+
+      <div class="signoff">
+        Real food, made by real people <span style="color:var(--tan)">&bull;</span> <b>heartoftexasorganics.com</b>
+        <div class="signoff__contact">operations@heartoftexasorganics.com &nbsp;&bull;&nbsp; 512-803-0333 &nbsp;&bull;&nbsp; @heartoftxorganics</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page sheet">
+    <div class="sheet__hd">
+      <div class="sheet__title">Thanksgiving Hen Reservations</div>
+      <div class="sheet__meta">Heart of Texas Organics &bull; Hens $10/lb &bull; $100 deposit<br>Hen (10&ndash;15 lb) + 1 doz yeast rolls + &frac12; doz cinnamon rolls</div>
+    </div>
+    <table>
+      <colgroup>
+        <col style="width:0.3in"><col style="width:1.25in"><col style="width:1.0in"><col style="width:1.3in"><col style="width:1.75in"><col style="width:0.6in"><col style="width:0.65in"><col style="width:0.75in">
+      </colgroup>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Delivery Address</th><th>Hen Wt (lb)</th><th>$100 Deposit</th><th>Balance</th></tr>
+      </thead>
+      <tbody>
+          <tr><td class="num">1</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">2</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">3</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">4</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">5</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">6</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">7</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">8</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">9</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">10</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">11</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">12</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+          <tr><td class="num">13</td><td></td><td></td><td></td><td></td><td class="wt"></td><td><div class="paid"><span><span class="box"></span>Paid</span></div></td><td><div class="paid"><span><span class="box"></span>Billed</span><span><span class="box"></span>Paid</span></div></td></tr>
+      </tbody>
+    </table>
+    <div class="sheet__ft">
+      <span>Total hens reserved: ________</span>
+      <span>Deposits collected: $________</span>
+      <span>Balances paid: ________</span>
+    </div>
+  </div>
+
+</body>
+</html>

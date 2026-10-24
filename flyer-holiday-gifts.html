@@ -404,6 +404,13 @@
   }
 
   .photos--one { grid-template-columns: 1fr; }
+  .photos--two { grid-template-columns: 1fr 1fr; }
+  .photos--two img { height: 2.6in; }
+  .products.products--three { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .products--three .prod { padding: 12px 14px; }
+  .products--three .prod__name { font-size: 18px; }
+  .products--three .prod__desc { font-size: 10.5px; }
+  .special__or { font-family: var(--serif); font-style: italic; font-size: 15px; color: #F3D9C4; }
   .photos--three { grid-template-columns: 1.2fr 1fr 1fr; }
   .photos--one img { height: 2.8in; object-position: center 55%; }
   .photos--three img { height: 2.55in; }
@@ -457,32 +464,41 @@
       <p class="hd__sub">Thanksgiving &bull; Christmas &bull; Gifts for everyone on your list</p>
     </div>
 
-    <div class="photos photos--one">
+    <div class="photos photos--two">
       <img src="images/chili-crunch.jpg" alt="Garlic chili crunch" />
+      <img src="images/herb-dipping-oil.jpg" alt="Tuscany herb bread dipping oil" />
     </div>
 
     <div class="ribbon">Small Batch &bull; Limited Holiday Jars</div>
 
     <div class="body">
-      <div class="products">
+      <div class="products products--three">
         <div class="prod">
           <div class="prod__tag">Customer Favorite</div>
           <div class="prod__name">Garlic Chili Crunch</div>
-          <p class="prod__desc">Crispy garlic and chilies in oil, made by hand in small batches. Spoon it over eggs, noodles, roasted vegetables, pizza or popcorn. The gift they'll keep reaching for.</p>
-          <div class="prod__price">$18 <small>per jar</small></div>
+          <p class="prod__desc">Crispy garlic and chilies in oil, made by hand in small batches. Spoon it over eggs, noodles, pizza or popcorn.</p>
+          <div class="prod__price">$18 <small>each</small></div>
         </div>
         <div class="prod prod--rust">
           <div class="prod__tag">New This Season</div>
           <div class="prod__name">Bacon Jalape&ntilde;o Preserve</div>
-          <p class="prod__desc">Smoky bacon, fresh jalape&ntilde;os and a little sweetness, slow-cooked into a spreadable preserve. Made for cheese boards, biscuits, burgers and glazing the holiday ham.</p>
-          <div class="prod__price">$15 <small>per jar</small></div>
+          <p class="prod__desc">Smoky bacon, fresh jalape&ntilde;os and a little sweetness. Made for cheese boards, biscuits and glazing the holiday ham.</p>
+          <div class="prod__price">$15 <small>each</small></div>
+        </div>
+        <div class="prod">
+          <div class="prod__tag">Holiday Table</div>
+          <div class="prod__name">Tuscany Herb Bread Dipping Oil</div>
+          <p class="prod__desc">Olive oil with Italian herbs, garlic and a pinch of red pepper. Pour, add warm bread, and dinner starts itself.</p>
+          <div class="prod__price">$18 <small>each</small></div>
         </div>
       </div>
 
       <div class="special">
         <div class="special__label">Holiday Special</div>
         <div class="special__deal">2 for $30</div>
-        <div class="special__sub">Mix &amp; match any two jars</div>
+        <div class="special__or">or</div>
+        <div class="special__deal">All 3 for $42</div>
+        <div class="special__sub">Mix &amp; match</div>
       </div>
 
       <div class="ideas">

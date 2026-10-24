@@ -405,7 +405,7 @@
 
   .photos--one { grid-template-columns: 1fr; }
   .photos--three { grid-template-columns: 1.2fr 1fr 1fr; }
-  .photos--one img { height: 3.1in; object-position: center 55%; }
+  .photos--one img { height: 2.8in; object-position: center 55%; }
   .photos--three img { height: 2.55in; }
   .products { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .prod {
@@ -434,6 +434,13 @@
   .order__big { font-family: var(--serif); font-size: 22px; font-weight: 600; color: #fff; margin-top: 2px; }
   .order__big { white-space: nowrap; }
   .order__email { font-size: 13px; font-weight: 600; color: var(--tan); margin-top: 2px; }
+  .special {
+    background: var(--rust); color: #fff; border-radius: 8px;
+    padding: 10px 18px; display: flex; align-items: center; justify-content: center; gap: 18px;
+  }
+  .special__label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #F3D9C4; }
+  .special__deal { font-family: var(--serif); font-size: 30px; font-weight: 600; line-height: 1; }
+  .special__sub { font-size: 11.5px; font-weight: 600; color: #F3D9C4; }
   @media print {
     .prod, .items { box-shadow: none; }
   }
@@ -465,11 +472,17 @@
           <div class="prod__price">$18 <small>per jar</small></div>
         </div>
         <div class="prod prod--rust">
-          <div class="prod__tag">Holiday Special</div>
+          <div class="prod__tag">New This Season</div>
           <div class="prod__name">Bacon Jalape&ntilde;o Preserve</div>
           <p class="prod__desc">Smoky bacon, fresh jalape&ntilde;os and a little sweetness, slow-cooked into a spreadable preserve. Made for cheese boards, biscuits, burgers and glazing the holiday ham.</p>
           <div class="prod__price">$15 <small>per jar</small></div>
         </div>
+      </div>
+
+      <div class="special">
+        <div class="special__label">Holiday Special</div>
+        <div class="special__deal">2 for $30</div>
+        <div class="special__sub">Mix &amp; match any two jars</div>
       </div>
 
       <div class="ideas">
@@ -483,7 +496,7 @@
         <div>
           <div class="order__label">Order Early &bull; Limited Jars</div>
           <div class="order__big">Call / Text 512-803-0333</div><div class="order__email">operations@heartoftexasorganics.com</div>
-          <p class="order__sub">Mix &amp; match jars for gift giving. Order early for Thanksgiving and Christmas.</p>
+          <p class="order__sub">Order early for Thanksgiving and Christmas.</p>
         </div>
       </div>
 

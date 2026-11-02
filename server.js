@@ -2273,8 +2273,13 @@ app.post('/create-checkout-session', async (req, res) => {
     let isShip = delivery_method !== 'pickup';
 
     // Thanksgiving hen/rooster reservations aren't open yet
+    // — except through an admin-created cart link, so they can be sold one-on-one
     if (!HEN_RESERVATIONS_OPEN && Array.isArray(items) && items.some(i => ['thanksgiving-hen', 'thanksgiving-rooster', 'addon-hen-smoke-request'].includes(i.id))) {
-      return res.status(400).json({ error: 'Thanksgiving hen & rooster reservations are coming soon and not open yet.' });
+      const carts = cart_link_token ? await readPendingCartsDB() : {};
+      const link  = cart_link_token && carts[cart_link_token];
+      if (!link || !link.adminCreated) {
+        return res.status(400).json({ error: 'Thanksgiving hen & rooster reservations are coming soon and not open yet.' });
+      }
     }
 
     // Farm Breakfast Bundle is delivery only — no pick-up or shipping

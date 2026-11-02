@@ -3247,10 +3247,56 @@ app.post('/admin/test-email', requireAdmin, async (req, res) => {
   }
 });
 
+// Cart-link personal notes come from the Compose rich-text editor (or older
+// plain-text notes). Keep only basic formatting tags — no attributes except a
+// font size/color — and give each block inline styles so email clients render it.
+const NOTE_FONT_PX = { 1: 12, 2: 13, 3: 15, 4: 18, 5: 22, 6: 26, 7: 30 };
+const NOTE_P_STYLE = 'margin:0 0 12px;font-size:15px;color:#444;line-height:1.6;';
+function formatCartNoteHtml(note) {
+  if (!note || !String(note).trim()) return '';
+  let src = String(note);
+  if (!/<[a-z][^>]*>/i.test(src)) {
+    // Plain text: blank lines → paragraphs, single line breaks → <br>
+    const esc = src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return esc.trim().split(/\n\s*\n/).map(par =>
+      `<p style="${NOTE_P_STYLE}">${par.trim().replace(/\n/g, '<br>')}</p>`).join('');
+  }
+  const out = src.split(/(<[^>]*>)/).map(part => {
+    if (!part.startsWith('<')) return part.replace(/</g, '&lt;');
+    const m = part.match(/^<(\/?)([a-z0-9]+)([^>]*)>$/i);
+    if (!m) return '';
+    const close = m[1], tag = m[2].toLowerCase(), attrs = m[3];
+    switch (tag) {
+      case 'b': case 'strong': return close ? '</strong>' : '<strong>';
+      case 'i': case 'em':     return close ? '</em>' : '<em>';
+      case 'u':                return close ? '</u>' : '<u>';
+      case 'br':               return close ? '' : '<br>';
+      // <div> (not <p>) so a list inside a line stays valid HTML
+      case 'p': case 'div':    return close ? '</div>' : `<div style="${NOTE_P_STYLE}">`;
+      case 'ul': case 'ol':    return close ? `</${tag}>` : `<${tag} style="margin:0 0 12px;padding-left:22px;font-size:15px;color:#444;line-height:1.6;">`;
+      case 'li':               return close ? '</li>' : '<li style="margin:0 0 4px;">';
+      case 'font': case 'span': {
+        if (close) return '</span>';
+        const styles = [];
+        const size  = attrs.match(/size\s*=\s*["']?(\d)/i);
+        const color = attrs.match(/color\s*=\s*["']?(#[0-9a-f]{3,6})/i);
+        if (size && NOTE_FONT_PX[size[1]]) styles.push(`font-size:${NOTE_FONT_PX[size[1]]}px`);
+        if (color) styles.push(`color:${color[1]}`);
+        return styles.length ? `<span style="${styles.join(';')}">` : '<span>';
+      }
+      default: return '';
+    }
+  }).join('');
+  if (!out.replace(/<[^>]*>|&nbsp;|\s/g, '')) return '';
+  // Bare text outside any block gets wrapped so it keeps the note's styling
+  return `<div style="${NOTE_P_STYLE}margin:0;">${out}</div>`;
+}
+
 // Builds the "your custom order is ready" email shared by send + resend
 function cartLinkEmailHtml({ name, note, items = [], total, discount, cartUrl }) {
   const greeting = name ? `Hi ${name},` : 'Hello,';
-  const noteBlock = note ? `<p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.6;">${note}</p>` : '';
+  const noteHtml  = formatCartNoteHtml(note);
+  const noteBlock = noteHtml ? `<div style="margin:0 0 24px;">${noteHtml}</div>` : '';
 
   const itemRows = items.map(r =>
     `<tr>

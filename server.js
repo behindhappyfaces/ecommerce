@@ -753,7 +753,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const customerName   = session.customer_details?.name || 'Valued Customer';
         const deliveryMethod = session.metadata?.delivery_method || 'ship';
         const shippingAddr   = session.shipping_details?.address;
-        const siteUrl        = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+        const siteUrl        = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
 
         // Confirm workshop seats booked through the normal cart checkout. The
         // registration record (with the attendee's own name/email/phone/notes)
@@ -4639,7 +4639,7 @@ app.get('/admin/webhook-status', requireAdmin, async (req, res) => {
   res.json({
     webhook_secret_configured: hasSecret,
     orders_on_file: orderCount,
-    webhook_url_should_be: `${process.env.SITE_URL || 'https://heartoftexasorganics.com'}/webhook`,
+    webhook_url_should_be: `${process.env.SITE_URL || 'https://www.heartoftexasorganics.com'}/webhook`,
     tip: hasSecret ? 'Secret is set. If orders are still missing, verify the URL in your Stripe dashboard matches the above.' : 'STRIPE_WEBHOOK_SECRET is not set in your environment variables.',
   });
 });
@@ -5371,7 +5371,7 @@ app.get('/admin/workshop-registrations', requireAdmin, async (req, res) => {
 // Stripe session for that one pending registration (the original session has
 // long since expired) and sends the browser straight to it.
 app.get('/api/workshop-resume-checkout', async (req, res) => {
-  const siteUrl = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+  const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
   try {
     const { id } = req.query;
     const regs = await readWorkshopRegs();
@@ -5425,7 +5425,7 @@ if (cron) {
     try {
       const regs = await readWorkshopRegs();
       const now = Date.now();
-      const siteUrl = process.env.SITE_URL || 'https://heartoftexasorganics.com';
+      const siteUrl = process.env.SITE_URL || 'https://www.heartoftexasorganics.com';
       let changed = false;
 
       for (const reg of regs) {

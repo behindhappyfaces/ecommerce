@@ -213,7 +213,7 @@
   /* ── Delivery row ──────────────────────────────── */
   .delivery {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
   }
   .dcard {
@@ -416,7 +416,7 @@
       <div class="hd__eyebrow">Heart of Texas Organics</div>
       <div class="hd__title">Garlic <em>Chili</em> Crunch</div>
       <div class="hd__rule"></div>
-      <p class="hd__sub">Pre-Order Now &bull; Pick Up in Round Rock Before Thanksgiving</p>
+      <p class="hd__sub">Pre-Order Now &bull; Round Rock Pick-Up Before Thanksgiving &bull; Shipping Available</p>
     </div>
 
     <div class="photos photos--one">
@@ -456,7 +456,7 @@
         <div class="price">
           <div class="price__label">Pre-Order Price</div>
           <div class="price__amt">$18</div>
-          <div class="price__incl"><b>per jar</b><br>local pick-up</div>
+          <div class="price__incl"><b>per jar</b><br>pick-up or shipped</div>
         </div>
       </div>
 
@@ -469,6 +469,10 @@
           <div class="dcard__label">Pick-Up Window</div>
           <div class="dcard__val">Before Thanksgiving</div>
         </div>
+        <div class="dcard">
+          <div class="dcard__label">Can't Pick Up?</div>
+          <div class="dcard__val">Shipping Available</div>
+        </div>
       </div>
 
       <p class="tone">Made in small batches, so reserve your jars early.</p>
@@ -477,7 +481,7 @@
         <div>
           <div class="order__label">How to Pre-Order</div>
           <div class="order__title">Sign up on the sheet, or call or text to reserve</div>
-          <p class="order__sub">Call/text <span class="order__url">512-803-0333</span> with your name and how many jars you'd like, or email <span class="order__url">operations@heartoftexasorganics.com</span>.<br>Exact pick-up time and spot in Round Rock will be sent to you before Thanksgiving.</p>
+          <p class="order__sub">Call/text <span class="order__url">512-803-0333</span> with your name, how many jars you'd like, and pick-up or shipping, or email <span class="order__url">operations@heartoftexasorganics.com</span>.<br>Pick-up time and spot in Round Rock sent before Thanksgiving &bull; shipping cost quoted to your address.</p>
         </div>
       </div>
 
@@ -491,39 +495,41 @@
   <div class="page sheet">
     <div class="sheet__hd">
       <div class="sheet__title">Garlic Chili Crunch Pre-Orders</div>
-      <div class="sheet__meta">Heart of Texas Organics &bull; $18 per jar<br>Pick-up: Round Rock, before Thanksgiving</div>
+      <div class="sheet__meta">Heart of Texas Organics &bull; $18 per jar<br>Pick-up: Round Rock, before Thanksgiving &bull; Shipping available</div>
     </div>
     <table>
       <colgroup>
-        <col style="width:0.3in"><col style="width:1.6in"><col style="width:1.15in"><col style="width:2.05in"><col style="width:0.65in"><col style="width:0.8in"><col style="width:1.05in">
+        <col style="width:0.3in"><col style="width:1.35in"><col style="width:1.0in"><col style="width:1.6in"><col style="width:0.5in"><col style="width:1.15in"><col style="width:0.7in"><col style="width:1.0in">
       </colgroup>
       <thead>
-        <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Jars</th><th>Total $</th><th>Paid?</th></tr>
+        <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Jars</th><th>Pick-up / Ship</th><th>Total $</th><th>Paid?</th></tr>
       </thead>
       <tbody>
-          <tr><td class="num">1</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">2</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">3</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">4</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">5</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">6</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">7</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">8</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">9</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">10</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">11</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">12</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">13</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">14</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
-          <tr><td class="num">15</td><td></td><td></td><td></td><td class="num"></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">1</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">2</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">3</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">4</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">5</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">6</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">7</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">8</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">9</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">10</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">11</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">12</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">13</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">14</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
+          <tr><td class="num">15</td><td></td><td></td><td></td><td class="num"></td><td><div class="paid"><span><span class="box"></span>Pick-up</span><span><span class="box"></span>Ship</span></div></td><td></td><td><div class="paid"><span><span class="box"></span>Paid</span><span><span class="box"></span>Not paid</span></div></td></tr>
       </tbody>
     </table>
     <div class="sheet__ft">
       <span>Total jars: ________</span>
+      <span>Shipped: ________</span>
       <span>Total $: ________</span>
       <span>Paid: ________</span>
       <span>Not paid: ________</span>
     </div>
+    <p style="margin-top:10px;font-size:10.5px;color:#000;">&#9993; <b>Shipping orders:</b> write the row # and full shipping address on the back of this sheet. Shipping cost is quoted to the customer by address.</p>
   </div>
 </body>
 </html>

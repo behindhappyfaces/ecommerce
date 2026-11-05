@@ -94,13 +94,13 @@
   /* ── Photo strip ───────────────────────────────── */
   .photos {
     display: grid;
-    grid-template-columns: 1.35fr 1fr;
+    grid-template-columns: 1.15fr 1fr 1fr;
     flex-shrink: 0;
     overflow: hidden;
   }
   .photos img {
     width: 100%;
-    height: 2.75in;
+    height: 2.55in;
     object-fit: cover;
     display: block;
   }
@@ -115,6 +115,31 @@
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
+  }
+
+  .ribbon--special {
+    background: #A63A1E;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    padding: 13px 0.5in;
+    border-top: 3px solid var(--tan);
+    border-bottom: 3px solid var(--tan);
+  }
+  .photo-special { position: relative; overflow: hidden; }
+  .photo-special__tag {
+    position: absolute;
+    top: 0.42in;
+    right: 0.42in;
+    background: var(--tan);
+    color: var(--olive-dark);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   }
 
   /* ── Body ──────────────────────────────────────── */
@@ -420,9 +445,13 @@
     <div class="photos">
       <img src="images/cinnamon-rolls.jpg" alt="Cinnamon rolls" />
       <img src="images/eggs.jpg" alt="Pasture-raised eggs" />
+      <div class="photo-special">
+        <img src="images/chili-crunch.jpg" alt="Garlic chili crunch" />
+        <span class="photo-special__tag">Free Bonus!</span>
+      </div>
     </div>
 
-    <div class="ribbon">Special &bull; Free Garlic Chili Crunch Sample Included</div>
+    <div class="ribbon ribbon--special">&#9733; Special &#9733; Free Garlic Chili Crunch Included &#9733;</div>
 
     <div class="body">
 

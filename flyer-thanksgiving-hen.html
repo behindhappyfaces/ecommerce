@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Thanksgiving Hen Dinner — Flyer</title>
+<title>Thanksgiving Hen — Flyer</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -404,6 +404,15 @@
   }
 
   .photos--one { grid-template-columns: 1fr; }
+  .photos--two { grid-template-columns: 1fr 1fr; }
+  .photos.photos--trio { grid-template-columns: 1fr 1fr 1fr; }
+  .photos--trio img { height: 2.6in; }
+  .photos--two img { height: 2.6in; }
+  .products.products--three { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .products--three .prod { padding: 12px 14px; }
+  .products--three .prod__name { font-size: 18px; }
+  .products--three .prod__desc { font-size: 10.5px; }
+  .special__or { font-family: var(--serif); font-style: italic; font-size: 15px; color: #F3D9C4; }
   .photos--three { grid-template-columns: 1.2fr 1fr 1fr; }
   .photos--one img { height: 2.8in; object-position: center 55%; }
   .photos--three img { height: 2.55in; }
@@ -453,15 +462,14 @@
   <div class="page">
     <div class="hd">
       <div class="hd__eyebrow">Heart of Texas Organics</div>
-      <div class="hd__title">The <em>Thanksgiving</em> Hen Dinner</div>
+      <div class="hd__title">The <em>Thanksgiving</em> Hen</div>
       <div class="hd__rule"></div>
-      <p class="hd__sub">Pasture-raised hen &bull; Fresh-baked rolls &bull; Reserve yours now</p>
+      <p class="hd__sub">Pasture-raised mature hens &bull; $10/lb &bull; Reserve yours now</p>
     </div>
 
-    <div class="photos photos--three">
+    <div class="photos photos--two">
       <img src="images/chicken.jpg" alt="Whole pasture-raised hen" />
-      <img src="images/yeast-rolls.jpg" alt="Yeast rolls" />
-      <img src="images/cinnamon-rolls.jpg" alt="Cinnamon rolls" />
+      <img src="images/hero-chickens.jpg" alt="Hens on pasture" />
     </div>
 
     <div class="ribbon">Limited Birds &bull; Reserve With a $100 Deposit</div>
@@ -469,7 +477,7 @@
     <div class="body">
       <div class="deal">
         <div class="items">
-          <div class="items__label">What's included</div>
+          <div class="items__label">Your Thanksgiving hen</div>
           <div class="item">
             <div class="item__qty">10&ndash;15 lb</div>
             <div>
@@ -478,17 +486,17 @@
             </div>
           </div>
           <div class="item">
-            <div class="item__qty">1 dozen</div>
+            <div class="item__qty">Cook it</div>
             <div>
-              <div class="item__name">Yeast Rolls</div>
-              <p class="item__desc">Soft, buttery dinner rolls, baked fresh.</p>
+              <div class="item__name">Low &amp; Slow</div>
+              <p class="item__desc">Mature hens shine slow-roasted or braised, with deep, old-fashioned flavor.</p>
             </div>
           </div>
           <div class="item">
-            <div class="item__qty">&frac12; dozen</div>
+            <div class="item__qty">Save it</div>
             <div>
-              <div class="item__name">Cinnamon Rolls</div>
-              <p class="item__desc">Topped with cream cheese frosting.</p>
+              <div class="item__name">Rich Bone Broth</div>
+              <p class="item__desc">The bones make golden stock for gravy, soups and leftovers.</p>
             </div>
           </div>
         </div>
@@ -514,7 +522,7 @@
         <div class="step">
           <div class="step__n">3</div>
           <div class="step__t">Delivered</div>
-          <p class="step__d">Your hen and rolls arrive in time for Thanksgiving.</p>
+          <p class="step__d">Your hen arrives in time for Thanksgiving.</p>
         </div>
       </div>
 
@@ -538,7 +546,7 @@
   <div class="page sheet">
     <div class="sheet__hd">
       <div class="sheet__title">Thanksgiving Hen Reservations</div>
-      <div class="sheet__meta">Heart of Texas Organics &bull; Hens $10/lb + $50 rolls &bull; $100 deposit<br>Hen (10&ndash;15 lb) + 1 doz yeast rolls + &frac12; doz cinnamon rolls</div>
+      <div class="sheet__meta">Heart of Texas Organics &bull; Hens $10/lb &bull; $100 deposit<br>Mature pasture-raised hen (10&ndash;15 lb)</div>
     </div>
     <table>
       <colgroup>

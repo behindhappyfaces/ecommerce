@@ -518,9 +518,6 @@
 
         var first = name.split(/\s+/)[0];
         document.getElementById('vegSuccessTitle').textContent = 'Your seat is planted, ' + first + '.';
-        if (data.updated) {
-          document.getElementById('vegSuccessBody').textContent = 'You were already on our list, so we updated your garden row. When the first harvest boxes are ready, you’ll hear from us first.';
-        }
         // Collapse steps 2–3, keep the planted row visible, then let it rain
         form.querySelectorAll('.veg-step').forEach(function (s, idx) { if (idx > 0) s.style.display = 'none'; });
         document.querySelector('.veg-step .veg-step__hint').style.display = 'none';

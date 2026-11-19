@@ -5729,7 +5729,7 @@
             <tbody>
               ${entries.map(r => `<tr style="border-bottom:1px solid #e8e0d6;${r.contacted ? 'opacity:0.55;' : ''}">
                 <td style="padding:6px 8px;"><input type="checkbox" class="wl-row-check" data-id="${r.id}"></td>
-                <td style="padding:6px 8px;">${escHtml(r.name)}</td>
+                <td style="padding:6px 8px;">${escHtml(r.name)}${r.notes ? `<div style="font-size:0.75rem;color:#6B7F5A;margin-top:2px;">🌱 ${escHtml(r.notes)}</div>` : ''}</td>
                 <td style="padding:6px 8px;">${escHtml(r.email)}</td>
                 <td style="padding:6px 8px;">${escHtml(r.phone || '—')}</td>
                 <td style="padding:6px 8px;font-size:0.78rem;color:#888;">${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</td>
@@ -5794,9 +5794,9 @@
   });
 
   document.getElementById('wl-csv-btn')?.addEventListener('click', function () {
-    const header = ['Product', 'Full Name', 'Email', 'Phone', 'Signed Up', 'Status'];
+    const header = ['Product', 'Full Name', 'Email', 'Phone', 'Details', 'Signed Up', 'Status'];
     const dataRows = allWaitlist.map(r => [
-      r.product_name, r.name, r.email, r.phone || '',
+      r.product_name, r.name, r.email, r.phone || '', r.notes || '',
       r.created_at ? new Date(r.created_at).toLocaleDateString() : '',
       r.contacted ? 'Contacted' : 'Waiting'
     ]);

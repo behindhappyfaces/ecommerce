@@ -422,6 +422,8 @@ async function ensureWaitlistTable() {
   )`);
   // Table may already exist from before the `contacted` column was added
   await pg.query(`ALTER TABLE product_waitlist ADD COLUMN IF NOT EXISTS contacted BOOLEAN NOT NULL DEFAULT FALSE`);
+  // Free-text details (e.g. vegetable picks + basket size from the veggie signup page)
+  await pg.query(`ALTER TABLE product_waitlist ADD COLUMN IF NOT EXISTS notes TEXT`);
 }
 ensureWaitlistTable().catch(e => console.warn('[Waitlist] table init failed:', e.message));
 
@@ -1653,12 +1655,81 @@ app.post('/api/waitlist', express.json(), async (req, res) => {
   res.json({ ok: true });
 });
 
+// --- Vegetable subscription interest list (vegetable-subscription.html) ---
+// Email-only signup (phone optional); garden picks + basket size stored in notes.
+const VEGGIE_CHOICES = ['Tomatoes', 'Peppers', 'Okra', 'Summer Squash', 'Zucchini', 'Eggplant', 'Green Beans',
+  'Leafy Greens', 'Winter Squash', 'Cucumbers', 'Tomatillos', 'Fresh Herbs'];
+const VEGGIE_BASKETS = { small: 'Just Me', medium: 'Two at the Table', large: 'Family Table', xl: 'Big Gathering' };
+app.post('/api/veggie-signup', express.json(), async (req, res) => {
+  const { name = '', email = '', phone = '', zip = '', veggies = [], basket = '', website = '' } = req.body || {};
+  if (website) return res.json({ ok: true }); // honeypot: bots fill hidden field
+  const cleanName = String(name).trim().slice(0, 120);
+  const cleanEmail = String(email).trim().slice(0, 200);
+  if (!cleanName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return res.status(400).json({ error: 'Please enter your name and a valid email.' });
+  }
+  const picks = (Array.isArray(veggies) ? veggies : []).filter(v => VEGGIE_CHOICES.includes(v));
+  const basketLabel = VEGGIE_BASKETS[basket] || '';
+  const cleanZip = String(zip).replace(/[^0-9]/g, '').slice(0, 5);
+  const notes = [
+    picks.length ? 'Wants: ' + picks.join(', ') : '',
+    basketLabel ? 'Basket: ' + basketLabel : '',
+    cleanZip ? 'ZIP: ' + cleanZip : '',
+  ].filter(Boolean).join(' · ');
+
+  const pg = getPcPool();
+  if (!pg) return res.status(503).json({ error: 'Signup is temporarily unavailable. Please try again soon.' });
+  try {
+    const dup = await pg.query(
+      "SELECT id FROM product_waitlist WHERE product_id = 'vegetable-subscription' AND LOWER(email) = LOWER($1) LIMIT 1",
+      [cleanEmail]
+    );
+    if (dup.rows.length) {
+      await pg.query('UPDATE product_waitlist SET name = $2, phone = COALESCE(NULLIF($3, \'\'), phone), notes = $4 WHERE id = $1',
+        [dup.rows[0].id, cleanName, String(phone).trim().slice(0, 40), notes]);
+      return res.json({ ok: true, updated: true });
+    }
+    await pg.query(
+      'INSERT INTO product_waitlist (product_id, product_name, name, email, phone, notes) VALUES ($1,$2,$3,$4,$5,$6)',
+      ['vegetable-subscription', 'Vegetable Subscription', cleanName, cleanEmail, String(phone).trim().slice(0, 40), notes]
+    );
+  } catch (e) {
+    console.error('[VeggieSignup] DB error:', e.message);
+    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+
+  sendEmail(
+    `🌱 Vegetable Subscription signup: ${cleanName}`,
+    `<p><strong>${escHtml(cleanName)}</strong> planted a seat for the Vegetable Subscription.</p>
+     <p>Email: ${escHtml(cleanEmail)}${phone ? '<br>Phone: ' + escHtml(String(phone).trim()) : ''}</p>
+     <p>${escHtml(notes || 'No preferences selected')}</p>`
+  ).catch(e => console.warn('[VeggieSignup] admin email failed:', e.message));
+
+  const firstName = cleanName.split(/\s+/)[0];
+  sendEmailTo(
+    cleanEmail,
+    'Your seat is planted 🌱 Heart of Texas Organics',
+    `<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#F5F0E8;color:#2A2A2A;">
+       <p style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8B4A2F;margin:0 0 12px;">Vegetable Subscription</p>
+       <h1 style="font-weight:normal;color:#2C3E2D;font-size:28px;margin:0 0 16px;">Your seat is planted, ${escHtml(firstName)}.</h1>
+       <p style="line-height:1.7;">Thank you for wanting to eat from our land. Our vegetable subscription is still growing,
+         and you'll be among the first to hear when the first harvest boxes are ready, before we open it to everyone.</p>
+       ${picks.length ? `<p style="line-height:1.7;"><strong>Your row:</strong> ${escHtml(picks.join(', '))}</p>` : ''}
+       ${basketLabel ? `<p style="line-height:1.7;"><strong>Basket size:</strong> ${escHtml(basketLabel)}</p>` : ''}
+       <p style="line-height:1.7;">Changed your mind about what you'd like? Just reply to this email and tell us.</p>
+       <p style="line-height:1.7;margin-top:28px;">Real food, made by real people.<br><em>Heart of Texas Organics</em></p>
+     </div>`
+  ).catch(e => console.warn('[VeggieSignup] confirmation email failed:', e.message));
+
+  res.json({ ok: true });
+});
+
 // Admin: list waitlist entries, grouped by product
 app.get('/admin/waitlist', requireAdmin, async (req, res) => {
   const pg = getPcPool();
   if (!pg) return res.json([]);
   const { rows } = await pg.query(
-    'SELECT id, product_id, product_name, name, email, phone, contacted, created_at FROM product_waitlist ORDER BY product_name, created_at DESC'
+    'SELECT id, product_id, product_name, name, email, phone, notes, contacted, created_at FROM product_waitlist ORDER BY product_name, created_at DESC'
   );
   res.json(rows);
 });

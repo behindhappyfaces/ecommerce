@@ -164,8 +164,30 @@
         </article>
         -->
       </div>
+
+      <!-- VEGETABLE SUBSCRIPTION TEASER -->
+      <a href="vegetable-subscription.html" class="veg-teaser" data-fade>
+        <img src="images/harvest.webp" alt="Tomatoes, peppers, okra and squash from our garden" loading="lazy" />
+        <div class="veg-teaser__body">
+          <p class="veg-teaser__eyebrow">🌱 Coming Soon</p>
+          <h3 class="veg-teaser__title">The Vegetable Subscription</h3>
+          <p class="veg-teaser__text">Fill a garden row with the vegetables you'd love, and we'll save your seat before boxes open.</p>
+          <span class="veg-teaser__cta">Plant Your Seat →</span>
+        </div>
+      </a>
     </div>
   </section>
+  <style>
+    .veg-teaser { display:grid; grid-template-columns: 280px 1fr; margin-top:32px; background:var(--color-green); color:var(--color-cream); border-radius:4px; overflow:hidden; text-decoration:none; transition:transform .25s ease, box-shadow .25s ease; }
+    .veg-teaser:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(44,62,45,.18); }
+    .veg-teaser img { width:100%; height:100%; min-height:180px; object-fit:cover; display:block; }
+    .veg-teaser__body { padding:32px 36px; display:flex; flex-direction:column; justify-content:center; }
+    .veg-teaser__eyebrow { font-family:var(--font-sans); font-size:.68rem; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--color-tan-light); margin:0 0 8px; }
+    .veg-teaser__title { font-family:var(--font-serif); font-weight:400; font-size:1.7rem; margin:0 0 10px; color:var(--color-cream); }
+    .veg-teaser__text { font-family:var(--font-sans); font-size:.92rem; line-height:1.7; color:rgba(245,240,232,.82); margin:0 0 16px; max-width:520px; }
+    .veg-teaser__cta { font-family:var(--font-sans); font-size:.75rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--color-tan-light); }
+    @media (max-width:640px) { .veg-teaser { grid-template-columns:1fr; } .veg-teaser img { height:180px; } .veg-teaser__body { padding:24px 22px; } }
+  </style>
 
   <style>
     @media (max-width: 900px) {

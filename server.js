@@ -1684,11 +1684,9 @@ app.post('/api/veggie-signup', express.json(), async (req, res) => {
       "SELECT id FROM product_waitlist WHERE product_id = 'vegetable-subscription' AND LOWER(email) = LOWER($1) LIMIT 1",
       [cleanEmail]
     );
-    if (dup.rows.length) {
-      await pg.query('UPDATE product_waitlist SET name = $2, phone = COALESCE(NULLIF($3, \'\'), phone), notes = $4 WHERE id = $1',
-        [dup.rows[0].id, cleanName, String(phone).trim().slice(0, 40), notes]);
-      return res.json({ ok: true, updated: true });
-    }
+    // Already signed up: don't modify the existing row from an unauthenticated request,
+    // and return the same response so the endpoint can't be used to check who's on the list.
+    if (dup.rows.length) return res.json({ ok: true });
     await pg.query(
       'INSERT INTO product_waitlist (product_id, product_name, name, email, phone, notes) VALUES ($1,$2,$3,$4,$5,$6)',
       ['vegetable-subscription', 'Vegetable Subscription', cleanName, cleanEmail, String(phone).trim().slice(0, 40), notes]
